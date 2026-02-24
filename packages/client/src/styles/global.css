@@ -168,3 +168,125 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* ─── Email HTML body content styling ──────────────────────────────── */
+
+.email-html-body a {
+  color: var(--color-text-link);
+  text-decoration: underline;
+}
+
+.email-html-body img {
+  max-width: 100%;
+  height: auto;
+}
+
+.email-html-body table {
+  border-collapse: collapse;
+  max-width: 100%;
+}
+
+.email-html-body td,
+.email-html-body th {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border-primary);
+}
+
+.email-html-body ul,
+.email-html-body ol {
+  padding-left: var(--spacing-xl);
+  margin: var(--spacing-sm) 0;
+}
+
+.email-html-body blockquote {
+  margin: var(--spacing-sm) 0;
+  padding-left: var(--spacing-md);
+  border-left: 3px solid var(--color-border-primary);
+  color: var(--color-text-secondary);
+}
+
+.email-html-body h1,
+.email-html-body h2,
+.email-html-body h3,
+.email-html-body h4,
+.email-html-body h5,
+.email-html-body h6 {
+  margin: var(--spacing-md) 0 var(--spacing-sm);
+  color: var(--color-text-primary);
+}
+
+.email-html-body p {
+  margin: var(--spacing-xs) 0;
+}
+
+.email-html-body pre,
+.email-html-body code {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-sm);
+}
+
+.email-html-body code {
+  padding: 1px 4px;
+}
+
+.email-html-body pre {
+  padding: var(--spacing-md);
+  overflow-x: auto;
+}
+
+.email-html-body hr {
+  border: none;
+  border-top: 1px solid var(--color-border-primary);
+  margin: var(--spacing-md) 0;
+}
+
+/* ─── Tiptap / ProseMirror editor styling ──────────────────────────── */
+
+.tiptap {
+  outline: none;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--color-text-tertiary);
+  pointer-events: none;
+  height: 0;
+}
+
+.tiptap p {
+  margin: var(--spacing-xs) 0;
+}
+
+.tiptap ul,
+.tiptap ol {
+  padding-left: var(--spacing-xl);
+  margin: var(--spacing-xs) 0;
+}
+
+.tiptap li {
+  margin: 2px 0;
+}
+
+.tiptap blockquote {
+  margin: var(--spacing-sm) 0;
+  padding-left: var(--spacing-md);
+  border-left: 3px solid var(--color-border-primary);
+  color: var(--color-text-secondary);
+}
+
+.tiptap code {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-sm);
+  padding: 1px 4px;
+}
+
+.tiptap a {
+  color: var(--color-text-link);
+  text-decoration: underline;
+  cursor: pointer;
+}

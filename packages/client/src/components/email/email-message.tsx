@@ -1,58 +1,179 @@
 import { useState } from 'react';
+import DOMPurify from 'dompurify';
 import { ChevronDown, ChevronUp, Paperclip } from 'lucide-react';
 import { Avatar } from '../ui/avatar';
 import { formatFullDate, formatRelativeTime } from '@atlasmail/shared';
+import { formatBytes } from '../../lib/format';
 import type { Email } from '@atlasmail/shared';
 import type { CSSProperties } from 'react';
 
-// SECURITY NOTE: Email HTML bodies must be sanitized before rendering to prevent XSS.
-// Import and use DOMPurify in production:
-//   import DOMPurify from 'dompurify';
-//   const safeHtml = DOMPurify.sanitize(email.bodyHtml, { USE_PROFILES: { html: true } });
-// This component currently renders text content only for safety.
+// Configure DOMPurify: allow safe HTML, strip dangerous elements
+// USE_PROFILES: { html: true } already strips all event handler attributes
+const PURIFY_CONFIG = {
+  USE_PROFILES: { html: true },
+  ADD_ATTR: ['target'],
+  FORBID_TAGS: ['style', 'form', 'input', 'script'],
+};
 
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+// Force all links to open in new tab
+DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+  if (node.tagName === 'A') {
+    node.setAttribute('target', '_blank');
+    node.setAttribute('rel', 'noopener noreferrer');
+  }
+});
+
+function separateQuotedContent(html: string): { main: string; quoted: string | null } {
+  // Gmail-style quoted blocks
+  const gmailQuoteMatch = html.match(/<div[^>]*class="gmail_quote"[^>]*>[\s\S]*$/i);
+  if (gmailQuoteMatch) {
+    return {
+      main: html.slice(0, gmailQuoteMatch.index!),
+      quoted: html.slice(gmailQuoteMatch.index!),
+    };
+  }
+
+  // Blockquote at the end
+  const blockquoteMatch = html.match(/<blockquote[^>]*>[\s\S]*$/i);
+  if (blockquoteMatch) {
+    return {
+      main: html.slice(0, blockquoteMatch.index!),
+      quoted: html.slice(blockquoteMatch.index!),
+    };
+  }
+
+  // "On ... wrote:" pattern
+  const onWroteMatch = html.match(/<(?:div|p|br)[^>]*>(?:\s|&nbsp;)*On .+? wrote:[\s\S]*$/i);
+  if (onWroteMatch) {
+    return {
+      main: html.slice(0, onWroteMatch.index!),
+      quoted: html.slice(onWroteMatch.index!),
+    };
+  }
+
+  return { main: html, quoted: null };
 }
 
+function separateQuotedText(text: string): { main: string; quoted: string | null } {
+  const lines = text.split('\n');
+
+  // Find "On ... wrote:" line
+  for (let i = 0; i < lines.length; i++) {
+    if (/^On .+? wrote:$/.test(lines[i].trim())) {
+      return {
+        main: lines.slice(0, i).join('\n').trimEnd(),
+        quoted: lines.slice(i).join('\n'),
+      };
+    }
+  }
+
+  // Find block of "> " prefixed lines (3+ consecutive)
+  let consecutiveQuoted = 0;
+  let quoteStartIndex = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].startsWith('> ') || lines[i] === '>') {
+      if (consecutiveQuoted === 0) quoteStartIndex = i;
+      consecutiveQuoted++;
+      if (consecutiveQuoted >= 3) {
+        return {
+          main: lines.slice(0, quoteStartIndex).join('\n').trimEnd(),
+          quoted: lines.slice(quoteStartIndex).join('\n'),
+        };
+      }
+    } else {
+      consecutiveQuoted = 0;
+      quoteStartIndex = -1;
+    }
+  }
+
+  return { main: text, quoted: null };
+}
+
+const textBodyStyle: CSSProperties = {
+  fontSize: 'var(--font-size-md)',
+  color: 'var(--color-text-primary)',
+  lineHeight: 'var(--line-height-normal)',
+  whiteSpace: 'pre-wrap',
+  fontFamily: 'var(--font-family)',
+  margin: 0,
+  overflowWrap: 'break-word',
+};
+
+const emailHtmlBodyStyle: CSSProperties = {
+  fontSize: 'var(--font-size-md)',
+  color: 'var(--color-text-primary)',
+  lineHeight: 'var(--line-height-normal)',
+  fontFamily: 'var(--font-family)',
+  overflowWrap: 'break-word',
+  wordBreak: 'break-word',
+};
+
+const quotedToggleStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  margin: 'var(--spacing-sm) 0',
+  padding: '2px var(--spacing-sm)',
+  fontSize: 'var(--font-size-sm)',
+  color: 'var(--color-text-tertiary)',
+  background: 'var(--color-bg-tertiary)',
+  border: '1px solid var(--color-border-primary)',
+  borderRadius: 'var(--radius-sm)',
+  cursor: 'pointer',
+  fontFamily: 'var(--font-family)',
+  letterSpacing: '1px',
+};
+
 function SafeEmailBody({ bodyHtml, bodyText }: { bodyHtml: string | null; bodyText: string | null }) {
-  if (bodyText) {
+  const [showQuoted, setShowQuoted] = useState(false);
+
+  // Prefer HTML rendering when available
+  if (bodyHtml) {
+    const sanitized = DOMPurify.sanitize(bodyHtml, PURIFY_CONFIG);
+    const { main, quoted } = separateQuotedContent(sanitized);
+
     return (
-      <pre
-        style={{
-          fontSize: 'var(--font-size-md)',
-          color: 'var(--color-text-primary)',
-          lineHeight: 'var(--line-height-normal)',
-          whiteSpace: 'pre-wrap',
-          fontFamily: 'var(--font-family)',
-          margin: 0,
-          overflowWrap: 'break-word',
-        }}
-      >
-        {bodyText}
-      </pre>
+      <div>
+        <div
+          className="email-html-body"
+          style={emailHtmlBodyStyle}
+          dangerouslySetInnerHTML={{ __html: main }}
+        />
+        {quoted && (
+          <>
+            <button onClick={() => setShowQuoted(!showQuoted)} style={quotedToggleStyle}>
+              {showQuoted ? 'Hide quoted text' : '\u2026'}
+            </button>
+            {showQuoted && (
+              <div
+                className="email-html-body"
+                style={{ ...emailHtmlBodyStyle, opacity: 0.7 }}
+                dangerouslySetInnerHTML={{ __html: quoted }}
+              />
+            )}
+          </>
+        )}
+      </div>
     );
   }
 
-  if (bodyHtml) {
-    // Strip HTML tags for safe text-only rendering until DOMPurify is wired up
-    const textContent = bodyHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  if (bodyText) {
+    const { main, quoted } = separateQuotedText(bodyText);
+
     return (
-      <pre
-        style={{
-          fontSize: 'var(--font-size-md)',
-          color: 'var(--color-text-primary)',
-          lineHeight: 'var(--line-height-normal)',
-          whiteSpace: 'pre-wrap',
-          fontFamily: 'var(--font-family)',
-          margin: 0,
-          overflowWrap: 'break-word',
-        }}
-      >
-        {textContent}
-      </pre>
+      <div>
+        <pre style={textBodyStyle}>{main}</pre>
+        {quoted && (
+          <>
+            <button onClick={() => setShowQuoted(!showQuoted)} style={quotedToggleStyle}>
+              {showQuoted ? 'Hide quoted text' : '\u2026'}
+            </button>
+            {showQuoted && (
+              <pre style={{ ...textBodyStyle, opacity: 0.7 }}>{quoted}</pre>
+            )}
+          </>
+        )}
+      </div>
     );
   }
 

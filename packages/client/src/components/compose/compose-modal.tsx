@@ -1,9 +1,88 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import { useRef, useState, useCallback } from 'react';
-import { X, Minus, Maximize2, Send, ChevronDown } from 'lucide-react';
+import { useRef, useState, useCallback, useEffect } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import TiptapLink from '@tiptap/extension-link';
+import Placeholder from '@tiptap/extension-placeholder';
+import Underline from '@tiptap/extension-underline';
+import {
+  X, Minus, Maximize2, Send, ChevronDown,
+  Bold, Italic, Underline as UnderlineIcon, Strikethrough,
+  List, ListOrdered, Link as LinkIcon, Code, Paperclip,
+} from 'lucide-react';
+import DOMPurify from 'dompurify';
 import { useEmailStore } from '../../stores/email-store';
+import { useAuthStore } from '../../stores/auth-store';
+import { useThread } from '../../hooks/use-threads';
 import { Button } from '../ui/button';
+import { formatBytes } from '../../lib/format';
+import { formatFullDate } from '@atlasmail/shared';
+import type { Email, EmailAddress } from '@atlasmail/shared';
 import type { CSSProperties } from 'react';
+import type { Editor } from '@tiptap/react';
+
+// ─── Compose helpers ──────────────────────────────────────────────────
+
+function addSubjectPrefix(subject: string | null, prefix: 'Re' | 'Fwd'): string {
+  const s = subject || '';
+  const cleaned = s.replace(/^((Re|Fwd):\s*)+/i, '');
+  return `${prefix}: ${cleaned}`;
+}
+
+function formatAddr(email: Email): string {
+  return email.fromName
+    ? `${email.fromName} <${email.fromAddress}>`
+    : email.fromAddress;
+}
+
+function formatAddressList(addresses: EmailAddress[]): string {
+  return addresses.map((a) => (a.name ? `${a.name} <${a.address}>` : a.address)).join(', ');
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br>');
+}
+
+function sanitizeBodyHtml(html: string): string {
+  return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+}
+
+function buildQuotedBody(email: Email): string {
+  const date = formatFullDate(email.receivedAt || email.internalDate);
+  const from = formatAddr(email);
+  const header = `<br><br><div style="border-left: 3px solid #e5e7eb; padding-left: 12px; color: #6b7280;">On ${date}, ${from} wrote:<br><br>`;
+
+  if (email.bodyHtml) {
+    return `${header}${sanitizeBodyHtml(email.bodyHtml)}</div>`;
+  }
+
+  return `${header}${escapeHtml(email.bodyText || '')}</div>`;
+}
+
+function buildForwardBody(email: Email): string {
+  const date = formatFullDate(email.receivedAt || email.internalDate);
+  const from = formatAddr(email);
+  const to = formatAddressList(email.toAddresses);
+
+  const header =
+    `<br><br>---------- Forwarded message ---------<br>` +
+    `From: ${from}<br>` +
+    `Date: ${date}<br>` +
+    `Subject: ${email.subject || '(no subject)'}<br>` +
+    `To: ${to}<br><br>`;
+
+  if (email.bodyHtml) {
+    return `${header}${sanitizeBodyHtml(email.bodyHtml)}`;
+  }
+
+  return `${header}${escapeHtml(email.bodyText || '')}`;
+}
+
+// ─── Recipient field ──────────────────────────────────────────────────
 
 interface ComposeField {
   label: string;
@@ -54,23 +133,270 @@ function RecipientField({ label, value, placeholder, onChange }: ComposeField) {
   );
 }
 
-// Safely clears a contenteditable element by removing all child nodes (avoids innerHTML XSS)
-function clearContentEditable(el: HTMLElement) {
-  while (el.firstChild) {
-    el.removeChild(el.firstChild);
-  }
+// ─── Format toolbar ───────────────────────────────────────────────────
+
+function ToolbarButton({
+  icon,
+  label,
+  isActive,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  isActive?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      aria-pressed={isActive}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 28,
+        height: 28,
+        border: 'none',
+        borderRadius: 'var(--radius-sm)',
+        background: isActive ? 'var(--color-surface-active)' : 'transparent',
+        color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
+        cursor: 'pointer',
+        transition: 'background var(--transition-fast), color var(--transition-fast)',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = 'var(--color-surface-hover)';
+        e.currentTarget.style.color = 'var(--color-text-primary)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = isActive ? 'var(--color-surface-active)' : 'transparent';
+        e.currentTarget.style.color = isActive ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)';
+      }}
+    >
+      {icon}
+    </button>
+  );
 }
 
+function FormatToolbar({ editor }: { editor: Editor | null }) {
+  if (!editor) return null;
+
+  const handleLinkToggle = () => {
+    if (editor.isActive('link')) {
+      editor.chain().focus().unsetLink().run();
+      return;
+    }
+    const url = window.prompt('Enter URL');
+    if (url) {
+      editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+    }
+  };
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '2px',
+        padding: 'var(--spacing-xs) var(--spacing-lg)',
+        borderBottom: '1px solid var(--color-border-secondary)',
+      }}
+    >
+      <ToolbarButton
+        icon={<Bold size={14} />}
+        label="Bold"
+        isActive={editor.isActive('bold')}
+        onClick={() => editor.chain().focus().toggleBold().run()}
+      />
+      <ToolbarButton
+        icon={<Italic size={14} />}
+        label="Italic"
+        isActive={editor.isActive('italic')}
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+      />
+      <ToolbarButton
+        icon={<UnderlineIcon size={14} />}
+        label="Underline"
+        isActive={editor.isActive('underline')}
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
+      />
+      <ToolbarButton
+        icon={<Strikethrough size={14} />}
+        label="Strikethrough"
+        isActive={editor.isActive('strike')}
+        onClick={() => editor.chain().focus().toggleStrike().run()}
+      />
+
+      <div
+        style={{
+          width: 1,
+          height: 16,
+          background: 'var(--color-border-primary)',
+          margin: '0 var(--spacing-xs)',
+        }}
+      />
+
+      <ToolbarButton
+        icon={<List size={14} />}
+        label="Bullet list"
+        isActive={editor.isActive('bulletList')}
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+      />
+      <ToolbarButton
+        icon={<ListOrdered size={14} />}
+        label="Ordered list"
+        isActive={editor.isActive('orderedList')}
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+      />
+
+      <div
+        style={{
+          width: 1,
+          height: 16,
+          background: 'var(--color-border-primary)',
+          margin: '0 var(--spacing-xs)',
+        }}
+      />
+
+      <ToolbarButton
+        icon={<LinkIcon size={14} />}
+        label="Insert link"
+        isActive={editor.isActive('link')}
+        onClick={handleLinkToggle}
+      />
+      <ToolbarButton
+        icon={<Code size={14} />}
+        label="Inline code"
+        isActive={editor.isActive('code')}
+        onClick={() => editor.chain().focus().toggleCode().run()}
+      />
+    </div>
+  );
+}
+
+// ─── Compose modal ────────────────────────────────────────────────────
+
 export function ComposeModal() {
-  const { composeMode, closeCompose } = useEmailStore();
+  const { composeMode, composeThreadId, closeCompose } = useEmailStore();
+  const account = useAuthStore((s) => s.account);
   const isOpen = composeMode !== null;
+
+  const { data: thread } = useThread(composeThreadId);
 
   const [to, setTo] = useState('');
   const [cc, setCc] = useState('');
   const [bcc, setBcc] = useState('');
   const [subject, setSubject] = useState('');
   const [showCcBcc, setShowCcBcc] = useState(false);
-  const bodyRef = useRef<HTMLDivElement>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // We use a ref to hold the pending content so the editor can pick it up once ready
+  const pendingContentRef = useRef<string | null>(null);
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: false,
+        codeBlock: false,
+      }),
+      Underline,
+      TiptapLink.configure({
+        openOnClick: false,
+        autolink: true,
+        HTMLAttributes: {
+          style: 'color: var(--color-text-link); text-decoration: underline;',
+        },
+      }),
+      Placeholder.configure({
+        placeholder: 'Write your email...',
+      }),
+    ],
+    editorProps: {
+      attributes: {
+        style: [
+          'outline: none',
+          'color: var(--color-text-primary)',
+          'font-size: var(--font-size-md)',
+          'line-height: var(--line-height-normal)',
+          'font-family: var(--font-family)',
+          'min-height: 180px',
+          'padding: 0',
+        ].join('; '),
+      },
+    },
+    content: '',
+    onCreate: ({ editor: e }) => {
+      // If content was queued before the editor was ready, apply it now
+      if (pendingContentRef.current) {
+        e.commands.setContent(pendingContentRef.current);
+        e.commands.focus('start');
+        pendingContentRef.current = null;
+      }
+    },
+  });
+
+  // Prefill fields when compose opens with a thread context
+  // editor is intentionally excluded from deps — we use pendingContentRef for the async case
+  useEffect(() => {
+    if (!composeMode || composeMode === 'new' || !thread?.emails?.length) {
+      return;
+    }
+
+    // Reset all fields before repopulating
+    setTo('');
+    setCc('');
+    setSubject('');
+    setShowCcBcc(false);
+
+    const lastEmail = thread.emails[thread.emails.length - 1];
+    const myEmail = account?.email || '';
+
+    const applyBody = (body: string) => {
+      pendingContentRef.current = body;
+      if (editor) {
+        editor.commands.setContent(body);
+        editor.commands.focus('start');
+        pendingContentRef.current = null;
+      }
+    };
+
+    if (composeMode === 'reply') {
+      const replyAddr = lastEmail.replyTo || lastEmail.fromAddress;
+      if (replyAddr !== myEmail) {
+        setTo(replyAddr);
+      }
+      setSubject(addSubjectPrefix(thread.subject, 'Re'));
+      applyBody(buildQuotedBody(lastEmail));
+    }
+
+    if (composeMode === 'reply_all') {
+      const replyAddr = lastEmail.replyTo || lastEmail.fromAddress;
+      if (replyAddr !== myEmail) {
+        setTo(replyAddr);
+      }
+
+      const allRecipients = [...lastEmail.toAddresses, ...lastEmail.ccAddresses].filter(
+        (a) => a.address !== myEmail && a.address !== replyAddr,
+      );
+
+      if (allRecipients.length > 0) {
+        setCc(formatAddressList(allRecipients));
+        setShowCcBcc(true);
+      }
+
+      setSubject(addSubjectPrefix(thread.subject, 'Re'));
+      applyBody(buildQuotedBody(lastEmail));
+    }
+
+    if (composeMode === 'forward') {
+      setSubject(addSubjectPrefix(thread.subject, 'Fwd'));
+      applyBody(buildForwardBody(lastEmail));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [composeMode, thread, account?.email]);
 
   const handleClose = useCallback(() => {
     closeCompose();
@@ -79,25 +405,93 @@ export function ComposeModal() {
     setBcc('');
     setSubject('');
     setShowCcBcc(false);
-    if (bodyRef.current) clearContentEditable(bodyRef.current);
-  }, [closeCompose]);
+    setAttachments([]);
+    setDragActive(false);
+    pendingContentRef.current = null;
+    editor?.commands.clearContent();
+  }, [closeCompose, editor]);
 
   const handleSend = useCallback(() => {
     // TODO: wire up send mutation
     handleClose();
   }, [handleClose]);
 
+  // Handle Cmd+Enter to send from anywhere in the modal
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleSend();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, handleSend]);
+
+  // File attachment handlers
+  const handleFilesAdded = useCallback((files: FileList | File[]) => {
+    setAttachments((prev) => [...prev, ...Array.from(files)]);
+  }, []);
+
+  const handleRemoveAttachment = useCallback((index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const handleFileInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files?.length) {
+        handleFilesAdded(e.target.files);
+      }
+      e.target.value = '';
+    },
+    [handleFilesAdded],
+  );
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragActive(false);
+      if (e.dataTransfer.files?.length) {
+        handleFilesAdded(e.dataTransfer.files);
+      }
+    },
+    [handleFilesAdded],
+  );
+
   const getTitle = () => {
     switch (composeMode) {
-      case 'reply': return 'Reply';
-      case 'reply_all': return 'Reply all';
-      case 'forward': return 'Forward';
-      default: return 'New message';
+      case 'reply':
+        return 'Reply';
+      case 'reply_all':
+        return 'Reply all';
+      case 'forward':
+        return 'Forward';
+      default:
+        return 'New message';
     }
   };
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) handleClose();
+      }}
+    >
       <Dialog.Portal>
         <Dialog.Overlay
           style={{
@@ -155,11 +549,7 @@ export function ComposeModal() {
               <button aria-label="Expand" style={windowControlStyle}>
                 <Maximize2 size={13} />
               </button>
-              <button
-                aria-label="Close and discard"
-                onClick={handleClose}
-                style={windowControlStyle}
-              >
+              <button aria-label="Close and discard" onClick={handleClose} style={windowControlStyle}>
                 <X size={13} />
               </button>
             </div>
@@ -195,7 +585,12 @@ export function ComposeModal() {
             {showCcBcc && (
               <>
                 <RecipientField label="Cc" value={cc} onChange={setCc} placeholder="CC recipients" />
-                <RecipientField label="Bcc" value={bcc} onChange={setBcc} placeholder="BCC recipients" />
+                <RecipientField
+                  label="Bcc"
+                  value={bcc}
+                  onChange={setBcc}
+                  placeholder="BCC recipients"
+                />
               </>
             )}
             <div
@@ -224,27 +619,125 @@ export function ComposeModal() {
             </div>
           </div>
 
-          {/* Composable body — contenteditable for rich text editing */}
+          {/* Format toolbar */}
+          <FormatToolbar editor={editor} />
+
+          {/* Editor with drag-and-drop */}
           <div
-            ref={bodyRef}
-            role="textbox"
-            aria-label="Email body"
-            aria-multiline="true"
-            contentEditable
-            suppressContentEditableWarning
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
             style={{
               flex: 1,
               padding: 'var(--spacing-lg)',
-              outline: 'none',
-              color: 'var(--color-text-primary)',
-              fontSize: 'var(--font-size-md)',
-              lineHeight: 'var(--line-height-normal)',
-              fontFamily: 'var(--font-family)',
               overflowY: 'auto',
-              minHeight: 180,
               cursor: 'text',
+              position: 'relative',
+              border: dragActive ? '2px dashed var(--color-accent-primary)' : '2px dashed transparent',
+              borderRadius: 'var(--radius-md)',
+              transition: 'border-color var(--transition-fast)',
             }}
-          />
+            onClick={() => editor?.commands.focus()}
+          >
+            <EditorContent editor={editor} />
+            {dragActive && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(0, 0, 0, 0.4)',
+                  borderRadius: 'var(--radius-md)',
+                  color: '#fff',
+                  fontSize: 'var(--font-size-md)',
+                  fontWeight: 'var(--font-weight-medium)' as CSSProperties['fontWeight'],
+                  pointerEvents: 'none',
+                }}
+              >
+                Drop files to attach
+              </div>
+            )}
+          </div>
+
+          {/* Attachment chips */}
+          {attachments.length > 0 && (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 'var(--spacing-xs)',
+                padding: 'var(--spacing-sm) var(--spacing-lg)',
+                borderTop: '1px solid var(--color-border-secondary)',
+              }}
+            >
+              {attachments.map((file, index) => (
+                <div
+                  key={`${file.name}-${index}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--spacing-xs)',
+                    padding: '4px var(--spacing-sm)',
+                    background: 'var(--color-bg-tertiary)',
+                    border: '1px solid var(--color-border-primary)',
+                    borderRadius: 'var(--radius-md)',
+                    fontSize: 'var(--font-size-sm)',
+                    color: 'var(--color-text-primary)',
+                    maxWidth: 200,
+                  }}
+                >
+                  <Paperclip size={12} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
+                  <span
+                    style={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {file.name}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 'var(--font-size-xs)',
+                      color: 'var(--color-text-tertiary)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {formatBytes(file.size)}
+                  </span>
+                  <button
+                    onClick={() => handleRemoveAttachment(index)}
+                    aria-label={`Remove ${file.name}`}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 16,
+                      height: 16,
+                      border: 'none',
+                      borderRadius: 'var(--radius-full)',
+                      background: 'transparent',
+                      color: 'var(--color-text-tertiary)',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'var(--color-surface-hover)';
+                      e.currentTarget.style.color = 'var(--color-error)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = 'var(--color-text-tertiary)';
+                    }}
+                  >
+                    <X size={10} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Bottom bar */}
           <div
@@ -258,14 +751,46 @@ export function ComposeModal() {
               flexShrink: 0,
             }}
           >
-            <Button
-              variant="primary"
-              size="md"
-              icon={<Send size={14} />}
-              onClick={handleSend}
-            >
-              Send
-            </Button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+              <Button variant="primary" size="md" icon={<Send size={14} />} onClick={handleSend}>
+                Send
+              </Button>
+
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Attach files"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 34,
+                  height: 34,
+                  border: 'none',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'transparent',
+                  color: 'var(--color-text-tertiary)',
+                  cursor: 'pointer',
+                  transition: 'background var(--transition-fast), color var(--transition-fast)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'var(--color-surface-hover)';
+                  e.currentTarget.style.color = 'var(--color-text-primary)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = 'var(--color-text-tertiary)';
+                }}
+              >
+                <Paperclip size={16} />
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                onChange={handleFileInputChange}
+                style={{ display: 'none' }}
+              />
+            </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
               <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>

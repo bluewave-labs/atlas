@@ -84,6 +84,27 @@ AtlasMail splits your inbox into four categories:
 We're always improving. Hit reply and let us know what you think.
 
 — The AtlasMail Team`,
+    bodyHtml: `<div style="font-family: sans-serif;">
+<p>Hey there! 👋</p>
+<p>Welcome to <strong>AtlasMail</strong>. We've built this to be the fastest, most beautiful email client you'll ever use.</p>
+<p>Here are a few things to try:</p>
+<ul>
+  <li>Press <code>J</code> and <code>K</code> to navigate up and down your inbox</li>
+  <li>Press <code>E</code> to archive a conversation instantly</li>
+  <li>Press <code>C</code> to compose a new email</li>
+  <li>Press <code>⌘K</code> to open the command palette</li>
+</ul>
+<p>AtlasMail splits your inbox into four categories:</p>
+<ol>
+  <li><strong>Important</strong> — emails from real people you know</li>
+  <li><strong>Other</strong> — everything else that matters</li>
+  <li><strong>Newsletters</strong> — subscriptions and mailing lists</li>
+  <li><strong>Notifications</strong> — automated alerts and updates</li>
+</ol>
+<hr>
+<p>We're always improving. Hit reply and let us know what you think.</p>
+<p>— The <em>AtlasMail</em> Team</p>
+</div>`,
   }),
 ];
 
@@ -264,6 +285,34 @@ See the full list: https://producthunt.com/weekly
 
 You're receiving this because you subscribed to Product Hunt Weekly.
 Unsubscribe: https://producthunt.com/unsubscribe`,
+    bodyHtml: `<div style="font-family: sans-serif; max-width: 600px;">
+<h2>🚀 This week's top products</h2>
+<table style="width: 100%; border-collapse: collapse;">
+  <tr style="border-bottom: 1px solid #eee;">
+    <td style="padding: 12px 8px; font-weight: bold; color: #e5532d;">1.</td>
+    <td style="padding: 12px 8px;"><strong>Raycast AI</strong><br><span style="color: #666;">An AI-powered productivity tool that integrates with your workflow</span></td>
+  </tr>
+  <tr style="border-bottom: 1px solid #eee;">
+    <td style="padding: 12px 8px; font-weight: bold; color: #e5532d;">2.</td>
+    <td style="padding: 12px 8px;"><strong>Linear 2.0</strong><br><span style="color: #666;">The issue tracker, redesigned from the ground up</span></td>
+  </tr>
+  <tr style="border-bottom: 1px solid #eee;">
+    <td style="padding: 12px 8px; font-weight: bold; color: #e5532d;">3.</td>
+    <td style="padding: 12px 8px;"><strong>Arc Browser for Teams</strong><br><span style="color: #666;">Shared spaces and collaborative browsing for teams</span></td>
+  </tr>
+  <tr style="border-bottom: 1px solid #eee;">
+    <td style="padding: 12px 8px; font-weight: bold; color: #e5532d;">4.</td>
+    <td style="padding: 12px 8px;"><strong>Supabase Edge Functions</strong><br><span style="color: #666;">Deploy serverless functions globally with Deno</span></td>
+  </tr>
+  <tr>
+    <td style="padding: 12px 8px; font-weight: bold; color: #e5532d;">5.</td>
+    <td style="padding: 12px 8px;"><strong>Framer Motion 12</strong><br><span style="color: #666;">Declarative animations for React, now with springs v2</span></td>
+  </tr>
+</table>
+<p style="margin-top: 16px;"><a href="https://producthunt.com/weekly">See the full list →</a></p>
+<hr>
+<p style="color: #999; font-size: 12px;">You're receiving this because you subscribed to Product Hunt Weekly. <a href="https://producthunt.com/unsubscribe">Unsubscribe</a></p>
+</div>`,
   }),
 ];
 
