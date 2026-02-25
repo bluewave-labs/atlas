@@ -535,25 +535,28 @@ export function EmailListPane() {
     }
   }, [cursorIndex]);
 
-  // Auto-select first thread when switching categories or mailboxes
+  // Auto-select first thread when switching categories, mailboxes, or label filters
   const prevCategoryRef = useRef(activeCategory);
   const prevMailboxRef = useRef(activeMailbox);
+  const prevFilterByLabelRef = useRef(filterByLabel);
   useEffect(() => {
     const categoryChanged = prevCategoryRef.current !== activeCategory;
     const mailboxChanged = prevMailboxRef.current !== activeMailbox;
+    const labelChanged = prevFilterByLabelRef.current !== filterByLabel;
     prevCategoryRef.current = activeCategory;
     prevMailboxRef.current = activeMailbox;
+    prevFilterByLabelRef.current = filterByLabel;
 
     if (categoryChanged || mailboxChanged) {
       setFilterByLabel(null);
       pendingNavigation.current = true;
     }
 
-    if ((categoryChanged || mailboxChanged) && displayThreads.length > 0) {
+    if ((categoryChanged || mailboxChanged || labelChanged) && displayThreads.length > 0) {
       setActiveThread(displayThreads[0].id);
       setCursorIndex(0);
     }
-  }, [activeCategory, activeMailbox, displayThreads, setActiveThread, setCursorIndex, setFilterByLabel]);
+  }, [activeCategory, activeMailbox, filterByLabel, displayThreads, setActiveThread, setCursorIndex, setFilterByLabel]);
 
   // Listen for the cursor-selection event dispatched by inbox.tsx when `x` is pressed
   useEffect(() => {
