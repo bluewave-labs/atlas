@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useCallback, useRef } from 'react';
+import { useEffect, useMemo, useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -6,7 +6,11 @@ import {
   ChevronRight,
   RefreshCw,
   Plus,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Search,
 } from 'lucide-react';
+import { useMediaQuery } from '../hooks/use-media-query';
 import '../styles/calendar.css';
 import { useCalendars, useCalendarEvents, useSyncCalendar, useToggleCalendar, useUpdateCalendarEvent, useCreateCalendarEvent, useDeleteCalendarEvent } from '../hooks/use-calendar';
 import { useCalendarStore } from '../stores/calendar-store';
@@ -236,6 +240,22 @@ export function CalendarPage() {
   }, [syncCalendar.isPending, syncCalendar.isSuccess, syncCalendar.isError, addToast]);
 
   const isDesktop = !!('atlasDesktop' in window);
+  const isNarrow = useMediaQuery('(max-width: 900px)');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const showSidebar = !sidebarCollapsed && !isNarrow;
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredEvents = useMemo(() => {
+    if (!events) return [];
+    if (!searchQuery.trim()) return events;
+    const q = searchQuery.trim().toLowerCase();
+    return events.filter(
+      (ev) =>
+        ev.summary?.toLowerCase().includes(q) ||
+        ev.location?.toLowerCase().includes(q) ||
+        ev.description?.toLowerCase().includes(q),
+    );
+  }, [events, searchQuery]);
 
   return (
     <div
@@ -270,6 +290,17 @@ export function CalendarPage() {
         >
           <ArrowLeft size={16} />
         </button>
+
+        {/* Sidebar toggle */}
+        {!isNarrow && (
+          <button
+            onClick={() => setSidebarCollapsed((v) => !v)}
+            title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+            style={iconBtnStyle}
+          >
+            {sidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+          </button>
+        )}
 
         <div style={{ width: 1, height: 20, background: 'var(--color-border-primary)', margin: '0 4px' }} />
 
@@ -332,6 +363,43 @@ export function CalendarPage() {
 
         <div style={{ flex: 1 }} />
 
+        {/* Search */}
+        <div
+          style={{
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <Search
+            size={13}
+            style={{
+              position: 'absolute',
+              left: 8,
+              color: 'var(--color-text-tertiary)',
+              pointerEvents: 'none',
+            }}
+          />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search events"
+            style={{
+              width: isNarrow ? 120 : 180,
+              height: 28,
+              paddingLeft: 28,
+              paddingRight: 8,
+              border: '1px solid var(--color-border-primary)',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--color-bg-primary)',
+              color: 'var(--color-text-primary)',
+              fontSize: 'var(--font-size-xs)',
+              fontFamily: 'var(--font-family)',
+              outline: 'none',
+            }}
+          />
+        </div>
+
         {/* Sync button */}
         <button
           onClick={() => syncCalendar.mutate()}
@@ -378,6 +446,7 @@ export function CalendarPage() {
       {/* Main content: sidebar + week grid */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* Left sidebar */}
+        {showSidebar && (
         <div
           style={{
             width: 210,
@@ -480,12 +549,13 @@ export function CalendarPage() {
             </label>
           </div>
         </div>
+        )}
 
         {/* Week grid */}
         <div style={{ flex: 1, overflow: 'hidden' }}>
           <WeekGrid
             weekStart={weekStart}
-            events={events || []}
+            events={filteredEvents}
             selectedCalendarIds={selectedCalendarIds}
             calendarColorMap={calendarColorMap}
             onEventClick={openEditModal}
@@ -493,7 +563,7 @@ export function CalendarPage() {
             onEventUpdate={handleEventUpdate}
             onQuickCreate={handleQuickCreate}
             onEventDelete={handleEventDelete}
-            dayCount={view === 'day' ? 1 : 7}
+            dayCount={isNarrow ? 1 : view === 'day' ? 1 : 7}
             weekStartsOnMonday={weekStartsOnMonday}
           />
         </div>
