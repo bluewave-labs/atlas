@@ -128,9 +128,15 @@ export function EmailListItem({
             <span
               style={{
                 marginLeft: 4,
-                fontSize: 'var(--font-size-xs)',
-                color: 'var(--color-text-tertiary)',
-                fontWeight: 'var(--font-weight-normal)' as CSSProperties['fontWeight'],
+                fontSize: '10px',
+                color: 'var(--color-text-secondary)',
+                fontWeight: 500,
+                background: 'var(--color-bg-tertiary)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '0 4px',
+                lineHeight: '16px',
+                display: 'inline-block',
+                verticalAlign: 'middle',
               }}
             >
               {thread.messageCount}
