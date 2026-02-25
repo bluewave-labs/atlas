@@ -29,7 +29,9 @@
     "typescript": "^5.6.0"
   },
   "dependencies": {
+    "@preact/signals": "^2.8.1",
     "@tiptap/extension-link": "^3.20.0",
-    "@tiptap/extension-underline": "^3.20.0"
+    "@tiptap/extension-underline": "^3.20.0",
+    "temporal-polyfill": "^0.3.0"
   }
 }

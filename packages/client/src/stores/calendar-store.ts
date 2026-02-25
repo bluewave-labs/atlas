@@ -20,10 +20,15 @@ interface CalendarStoreState {
   closeEventModal: () => void;
 }
 
-const today = new Date().toISOString().slice(0, 10);
+function toYMD(date: Date = new Date()): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 
 export const useCalendarStore = create<CalendarStoreState>((set) => ({
-  selectedDate: today,
+  selectedDate: toYMD(),
   view: 'week',
   eventModal: {
     open: false,
