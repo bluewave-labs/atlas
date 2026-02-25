@@ -1,6 +1,6 @@
 import type { ReactNode, CSSProperties } from 'react';
 import type { EmailCategory } from '@atlasmail/shared';
-import { CHIP_RADIUS } from './chip';
+import { Chip } from './chip';
 
 // Category-specific badge
 interface CategoryBadgeProps {
@@ -27,24 +27,16 @@ export function CategoryBadge({ category }: CategoryBadgeProps) {
   const color = CATEGORY_COLORS[category];
 
   return (
-    <span
+    <Chip
+      color={color}
+      height={18}
       style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        height: '18px',
         padding: '0 var(--spacing-xs)',
-        borderRadius: CHIP_RADIUS,
-        fontSize: 'var(--font-size-xs)',
-        fontFamily: 'var(--font-family)',
         fontWeight: 'var(--font-weight-medium)' as CSSProperties['fontWeight'],
-        background: `${color}20`,
-        color,
-        border: `1px solid ${color}40`,
-        whiteSpace: 'nowrap',
       }}
     >
       {CATEGORY_LABELS[category]}
-    </span>
+    </Chip>
   );
 }
 
@@ -54,51 +46,33 @@ interface BadgeProps {
   children: ReactNode;
 }
 
-const VARIANT_STYLES: Record<NonNullable<BadgeProps['variant']>, CSSProperties> = {
-  default: {
-    background: 'var(--color-bg-elevated)',
-    color: 'var(--color-text-secondary)',
-    border: '1px solid var(--color-border-primary)',
-  },
-  primary: {
-    background: 'rgba(59, 130, 246, 0.15)',
-    color: 'var(--color-accent-primary)',
-    border: '1px solid rgba(59, 130, 246, 0.3)',
-  },
-  success: {
-    background: 'rgba(16, 185, 129, 0.15)',
-    color: 'var(--color-success)',
-    border: '1px solid rgba(16, 185, 129, 0.3)',
-  },
-  warning: {
-    background: 'rgba(245, 158, 11, 0.15)',
-    color: 'var(--color-warning)',
-    border: '1px solid rgba(245, 158, 11, 0.3)',
-  },
-  error: {
-    background: 'rgba(239, 68, 68, 0.15)',
-    color: 'var(--color-error)',
-    border: '1px solid rgba(239, 68, 68, 0.3)',
-  },
+const VARIANT_COLORS: Record<NonNullable<BadgeProps['variant']>, string | undefined> = {
+  default: undefined,
+  primary: 'var(--color-accent-primary)',
+  success: 'var(--color-success)',
+  warning: 'var(--color-warning)',
+  error: 'var(--color-error)',
 };
 
 export function Badge({ variant = 'default', children }: BadgeProps) {
+  const color = VARIANT_COLORS[variant];
+
   return (
-    <span
+    <Chip
+      color={color}
+      height={20}
       style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        height: '20px',
         padding: '0 var(--spacing-xs)',
-        borderRadius: CHIP_RADIUS,
-        fontSize: 'var(--font-size-xs)',
-        fontFamily: 'var(--font-family)',
         fontWeight: 'var(--font-weight-medium)' as CSSProperties['fontWeight'],
-        whiteSpace: 'nowrap',
-        ...VARIANT_STYLES[variant],
+        // Default variant uses elevated bg instead of color-mix
+        ...(variant === 'default' && {
+          background: 'var(--color-bg-elevated)',
+          color: 'var(--color-text-secondary)',
+          borderColor: 'var(--color-border-primary)',
+        }),
       }}
     >
       {children}
-    </span>
+    </Chip>
   );
 }

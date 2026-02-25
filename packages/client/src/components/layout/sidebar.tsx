@@ -20,6 +20,7 @@ import {
   ChevronLeft,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Chip } from '../ui/chip';
 import { useEmailStore } from '../../stores/email-store';
 import { useSettingsStore } from '../../stores/settings-store';
 import { useUIStore } from '../../stores/ui-store';
@@ -239,9 +240,20 @@ function MailboxNavItem({
       {totalCount > 0 && (
         <span
           style={{
-            fontSize: 'var(--font-size-xs)',
-            color: 'var(--color-text-tertiary)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: 18,
+            height: 18,
+            padding: '0 5px',
+            borderRadius: 9,
+            background: 'var(--color-accent-subtle)',
+            color: 'var(--color-accent-primary)',
+            fontSize: 10,
+            fontWeight: 600,
+            lineHeight: 1,
             flexShrink: 0,
+            boxSizing: 'border-box' as CSSProperties['boxSizing'],
           }}
         >
           {totalCount > 999 ? '999+' : totalCount}
@@ -779,33 +791,24 @@ export function Sidebar() {
               Labels
             </span>
             {filterByLabel && (
-              <button
+              <Chip
                 onClick={() => {
                   setFilterByLabel(null);
                   setLabelsOpen(false);
                 }}
                 aria-label="Clear label filter"
+                active
+                height={26}
                 style={{
-                  fontSize: 'var(--font-size-xs)',
-                  color: 'var(--color-accent-primary)',
-                  background: 'var(--color-accent-subtle)',
                   border: 'none',
-                  borderRadius: 'var(--radius-full)',
-                  padding: '4px 10px',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-family)',
+                  background: 'var(--color-accent-subtle)',
+                  color: 'var(--color-accent-primary)',
                   fontWeight: 500,
-                  transition: 'background var(--transition-normal)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'var(--color-accent-subtle-hover)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'var(--color-accent-subtle)';
+                  padding: '0 10px',
                 }}
               >
                 Clear filter
-              </button>
+              </Chip>
             )}
           </div>
 

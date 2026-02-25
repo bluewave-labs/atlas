@@ -87,6 +87,8 @@ export function EmailListItem({
           boxSizing: 'border-box',
           transition: 'background var(--transition-normal)',
           userSelect: 'none',
+          position: 'relative',
+          zIndex: 0,
         }}
       >
         {/* Unread indicator / Checkbox */}
@@ -211,7 +213,7 @@ export function EmailListItem({
               top: 0,
               display: 'flex',
               alignItems: 'center',
-              gap: '1px',
+              gap: 'var(--spacing-xs)',
               opacity: isHovered ? 1 : 0,
               pointerEvents: isHovered ? 'auto' : 'none',
               transition: 'opacity var(--transition-normal)',
@@ -279,6 +281,8 @@ export function EmailListItem({
         boxSizing: 'border-box',
         transition: 'background var(--transition-normal)',
         userSelect: 'none',
+        position: 'relative',
+        zIndex: 0,
       }}
     >
       {/* Unread indicator / Checkbox */}
@@ -364,7 +368,7 @@ export function EmailListItem({
                 top: 0,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '2px',
+                gap: 'var(--spacing-xs)',
                 opacity: isHovered ? 1 : 0,
                 pointerEvents: isHovered ? 'auto' : 'none',
                 transition: 'opacity var(--transition-normal)',

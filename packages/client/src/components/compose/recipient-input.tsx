@@ -6,9 +6,8 @@ import {
   type KeyboardEvent,
   type CSSProperties,
 } from 'react';
-import { X } from 'lucide-react';
 import { MOCK_CONTACTS, type Recipient } from '../../lib/mock-contacts';
-import { CHIP_RADIUS } from '../ui/chip';
+import { Chip } from '../ui/chip';
 
 // ─── Helpers ──────────────────────────────────────────────────────────
 
@@ -40,28 +39,15 @@ interface RecipientChipProps {
 }
 
 function RecipientChip({ recipient, onRemove }: RecipientChipProps) {
-  const [removeHovered, setRemoveHovered] = useState(false);
   const label = recipient.name || recipient.address;
 
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '3px',
-        height: 24,
-        padding: '0 6px 0 8px',
-        background: 'var(--color-bg-tertiary)',
-        border: '1px solid var(--color-border-primary)',
-        borderRadius: CHIP_RADIUS,
-        fontSize: 'var(--font-size-sm)',
-        color: 'var(--color-text-primary)',
-        fontFamily: 'var(--font-family)',
-        whiteSpace: 'nowrap',
-        maxWidth: 200,
-        flexShrink: 0,
-      }}
+    <Chip
+      onRemove={onRemove}
+      height={24}
       title={`${label} <${recipient.address}>`}
+      aria-label={`Remove ${label}`}
+      style={{ maxWidth: 200, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)' }}
     >
       <span
         style={{
@@ -73,31 +59,7 @@ function RecipientChip({ recipient, onRemove }: RecipientChipProps) {
       >
         {label}
       </span>
-      <button
-        type="button"
-        onClick={onRemove}
-        onMouseEnter={() => setRemoveHovered(true)}
-        onMouseLeave={() => setRemoveHovered(false)}
-        aria-label={`Remove ${label}`}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 14,
-          height: 14,
-          border: 'none',
-          borderRadius: CHIP_RADIUS,
-          background: removeHovered ? 'var(--color-surface-active)' : 'transparent',
-          color: removeHovered ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
-          cursor: 'pointer',
-          padding: 0,
-          flexShrink: 0,
-          transition: 'background var(--transition-normal), color var(--transition-normal)',
-        }}
-      >
-        <X size={9} strokeWidth={2.5} />
-      </button>
-    </span>
+    </Chip>
   );
 }
 

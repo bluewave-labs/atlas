@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api-client';
 import { queryKeys } from '../config/query-keys';
@@ -101,6 +101,34 @@ export function useMailboxThreads(mailbox: string, category?: string, gmailLabel
     [infiniteQuery.data],
   );
 
+  // #6 — Prefetch exactly one page ahead so scrolling is instant.
+  // Track which page count we already prefetched for to avoid a recursive loop.
+  const prefetchedForRef = useRef(0);
+
+  // Reset prefetch tracking when mailbox/category changes (query key changes)
+  useEffect(() => {
+    prefetchedForRef.current = 0;
+  }, [mailbox, category, gmailLabel]);
+
+  useEffect(() => {
+    const pageCount = infiniteQuery.data?.pages.length ?? 0;
+    if (
+      !isDrafts && !USE_MOCK &&
+      infiniteQuery.hasNextPage &&
+      !infiniteQuery.isFetchingNextPage &&
+      pageCount > 0 &&
+      prefetchedForRef.current < pageCount
+    ) {
+      prefetchedForRef.current = pageCount;
+      const timer = setTimeout(() => {
+        if (infiniteQuery.hasNextPage && !infiniteQuery.isFetchingNextPage) {
+          infiniteQuery.fetchNextPage();
+        }
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [infiniteQuery.data?.pages.length, infiniteQuery.hasNextPage, infiniteQuery.isFetchingNextPage, isDrafts]);
+
   return {
     data,
     isLoading: infiniteQuery.isLoading,
@@ -123,6 +151,29 @@ export function useThread(id: string | null) {
   });
 }
 
+// #5 — Selective invalidation: only invalidate affected mailbox keys + counts
+function invalidateForArchive(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: queryKeys.threads.counts });
+  // Invalidate all mailbox lists since archive affects inbox → archive
+  queryClient.invalidateQueries({ queryKey: ['threads', 'mailbox'] });
+}
+
+function invalidateForTrash(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: queryKeys.threads.counts });
+  queryClient.invalidateQueries({ queryKey: ['threads', 'mailbox'] });
+}
+
+function invalidateForStar(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: queryKeys.threads.counts });
+  // Star only affects the current list and the starred mailbox
+  queryClient.invalidateQueries({ queryKey: queryKeys.threads.mailbox('starred') });
+}
+
+function invalidateForReadStatus(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: queryKeys.threads.counts });
+  // Read/unread changes badge counts but threads stay in the same list
+}
+
 export function useArchiveThread() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -131,7 +182,7 @@ export function useArchiveThread() {
       await api.post(`/threads/${threadId}/archive`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.threads.all });
+      invalidateForArchive(queryClient);
     },
   });
 }
@@ -144,7 +195,7 @@ export function useTrashThread() {
       await api.post(`/threads/${threadId}/trash`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.threads.all });
+      invalidateForTrash(queryClient);
     },
   });
 }
@@ -357,7 +408,7 @@ export function useToggleStar() {
     },
     onSettled: () => {
       if (!USE_MOCK) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.threads.all });
+        invalidateForStar(queryClient);
       }
     },
   });
@@ -371,7 +422,7 @@ export function useSnoozeThread() {
       await api.post(`/threads/${threadId}/snooze`, { snoozeUntil });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.threads.all });
+      invalidateForArchive(queryClient);
     },
   });
 }
@@ -397,7 +448,8 @@ export function useSendEmail() {
       await api.post('/threads/send', payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.threads.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.threads.counts });
+      queryClient.invalidateQueries({ queryKey: queryKeys.threads.mailbox('sent') });
       addToast({ type: 'success', message: i18n.t('toast.messageSent'), duration: 3000 });
     },
     onError: () => {
@@ -441,7 +493,7 @@ export function useMarkReadUnread() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.threads.all });
+      invalidateForReadStatus(queryClient);
     },
   });
 }
@@ -454,7 +506,8 @@ export function useSpamThread() {
       await api.post(`/threads/${threadId}/spam`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.threads.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.threads.counts });
+      queryClient.invalidateQueries({ queryKey: ['threads', 'mailbox'] });
     },
   });
 }
@@ -470,7 +523,8 @@ export function useBlockSender() {
       await api.post('/block-sender', { threadId, senderEmail });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.threads.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.threads.counts });
+      queryClient.invalidateQueries({ queryKey: ['threads', 'mailbox'] });
     },
   });
 }

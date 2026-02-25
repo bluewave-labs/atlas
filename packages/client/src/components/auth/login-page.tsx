@@ -178,18 +178,6 @@ export function LoginPage() {
           </button>
         </div>
 
-        {/* Footer note */}
-        <p
-          style={{
-            margin: 0,
-            fontSize: 'var(--font-size-xs)',
-            color: 'var(--color-text-tertiary)',
-            textAlign: 'center',
-            lineHeight: 'var(--line-height-normal)',
-          }}
-        >
-          {t('auth.consentNotice')}
-        </p>
       </div>
     </div>
   );

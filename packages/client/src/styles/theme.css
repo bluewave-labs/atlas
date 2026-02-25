@@ -9,9 +9,9 @@
   --color-surface-hover: #e4e7ec;
   --color-surface-active: #daddE4;
   --color-surface-selected: #cdd8e4;
-  --color-text-primary: #1a1d23;
-  --color-text-secondary: #4a5264;
-  --color-text-tertiary: #7a8494;
+  --color-text-primary: #111318;
+  --color-text-secondary: #3b4253;
+  --color-text-tertiary: #5f6b7a;
   --color-text-inverse: #ffffff;
   --color-text-link: #5a7fa0;
   --color-border-primary: #d0d5dd;
@@ -52,9 +52,9 @@
   --font-size-2xl: 24px;
   --line-height-tight: 1.25;
   --line-height-normal: 1.5;
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
+  --font-weight-normal: 420;
+  --font-weight-medium: 520;
+  --font-weight-semibold: 620;
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
@@ -78,9 +78,9 @@
   --color-surface-hover: #1f2128;
   --color-surface-active: #282b34;
   --color-surface-selected: #1e2a3d;
-  --color-text-primary: #e8eaed;
-  --color-text-secondary: #9ba2b0;
-  --color-text-tertiary: #636b7c;
+  --color-text-primary: #f0f1f4;
+  --color-text-secondary: #adb4c2;
+  --color-text-tertiary: #7b8396;
   --color-text-inverse: #1a1d23;
   --color-text-link: #7a9ab8;
   --color-border-primary: #2a2d36;
@@ -108,12 +108,12 @@
 }
 
 [data-density="compact"] {
-  --email-list-item-height: 72px;
-  --email-list-padding: 6px 12px;
-  --email-list-avatar: 28px;
-  --email-row-height: 28px;
-  --email-row-padding: 0 10px;
-  --email-row-avatar: 20px;
+  --email-list-item-height: 84px;
+  --email-list-padding: 10px 16px;
+  --email-list-avatar: 32px;
+  --email-row-height: 36px;
+  --email-row-padding: 0 16px;
+  --email-row-avatar: 22px;
   --font-size-md: 13px;
 }
 
@@ -127,12 +127,12 @@
 }
 
 [data-density="comfortable"] {
-  --email-list-item-height: 96px;
-  --email-list-padding: 14px 20px;
-  --email-list-avatar: 36px;
-  --email-row-height: 44px;
+  --email-list-item-height: 108px;
+  --email-list-padding: 16px 20px;
+  --email-list-avatar: 38px;
+  --email-row-height: 48px;
   --email-row-padding: 0 20px;
-  --email-row-avatar: 26px;
+  --email-row-avatar: 28px;
 }
 
 /* ---- Theme transition (View Transitions API) ----------------------------- */
