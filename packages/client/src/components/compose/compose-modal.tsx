@@ -31,7 +31,7 @@ import { AIWritingAssist } from './ai-writing-assist';
 import { useAIConfig } from '../../hooks/use-ai';
 import { formatBytes } from '../../lib/format';
 import { bodyMentionsAttachments } from '../../lib/attachment-check';
-import { injectComposeTransition } from '../../lib/animations';
+import { injectComposeTransition, injectAISparkle } from '../../lib/animations';
 import { formatFullDate } from '@atlasmail/shared';
 import type { Email, EmailAddress } from '@atlasmail/shared';
 import type { Recipient } from '../../lib/mock-contacts';
@@ -270,6 +270,16 @@ function LinkPopover({
 function FormatToolbar({ editor, onAIClick, aiEnabled }: { editor: Editor | null; onAIClick?: () => void; aiEnabled?: boolean }) {
   const { t } = useTranslation();
   const [showLinkPopover, setShowLinkPopover] = useState(false);
+  const [aiSparkleActive, setAiSparkleActive] = useState(false);
+
+  // Trigger colorful sparkle animation on mount when AI is enabled
+  useEffect(() => {
+    if (!aiEnabled) return;
+    injectAISparkle();
+    setAiSparkleActive(true);
+    const timer = setTimeout(() => setAiSparkleActive(false), 3000);
+    return () => clearTimeout(timer);
+  }, [aiEnabled]);
 
   if (!editor) return null;
 
@@ -412,11 +422,41 @@ function FormatToolbar({ editor, onAIClick, aiEnabled }: { editor: Editor | null
               margin: '0 var(--spacing-xs)',
             }}
           />
-          <ToolbarButton
-            icon={<Sparkles size={14} />}
-            label="AI writing assist"
+          <button
+            type="button"
             onClick={onAIClick}
-          />
+            aria-label="AI writing assist"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 28,
+              height: 28,
+              border: 'none',
+              borderRadius: 'var(--radius-sm)',
+              background: 'transparent',
+              color: aiSparkleActive ? undefined : 'var(--color-text-tertiary)',
+              cursor: 'pointer',
+              transition: 'background var(--transition-normal), color var(--transition-normal)',
+              animation: aiSparkleActive
+                ? 'atlasmail-ai-sparkle-color 3s ease-in-out forwards, atlasmail-ai-sparkle-rotate 0.6s ease-in-out 3'
+                : undefined,
+            }}
+            onMouseEnter={(e) => {
+              if (!aiSparkleActive) {
+                e.currentTarget.style.background = 'var(--color-surface-hover)';
+                e.currentTarget.style.color = 'var(--color-text-primary)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!aiSparkleActive) {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = 'var(--color-text-tertiary)';
+              }
+            }}
+          >
+            <Sparkles size={14} />
+          </button>
         </>
       )}
     </div>

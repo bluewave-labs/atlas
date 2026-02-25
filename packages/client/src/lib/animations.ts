@@ -183,6 +183,30 @@ export function injectThreadExpand(): void {
   );
 }
 
+/** AI sparkle — colorful shimmer + gentle pulse on the toolbar icon */
+export function injectAISparkle(): void {
+  injectKeyframes(
+    'ai-sparkle',
+    `@keyframes atlasmail-ai-sparkle-color {
+      0%   { color: #f59e0b; filter: drop-shadow(0 0 3px #f59e0b80); transform: scale(1); }
+      15%  { color: #ec4899; filter: drop-shadow(0 0 4px #ec489980); transform: scale(1.18); }
+      30%  { color: #8b5cf6; filter: drop-shadow(0 0 4px #8b5cf680); transform: scale(1.05); }
+      45%  { color: #3b82f6; filter: drop-shadow(0 0 3px #3b82f680); transform: scale(1.15); }
+      60%  { color: #10b981; filter: drop-shadow(0 0 4px #10b98180); transform: scale(1.02); }
+      75%  { color: #f59e0b; filter: drop-shadow(0 0 3px #f59e0b80); transform: scale(1.12); }
+      90%  { color: #ec4899; filter: drop-shadow(0 0 3px #ec489980); transform: scale(1.05); }
+      100% { color: #f59e0b; filter: drop-shadow(0 0 0px transparent); transform: scale(1); }
+    }
+    @keyframes atlasmail-ai-sparkle-rotate {
+      0%   { transform: rotate(0deg); }
+      25%  { transform: rotate(-8deg); }
+      50%  { transform: rotate(8deg); }
+      75%  { transform: rotate(-4deg); }
+      100% { transform: rotate(0deg); }
+    }`,
+  );
+}
+
 /** New email arrival slide-in */
 export function injectNewEmailArrival(): void {
   injectKeyframes(
