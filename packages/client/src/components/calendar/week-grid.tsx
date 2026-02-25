@@ -1,5 +1,5 @@
 import { useMemo, useRef, useEffect, useState, useCallback } from 'react';
-import { MapPin, Pencil, Trash2, Video, X } from 'lucide-react';
+import { Copy, MapPin, Pencil, Trash2, Video, X } from 'lucide-react';
 import type { CalendarEvent } from '@atlasmail/shared';
 import type { CSSProperties } from 'react';
 
@@ -13,6 +13,7 @@ interface WeekGridProps {
   onEventUpdate?: (eventId: string, startTime: string, endTime: string) => void;
   onQuickCreate?: (title: string, start: Date, end: Date) => void;
   onEventDelete?: (eventId: string) => void;
+  onEventDuplicate?: (event: CalendarEvent) => void;
   /** Number of days to display. Defaults to 7 (week view). Use 1 for day view. */
   dayCount?: number;
   /** Whether the week starts on Monday. Defaults to false (Sunday). */
@@ -201,6 +202,7 @@ export function WeekGrid({
   onEventUpdate,
   onQuickCreate,
   onEventDelete,
+  onEventDuplicate,
   dayCount = 7,
   weekStartsOnMonday = false,
 }: WeekGridProps) {
@@ -827,6 +829,33 @@ export function WeekGrid({
                 }}
                 onMouseDown={(e) => handleGridMouseDown(e, dayIndex)}
               >
+                {/* Non-working hours shade (before 9am) */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 9 * HOUR_HEIGHT,
+                    background: 'var(--color-bg-secondary)',
+                    opacity: 0.4,
+                    pointerEvents: 'none',
+                  }}
+                />
+                {/* Non-working hours shade (after 5pm) */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 17 * HOUR_HEIGHT,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'var(--color-bg-secondary)',
+                    opacity: 0.4,
+                    pointerEvents: 'none',
+                  }}
+                />
+
                 {/* Hour lines */}
                 {Array.from({ length: TOTAL_HOURS }, (_, i) => (
                   <div
@@ -1329,6 +1358,31 @@ export function WeekGrid({
                           <Pencil size={11} />
                           Edit
                         </button>
+                        {onEventDuplicate && (
+                          <button
+                            onClick={() => {
+                              onEventDuplicate(eventPopover.event);
+                              setEventPopover(null);
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4,
+                              height: 28,
+                              padding: '0 10px',
+                              background: 'transparent',
+                              border: '1px solid var(--color-border-primary)',
+                              borderRadius: 'var(--radius-sm)',
+                              color: 'var(--color-text-secondary)',
+                              fontSize: 'var(--font-size-xs)',
+                              fontFamily: 'var(--font-family)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <Copy size={11} />
+                            Duplicate
+                          </button>
+                        )}
                         {onEventDelete && (
                           <button
                             onClick={() => {

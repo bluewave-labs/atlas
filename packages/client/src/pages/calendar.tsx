@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useCallback, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -66,6 +67,7 @@ function formatWeekRange(weekStart: Date): string {
 
 export function CalendarPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const {
     selectedDate,
     setSelectedDate,
@@ -93,6 +95,7 @@ export function CalendarPage() {
   const updateEvent = useUpdateCalendarEvent();
   const createEvent = useCreateCalendarEvent();
   const deleteEvent = useDeleteCalendarEvent();
+  const addToast = useToastStore((s) => s.addToast);
 
   // Derive selected calendar IDs and color map
   const selectedCalendarIds = useMemo(() => {
@@ -155,9 +158,34 @@ export function CalendarPage() {
 
   const handleEventDelete = useCallback(
     (eventId: string) => {
-      deleteEvent.mutate(eventId);
+      // Snapshot current event caches for rollback
+      const previousQueries = queryClient.getQueriesData<any>({ queryKey: ['calendar', 'events'] });
+
+      // Optimistically remove from all caches
+      queryClient.setQueriesData<any>(
+        { queryKey: ['calendar', 'events'] },
+        (old: any) => {
+          if (!old) return old;
+          return (old as any[]).filter((ev: any) => ev.id !== eventId);
+        },
+      );
+
+      addToast({
+        type: 'undo',
+        message: 'Event deleted',
+        duration: 5000,
+        undoAction: () => {
+          // Restore previous caches
+          for (const [key, data] of previousQueries) {
+            queryClient.setQueryData(key, data);
+          }
+        },
+        commitAction: () => {
+          deleteEvent.mutate(eventId);
+        },
+      });
     },
-    [deleteEvent],
+    [deleteEvent, queryClient, addToast],
   );
 
   const handleQuickCreate = useCallback(
@@ -172,6 +200,22 @@ export function CalendarPage() {
       });
     },
     [calendars, createEvent],
+  );
+
+  const handleEventDuplicate = useCallback(
+    (event: import('@atlasmail/shared').CalendarEvent) => {
+      createEvent.mutate({
+        calendarId: event.calendarId,
+        summary: `${event.summary || '(No title)'} (copy)`,
+        description: event.description || undefined,
+        location: event.location || undefined,
+        startTime: event.startTime,
+        endTime: event.endTime,
+        isAllDay: event.isAllDay,
+        colorId: event.colorId || undefined,
+      });
+    },
+    [createEvent],
   );
 
   // ─── Keyboard shortcuts ──────────────────────────────────────────────
@@ -227,7 +271,6 @@ export function CalendarPage() {
   }, [openCreateModal, goToday, goNext, goPrev, syncCalendar, setView, eventModal.open]);
 
   // ─── Sync toasts ────────────────────────────────────────────────────
-  const addToast = useToastStore((s) => s.addToast);
   const prevSyncStatus = useRef<'idle' | 'pending' | 'success' | 'error'>('idle');
   useEffect(() => {
     const status = syncCalendar.isPending ? 'pending' : syncCalendar.isSuccess ? 'success' : syncCalendar.isError ? 'error' : 'idle';
@@ -575,6 +618,7 @@ export function CalendarPage() {
             onEventUpdate={handleEventUpdate}
             onQuickCreate={handleQuickCreate}
             onEventDelete={handleEventDelete}
+            onEventDuplicate={handleEventDuplicate}
             dayCount={isNarrow ? 1 : view === 'day' ? 1 : 7}
             weekStartsOnMonday={weekStartsOnMonday}
           />
