@@ -96,26 +96,35 @@ export function EmailListItem({
         {/* Avatar — smaller in horizontal mode, scales with density */}
         <Avatar name={senderName} email={senderEmail} cssSize="var(--email-row-avatar, 22px)" />
 
-        {/* Sender — fixed width, bold */}
-        <span
+        {/* Sender + thread count — fixed width container */}
+        <div
           style={{
             width: 120,
             flexShrink: 0,
-            fontSize: 'var(--font-size-sm)',
-            fontWeight: isUnread
-              ? ('var(--font-weight-semibold)' as CSSProperties['fontWeight'])
-              : ('var(--font-weight-normal)' as CSSProperties['fontWeight']),
-            color: isUnread ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            minWidth: 0,
           }}
         >
-          {senderName}
+          <span
+            style={{
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: isUnread
+                ? ('var(--font-weight-semibold)' as CSSProperties['fontWeight'])
+                : ('var(--font-weight-normal)' as CSSProperties['fontWeight']),
+              color: isUnread ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              minWidth: 0,
+            }}
+          >
+            {senderName}
+          </span>
           {thread.messageCount > 1 && (
             <span
               style={{
-                marginLeft: 4,
                 fontSize: '10px',
                 color: 'var(--color-text-secondary)',
                 fontWeight: 500,
@@ -123,14 +132,14 @@ export function EmailListItem({
                 borderRadius: 'var(--radius-sm)',
                 padding: '0 4px',
                 lineHeight: '16px',
-                display: 'inline-block',
-                verticalAlign: 'middle',
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
               }}
             >
               {thread.messageCount}
             </span>
           )}
-        </span>
+        </div>
 
         {/* Subject */}
         <span
