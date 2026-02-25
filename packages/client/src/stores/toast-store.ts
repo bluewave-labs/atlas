@@ -37,6 +37,10 @@ export const useToastStore = create<ToastState>((set, get) => ({
   },
 
   dismissToast: (id) => {
+    const toast = get().toasts.find((t) => t.id === id);
+    if (toast?.commitAction) {
+      toast.commitAction();
+    }
     set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
   },
 
