@@ -1,4 +1,5 @@
 import { useMemo, useRef, useEffect, useState, useCallback } from 'react';
+import { MapPin, Pencil, Trash2, Video, X } from 'lucide-react';
 import type { CalendarEvent } from '@atlasmail/shared';
 import type { CSSProperties } from 'react';
 
@@ -11,6 +12,7 @@ interface WeekGridProps {
   onDragCreate: (start: Date, end: Date) => void;
   onEventUpdate?: (eventId: string, startTime: string, endTime: string) => void;
   onQuickCreate?: (title: string, start: Date, end: Date) => void;
+  onEventDelete?: (eventId: string) => void;
 }
 
 interface QuickCreateState {
@@ -18,6 +20,12 @@ interface QuickCreateState {
   topY: number;
   start: Date;
   end: Date;
+}
+
+interface EventPopoverState {
+  event: CalendarEvent;
+  dayIndex: number;
+  topY: number;
 }
 
 const HOUR_HEIGHT = 56;
@@ -179,6 +187,7 @@ export function WeekGrid({
   onDragCreate,
   onEventUpdate,
   onQuickCreate,
+  onEventDelete,
 }: WeekGridProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -188,6 +197,7 @@ export function WeekGrid({
   const [quickCreate, setQuickCreate] = useState<QuickCreateState | null>(null);
   const [quickTitle, setQuickTitle] = useState('');
   const quickInputRef = useRef<HTMLInputElement>(null);
+  const [eventPopover, setEventPopover] = useState<EventPopoverState | null>(null);
 
   const days = useMemo(() => {
     const result: Date[] = [];
@@ -283,8 +293,9 @@ export function WeekGrid({
     if ((e.target as HTMLElement).closest('[data-event]')) return;
     if ((e.target as HTMLElement).closest('[data-quick-create]')) return;
 
-    // Close quick-create popover if open
+    // Close popovers if open
     setQuickCreate(null);
+    setEventPopover(null);
 
     const colEl = e.currentTarget as HTMLElement;
     const y = snapY(getYInGrid(e.clientY, colEl));
@@ -436,8 +447,10 @@ export function WeekGrid({
         onDragCreate(startDate, endDate);
       } else if (d.mode === 'move') {
         if (!d.hasMoved) {
-          // It was just a click, not a drag — open event
-          onEventClick(d.event);
+          // It was just a click, not a drag — show event popover
+          const eventTopPx = getEventTop(d.eventStart);
+          setEventPopover({ event: d.event, dayIndex: d.dayIndex, topY: eventTopPx });
+          setQuickCreate(null);
           return;
         }
         if (!onEventUpdate) return;
@@ -1006,6 +1019,191 @@ export function WeekGrid({
                         >
                           Save
                         </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Event quick-view popover */}
+                {eventPopover && eventPopover.dayIndex === dayIndex && (
+                  <div
+                    data-event
+                    style={{
+                      position: 'absolute',
+                      top: Math.max(0, eventPopover.topY - 10),
+                      left: 4,
+                      right: 4,
+                      zIndex: 30,
+                    }}
+                  >
+                    <div
+                      style={{
+                        background: 'var(--color-bg-elevated)',
+                        border: '1px solid var(--color-border-primary)',
+                        borderRadius: 'var(--radius-md)',
+                        boxShadow: 'var(--shadow-lg)',
+                        padding: 14,
+                        fontFamily: 'var(--font-family)',
+                        minWidth: 220,
+                      }}
+                    >
+                      {/* Header: title + close */}
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: '50%',
+                              background: calendarColorMap.get(eventPopover.event.calendarId) || 'var(--color-accent-primary)',
+                              flexShrink: 0,
+                            }}
+                          />
+                          <span
+                            style={{
+                              fontSize: 'var(--font-size-md)',
+                              fontWeight: 600,
+                              color: 'var(--color-text-primary)',
+                              lineHeight: 1.3,
+                              wordBreak: 'break-word',
+                            }}
+                          >
+                            {eventPopover.event.summary || '(No title)'}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => setEventPopover(null)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 22,
+                            height: 22,
+                            padding: 0,
+                            background: 'transparent',
+                            border: 'none',
+                            borderRadius: 'var(--radius-sm)',
+                            color: 'var(--color-text-tertiary)',
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+
+                      {/* Time */}
+                      <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 6 }}>
+                        {(() => {
+                          const ev = eventPopover.event;
+                          const s = new Date(ev.startTime);
+                          const e = new Date(ev.endTime);
+                          if (ev.isAllDay) return 'All day';
+                          const dateStr = s.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                          return `${dateStr}, ${formatTime(s)} – ${formatTime(e)}`;
+                        })()}
+                      </div>
+
+                      {/* Location */}
+                      {eventPopover.event.location && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', marginBottom: 6 }}>
+                          <MapPin size={12} style={{ flexShrink: 0 }} />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {eventPopover.event.location}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Meet link */}
+                      {eventPopover.event.hangoutLink && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--font-size-sm)', marginBottom: 6 }}>
+                          <Video size={12} style={{ flexShrink: 0, color: 'var(--color-accent-primary)' }} />
+                          <a
+                            href={eventPopover.event.hangoutLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: 'var(--color-accent-primary)', textDecoration: 'none' }}
+                          >
+                            Join meeting
+                          </a>
+                        </div>
+                      )}
+
+                      {/* Description preview */}
+                      {eventPopover.event.description && (
+                        <div
+                          style={{
+                            fontSize: 'var(--font-size-xs)',
+                            color: 'var(--color-text-tertiary)',
+                            marginBottom: 6,
+                            overflow: 'hidden',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {eventPopover.event.description}
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                        <button
+                          onClick={() => {
+                            const ev = eventPopover.event;
+                            setEventPopover(null);
+                            onEventClick(ev);
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            height: 28,
+                            padding: '0 10px',
+                            background: 'var(--color-accent-primary)',
+                            border: 'none',
+                            borderRadius: 'var(--radius-sm)',
+                            color: 'var(--color-text-inverse)',
+                            fontSize: 'var(--font-size-xs)',
+                            fontFamily: 'var(--font-family)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Pencil size={11} />
+                          Edit
+                        </button>
+                        {onEventDelete && (
+                          <button
+                            onClick={() => {
+                              onEventDelete(eventPopover.event.id);
+                              setEventPopover(null);
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4,
+                              height: 28,
+                              padding: '0 10px',
+                              background: 'transparent',
+                              border: '1px solid var(--color-border-primary)',
+                              borderRadius: 'var(--radius-sm)',
+                              color: 'var(--color-error)',
+                              fontSize: 'var(--font-size-xs)',
+                              fontFamily: 'var(--font-family)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <Trash2 size={11} />
+                            Delete
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

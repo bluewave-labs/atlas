@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useCallback } from 'react';
+import { useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -8,8 +8,9 @@ import {
   Plus,
 } from 'lucide-react';
 import '../styles/calendar.css';
-import { useCalendars, useCalendarEvents, useSyncCalendar, useToggleCalendar, useUpdateCalendarEvent, useCreateCalendarEvent } from '../hooks/use-calendar';
+import { useCalendars, useCalendarEvents, useSyncCalendar, useToggleCalendar, useUpdateCalendarEvent, useCreateCalendarEvent, useDeleteCalendarEvent } from '../hooks/use-calendar';
 import { useCalendarStore } from '../stores/calendar-store';
+import { useToastStore } from '../stores/toast-store';
 import { EventModal } from '../components/calendar/event-modal';
 import { MiniMonth } from '../components/calendar/mini-month';
 import { WeekGrid } from '../components/calendar/week-grid';
@@ -75,6 +76,7 @@ export function CalendarPage() {
   const toggleCalendar = useToggleCalendar();
   const updateEvent = useUpdateCalendarEvent();
   const createEvent = useCreateCalendarEvent();
+  const deleteEvent = useDeleteCalendarEvent();
 
   // Derive selected calendar IDs and color map
   const selectedCalendarIds = useMemo(() => {
@@ -127,6 +129,13 @@ export function CalendarPage() {
     [updateEvent],
   );
 
+  const handleEventDelete = useCallback(
+    (eventId: string) => {
+      deleteEvent.mutate(eventId);
+    },
+    [deleteEvent],
+  );
+
   const handleQuickCreate = useCallback(
     (title: string, start: Date, end: Date) => {
       const primaryCalendarId = calendars?.find((c) => c.isPrimary)?.id || calendars?.[0]?.id;
@@ -140,6 +149,63 @@ export function CalendarPage() {
     },
     [calendars, createEvent],
   );
+
+  // ─── Keyboard shortcuts ──────────────────────────────────────────────
+  const { eventModal } = useCalendarStore();
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Don't handle shortcuts when typing in inputs or when modal is open
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (eventModal.open) return;
+
+      switch (e.key) {
+        case 'c':
+          e.preventDefault();
+          openCreateModal();
+          break;
+        case 't':
+          e.preventDefault();
+          goToday();
+          break;
+        case 'j':
+        case 'ArrowRight':
+          if (!e.metaKey && !e.ctrlKey) {
+            e.preventDefault();
+            goNextWeek();
+          }
+          break;
+        case 'k':
+        case 'ArrowLeft':
+          if (!e.metaKey && !e.ctrlKey) {
+            e.preventDefault();
+            goPrevWeek();
+          }
+          break;
+        case 'r':
+          if (!e.metaKey && !e.ctrlKey) {
+            e.preventDefault();
+            syncCalendar.mutate();
+          }
+          break;
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [openCreateModal, goToday, goNextWeek, goPrevWeek, syncCalendar, eventModal.open]);
+
+  // ─── Sync toasts ────────────────────────────────────────────────────
+  const addToast = useToastStore((s) => s.addToast);
+  const prevSyncStatus = useRef<'idle' | 'pending' | 'success' | 'error'>('idle');
+  useEffect(() => {
+    const status = syncCalendar.isPending ? 'pending' : syncCalendar.isSuccess ? 'success' : syncCalendar.isError ? 'error' : 'idle';
+    if (prevSyncStatus.current === 'pending' && status === 'success') {
+      addToast({ message: 'Calendar synced', type: 'success', duration: 3000 });
+    } else if (prevSyncStatus.current === 'pending' && status === 'error') {
+      addToast({ message: 'Sync failed — try again', type: 'error', duration: 5000 });
+    }
+    prevSyncStatus.current = status;
+  }, [syncCalendar.isPending, syncCalendar.isSuccess, syncCalendar.isError, addToast]);
 
   const isDesktop = !!('atlasDesktop' in window);
 
@@ -331,6 +397,7 @@ export function CalendarPage() {
             onDragCreate={handleDragCreate}
             onEventUpdate={handleEventUpdate}
             onQuickCreate={handleQuickCreate}
+            onEventDelete={handleEventDelete}
           />
         </div>
       </div>
