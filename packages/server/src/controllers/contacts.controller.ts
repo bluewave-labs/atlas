@@ -50,22 +50,6 @@ export async function syncContacts(req: Request, res: Response) {
   }
 }
 
-export async function enrichContact(req: Request, res: Response) {
-  try {
-    const email = req.params.email as string;
-    if (!email) {
-      res.status(400).json({ success: false, error: 'Email is required' });
-      return;
-    }
-
-    const contact = await contactsService.enrichContactByEmail(req.auth!.accountId, email);
-    res.json({ success: true, data: { contact } });
-  } catch (error) {
-    logger.error({ error }, 'Failed to enrich contact');
-    res.status(500).json({ success: false, error: 'Failed to enrich contact' });
-  }
-}
-
 export async function updateNotes(req: Request, res: Response) {
   try {
     const email = req.params.email as string;

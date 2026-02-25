@@ -1,9 +1,3 @@
-export interface SocialProfile {
-  type: 'linkedin' | 'twitter' | 'github' | 'facebook' | 'other';
-  url: string;
-  label?: string;
-}
-
 export interface Contact {
   id: string;
   accountId: string;
@@ -18,9 +12,6 @@ export interface Contact {
   jobTitle: string | null;
   notes: string | null;
   googleResourceName: string | null;
-  socialProfiles: SocialProfile[] | null;
-  enrichedAt: string | null;
-  enrichmentSource: string | null;
   frequency: number;
   lastContacted: string | null;
   createdAt: string;

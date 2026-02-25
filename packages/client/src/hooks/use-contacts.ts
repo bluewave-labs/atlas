@@ -15,27 +15,6 @@ export function useContactByEmail(email: string | null) {
   });
 }
 
-export function useEnrichContact() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (email: string) => {
-      const { data } = await api.post(`/contacts/by-email/${encodeURIComponent(email)}/enrich`);
-      return data.data as { contact: ContactByEmailResponse['contact'] };
-    },
-    onSuccess: (data, email) => {
-      const key = queryKeys.contacts.byEmail(email);
-      const previous = queryClient.getQueryData<ContactByEmailResponse>(key);
-      if (previous && data.contact) {
-        queryClient.setQueryData<ContactByEmailResponse>(key, {
-          ...previous,
-          contact: data.contact,
-        });
-      }
-    },
-  });
-}
-
 export function useUpdateContactNotes() {
   const queryClient = useQueryClient();
 

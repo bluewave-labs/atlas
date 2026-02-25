@@ -15,8 +15,6 @@ const envSchema = z.object({
   TOKEN_ENCRYPTION_KEY: z.string().min(32),
   SERVER_PUBLIC_URL: z.string().url().default('http://localhost:3001'),
   GOOGLE_PUBSUB_TOPIC: z.string().optional(), // e.g. projects/my-proj/topics/gmail-push
-  FULLCONTACT_API_KEY: z.string().optional(),
-  PDL_API_KEY: z.string().optional(), // People Data Labs
 });
 
 export const env = envSchema.parse(process.env);
