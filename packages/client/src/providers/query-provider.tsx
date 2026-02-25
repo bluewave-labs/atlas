@@ -8,7 +8,20 @@ export const queryClient = new QueryClient({
       retry: 1,
       refetchOnWindowFocus: false,
     },
+    mutations: {
+      onError: () => {
+        document.dispatchEvent(new CustomEvent('atlasmail:query-error'));
+      },
+    },
   },
+});
+
+// When any query fails (after retries exhausted), notify the network status
+// hook so it can run an immediate health check and show the connection banner.
+queryClient.getQueryCache().subscribe((event) => {
+  if (event.type === 'updated' && event.action.type === 'error') {
+    document.dispatchEvent(new CustomEvent('atlasmail:query-error'));
+  }
 });
 
 function AccountSwitchListener() {

@@ -28,7 +28,8 @@
     "attachment_one": "{{count}} attachment",
     "attachment_other": "{{count}} attachments",
     "file_one": "{{count}} file",
-    "file_other": "{{count}} files"
+    "file_other": "{{count}} files",
+    "retry": "Retry"
   },
   "auth": {
     "appName": "AtlasMail",
@@ -344,7 +345,9 @@
   "connection": {
     "lost": "Connection lost — checking connectivity",
     "reconnecting": "Reconnecting...",
-    "restored": "Connection restored"
+    "restored": "Connection restored",
+    "unableToLoad": "Unable to load emails",
+    "checkAndRetry": "Check your internet connection and try again."
   },
   "toast": {
     "messageSent": "Message sent",

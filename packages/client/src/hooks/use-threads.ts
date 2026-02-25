@@ -133,6 +133,8 @@ export function useMailboxThreads(mailbox: string, category?: string, gmailLabel
     data,
     isLoading: infiniteQuery.isLoading,
     isFetching: infiniteQuery.isFetching,
+    isError: infiniteQuery.isError,
+    refetch: infiniteQuery.refetch,
     fetchNextPage: infiniteQuery.fetchNextPage,
     hasNextPage: infiniteQuery.hasNextPage,
     isFetchingNextPage: infiniteQuery.isFetchingNextPage,

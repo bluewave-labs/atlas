@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GroupedVirtuoso, type GroupedVirtuosoHandle } from 'react-virtuoso';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, WifiOff, RefreshCw } from 'lucide-react';
 import { useEmailStore } from '../../stores/email-store';
 import { useSettingsStore } from '../../stores/settings-store';
 import { useDraftStore } from '../../stores/draft-store';
@@ -449,6 +449,8 @@ export function EmailListPane() {
   const {
     data: threads,
     isLoading,
+    isError,
+    refetch,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -839,7 +841,69 @@ export function EmailListPane() {
 
       {/* Thread list */}
       <div style={{ flex: 1, overflow: 'hidden' }}>
-        {(isLoading || (isSearchActive && (isSearching || !searchResults))) ? (
+        {isError && !isLoading ? (
+          <div
+            role="alert"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              gap: 'var(--spacing-md)',
+              fontFamily: 'var(--font-family)',
+              userSelect: 'none',
+              animation: 'atlasmail-empty-fade-in 220ms ease both',
+            }}
+          >
+            <WifiOff size={36} style={{ color: 'var(--color-text-tertiary)' }} />
+            <span
+              style={{
+                fontSize: 'var(--font-size-md)',
+                fontWeight: 500,
+                color: 'var(--color-text-secondary)',
+                textAlign: 'center',
+              }}
+            >
+              {t('connection.unableToLoad')}
+            </span>
+            <span
+              style={{
+                fontSize: 'var(--font-size-sm)',
+                color: 'var(--color-text-tertiary)',
+                textAlign: 'center',
+                maxWidth: 280,
+                lineHeight: 'var(--line-height-normal)',
+              }}
+            >
+              {t('connection.checkAndRetry')}
+            </span>
+            <button
+              onClick={() => refetch()}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 'var(--spacing-xs)',
+                marginTop: 'var(--spacing-xs)',
+                padding: 'var(--spacing-sm) var(--spacing-lg)',
+                background: 'var(--color-accent-primary)',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: 'var(--radius-lg)',
+                fontSize: 'var(--font-size-sm)',
+                fontFamily: 'var(--font-family)',
+                fontWeight: 500,
+                cursor: 'pointer',
+                transition: 'opacity var(--transition-normal)',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+            >
+              <RefreshCw size={13} />
+              {t('common.retry')}
+            </button>
+          </div>
+        ) : (isLoading || (isSearchActive && (isSearching || !searchResults))) ? (
           <EmailListSkeleton />
         ) : displayThreads.length === 0 ? (
           <EmptyState

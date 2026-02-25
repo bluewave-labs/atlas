@@ -157,14 +157,17 @@ export async function getThreads(
       break;
     case 'inbox':
     default:
-      // When no category filter is applied (i.e. "All mail"), show everything
-      // except trash and spam.  Category sub-views (newsletters, notifications,
-      // etc.) should NOT exclude archived threads because Gmail's category tabs
-      // (CATEGORY_PROMOTIONS, CATEGORY_UPDATES, etc.) often lack the INBOX
-      // label, which our sync marks as isArchived=true.  Filtering those out
-      // would hide the vast majority of categorised mail.
       conditions.push(eq(threads.isTrashed, false));
       conditions.push(eq(threads.isSpam, false));
+      // When viewing the default inbox (no category filter), exclude archived
+      // threads so that user-initiated archives actually disappear.
+      // Category sub-views (newsletters, notifications, etc.) must NOT filter
+      // by isArchived because Gmail's category tabs (CATEGORY_PROMOTIONS, etc.)
+      // often lack the INBOX label, which our sync marks as isArchived=true.
+      // Filtering those out would hide the vast majority of categorised mail.
+      if (!options.category) {
+        conditions.push(eq(threads.isArchived, false));
+      }
       break;
   }
 

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { ArrowLeft, ChevronsUpDown, ChevronsDownUp, PanelRightOpen, PanelRightClose } from 'lucide-react';
+import { ArrowLeft, ChevronsUpDown, ChevronsDownUp, PanelRightOpen, PanelRightClose, WifiOff, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useEmailStore } from '../../stores/email-store';
 import { useSettingsStore } from '../../stores/settings-store';
@@ -67,7 +67,7 @@ function ReadingPaneEmptyState() {
 export function ReadingPane() {
   const { activeThreadId, setActiveThread } = useEmailStore();
   const readingPanePosition = useSettingsStore((s) => s.readingPane);
-  const { data: thread, isLoading } = useThread(activeThreadId);
+  const { data: thread, isLoading, isError, refetch } = useThread(activeThreadId);
   const { data: trackingStats } = useThreadTracking(activeThreadId);
   const isMobile = useMediaQuery('(max-width: 768px)');
   const isNarrow = useMediaQuery('(max-width: 1100px)');
@@ -144,6 +144,69 @@ export function ReadingPane() {
 
   if (!activeThreadId) {
     return <ReadingPaneEmptyState />;
+  }
+
+  if (isError) {
+    return (
+      <div
+        role="alert"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          gap: 'var(--spacing-md)',
+          fontFamily: 'var(--font-family)',
+          userSelect: 'none',
+        }}
+      >
+        <WifiOff size={32} style={{ color: 'var(--color-text-tertiary)' }} />
+        <span
+          style={{
+            fontSize: 'var(--font-size-md)',
+            fontWeight: 500,
+            color: 'var(--color-text-secondary)',
+          }}
+        >
+          {t('connection.unableToLoad')}
+        </span>
+        <span
+          style={{
+            fontSize: 'var(--font-size-sm)',
+            color: 'var(--color-text-tertiary)',
+            textAlign: 'center',
+            maxWidth: 260,
+            lineHeight: 'var(--line-height-normal)',
+          }}
+        >
+          {t('connection.checkAndRetry')}
+        </span>
+        <button
+          onClick={() => refetch()}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 'var(--spacing-xs)',
+            padding: 'var(--spacing-sm) var(--spacing-lg)',
+            background: 'var(--color-accent-primary)',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: 'var(--radius-lg)',
+            fontSize: 'var(--font-size-sm)',
+            fontFamily: 'var(--font-family)',
+            fontWeight: 500,
+            cursor: 'pointer',
+            transition: 'opacity var(--transition-normal)',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+        >
+          <RefreshCw size={13} />
+          {t('common.retry')}
+        </button>
+      </div>
+    );
   }
 
   if (isLoading || !thread) {
