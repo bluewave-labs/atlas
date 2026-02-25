@@ -367,10 +367,15 @@ export async function fullSync(accountId: string) {
   } catch (err: any) {
     log.error({ err }, 'Full sync failed');
 
+    const status = err?.code || err?.response?.status;
+    const isAuthError = status === 401 || status === 403
+      || err?.message?.includes('invalid_grant')
+      || err?.message?.includes('Token has been expired or revoked');
+
     await db
       .update(accounts)
       .set({
-        syncStatus: 'error',
+        syncStatus: isAuthError ? 'auth_error' : 'error',
         syncError: err.message || 'Unknown error during full sync',
         updatedAt: new Date().toISOString(),
       })
@@ -645,10 +650,15 @@ export async function incrementalSync(accountId: string) {
       return;
     }
 
+    const status = err?.code || err?.response?.status;
+    const isAuthError = status === 401 || status === 403
+      || err?.message?.includes('invalid_grant')
+      || err?.message?.includes('Token has been expired or revoked');
+
     await db
       .update(accounts)
       .set({
-        syncStatus: 'error',
+        syncStatus: isAuthError ? 'auth_error' : 'error',
         syncError: err.message || 'Unknown error during incremental sync',
         updatedAt: new Date().toISOString(),
       })

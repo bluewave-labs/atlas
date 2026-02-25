@@ -18,13 +18,17 @@ export async function getGmailClient(accountId: string) {
 
   oauth2Client.on('tokens', async (tokens) => {
     if (tokens.access_token) {
-      // Encrypt the refreshed token before persisting — must be consistent with
-      // how auth.service stores tokens on initial OAuth.
-      await db.update(accounts).set({
+      const updates: Record<string, string> = {
         accessToken: encrypt(tokens.access_token),
         tokenExpiresAt: new Date(tokens.expiry_date || Date.now() + 3600000).toISOString(),
         updatedAt: new Date().toISOString(),
-      }).where(eq(accounts.id, accountId));
+      };
+      // Google may issue a new refresh token — persist it so the old one
+      // doesn't become stale and cause auth failures down the line.
+      if (tokens.refresh_token) {
+        updates.refreshToken = encrypt(tokens.refresh_token);
+      }
+      await db.update(accounts).set(updates).where(eq(accounts.id, accountId));
     }
   });
 

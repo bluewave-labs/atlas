@@ -28,18 +28,27 @@ export async function findOrCreateAccount(
   const existing = await db.select().from(accounts).where(eq(accounts.email, userInfo.email)).limit(1);
 
   if (existing.length > 0) {
+    const updates: Record<string, string> = {
+      name: userInfo.name,
+      pictureUrl: userInfo.picture,
+      accessToken: encrypt(tokens.access_token),
+      tokenExpiresAt: new Date(tokens.expiry_date || Date.now() + 3600000).toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    // Only overwrite refresh token if Google returned a new one — re-auth
+    // flows with prompt=consent always do, but silent re-auth may not.
+    if (tokens.refresh_token) {
+      updates.refreshToken = encrypt(tokens.refresh_token);
+    }
     const [account] = await db.update(accounts)
-      .set({
-        name: userInfo.name,
-        pictureUrl: userInfo.picture,
-        accessToken: encrypt(tokens.access_token),
-        refreshToken: encrypt(tokens.refresh_token || ''),
-        tokenExpiresAt: new Date(tokens.expiry_date || Date.now() + 3600000).toISOString(),
-        updatedAt: new Date().toISOString(),
-      })
+      .set(updates)
       .where(eq(accounts.id, existing[0].id))
       .returning();
     return { account, isNew: false };
+  }
+
+  if (!tokens.refresh_token) {
+    throw new Error('No refresh token received from Google. Please re-authenticate with full consent.');
   }
 
   const [account] = await db.insert(accounts).values({
@@ -49,7 +58,7 @@ export async function findOrCreateAccount(
     provider: 'google',
     providerId: userInfo.id,
     accessToken: encrypt(tokens.access_token),
-    refreshToken: encrypt(tokens.refresh_token || ''),
+    refreshToken: encrypt(tokens.refresh_token),
     tokenExpiresAt: new Date(tokens.expiry_date || Date.now() + 3600000).toISOString(),
   }).returning();
 
