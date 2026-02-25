@@ -35,6 +35,7 @@ export function QuickAIReplies({ threadId, onSelectReply }: QuickAIRepliesProps)
         alignItems: 'center',
         gap: 'var(--spacing-sm)',
         padding: '0 var(--spacing-lg)',
+        marginTop: 8,
         marginBottom: 'var(--spacing-sm)',
         flexWrap: 'wrap',
       }}
