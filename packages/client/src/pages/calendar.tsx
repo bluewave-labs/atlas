@@ -23,11 +23,12 @@ function toYMD(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-/** Get the Sunday that starts the week containing the given date */
-function getWeekStart(dateStr: string): Date {
+/** Get the start of the week containing the given date. Sunday-start by default. */
+function getWeekStart(dateStr: string, mondayStart = false): Date {
   const d = new Date(dateStr + 'T12:00:00');
   const day = d.getDay(); // 0=Sun
-  d.setDate(d.getDate() - day);
+  const offset = mondayStart ? ((day + 6) % 7) : day;
+  d.setDate(d.getDate() - offset);
   d.setHours(0, 0, 0, 0);
   return d;
 }
@@ -66,6 +67,8 @@ export function CalendarPage() {
     setSelectedDate,
     view,
     setView,
+    weekStartsOnMonday,
+    setWeekStartsOnMonday,
     openCreateModal,
     openEditModal,
   } = useCalendarStore();
@@ -76,8 +79,8 @@ export function CalendarPage() {
       d.setHours(0, 0, 0, 0);
       return d;
     }
-    return getWeekStart(selectedDate);
-  }, [selectedDate, view]);
+    return getWeekStart(selectedDate, weekStartsOnMonday);
+  }, [selectedDate, view, weekStartsOnMonday]);
   const { timeMin, timeMax } = useMemo(() => getTimeRange(weekStart), [weekStart]);
   const { data: calendars } = useCalendars();
   const { data: events } = useCalendarEvents(timeMin, timeMax);
@@ -387,7 +390,7 @@ export function CalendarPage() {
           }}
         >
           {/* Mini month picker */}
-          <MiniMonth selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+          <MiniMonth selectedDate={selectedDate} onSelectDate={setSelectedDate} weekStartsOnMonday={weekStartsOnMonday} />
 
           <div style={{ height: 1, background: 'var(--color-border-primary)', margin: '4px 8px' }} />
 
@@ -440,6 +443,41 @@ export function CalendarPage() {
                 </label>
               );
             })}
+
+            <div style={{ height: 1, background: 'var(--color-border-primary)', margin: '8px 0' }} />
+
+            {/* Settings */}
+            <div
+              style={{
+                fontSize: 'var(--font-size-xs)',
+                fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'],
+                color: 'var(--color-text-tertiary)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: 6,
+              }}
+            >
+              Settings
+            </div>
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '4px 0',
+                fontSize: 'var(--font-size-sm)',
+                color: 'var(--color-text-primary)',
+                cursor: 'pointer',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={weekStartsOnMonday}
+                onChange={(e) => setWeekStartsOnMonday(e.target.checked)}
+                style={{ width: 14, height: 14, cursor: 'pointer' }}
+              />
+              Week starts on Monday
+            </label>
           </div>
         </div>
 
@@ -456,6 +494,7 @@ export function CalendarPage() {
             onQuickCreate={handleQuickCreate}
             onEventDelete={handleEventDelete}
             dayCount={view === 'day' ? 1 : 7}
+            weekStartsOnMonday={weekStartsOnMonday}
           />
         </div>
       </div>

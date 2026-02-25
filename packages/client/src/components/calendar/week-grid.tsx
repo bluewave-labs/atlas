@@ -15,6 +15,8 @@ interface WeekGridProps {
   onEventDelete?: (eventId: string) => void;
   /** Number of days to display. Defaults to 7 (week view). Use 1 for day view. */
   dayCount?: number;
+  /** Whether the week starts on Monday. Defaults to false (Sunday). */
+  weekStartsOnMonday?: boolean;
 }
 
 interface QuickCreateState {
@@ -191,6 +193,7 @@ export function WeekGrid({
   onQuickCreate,
   onEventDelete,
   dayCount = 7,
+  weekStartsOnMonday = false,
 }: WeekGridProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);

@@ -5,6 +5,7 @@ import type { CSSProperties } from 'react';
 interface MiniMonthProps {
   selectedDate: string; // YYYY-MM-DD
   onSelectDate: (date: string) => void;
+  weekStartsOnMonday?: boolean;
 }
 
 function toYMD(date: Date): string {
@@ -14,20 +15,24 @@ function toYMD(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-const DAY_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const DAY_NAMES_SUN = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const DAY_NAMES_MON = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
-export function MiniMonth({ selectedDate, onSelectDate }: MiniMonthProps) {
+export function MiniMonth({ selectedDate, onSelectDate, weekStartsOnMonday = false }: MiniMonthProps) {
   const selectedDateObj = new Date(selectedDate + 'T12:00:00');
   const [viewYear, setViewYear] = useState(selectedDateObj.getFullYear());
   const [viewMonth, setViewMonth] = useState(selectedDateObj.getMonth());
 
   const todayStr = useMemo(() => toYMD(new Date()), []);
 
+  const dayNames = weekStartsOnMonday ? DAY_NAMES_MON : DAY_NAMES_SUN;
+
   const weeks = useMemo(() => {
     const firstDay = new Date(viewYear, viewMonth, 1);
-    const startDow = firstDay.getDay(); // 0=Sun
+    const dow = firstDay.getDay(); // 0=Sun
+    const offset = weekStartsOnMonday ? ((dow + 6) % 7) : dow;
     const start = new Date(firstDay);
-    start.setDate(start.getDate() - startDow);
+    start.setDate(start.getDate() - offset);
 
     const rows: Date[][] = [];
     const cursor = new Date(start);
@@ -44,7 +49,7 @@ export function MiniMonth({ selectedDate, onSelectDate }: MiniMonthProps) {
       rows.pop();
     }
     return rows;
-  }, [viewYear, viewMonth]);
+  }, [viewYear, viewMonth, weekStartsOnMonday]);
 
   const monthLabel = new Date(viewYear, viewMonth).toLocaleDateString('en-US', {
     month: 'long',
@@ -102,7 +107,7 @@ export function MiniMonth({ selectedDate, onSelectDate }: MiniMonthProps) {
 
       {/* Day name headers */}
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(7, ${cellSize}px)`, justifyContent: 'center' }}>
-        {DAY_NAMES.map((d) => (
+        {dayNames.map((d) => (
           <div
             key={d}
             style={{

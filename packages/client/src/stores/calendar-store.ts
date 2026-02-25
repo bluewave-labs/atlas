@@ -12,9 +12,11 @@ interface EventModalState {
 interface CalendarStoreState {
   selectedDate: string; // YYYY-MM-DD
   view: 'week' | 'month-grid' | 'day';
+  weekStartsOnMonday: boolean;
   eventModal: EventModalState;
   setSelectedDate: (date: string) => void;
   setView: (view: 'week' | 'month-grid' | 'day') => void;
+  setWeekStartsOnMonday: (val: boolean) => void;
   openCreateModal: (start?: string, end?: string) => void;
   openEditModal: (event: CalendarEvent) => void;
   closeEventModal: () => void;
@@ -30,6 +32,7 @@ function toYMD(date: Date = new Date()): string {
 export const useCalendarStore = create<CalendarStoreState>((set) => ({
   selectedDate: toYMD(),
   view: 'week',
+  weekStartsOnMonday: localStorage.getItem('cal_weekStartsOnMonday') === 'true',
   eventModal: {
     open: false,
     mode: 'create',
@@ -39,6 +42,10 @@ export const useCalendarStore = create<CalendarStoreState>((set) => ({
   },
   setSelectedDate: (date) => set({ selectedDate: date }),
   setView: (view) => set({ view }),
+  setWeekStartsOnMonday: (val) => {
+    localStorage.setItem('cal_weekStartsOnMonday', String(val));
+    set({ weekStartsOnMonday: val });
+  },
   openCreateModal: (start, end) =>
     set({
       eventModal: {
