@@ -39,6 +39,28 @@ function isDarkTheme(): boolean {
   return document.documentElement.getAttribute('data-theme') === 'dark';
 }
 
+// Extract domain from an email address and build a Google favicon URL.
+// Returns null for common freemail providers (gmail, outlook, yahoo, etc.)
+// since their favicons aren't meaningful as sender avatars.
+const FREEMAIL_DOMAINS = new Set([
+  'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'live.com',
+  'msn.com', 'yahoo.com', 'yahoo.co.uk', 'ymail.com', 'aol.com',
+  'icloud.com', 'me.com', 'mac.com', 'protonmail.com', 'proton.me',
+  'zoho.com', 'mail.com', 'gmx.com', 'gmx.net', 'fastmail.com',
+  'tutanota.com', 'tuta.com',
+]);
+
+function getFaviconUrl(email: string | undefined, size: number): string | null {
+  if (!email) return null;
+  const atIndex = email.lastIndexOf('@');
+  if (atIndex < 0) return null;
+  const domain = email.substring(atIndex + 1).toLowerCase();
+  if (!domain || FREEMAIL_DOMAINS.has(domain)) return null;
+  // Google's favicon service — request a square icon at the desired resolution
+  const sz = Math.min(128, Math.max(32, size * 2)); // 2x for retina
+  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=${sz}`;
+}
+
 interface AvatarProps {
   src?: string | null;
   name?: string | null;
@@ -52,6 +74,9 @@ export function Avatar({ src, name, email = '', size = 32, cssSize }: AvatarProp
   const seed = email || name || 'default';
   const colors = pickPalette(seed, isDarkTheme());
   const initials = getInitials(name ?? null, email);
+
+  // Use explicit src if provided, otherwise try the domain favicon
+  const imageSrc = src || getFaviconUrl(email, size);
 
   // When cssSize is provided, use it for width/height (CSS variable driven).
   // The numeric `size` is still used for BoringAvatar and font sizing fallback.
@@ -71,15 +96,15 @@ export function Avatar({ src, name, email = '', size = 32, cssSize }: AvatarProp
         userSelect: 'none',
       }}
     >
-      {src && (
+      {imageSrc && (
         <AvatarPrimitive.Image
-          src={src}
+          src={imageSrc}
           alt={name || email}
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
         />
       )}
       <AvatarPrimitive.Fallback
-        delayMs={src ? 300 : 0}
+        delayMs={imageSrc ? 600 : 0}
         style={{
           display: 'flex',
           alignItems: 'center',
