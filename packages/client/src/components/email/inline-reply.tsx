@@ -3,14 +3,17 @@ import { useTranslation } from 'react-i18next';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import { Send, Maximize2, Reply, ReplyAll, Forward } from 'lucide-react';
+import { Send, Maximize2, Reply, ReplyAll, Forward, Sparkles } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { Avatar } from '../ui/avatar';
 import { Button } from '../ui/button';
+import { AIWritingAssist } from '../compose/ai-writing-assist';
 import { useEmailStore } from '../../stores/email-store';
 import { useAuthStore } from '../../stores/auth-store';
 import { useSettingsStore } from '../../stores/settings-store';
+import { useAIConfig } from '../../hooks/use-ai';
 import { useSendEmail } from '../../hooks/use-threads';
+import { injectAISparkle } from '../../lib/animations';
 import { formatFullDate } from '@atlasmail/shared';
 import type { Email } from '@atlasmail/shared';
 import type { CSSProperties } from 'react';
@@ -116,6 +119,10 @@ export function InlineReply({ threadId, threadSubject, lastEmail, prefillBody, o
   const { openCompose } = useEmailStore();
   const trackingEnabled = useSettingsStore((s) => s.trackingEnabled);
   const sendEmail = useSendEmail();
+  const aiConfig = useAIConfig();
+  const aiEnabled = aiConfig.isConfigured && aiConfig.features.writingAssistant;
+  const [showAIAssist, setShowAIAssist] = useState(false);
+  const [aiSparkleActive, setAiSparkleActive] = useState(false);
 
   const myEmail = account?.email || '';
 
@@ -197,11 +204,18 @@ export function InlineReply({ threadId, threadSubject, lastEmail, prefillBody, o
 
   const handleExpand = useCallback(() => {
     setIsExpanded(true);
+    setShowAIAssist(false);
+    // Trigger sparkle animation when expanding
+    if (aiEnabled) {
+      injectAISparkle();
+      setAiSparkleActive(true);
+      setTimeout(() => setAiSparkleActive(false), 3000);
+    }
     // Focus the editor at the start (before the quoted content)
     requestAnimationFrame(() => {
       editor?.commands.focus('start');
     });
-  }, [editor]);
+  }, [editor, aiEnabled]);
 
   const handleCollapse = useCallback(() => {
     setIsExpanded(false);
@@ -449,6 +463,24 @@ export function InlineReply({ threadId, threadSubject, lastEmail, prefillBody, o
         </span>
       </div>
 
+      {/* AI writing assistant panel */}
+      {showAIAssist && (
+        <div style={{ padding: 'var(--spacing-sm) var(--spacing-md) 0' }}>
+          <AIWritingAssist
+            subject={addReSubjectPrefix(threadSubject)}
+            existingDraft={editor?.getText() || undefined}
+            onAccept={(text) => {
+              if (editor) {
+                const html = `<p>${text.replace(/\n/g, '<br>')}</p>${quotedHtml}`;
+                editor.commands.setContent(html);
+                editor.commands.focus('start');
+              }
+            }}
+            onClose={() => setShowAIAssist(false)}
+          />
+        </div>
+      )}
+
       {/* TipTap editor area */}
       <div
         style={{
@@ -485,6 +517,45 @@ export function InlineReply({ threadId, threadSubject, lastEmail, prefillBody, o
           >
             {sendEmail.isPending ? t('common.sending') : t('common.send')}
           </Button>
+
+          {/* AI writing assist button */}
+          {aiEnabled && (
+            <button
+              type="button"
+              onClick={() => setShowAIAssist((v) => !v)}
+              aria-label="AI writing assist"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 28,
+                height: 28,
+                border: 'none',
+                borderRadius: 'var(--radius-sm)',
+                background: showAIAssist ? 'var(--color-surface-active)' : 'transparent',
+                color: aiSparkleActive ? undefined : (showAIAssist ? 'var(--color-accent-primary)' : 'var(--color-text-tertiary)'),
+                cursor: 'pointer',
+                transition: 'background var(--transition-normal), color var(--transition-normal)',
+                animation: aiSparkleActive
+                  ? 'atlasmail-ai-sparkle-color 3s ease-in-out forwards, atlasmail-ai-sparkle-rotate 0.6s ease-in-out 3'
+                  : undefined,
+              }}
+              onMouseEnter={(e) => {
+                if (!aiSparkleActive) {
+                  e.currentTarget.style.background = 'var(--color-surface-hover)';
+                  e.currentTarget.style.color = 'var(--color-text-primary)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!aiSparkleActive) {
+                  e.currentTarget.style.background = showAIAssist ? 'var(--color-surface-active)' : 'transparent';
+                  e.currentTarget.style.color = showAIAssist ? 'var(--color-accent-primary)' : 'var(--color-text-tertiary)';
+                }
+              }}
+            >
+              <Sparkles size={13} />
+            </button>
+          )}
 
           {/* Keyboard hint */}
           <span
