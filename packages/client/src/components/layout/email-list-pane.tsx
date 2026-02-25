@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { GroupedVirtuoso, type GroupedVirtuosoHandle } from 'react-virtuoso';
 import { ArrowLeft } from 'lucide-react';
 import { useEmailStore } from '../../stores/email-store';
+import { useSettingsStore } from '../../stores/settings-store';
 import { useDraftStore } from '../../stores/draft-store';
 import { useMailboxThreads, useToggleStar, useArchiveWithUndo, useTrashWithUndo, useBulkArchiveWithUndo, useBulkTrashWithUndo, useMarkReadUnread, useSnoozeThread, useGmailLabels } from '../../hooks/use-threads';
 import { useToastStore } from '../../stores/toast-store';
@@ -392,6 +393,7 @@ export function EmailListPane() {
     filterByLabel,
     setFilterByLabel,
   } = useEmailStore();
+  const readingPanePosition = useSettingsStore((s) => s.readingPane);
 
   const CATEGORY_LABELS: Record<EmailCategory, string> = {
     all: t('sidebar.allMail'),
@@ -557,8 +559,9 @@ export function EmailListPane() {
       setCursorIndex(0);
     }
 
-    // On initial load (or after clearing active thread), select the first thread
-    if (!activeThreadId && displayThreads.length > 0 && !categoryChanged && !mailboxChanged && !labelChanged) {
+    // On initial load (or after clearing active thread), select the first thread.
+    // Skip in 'hidden' pane mode — the user navigates list → thread → back explicitly.
+    if (!activeThreadId && displayThreads.length > 0 && !categoryChanged && !mailboxChanged && !labelChanged && readingPanePosition !== 'hidden') {
       setActiveThread(displayThreads[0].id);
       setCursorIndex(0);
     }
