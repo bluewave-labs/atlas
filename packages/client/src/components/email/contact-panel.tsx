@@ -1,13 +1,14 @@
 import { useState, useRef, useCallback, useEffect, type CSSProperties } from 'react';
 import {
   Phone, Mail, Building2, Paperclip, Copy, Pencil, Check,
-  Send, MailPlus, Clock, ArrowUpRight, ArrowDownLeft, StickyNote,
+  MailPlus, Clock, ArrowUpRight, ArrowDownLeft,
+  Linkedin, Github, Twitter, Facebook, Globe,
 } from 'lucide-react';
 import { Avatar } from '../ui/avatar';
-import { useContactByEmail, useUpdateContactNotes } from '../../hooks/use-contacts';
+import { useContactByEmail, useUpdateContactNotes, useEnrichContact } from '../../hooks/use-contacts';
 import { useEmailStore } from '../../stores/email-store';
 import { formatRelativeTime } from '@atlasmail/shared';
-import type { ContactThread, ContactAttachment, InteractionStats } from '@atlasmail/shared';
+import type { ContactThread, ContactAttachment, InteractionStats, SocialProfile } from '@atlasmail/shared';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
@@ -359,6 +360,56 @@ function StatsSection({ stats }: { stats: InteractionStats }) {
   );
 }
 
+// ─── Social links ────────────────────────────────────────────────────
+
+const SOCIAL_ICONS: Record<SocialProfile['type'], React.ReactNode> = {
+  linkedin: <Linkedin size={13} />,
+  twitter: <Twitter size={13} />,
+  github: <Github size={13} />,
+  facebook: <Facebook size={13} />,
+  other: <Globe size={13} />,
+};
+
+function SocialLinks({ profiles }: { profiles: SocialProfile[] }) {
+  if (!profiles.length) return null;
+
+  return (
+    <div style={{ display: 'flex', gap: 'var(--spacing-xs)', flexWrap: 'wrap' }}>
+      {profiles.map((profile, i) => (
+        <a
+          key={i}
+          href={profile.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={profile.label || profile.type}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 28,
+            height: 28,
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--color-border-primary)',
+            color: 'var(--color-text-secondary)',
+            textDecoration: 'none',
+            transition: 'all var(--transition-normal)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--color-surface-hover)';
+            e.currentTarget.style.color = 'var(--color-text-primary)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = 'var(--color-text-secondary)';
+          }}
+        >
+          {SOCIAL_ICONS[profile.type]}
+        </a>
+      ))}
+    </div>
+  );
+}
+
 // ─── Contact panel ───────────────────────────────────────────────────
 
 interface ContactPanelProps {
@@ -370,6 +421,21 @@ export function ContactPanel({ senderEmail, senderName }: ContactPanelProps) {
   const { data, isLoading } = useContactByEmail(senderEmail);
   const { openCompose } = useEmailStore();
   const [copied, setCopied] = useState(false);
+  const enrichContact = useEnrichContact();
+  const enrichAttemptedRef = useRef<string | null>(null);
+
+  // Trigger lazy enrichment when contact panel loads for a new email
+  useEffect(() => {
+    if (!senderEmail || isLoading || !data) return;
+    if (enrichAttemptedRef.current === senderEmail) return;
+    // Skip if already enriched recently (within 30 days)
+    if (data.contact?.enrichedAt) {
+      const daysSince = (Date.now() - new Date(data.contact.enrichedAt).getTime()) / (1000 * 60 * 60 * 24);
+      if (daysSince < 30) return;
+    }
+    enrichAttemptedRef.current = senderEmail;
+    enrichContact.mutate(senderEmail);
+  }, [senderEmail, isLoading, data]);
 
   const handleCopyEmail = useCallback(() => {
     if (!senderEmail) return;
@@ -481,6 +547,12 @@ export function ContactPanel({ senderEmail, senderName }: ContactPanelProps) {
             ))}
             {contact?.organization && !contact?.jobTitle && (
               <DetailRow icon={<Building2 size={13} />} label={contact.organization} />
+            )}
+            {/* Social links */}
+            {contact?.socialProfiles && contact.socialProfiles.length > 0 && (
+              <div style={{ marginTop: 'var(--spacing-xs)' }}>
+                <SocialLinks profiles={contact.socialProfiles} />
+              </div>
             )}
           </div>
 

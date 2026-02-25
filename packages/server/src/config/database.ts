@@ -46,6 +46,17 @@ for (const col of [
   } catch { /* column already exists */ }
 }
 
+// Add enrichment columns to contacts table
+for (const col of [
+  `social_profiles TEXT`,
+  `enriched_at TEXT`,
+  `enrichment_source TEXT`,
+]) {
+  try {
+    sqlite.prepare(`ALTER TABLE contacts ADD COLUMN ${col}`).run();
+  } catch { /* column already exists */ }
+}
+
 // Create FTS5 virtual table for full-text search across emails.
 // content='' means we manage the index manually (external content table).
 sqlite.prepare(`
