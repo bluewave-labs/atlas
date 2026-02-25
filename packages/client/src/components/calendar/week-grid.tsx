@@ -157,6 +157,8 @@ interface CreateDrag {
   dayIndex: number;
   startY: number;
   currentY: number;
+  /** Current day index (can differ from dayIndex when dragging across columns) */
+  currentDayIndex: number;
 }
 
 interface MoveDrag {
@@ -325,7 +327,7 @@ export function WeekGrid({
 
     const colEl = e.currentTarget as HTMLElement;
     const y = snapY(getYInGrid(e.clientY, colEl));
-    const state: CreateDrag = { mode: 'create', dayIndex, startY: y, currentY: y };
+    const state: CreateDrag = { mode: 'create', dayIndex, startY: y, currentY: y, currentDayIndex: dayIndex };
     dragRef.current = state;
     setDrag(state);
     e.preventDefault();
@@ -408,10 +410,15 @@ export function WeekGrid({
       const cols = getDayColumns();
 
       if (d.mode === 'create') {
-        const col = cols[d.dayIndex];
+        // Track which day column we're over
+        let targetDayIndex = d.currentDayIndex;
+        const dayIdx = getDayIndexFromX(e.clientX);
+        if (dayIdx !== null) targetDayIndex = dayIdx;
+
+        const col = cols[targetDayIndex] || cols[d.dayIndex];
         if (!col) return;
         const y = snapY(getYInGrid(e.clientY, col));
-        const newState: CreateDrag = { ...d, currentY: y };
+        const newState: CreateDrag = { ...d, currentY: y, currentDayIndex: targetDayIndex };
         dragRef.current = newState;
         setDrag(newState);
       } else if (d.mode === 'move') {
@@ -456,12 +463,12 @@ export function WeekGrid({
       setDrag(null);
 
       if (d.mode === 'create') {
-        const topY = Math.min(d.startY, d.currentY);
-        const bottomY = Math.max(d.startY, d.currentY);
-        const wasClick = Math.abs(d.currentY - d.startY) < SNAP_PX;
+        const crossDay = d.currentDayIndex !== d.dayIndex;
+        const wasClick = !crossDay && Math.abs(d.currentY - d.startY) < SNAP_PX;
 
         if (wasClick) {
           // Single click → show quick-create popover
+          const topY = Math.min(d.startY, d.currentY);
           const startTime = yToTime(topY);
           const endTimeParts = yToTime(topY + 2 * SNAP_PX); // 30 min default
           const day = days[d.dayIndex];
@@ -473,16 +480,35 @@ export function WeekGrid({
           return;
         }
 
-        // Real drag → open full modal
-        const finalBottomY = bottomY;
-        const startTime = yToTime(topY);
-        const endTime = yToTime(finalBottomY);
+        if (crossDay) {
+          // Dragged across days — create event spanning from startDay:startY to endDay:endY
+          const startDayIdx = Math.min(d.dayIndex, d.currentDayIndex);
+          const endDayIdx = Math.max(d.dayIndex, d.currentDayIndex);
+          const isForward = d.currentDayIndex >= d.dayIndex;
 
-        const day = days[d.dayIndex];
-        const startDate = timeToDate(day, startTime);
-        const endDate = timeToDate(day, endTime);
+          const startY = isForward ? d.startY : d.currentY;
+          const endY = isForward ? d.currentY : d.startY;
 
-        onDragCreate(startDate, endDate);
+          const startTime = yToTime(startY);
+          const endTime = yToTime(Math.max(endY, startY + SNAP_PX));
+
+          const startDate = timeToDate(days[startDayIdx], startTime);
+          const endDate = timeToDate(days[endDayIdx], endTime);
+
+          onDragCreate(startDate, endDate);
+        } else {
+          // Same day drag → open full modal
+          const topY = Math.min(d.startY, d.currentY);
+          const bottomY = Math.max(d.startY, d.currentY);
+          const startTime = yToTime(topY);
+          const endTime = yToTime(bottomY);
+
+          const day = days[d.dayIndex];
+          const startDate = timeToDate(day, startTime);
+          const endDate = timeToDate(day, endTime);
+
+          onDragCreate(startDate, endDate);
+        }
       } else if (d.mode === 'move') {
         if (!d.hasMoved) {
           // It was just a click, not a drag — show event popover
@@ -527,19 +553,48 @@ export function WeekGrid({
 
   // ─── Drag previews ───────────────────────────────────────────────────
 
-  const createPreview = useMemo(() => {
+  const createPreviews = useMemo(() => {
     if (!drag || drag.mode !== 'create') return null;
-    const topY = Math.min(drag.startY, drag.currentY);
-    const bottomY = Math.max(drag.startY, drag.currentY);
-    const height = Math.max(bottomY - topY, SNAP_PX);
-    const startTime = yToTime(topY);
-    const endTime = yToTime(topY + height);
-    return {
-      dayIndex: drag.dayIndex,
-      top: topY,
-      height,
-      label: `${formatTimeFromParts(startTime.hours, startTime.minutes)} – ${formatTimeFromParts(endTime.hours, endTime.minutes)}`,
-    };
+    const crossDay = drag.currentDayIndex !== drag.dayIndex;
+
+    if (!crossDay) {
+      // Same-day preview
+      const topY = Math.min(drag.startY, drag.currentY);
+      const bottomY = Math.max(drag.startY, drag.currentY);
+      const height = Math.max(bottomY - topY, SNAP_PX);
+      const startTime = yToTime(topY);
+      const endTime = yToTime(topY + height);
+      return [{
+        dayIndex: drag.dayIndex,
+        top: topY,
+        height,
+        label: `${formatTimeFromParts(startTime.hours, startTime.minutes)} – ${formatTimeFromParts(endTime.hours, endTime.minutes)}`,
+      }];
+    }
+
+    // Cross-day preview: show a preview block on each day in the range
+    const isForward = drag.currentDayIndex >= drag.dayIndex;
+    const startDayIdx = Math.min(drag.dayIndex, drag.currentDayIndex);
+    const endDayIdx = Math.max(drag.dayIndex, drag.currentDayIndex);
+    const startY = isForward ? drag.startY : drag.currentY;
+    const endY = isForward ? drag.currentY : drag.startY;
+    const maxY = TOTAL_HOURS * HOUR_HEIGHT;
+
+    const previews: Array<{ dayIndex: number; top: number; height: number; label: string }> = [];
+    for (let di = startDayIdx; di <= endDayIdx; di++) {
+      const top = di === startDayIdx ? startY : 0;
+      const bottom = di === endDayIdx ? Math.max(endY, startY + SNAP_PX) : maxY;
+      const height = Math.max(bottom - top, SNAP_PX);
+      const st = yToTime(top);
+      const et = yToTime(top + height);
+      previews.push({
+        dayIndex: di,
+        top,
+        height,
+        label: `${formatTimeFromParts(st.hours, st.minutes)} – ${formatTimeFromParts(et.hours, et.minutes)}`,
+      });
+    }
+    return previews;
   }, [drag]);
 
   const movePreview = useMemo(() => {
@@ -809,14 +864,15 @@ export function WeekGrid({
                 {dayStr === todayStr && <NowLine />}
 
                 {/* Create drag preview */}
-                {createPreview && createPreview.dayIndex === dayIndex && (
+                {createPreviews?.filter((p) => p.dayIndex === dayIndex).map((p, idx) => (
                   <div
+                    key={`create-${idx}`}
                     style={{
                       position: 'absolute',
-                      top: createPreview.top,
+                      top: p.top,
                       left: 2,
                       right: 2,
-                      height: createPreview.height,
+                      height: p.height,
                       background: 'color-mix(in srgb, var(--color-accent-primary) 20%, transparent)',
                       border: '1px solid var(--color-accent-primary)',
                       borderLeft: '3px solid var(--color-accent-primary)',
@@ -830,9 +886,9 @@ export function WeekGrid({
                       fontFamily: 'var(--font-family)',
                     }}
                   >
-                    {createPreview.label}
+                    {p.label}
                   </div>
-                )}
+                ))}
 
                 {/* Move ghost preview */}
                 {movePreview && movePreview.dayIndex === dayIndex && (

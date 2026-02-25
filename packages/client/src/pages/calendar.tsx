@@ -400,6 +400,18 @@ export function CalendarPage() {
           />
         </div>
 
+        {/* Timezone label */}
+        <span
+          style={{
+            fontSize: 'var(--font-size-xs)',
+            color: 'var(--color-text-tertiary)',
+            whiteSpace: 'nowrap',
+          }}
+          title={Intl.DateTimeFormat().resolvedOptions().timeZone}
+        >
+          {new Date().toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').pop()}
+        </span>
+
         {/* Sync button */}
         <button
           onClick={() => syncCalendar.mutate()}
