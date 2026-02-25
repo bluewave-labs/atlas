@@ -205,9 +205,9 @@ export const calendars = sqliteTable('calendars', {
   isPrimary: integer('is_primary', { mode: 'boolean' }).notNull().default(false),
   isSelected: integer('is_selected', { mode: 'boolean' }).notNull().default(true),
   syncToken: text('sync_token'),
-  lastSyncAt: timestamp(),
-  createdAt: timestampNow().notNull(),
-  updatedAt: timestampNow().notNull(),
+  lastSyncAt: text('last_sync_at'),
+  createdAt: text('createdAt').$defaultFn(() => new Date().toISOString()).notNull(),
+  updatedAt: text('updatedAt').$defaultFn(() => new Date().toISOString()).notNull(),
 }, (table) => ({
   accountGoogleIdx: uniqueIndex('idx_calendars_account_google').on(table.accountId, table.googleCalendarId),
 }));

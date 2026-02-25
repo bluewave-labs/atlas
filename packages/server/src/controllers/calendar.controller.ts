@@ -6,7 +6,7 @@ export async function listCalendars(req: Request, res: Response) {
   try {
     const cals = await calendarService.listCalendars(req.auth!.accountId);
     res.json({ success: true, data: cals });
-  } catch (error) {
+  } catch (error: any) {
     logger.error({ error }, 'Failed to list calendars');
     res.status(500).json({ success: false, error: 'Failed to list calendars' });
   }
