@@ -99,7 +99,7 @@ export function EmailListItem({
         {/* Sender + thread count — fixed width container */}
         <div
           style={{
-            width: 120,
+            width: 140,
             flexShrink: 0,
             display: 'flex',
             alignItems: 'center',
