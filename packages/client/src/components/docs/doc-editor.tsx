@@ -275,25 +275,27 @@ const SLASH_COMMANDS: SlashCommandItem[] = [
     description: 'Insert a linked list of headings',
     icon: '≡',
     command: (editor) => {
-      // Scan for all headings in the current document and insert a TOC
-      const headings: Array<{ level: number; text: string }> = [];
+      const headings: Array<{ level: number; text: string; id: string }> = [];
       editor.state.doc.descendants((node) => {
         if (node.type.name === 'heading') {
-          headings.push({ level: node.attrs.level as number, text: node.textContent });
+          headings.push({
+            level: node.attrs.level as number,
+            text: node.textContent,
+            id: node.attrs.id || '',
+          });
         }
       });
       if (headings.length === 0) {
-        // Insert a placeholder paragraph if no headings found
         editor.chain().focus().insertContent('<p><em>No headings found in this document.</em></p>').run();
         return;
       }
-      // Build a bullet list from headings
-      const lines = headings.map((h) => {
-        const indent = '  '.repeat(h.level - 1);
-        return `${indent}• ${h.text}`;
+      // Build nested bullet list items
+      const items = headings.map((h) => {
+        const padding = (h.level - 1) * 16;
+        return `<li style="padding-left: ${padding}px; list-style: none;"><a href="#${h.id}" style="color: var(--color-text-secondary); text-decoration: none;">${h.text}</a></li>`;
       });
-      const content = lines.join('\n');
-      editor.chain().focus().insertContent(`<p><strong>Table of contents</strong></p><pre><code>${content}</code></pre>`).run();
+      const tocHtml = `<p><strong>Table of contents</strong></p><ul style="padding-left: 0;">${items.join('')}</ul>`;
+      editor.chain().focus().insertContent(tocHtml).run();
     },
   },
 ];

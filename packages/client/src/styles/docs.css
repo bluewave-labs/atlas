@@ -587,11 +587,16 @@
   left: 14px;
   top: 12px;
   font-size: 16px;
-  line-height: 1;
+  /* Match text line-height so the icon centers on the same baseline as the first line */
+  line-height: 22.4px; /* 14px font-size * 1.6 line-height */
 }
 
 .doc-editor .tiptap .callout p {
   margin: 2px 0;
+}
+
+.doc-editor .tiptap .callout p:first-child {
+  margin-top: 0;
 }
 
 /* Info variant */
