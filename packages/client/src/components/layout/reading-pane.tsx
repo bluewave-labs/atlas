@@ -302,7 +302,7 @@ export function ReadingPane() {
         <h1
           style={{
             margin: 0,
-            fontSize: 'var(--font-size-lg)',
+            fontSize: 14,
             fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'],
             color: 'var(--color-text-primary)',
             lineHeight: 'var(--line-height-tight)',
