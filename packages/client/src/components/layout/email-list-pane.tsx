@@ -262,6 +262,7 @@ export function EmailListPane() {
     openCompose,
     selectedThreadIds,
     toggleSelection,
+    addToSelection,
     clearSelection,
     selectThreads,
     filterByLabel,
@@ -434,6 +435,17 @@ export function EmailListPane() {
     document.addEventListener('atlasmail:select_cursor', handleSelectCursor);
     return () => document.removeEventListener('atlasmail:select_cursor', handleSelectCursor);
   }, [toggleSelection]);
+
+  // Listen for add-to-selection event dispatched by Shift+Arrow/j/k
+  useEffect(() => {
+    const handleAddToSelection = (e: Event) => {
+      const { cursorIndex: idx } = (e as CustomEvent<{ cursorIndex: number }>).detail;
+      const thread = displayThreadsRef.current[idx];
+      if (thread) addToSelection(thread.id);
+    };
+    document.addEventListener('atlasmail:add_to_selection', handleAddToSelection);
+    return () => document.removeEventListener('atlasmail:add_to_selection', handleAddToSelection);
+  }, [addToSelection]);
 
   const handleThreadClick = useCallback(
     (thread: Thread, index: number) => {

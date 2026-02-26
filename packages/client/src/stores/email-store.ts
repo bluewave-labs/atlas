@@ -21,6 +21,7 @@ interface EmailState {
   moveCursor: (delta: number, max: number) => void;
   setCursorIndex: (index: number) => void;
   toggleSelection: (threadId: string) => void;
+  addToSelection: (threadId: string) => void;
   clearSelection: () => void;
   selectThreads: (threadIds: string[]) => void;
   openCompose: (mode: 'new' | 'reply' | 'reply_all' | 'forward', threadId?: string, initialTo?: string) => void;
@@ -60,6 +61,12 @@ export const useEmailStore = create<EmailState>((set) => ({
       const next = new Set(state.selectedThreadIds);
       if (next.has(threadId)) next.delete(threadId);
       else next.add(threadId);
+      return { selectedThreadIds: next };
+    }),
+  addToSelection: (threadId) =>
+    set((state) => {
+      const next = new Set(state.selectedThreadIds);
+      next.add(threadId);
       return { selectedThreadIds: next };
     }),
   clearSelection: () => set({ selectedThreadIds: new Set() }),

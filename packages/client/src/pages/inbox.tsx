@@ -43,7 +43,7 @@ export function InboxPage() {
   const starMutation = useToggleStar();
   const markReadUnread = useMarkReadUnread();
   const isInbox = activeMailbox === 'inbox';
-  const categoryFilter = isInbox && activeCategory !== 'all' ? activeCategory : undefined;
+  const categoryFilter = isInbox ? activeCategory : undefined;
   const { data: threads } = useMailboxThreads(activeMailbox, categoryFilter, filterByLabel);
   const maxCursorIndex = Math.max(0, (threads?.length ?? 1) - 1);
   const displayThreads = useMemo(() => threads ?? [], [threads]);
@@ -177,17 +177,17 @@ export function InboxPage() {
     );
   }, [cursorIndex]);
 
-  // Shift+j / Shift+k — select the current thread then move cursor
+  // Shift+j / Shift+k / Shift+Arrow — add current thread to selection then move cursor
   const handleSelectDown = useCallback(() => {
     document.dispatchEvent(
-      new CustomEvent('atlasmail:select_cursor', { detail: { cursorIndex } }),
+      new CustomEvent('atlasmail:add_to_selection', { detail: { cursorIndex } }),
     );
     moveCursor(1, maxCursorIndex);
   }, [cursorIndex, moveCursor, maxCursorIndex]);
 
   const handleSelectUp = useCallback(() => {
     document.dispatchEvent(
-      new CustomEvent('atlasmail:select_cursor', { detail: { cursorIndex } }),
+      new CustomEvent('atlasmail:add_to_selection', { detail: { cursorIndex } }),
     );
     moveCursor(-1, maxCursorIndex);
   }, [cursorIndex, moveCursor, maxCursorIndex]);
