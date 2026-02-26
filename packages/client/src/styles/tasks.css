@@ -1055,7 +1055,7 @@
 
 .task-calendar-events {
   margin: var(--spacing-sm) var(--spacing-md);
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
   background: color-mix(in srgb, var(--color-accent-primary) 4%, transparent);
   border-radius: var(--radius-lg);
   border: 1px solid color-mix(in srgb, var(--color-accent-primary) 10%, transparent);
@@ -1070,15 +1070,15 @@
   color: var(--color-text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  padding-bottom: var(--spacing-xs);
+  padding-bottom: var(--spacing-sm);
 }
 
 .task-calendar-event-row {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  padding: 5px 0;
-  font-size: var(--font-size-sm);
+  gap: var(--spacing-md);
+  padding: 8px 0;
+  font-size: var(--font-size-md);
   color: var(--color-text-secondary);
   border-top: 1px solid color-mix(in srgb, var(--color-border-primary) 50%, transparent);
 }
@@ -1088,10 +1088,10 @@
 }
 
 .task-calendar-event-time {
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   color: var(--color-text-tertiary);
   white-space: nowrap;
-  min-width: 100px;
+  min-width: 110px;
   font-variant-numeric: tabular-nums;
 }
 
