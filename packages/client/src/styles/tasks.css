@@ -1438,8 +1438,7 @@
   color: var(--color-text-primary);
   background: transparent;
   border: none;
-  border-bottom: 1.5px solid var(--color-accent-primary);
   outline: none;
-  padding: 0 0 1px;
+  padding: 0;
   line-height: var(--line-height-normal);
 }
