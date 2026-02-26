@@ -52,7 +52,9 @@ function collectAddresses(
 function deriveThreadFlags(gmailLabels: string[]) {
   return {
     isStarred: gmailLabels.includes('STARRED'),
-    isArchived: !gmailLabels.includes('INBOX'),
+    // isArchived is only set by user-initiated archive actions, not by sync.
+    // Gmail's lack of INBOX label doesn't mean the user archived it in Atlas.
+    isArchived: false,
     isTrashed: gmailLabels.includes('TRASH'),
     isSpam: gmailLabels.includes('SPAM'),
   };
@@ -260,11 +262,7 @@ async function processMessages(
           category,
           labels: parsed.gmailLabels,
           isStarred: flags.isStarred,
-          // Only clear isArchived when this email has INBOX label;
-          // never overwrite to true (another email in the thread may have INBOX)
-          isArchived: flags.isArchived
-            ? sql`${threads.isArchived}`
-            : false,
+          // Preserve isArchived — only user-initiated archive actions change it
           isTrashed: flags.isTrashed,
           isSpam: flags.isSpam,
           updatedAt: now,
@@ -443,11 +441,7 @@ async function processMetadataMessages(
           category,
           labels: parsed.gmailLabels,
           isStarred: flags.isStarred,
-          // Only clear isArchived when this email has INBOX label;
-          // never overwrite to true (another email in the thread may have INBOX)
-          isArchived: flags.isArchived
-            ? sql`${threads.isArchived}`
-            : false,
+          // Preserve isArchived — only user-initiated archive actions change it
           isTrashed: flags.isTrashed,
           isSpam: flags.isSpam,
           updatedAt: now,
@@ -805,19 +799,16 @@ export async function incrementalSync(accountId: string) {
           if (emailRecord) {
             touchedThreadIds.add(emailRecord.threadId);
             // Only clear isArchived (don't set true — reconciliation handles that)
-            const threadUpdate: Record<string, any> = {
-              isStarred: flags.isStarred,
-              isTrashed: flags.isTrashed,
-              isSpam: flags.isSpam,
-              labels,
-              updatedAt: new Date().toISOString(),
-            };
-            if (!flags.isArchived) {
-              threadUpdate.isArchived = false;
-            }
             await db
               .update(threads)
-              .set(threadUpdate)
+              .set({
+                isStarred: flags.isStarred,
+                // isArchived is not touched by sync — only user actions change it
+                isTrashed: flags.isTrashed,
+                isSpam: flags.isSpam,
+                labels,
+                updatedAt: new Date().toISOString(),
+              })
               .where(eq(threads.id, emailRecord.threadId));
           }
         }
@@ -962,10 +953,6 @@ async function reconcileThreadCountsSelective(threadIds: Set<string>) {
           WHERE e2.thread_id = threads.id
           ORDER BY e2."internalDate" DESC LIMIT 1
         ),
-        is_archived = CASE WHEN EXISTS (
-          SELECT 1 FROM emails e WHERE e.thread_id = threads.id
-            AND EXISTS (SELECT 1 FROM json_each(e.gmail_labels) WHERE value = 'INBOX')
-        ) THEN 0 ELSE 1 END,
         "updatedAt" = ?
       WHERE threads.id IN (${placeholders})
     `).run(now, ...chunk);
