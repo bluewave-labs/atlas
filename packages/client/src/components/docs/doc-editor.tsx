@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
+import { useEditor, EditorContent, BubbleMenu, FloatingMenu } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { Extension } from '@tiptap/core';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import Underline from '@tiptap/extension-underline';
 import TiptapLink from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -14,6 +17,9 @@ import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import Image from '@tiptap/extension-image';
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import { common, createLowlight } from 'lowlight';
+import GlobalDragHandle from 'tiptap-extension-global-drag-handle';
 import { Callout } from './extensions/callout';
 import { ToggleBlock, ToggleSummary } from './extensions/toggle-block';
 import { PageMention } from './extensions/page-mention';
@@ -38,6 +44,72 @@ import {
   Trash2,
 } from 'lucide-react';
 import '../../styles/docs.css';
+
+// ─── Lowlight instance ────────────────────────────────────────────────────────
+const lowlight = createLowlight(common);
+
+// ─── Trailing Node Extension ─────────────────────────────────────────────────
+// Ensures there is always a paragraph at the end of the document so the
+// user can always click past the last block to continue typing.
+const TrailingNode = Extension.create({
+  name: 'trailingNode',
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        appendTransaction: (_transactions, _oldState, newState) => {
+          const { doc, tr, schema } = newState;
+          const lastNode = doc.lastChild;
+          if (lastNode?.type.name !== 'paragraph' || lastNode.content.size !== 0) {
+            // Only append if last node isn't an empty paragraph
+            if (lastNode?.type.name !== 'paragraph') {
+              const paragraph = schema.nodes.paragraph.create();
+              return tr.insert(doc.content.size, paragraph);
+            }
+          }
+          return null;
+        },
+      }),
+    ];
+  },
+});
+
+// ─── Focus Extension (custom — @tiptap/extension-focus v3 needs @tiptap/extensions peer) ───
+const focusPluginKey = new PluginKey('focus');
+
+const FocusExtension = Extension.create({
+  name: 'focus',
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: focusPluginKey,
+        props: {
+          decorations: (state) => {
+            const { doc, selection } = state;
+            const decorations: Decoration[] = [];
+            const { $anchor, $head } = selection;
+            const resolvedFrom = Math.min($anchor.pos, $head.pos);
+            const resolvedEnd = Math.max($anchor.pos, $head.pos);
+
+            doc.descendants((node, pos) => {
+              if (!node.isBlock) return true;
+              const from = pos;
+              const to = pos + node.nodeSize;
+              const isActive = resolvedFrom >= from && resolvedEnd <= to;
+              if (isActive) {
+                decorations.push(
+                  Decoration.node(from, to, { class: 'has-focus' }),
+                );
+              }
+              return true;
+            });
+
+            return DecorationSet.create(doc, decorations);
+          },
+        },
+      }),
+    ];
+  },
+});
 
 // ─── Types ──────────────────────────────────────────────────────────────
 
@@ -185,6 +257,32 @@ const SLASH_COMMANDS: SlashCommandItem[] = [
     icon: '▶',
     command: (editor) => editor.chain().focus().setToggleBlock().run(),
   },
+  {
+    title: 'Table of contents',
+    description: 'Insert a linked list of headings',
+    icon: '≡',
+    command: (editor) => {
+      // Scan for all headings in the current document and insert a TOC
+      const headings: Array<{ level: number; text: string }> = [];
+      editor.state.doc.descendants((node) => {
+        if (node.type.name === 'heading') {
+          headings.push({ level: node.attrs.level as number, text: node.textContent });
+        }
+      });
+      if (headings.length === 0) {
+        // Insert a placeholder paragraph if no headings found
+        editor.chain().focus().insertContent('<p><em>No headings found in this document.</em></p>').run();
+        return;
+      }
+      // Build a bullet list from headings
+      const lines = headings.map((h) => {
+        const indent = '  '.repeat(h.level - 1);
+        return `${indent}• ${h.text}`;
+      });
+      const content = lines.join('\n');
+      editor.chain().focus().insertContent(`<p><strong>Table of contents</strong></p><pre><code>${content}</code></pre>`).run();
+    },
+  },
 ];
 
 // ─── DocEditor ──────────────────────────────────────────────────────────
@@ -196,6 +294,13 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
   const [slashSelectedIdx, setSlashSelectedIdx] = useState(0);
   const slashStartRef = useRef<number | null>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
+
+  // Floating menu state for the "+" button on empty lines
+  const [floatingMenuOpen, setFloatingMenuOpen] = useState(false);
+
+  // Word and character count (computed from editor text content)
+  const [wordCount, setWordCount] = useState(0);
+  const [charCount, setCharCount] = useState(0);
 
   // Drag-over state for the visual drop zone indicator.
   // A counter is used instead of a boolean so that nested dragenter/dragleave
@@ -218,7 +323,20 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
+        // Disable default codeBlock — replaced by CodeBlockLowlight
+        codeBlock: false,
       }),
+      // ── Syntax-highlighted code blocks ──
+      CodeBlockLowlight.configure({ lowlight }),
+      // ── Global drag handle (Notion-style) ──
+      GlobalDragHandle.configure({
+        dragHandleWidth: 20,
+        scrollTreshold: 100,
+      }),
+      // ── Trailing paragraph ──
+      TrailingNode,
+      // ── Focus highlight ──
+      FocusExtension,
       Underline,
       TextStyle,
       Color,
@@ -374,6 +492,11 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
     onUpdate: ({ editor: e }) => {
       onChange({ _html: e.getHTML() });
 
+      // Update word and character counts
+      const text = e.state.doc.textContent;
+      setCharCount(text.length);
+      setWordCount(text.trim() === '' ? 0 : text.trim().split(/\s+/).length);
+
       // Slash command detection
       if (!e.isActive('codeBlock')) {
         const { from } = e.state.selection;
@@ -513,6 +636,14 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
     }
   }, [editor, readOnly]);
 
+  // Initialize word/char count when editor first mounts
+  useEffect(() => {
+    if (!editor) return;
+    const text = editor.state.doc.textContent;
+    setCharCount(text.length);
+    setWordCount(text.trim() === '' ? 0 : text.trim().split(/\s+/).length);
+  }, [editor]);
+
   // Close slash menu on click outside
   useEffect(() => {
     if (!slashMenuOpen) return;
@@ -538,6 +669,19 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [mentionMenuOpen]);
+
+  // Close floating menu on click outside
+  useEffect(() => {
+    if (!floatingMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.floating-menu')) {
+        setFloatingMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [floatingMenuOpen]);
 
   // Table toolbar: update position whenever the selection changes
   useEffect(() => {
@@ -674,6 +818,55 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
           </BubbleMenu>
         )}
 
+        {/* Floating "+" menu on empty lines */}
+        {!readOnly && (
+          <FloatingMenu
+            editor={editor}
+            tippyOptions={{ duration: 100, placement: 'left-start' }}
+            shouldShow={({ state }) => {
+              const { $from } = state.selection;
+              const isEmptyParagraph =
+                $from.parent.type.name === 'paragraph' &&
+                $from.parent.content.size === 0;
+              return isEmptyParagraph;
+            }}
+          >
+            <div className="floating-menu">
+              <button
+                className="floating-menu-btn"
+                title="Add a block"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setFloatingMenuOpen((v) => !v);
+                }}
+              >
+                +
+              </button>
+              {floatingMenuOpen && (
+                <div className="floating-menu-popover">
+                  {SLASH_COMMANDS.slice(0, 10).map((item) => (
+                    <button
+                      key={item.title}
+                      className="slash-command-item"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        item.command(editor);
+                        setFloatingMenuOpen(false);
+                      }}
+                    >
+                      <div className="slash-command-item-icon">{item.icon}</div>
+                      <div className="slash-command-item-text">
+                        <div className="slash-command-item-title">{item.title}</div>
+                        <div className="slash-command-item-description">{item.description}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </FloatingMenu>
+        )}
+
         {/* Editor */}
         <EditorContent editor={editor} />
 
@@ -707,6 +900,15 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
       {isDraggingFile && (
         <div className="doc-editor-drop-overlay">
           <div className="doc-editor-drop-label">Drop image to insert</div>
+        </div>
+      )}
+
+      {/* Character / word count status bar */}
+      {!readOnly && (
+        <div className="doc-editor-status-bar">
+          <span>{wordCount} {wordCount === 1 ? 'word' : 'words'}</span>
+          <span className="doc-editor-status-bar-dot">·</span>
+          <span>{charCount} {charCount === 1 ? 'character' : 'characters'}</span>
         </div>
       )}
     </div>
