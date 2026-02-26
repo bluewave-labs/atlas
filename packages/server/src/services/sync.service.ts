@@ -260,7 +260,11 @@ async function processMessages(
           category,
           labels: parsed.gmailLabels,
           isStarred: flags.isStarred,
-          isArchived: flags.isArchived,
+          // Only clear isArchived when this email has INBOX label;
+          // never overwrite to true (another email in the thread may have INBOX)
+          isArchived: flags.isArchived
+            ? sql`${threads.isArchived}`
+            : false,
           isTrashed: flags.isTrashed,
           isSpam: flags.isSpam,
           updatedAt: now,
@@ -439,7 +443,11 @@ async function processMetadataMessages(
           category,
           labels: parsed.gmailLabels,
           isStarred: flags.isStarred,
-          isArchived: flags.isArchived,
+          // Only clear isArchived when this email has INBOX label;
+          // never overwrite to true (another email in the thread may have INBOX)
+          isArchived: flags.isArchived
+            ? sql`${threads.isArchived}`
+            : false,
           isTrashed: flags.isTrashed,
           isSpam: flags.isSpam,
           updatedAt: now,
@@ -796,16 +804,20 @@ export async function incrementalSync(accountId: string) {
 
           if (emailRecord) {
             touchedThreadIds.add(emailRecord.threadId);
+            // Only clear isArchived (don't set true — reconciliation handles that)
+            const threadUpdate: Record<string, any> = {
+              isStarred: flags.isStarred,
+              isTrashed: flags.isTrashed,
+              isSpam: flags.isSpam,
+              labels,
+              updatedAt: new Date().toISOString(),
+            };
+            if (!flags.isArchived) {
+              threadUpdate.isArchived = false;
+            }
             await db
               .update(threads)
-              .set({
-                isStarred: flags.isStarred,
-                isArchived: flags.isArchived,
-                isTrashed: flags.isTrashed,
-                isSpam: flags.isSpam,
-                labels,
-                updatedAt: new Date().toISOString(),
-              })
+              .set(threadUpdate)
               .where(eq(threads.id, emailRecord.threadId));
           }
         }
@@ -950,6 +962,10 @@ async function reconcileThreadCountsSelective(threadIds: Set<string>) {
           WHERE e2.thread_id = threads.id
           ORDER BY e2."internalDate" DESC LIMIT 1
         ),
+        is_archived = CASE WHEN EXISTS (
+          SELECT 1 FROM emails e WHERE e.thread_id = threads.id
+            AND EXISTS (SELECT 1 FROM json_each(e.gmail_labels) WHERE value = 'INBOX')
+        ) THEN 0 ELSE 1 END,
         "updatedAt" = ?
       WHERE threads.id IN (${placeholders})
     `).run(now, ...chunk);

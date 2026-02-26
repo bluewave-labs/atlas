@@ -311,7 +311,7 @@ export function EmailListPane() {
     isFetchingNextPage,
   } = useMailboxThreads(
     activeMailbox,
-    isInbox && activeCategory !== 'all' ? activeCategory : undefined,
+    isInbox ? activeCategory : undefined,
     filterByLabel,
   );
 
@@ -474,7 +474,7 @@ export function EmailListPane() {
   // The undo hooks snapshot the cache entry for the currently visible list.
   // When in inbox mode the key is the category list; in other mailboxes it
   // is the mailbox key — so we must pass the right key to each undo hook.
-  const categoryFilter = isInbox && activeCategory !== 'all' ? activeCategory : undefined;
+  const categoryFilter = isInbox ? activeCategory : undefined;
   const activeListKey = useMemo(
     () => queryKeys.threads.mailbox(activeMailbox, categoryFilter),
     [activeMailbox, categoryFilter],
