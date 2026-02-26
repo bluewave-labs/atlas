@@ -1294,7 +1294,7 @@
  * Keep it very subtle — just a faint background tint.
  */
 .doc-editor .tiptap .has-focus {
-  background: rgba(0, 0, 0, 0.018);
+  box-shadow: inset 0 0 0 0 transparent;
   border-radius: 4px;
 }
 
@@ -1434,4 +1434,308 @@
 
 .doc-editor-status-bar-dot {
   opacity: 0.5;
+}
+
+.doc-editor-shortcuts-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  color: var(--color-text-tertiary, #98a2b3);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+
+.doc-editor-shortcuts-btn:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-secondary);
+}
+
+/* ─── Resizable image ─────────────────────────────────────────────────── */
+
+.doc-editor .tiptap .resizable-image-figure {
+  margin: 16px 0;
+  display: inline-block;
+  max-width: 100%;
+  position: relative;
+}
+
+.doc-editor .tiptap .resizable-image-figure.ProseMirror-selectednode {
+  outline: none;
+}
+
+.doc-editor .tiptap .resizable-image-wrapper {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  line-height: 0;
+}
+
+.doc-editor .tiptap .resizable-image-wrapper img {
+  border-radius: 6px;
+  display: block;
+  max-width: 100%;
+  height: auto;
+  cursor: default;
+}
+
+.doc-editor .tiptap .resizable-image-figure.ProseMirror-selectednode .resizable-image-wrapper img {
+  outline: 2px solid var(--color-accent-primary, #13715B);
+  outline-offset: 2px;
+}
+
+/* Resize handles — only show on selected node */
+.resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--color-accent-primary, #13715B);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+  pointer-events: none;
+}
+
+.resizable-image-figure.ProseMirror-selectednode .resize-handle {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.resize-handle-se {
+  bottom: 4px;
+  right: 4px;
+  cursor: se-resize;
+}
+
+.resize-handle-sw {
+  bottom: 4px;
+  left: 4px;
+  cursor: sw-resize;
+}
+
+/* Caption */
+.resizable-image-caption {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-tertiary, #98a2b3);
+  padding: 6px 4px 2px;
+  outline: none;
+  border: none;
+  font-family: var(--font-family);
+  line-height: 1.4;
+  min-height: 20px;
+}
+
+.resizable-image-caption:empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-tertiary, #98a2b3);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ─── Search & Replace bar ────────────────────────────────────────────── */
+
+.search-replace-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--color-border-primary, #d0d5dd);
+  background: var(--color-bg-primary, #fff);
+  font-family: var(--font-family);
+}
+
+.search-replace-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.search-replace-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border-primary, #d0d5dd);
+  border-radius: 4px;
+  background: var(--color-bg-secondary, #f9fafb);
+  flex: 1;
+  min-width: 0;
+}
+
+.search-replace-input-wrap:focus-within {
+  border-color: var(--color-accent-primary, #13715B);
+}
+
+.search-replace-input {
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-family: var(--font-family);
+  color: var(--color-text-primary);
+  outline: none;
+  width: 100%;
+  padding: 0;
+}
+
+.search-replace-input::placeholder {
+  color: var(--color-text-tertiary, #98a2b3);
+}
+
+.search-replace-count {
+  font-size: 11px;
+  color: var(--color-text-tertiary, #98a2b3);
+  white-space: nowrap;
+  min-width: 50px;
+  text-align: center;
+}
+
+.search-replace-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-family);
+  transition: background 0.1s ease;
+}
+
+.search-replace-btn:hover {
+  background: var(--color-surface-hover);
+}
+
+.search-replace-action {
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+/* Search match highlights */
+.doc-editor .tiptap .search-match {
+  background: #fef08a;
+  border-radius: 2px;
+}
+
+.doc-editor .tiptap .search-match-active {
+  background: #fb923c;
+  color: #fff;
+  border-radius: 2px;
+}
+
+/* ─── Keyboard shortcuts help modal ──────────────────────────────────── */
+
+.shortcuts-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  font-family: var(--font-family);
+}
+
+.shortcuts-modal {
+  background: var(--color-bg-elevated, #fff);
+  border: 1px solid var(--color-border-primary, #d0d5dd);
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+  width: 480px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.shortcuts-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--color-border-primary, #d0d5dd);
+}
+
+.shortcuts-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.shortcuts-modal-body {
+  padding: 12px 20px 20px;
+  overflow-y: auto;
+}
+
+.shortcuts-section {
+  margin-bottom: 16px;
+}
+
+.shortcuts-section:last-child {
+  margin-bottom: 0;
+}
+
+.shortcuts-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-tertiary, #98a2b3);
+  padding: 4px 0 8px;
+}
+
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.shortcut-label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.shortcut-keys {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.shortcut-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  background: var(--color-bg-secondary, #f9fafb);
+  border: 1px solid var(--color-border-primary, #d0d5dd);
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: var(--font-family);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.06);
+}
+
+.shortcut-plus {
+  font-size: 10px;
+  color: var(--color-text-tertiary, #98a2b3);
+  margin: 0 1px;
 }

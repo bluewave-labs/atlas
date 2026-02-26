@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useEditor, EditorContent, BubbleMenu, FloatingMenu } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
-import { Decoration, DecorationSet } from '@tiptap/pm/view';
+import { Plugin } from '@tiptap/pm/state';
 import Underline from '@tiptap/extension-underline';
 import TiptapLink from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -16,13 +15,16 @@ import { Table } from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
-import Image from '@tiptap/extension-image';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { common, createLowlight } from 'lowlight';
 import GlobalDragHandle from 'tiptap-extension-global-drag-handle';
+import UniqueID from '@tiptap/extension-unique-id';
 import { Callout } from './extensions/callout';
 import { ToggleBlock, ToggleSummary } from './extensions/toggle-block';
 import { PageMention } from './extensions/page-mention';
+import { ResizableImage } from './extensions/resizable-image';
+import { SearchReplace } from './extensions/search-replace';
+import type { SearchReplaceState } from './extensions/search-replace';
 import {
   Bold,
   Italic,
@@ -42,6 +44,13 @@ import {
   Redo2,
   Palette,
   Trash2,
+  Search,
+  Replace,
+  X,
+  ChevronUp,
+  ChevronDown,
+  Keyboard,
+  CaseSensitive,
 } from 'lucide-react';
 import '../../styles/docs.css';
 
@@ -73,43 +82,9 @@ const TrailingNode = Extension.create({
   },
 });
 
-// ─── Focus Extension (custom — @tiptap/extension-focus v3 needs @tiptap/extensions peer) ───
-const focusPluginKey = new PluginKey('focus');
-
-const FocusExtension = Extension.create({
-  name: 'focus',
-  addProseMirrorPlugins() {
-    return [
-      new Plugin({
-        key: focusPluginKey,
-        props: {
-          decorations: (state) => {
-            const { doc, selection } = state;
-            const decorations: Decoration[] = [];
-            const { $anchor, $head } = selection;
-            const resolvedFrom = Math.min($anchor.pos, $head.pos);
-            const resolvedEnd = Math.max($anchor.pos, $head.pos);
-
-            doc.descendants((node, pos) => {
-              if (!node.isBlock) return true;
-              const from = pos;
-              const to = pos + node.nodeSize;
-              const isActive = resolvedFrom >= from && resolvedEnd <= to;
-              if (isActive) {
-                decorations.push(
-                  Decoration.node(from, to, { class: 'has-focus' }),
-                );
-              }
-              return true;
-            });
-
-            return DecorationSet.create(doc, decorations);
-          },
-        },
-      }),
-    ];
-  },
-});
+// Focus Extension removed — the per-transaction decoration rebuild caused
+// visible shaking/jitter in the editor. The visual effect was minimal
+// (rgba(0,0,0,0.018) background) and not worth the performance cost.
 
 // ─── Types ──────────────────────────────────────────────────────────────
 
@@ -140,6 +115,45 @@ function readFileAsDataUrl(file: File): Promise<string> {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+// ─── Office Paste Helpers ───────────────────────────────────────────────────
+// Detect and clean HTML pasted from Microsoft Office, Google Docs, etc.
+
+function isOfficePaste(html: string): boolean {
+  return (
+    /class="?Mso/i.test(html) ||
+    /xmlns:o="urn:schemas-microsoft-com:office/i.test(html) ||
+    /docs-internal-guid/i.test(html) ||
+    /<google-sheets-html-origin/i.test(html) ||
+    /x:str/i.test(html)
+  );
+}
+
+function cleanOfficePaste(html: string): string {
+  let cleaned = html;
+  // Remove everything before <body> and after </body>
+  const bodyMatch = cleaned.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  if (bodyMatch) cleaned = bodyMatch[1];
+  // Remove XML namespaces and Office-specific tags
+  cleaned = cleaned.replace(/<o:[^>]*>[\s\S]*?<\/o:[^>]*>/gi, '');
+  cleaned = cleaned.replace(/<w:[^>]*>[\s\S]*?<\/w:[^>]*>/gi, '');
+  cleaned = cleaned.replace(/<m:[^>]*>[\s\S]*?<\/m:[^>]*>/gi, '');
+  cleaned = cleaned.replace(/<!\[if[^>]*>[\s\S]*?<!\[endif\]>/gi, '');
+  cleaned = cleaned.replace(/<!--[\s\S]*?-->/g, '');
+  // Remove all style attributes (Office adds massive inline styles)
+  cleaned = cleaned.replace(/\s+style="[^"]*"/gi, '');
+  cleaned = cleaned.replace(/\s+style='[^']*'/gi, '');
+  // Remove class attributes with mso-* or Office-specific classes
+  cleaned = cleaned.replace(/\s+class="[^"]*"/gi, '');
+  // Remove <span> tags without useful attributes (Office wraps everything in spans)
+  cleaned = cleaned.replace(/<span\s*>/gi, '');
+  cleaned = cleaned.replace(/<\/span>/gi, '');
+  // Remove empty paragraphs
+  cleaned = cleaned.replace(/<p[^>]*>\s*(&nbsp;|\u00a0)?\s*<\/p>/gi, '');
+  // Clean up excessive whitespace
+  cleaned = cleaned.replace(/\n\s*\n/g, '\n');
+  return cleaned.trim();
 }
 
 const SLASH_COMMANDS: SlashCommandItem[] = [
@@ -211,10 +225,9 @@ const SLASH_COMMANDS: SlashCommandItem[] = [
   },
   {
     title: 'Image',
-    description: 'Upload an image from your device',
+    description: 'Upload a resizable image',
     icon: '🖼',
     command: (editor) => {
-      // Open a hidden file input to let the user pick a local image file
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'image/*';
@@ -222,7 +235,7 @@ const SLASH_COMMANDS: SlashCommandItem[] = [
         const file = input.files?.[0];
         if (!file) return;
         const src = await readFileAsDataUrl(file);
-        editor.chain().focus().setImage({ src }).run();
+        editor.chain().focus().setResizableImage({ src }).run();
       };
       input.click();
     },
@@ -298,9 +311,10 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
   // Floating menu state for the "+" button on empty lines
   const [floatingMenuOpen, setFloatingMenuOpen] = useState(false);
 
-  // Word and character count (computed from editor text content)
+  // Word and character count (computed from editor text content, debounced)
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
+  const countTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Drag-over state for the visual drop zone indicator.
   // A counter is used instead of a boolean so that nested dragenter/dragleave
@@ -319,6 +333,13 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
   // Table toolbar state
   const [tableToolbarPos, setTableToolbarPos] = useState<{ top: number; left: number } | null>(null);
 
+  // Search & Replace bar state (derived from editor storage)
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [showReplace, setShowReplace] = useState(false);
+
+  // Keyboard shortcuts help modal
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -335,8 +356,6 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
       }),
       // ── Trailing paragraph ──
       TrailingNode,
-      // ── Focus highlight ──
-      FocusExtension,
       Underline,
       TextStyle,
       Color,
@@ -362,11 +381,13 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
       TableRow,
       TableCell,
       TableHeader,
-      Image.configure({
-        HTMLAttributes: {
-          style: 'max-width: 100%; height: auto; border-radius: 6px;',
-        },
+      ResizableImage,
+      // ── Unique ID per block (for future comments/anchoring) ──
+      UniqueID.configure({
+        types: ['heading', 'paragraph', 'bulletList', 'orderedList', 'taskList', 'codeBlock', 'blockquote', 'table', 'resizableImage', 'callout', 'toggleBlock'],
       }),
+      // ── Search & Replace (Cmd+F) ──
+      SearchReplace,
       Callout,
       ToggleSummary,
       ToggleBlock,
@@ -457,7 +478,7 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
             readFileAsDataUrl(file).then((src) => {
               const pos = view.posAtCoords({ left: event.clientX, top: event.clientY });
               if (pos) {
-                const node = view.state.schema.nodes.image.create({ src });
+                const node = view.state.schema.nodes.resizableImage.create({ src });
                 const tr = view.state.tr.insert(pos.pos, node);
                 view.dispatch(tr);
               }
@@ -467,17 +488,31 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
         }
         return false;
       },
-      // ── Image paste from clipboard ───────────────────────────────────
+      // ── Image & Office paste from clipboard ─────────────────────────
       handlePaste: (view, event) => {
         const items = event.clipboardData?.items;
         if (!items) return false;
+
+        // Office paste cleanup: intercept Word/Excel/Google Docs HTML
+        const htmlData = event.clipboardData?.getData('text/html');
+        if (htmlData && isOfficePaste(htmlData)) {
+          event.preventDefault();
+          const cleaned = cleanOfficePaste(htmlData);
+          // Use ProseMirror's schema-based insertContent for safe sanitization
+          const editorRef = (view as any).__tiptapEditor;
+          if (editorRef) {
+            editorRef.chain().focus().insertContent(cleaned).run();
+          }
+          return true;
+        }
+
         for (const item of items) {
           if (item.type.startsWith('image/')) {
             event.preventDefault();
             const file = item.getAsFile();
             if (!file) return false;
             readFileAsDataUrl(file).then((src) => {
-              const node = view.state.schema.nodes.image.create({ src });
+              const node = view.state.schema.nodes.resizableImage.create({ src });
               const tr = view.state.tr.replaceSelectionWith(node);
               view.dispatch(tr);
             });
@@ -492,10 +527,13 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
     onUpdate: ({ editor: e }) => {
       onChange({ _html: e.getHTML() });
 
-      // Update word and character counts
-      const text = e.state.doc.textContent;
-      setCharCount(text.length);
-      setWordCount(text.trim() === '' ? 0 : text.trim().split(/\s+/).length);
+      // Debounce word/character count updates to prevent shaking from rapid re-renders
+      if (countTimerRef.current) clearTimeout(countTimerRef.current);
+      countTimerRef.current = setTimeout(() => {
+        const text = e.state.doc.textContent;
+        setCharCount(text.length);
+        setWordCount(text.trim() === '' ? 0 : text.trim().split(/\s+/).length);
+      }, 300);
 
       // Slash command detection
       if (!e.isActive('codeBlock')) {
@@ -636,6 +674,24 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
     }
   }, [editor, readOnly]);
 
+  // Store editor reference on the ProseMirror view for the Office paste handler
+  useEffect(() => {
+    if (editor) {
+      (editor.view as any).__tiptapEditor = editor;
+    }
+  }, [editor]);
+
+  // Sync search bar open state from the SearchReplace extension storage
+  useEffect(() => {
+    if (!editor) return;
+    const handler = () => {
+      const s = editor.storage.searchReplace as SearchReplaceState | undefined;
+      if (s) setSearchOpen(s.open);
+    };
+    editor.on('transaction', handler);
+    return () => { editor.off('transaction', handler); };
+  }, [editor]);
+
   // Initialize word/char count when editor first mounts
   useEffect(() => {
     if (!editor) return;
@@ -690,7 +746,8 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
     function updateTableToolbar() {
       if (!editor) return;
       if (!editor.isActive('table')) {
-        setTableToolbarPos(null);
+        // Only call setState if currently showing the toolbar (avoid unnecessary renders)
+        setTableToolbarPos((prev) => prev === null ? prev : null);
         return;
       }
       try {
@@ -903,13 +960,39 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
         </div>
       )}
 
+      {/* Search & Replace bar */}
+      {searchOpen && !readOnly && (
+        <SearchBar
+          editor={editor}
+          showReplace={showReplace}
+          onToggleReplace={() => setShowReplace((v) => !v)}
+          onClose={() => {
+            editor.commands.closeSearch();
+            setShowReplace(false);
+          }}
+        />
+      )}
+
       {/* Character / word count status bar */}
       {!readOnly && (
         <div className="doc-editor-status-bar">
           <span>{wordCount} {wordCount === 1 ? 'word' : 'words'}</span>
           <span className="doc-editor-status-bar-dot">·</span>
           <span>{charCount} {charCount === 1 ? 'character' : 'characters'}</span>
+          <span style={{ flex: 1 }} />
+          <button
+            className="doc-editor-shortcuts-btn"
+            title="Keyboard shortcuts"
+            onClick={() => setShowShortcutsHelp(true)}
+          >
+            <Keyboard size={12} />
+          </button>
         </div>
+      )}
+
+      {/* Keyboard shortcuts help modal */}
+      {showShortcutsHelp && (
+        <KeyboardShortcutsHelp onClose={() => setShowShortcutsHelp(false)} />
       )}
     </div>
   );
@@ -1315,13 +1398,230 @@ function MentionMenu({
           onClick={() => onSelect(item)}
         >
           <span style={{ fontSize: 16, width: 24, textAlign: 'center', flexShrink: 0 }}>
-            {item.icon || '📄'}
+            {item.icon || '\u{1F4C4}'}
           </span>
           <span style={{ fontSize: 13, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {item.title || 'Untitled'}
           </span>
         </button>
       ))}
+    </div>
+  );
+}
+
+// ─── Search & Replace bar ────────────────────────────────────────────────
+
+function SearchBar({
+  editor,
+  showReplace,
+  onToggleReplace,
+  onClose,
+}: {
+  editor: NonNullable<ReturnType<typeof useEditor>>;
+  showReplace: boolean;
+  onToggleReplace: () => void;
+  onClose: () => void;
+}) {
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const storage = editor.storage.searchReplace as SearchReplaceState;
+
+  useEffect(() => {
+    searchInputRef.current?.focus();
+  }, []);
+
+  return (
+    <div className="search-replace-bar">
+      <div className="search-replace-row">
+        <div className="search-replace-input-wrap">
+          <Search size={13} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
+          <input
+            ref={searchInputRef}
+            type="text"
+            placeholder="Find..."
+            className="search-replace-input"
+            value={storage.query}
+            onChange={(e) => editor.commands.setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                if (e.shiftKey) editor.commands.previousMatch();
+                else editor.commands.nextMatch();
+              }
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                onClose();
+              }
+            }}
+          />
+        </div>
+        <span className="search-replace-count">
+          {storage.matchCount > 0
+            ? `${storage.activeIndex + 1} / ${storage.matchCount}`
+            : storage.query ? 'No results' : ''}
+        </span>
+        <button
+          className="search-replace-btn"
+          title="Case sensitive"
+          onClick={() => editor.commands.toggleCaseSensitive()}
+          style={{ color: storage.caseSensitive ? 'var(--color-accent-primary, #13715B)' : undefined }}
+        >
+          <CaseSensitive size={14} />
+        </button>
+        <button className="search-replace-btn" title="Previous" onClick={() => editor.commands.previousMatch()}>
+          <ChevronUp size={14} />
+        </button>
+        <button className="search-replace-btn" title="Next" onClick={() => editor.commands.nextMatch()}>
+          <ChevronDown size={14} />
+        </button>
+        <button
+          className="search-replace-btn"
+          title={showReplace ? 'Hide replace' : 'Show replace'}
+          onClick={onToggleReplace}
+        >
+          <Replace size={14} />
+        </button>
+        <button className="search-replace-btn" title="Close" onClick={onClose}>
+          <X size={14} />
+        </button>
+      </div>
+      {showReplace && (
+        <div className="search-replace-row">
+          <div className="search-replace-input-wrap">
+            <Replace size={13} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
+            <input
+              type="text"
+              placeholder="Replace..."
+              className="search-replace-input"
+              value={storage.replaceText}
+              onChange={(e) => editor.commands.setReplaceText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  editor.commands.replaceCurrentMatch();
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  onClose();
+                }
+              }}
+            />
+          </div>
+          <button
+            className="search-replace-btn search-replace-action"
+            onClick={() => editor.commands.replaceCurrentMatch()}
+          >
+            Replace
+          </button>
+          <button
+            className="search-replace-btn search-replace-action"
+            onClick={() => editor.commands.replaceAllMatches()}
+          >
+            All
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Keyboard shortcuts help modal ───────────────────────────────────────
+
+const SHORTCUT_SECTIONS = [
+  {
+    title: 'Essentials',
+    shortcuts: [
+      { keys: ['Mod', 'Z'], label: 'Undo' },
+      { keys: ['Mod', 'Shift', 'Z'], label: 'Redo' },
+      { keys: ['Mod', 'B'], label: 'Bold' },
+      { keys: ['Mod', 'I'], label: 'Italic' },
+      { keys: ['Mod', 'U'], label: 'Underline' },
+      { keys: ['Mod', 'Shift', 'S'], label: 'Strikethrough' },
+      { keys: ['Mod', 'E'], label: 'Inline code' },
+      { keys: ['Mod', 'K'], label: 'Insert link' },
+    ],
+  },
+  {
+    title: 'Text formatting',
+    shortcuts: [
+      { keys: ['Mod', 'Shift', 'H'], label: 'Highlight' },
+      { keys: ['/'], label: 'Open slash commands' },
+      { keys: ['@'], label: 'Mention a page' },
+    ],
+  },
+  {
+    title: 'Blocks',
+    shortcuts: [
+      { keys: ['Mod', 'Alt', '1'], label: 'Heading 1' },
+      { keys: ['Mod', 'Alt', '2'], label: 'Heading 2' },
+      { keys: ['Mod', 'Alt', '3'], label: 'Heading 3' },
+      { keys: ['Mod', 'Shift', '7'], label: 'Numbered list' },
+      { keys: ['Mod', 'Shift', '8'], label: 'Bullet list' },
+      { keys: ['Mod', 'Shift', '9'], label: 'Task list' },
+      { keys: ['Mod', 'Shift', 'B'], label: 'Blockquote' },
+      { keys: ['---'], label: 'Horizontal rule' },
+    ],
+  },
+  {
+    title: 'Navigation',
+    shortcuts: [
+      { keys: ['Mod', 'F'], label: 'Find in document' },
+      { keys: ['Tab'], label: 'Indent list item' },
+      { keys: ['Shift', 'Tab'], label: 'Outdent list item' },
+      { keys: ['Enter'], label: 'New line / split block' },
+      { keys: ['Shift', 'Enter'], label: 'Line break' },
+    ],
+  },
+];
+
+function KeyboardShortcutsHelp({ onClose }: { onClose: () => void }) {
+  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+  const modKey = isMac ? '\u2318' : 'Ctrl';
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  function renderKey(key: string) {
+    if (key === 'Mod') return modKey;
+    if (key === 'Shift') return isMac ? '\u21E7' : 'Shift';
+    if (key === 'Alt') return isMac ? '\u2325' : 'Alt';
+    if (key === 'Enter') return '\u21B5';
+    if (key === 'Tab') return '\u21E5';
+    return key;
+  }
+
+  return (
+    <div className="shortcuts-modal-backdrop" onClick={onClose}>
+      <div className="shortcuts-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="shortcuts-modal-header">
+          <span className="shortcuts-modal-title">Keyboard shortcuts</span>
+          <button className="search-replace-btn" onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className="shortcuts-modal-body">
+          {SHORTCUT_SECTIONS.map((section) => (
+            <div key={section.title} className="shortcuts-section">
+              <div className="shortcuts-section-title">{section.title}</div>
+              {section.shortcuts.map((s) => (
+                <div key={s.label} className="shortcut-row">
+                  <span className="shortcut-label">{s.label}</span>
+                  <span className="shortcut-keys">
+                    {s.keys.map((k, i) => (
+                      <span key={i}>
+                        <kbd className="shortcut-kbd">{renderKey(k)}</kbd>
+                        {i < s.keys.length - 1 && <span className="shortcut-plus">+</span>}
+                      </span>
+                    ))}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
