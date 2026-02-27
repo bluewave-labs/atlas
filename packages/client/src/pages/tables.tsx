@@ -38,6 +38,7 @@ import {
   Percent,
   AlignLeft,
   Paperclip,
+  Maximize2,
 } from 'lucide-react';
 import {
   DndContext,
@@ -1007,18 +1008,21 @@ export function TablesPage() {
   );
 
   // AG Grid cell keyboard handling
+  const gridRef = useRef<AgGridReact>(null);
   const handleCellKeyDown = useCallback(
     (event: CellKeyDownEvent) => {
       const kbEvent = event.event as KeyboardEvent | undefined;
       if (!kbEvent) return;
 
       // Delete/Backspace clears cell value (only when not in edit mode)
-      if ((kbEvent.key === 'Delete' || kbEvent.key === 'Backspace') && !(event as unknown as { editing?: boolean }).editing) {
+      const isEditing = gridRef.current?.api?.getEditingCells()?.length ?? 0;
+      if ((kbEvent.key === 'Delete' || kbEvent.key === 'Backspace') && isEditing === 0) {
         const colId = event.colDef.field;
         if (!colId) return;
         const rowId = (event.data as TableRow)?._id;
         if (!rowId || rowId === PLACEHOLDER_ROW_ID) return;
 
+        pushUndoState();
         const updatedRows = localRows.map((r) =>
           r._id === rowId ? { ...r, [colId]: undefined } : r,
         );
@@ -1026,7 +1030,7 @@ export function TablesPage() {
         triggerAutoSave({ rows: updatedRows });
       }
     },
-    [localRows, triggerAutoSave],
+    [localRows, triggerAutoSave, pushUndoState],
   );
 
   // AG Grid row drag reorder
@@ -1036,12 +1040,13 @@ export function TablesPage() {
       const overIndex = event.overIndex;
       if (overIndex < 0) return;
 
+      pushUndoState();
       const copy = localRows.filter((r) => r._id !== movedData._id);
       copy.splice(overIndex, 0, movedData);
       setLocalRows(copy);
       triggerAutoSave({ rows: copy });
     },
-    [localRows, triggerAutoSave],
+    [localRows, triggerAutoSave, pushUndoState],
   );
 
   // Column resize persistence
@@ -1072,6 +1077,26 @@ export function TablesPage() {
     [localViewConfig, triggerAutoSave],
   );
 
+  // Row number cell renderer with expand icon on hover
+  const RowNumberRenderer = useCallback((params: ICellRendererParams) => {
+    const rowId = (params.data as TableRow)?._id;
+    if (!rowId || rowId === PLACEHOLDER_ROW_ID) {
+      return <span className="tables-row-number">{params.node.rowIndex != null ? params.node.rowIndex + 1 : ''}</span>;
+    }
+    return (
+      <span className="tables-row-number-wrap">
+        <span className="tables-row-number">{params.node.rowIndex != null ? params.node.rowIndex + 1 : ''}</span>
+        <button
+          className="tables-row-expand-btn"
+          onClick={(e) => { e.stopPropagation(); setExpandedRowId(rowId); }}
+          title={t('tables.expandRow')}
+        >
+          <Maximize2 size={12} />
+        </button>
+      </span>
+    );
+  }, [t]);
+
   // AG Grid column defs
   const ROW_NUMBER_COL: ColDef = useMemo(() => ({
     headerName: '',
@@ -1084,9 +1109,9 @@ export function TablesPage() {
     resizable: false,
     suppressMovable: true,
     lockPosition: 'left',
-    cellStyle: { color: 'var(--color-text-tertiary)', textAlign: 'center', fontSize: '12px' },
-    valueGetter: (params) => params.node?.rowIndex != null ? params.node.rowIndex + 1 : '',
-  }), []);
+    cellRenderer: RowNumberRenderer,
+    cellStyle: { padding: 0 },
+  }), [RowNumberRenderer]);
 
   const handleColumnMenuOpen = useCallback((columnId: string, x: number, y: number) => {
     setColumnMenu({ columnId, x, y });
@@ -1448,6 +1473,7 @@ export function TablesPage() {
                 <div className="tables-grid-container">
                   <div className={isDark ? 'ag-theme-quartz-dark' : 'ag-theme-quartz'}>
                     <AgGridReact
+                      ref={gridRef}
                       columnDefs={columnDefs}
                       rowData={rowData}
                       getRowId={getRowId}

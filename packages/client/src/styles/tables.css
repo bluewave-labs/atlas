@@ -1072,6 +1072,55 @@
   background: var(--color-surface-hover);
 }
 
+/* ─── Row number + expand icon ────────────────────────────────────── */
+
+.tables-row-number-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.tables-row-number {
+  color: var(--color-text-tertiary);
+  font-size: 12px;
+  text-align: center;
+  line-height: 1;
+}
+
+.tables-row-expand-btn {
+  display: none;
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  border-radius: var(--radius-sm, 3px);
+  padding: 0;
+}
+
+.tables-row-number-wrap:hover .tables-row-number {
+  display: none;
+}
+
+.tables-row-number-wrap:hover .tables-row-expand-btn {
+  display: flex;
+}
+
+.tables-row-expand-btn:hover {
+  color: var(--color-accent-primary);
+  background: var(--color-accent-subtle);
+}
+
 /* ─── Pinned bottom placeholder row ──────────────────────────────── */
 
 .ag-theme-quartz .ag-row-pinned,
