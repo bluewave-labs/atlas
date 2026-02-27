@@ -477,7 +477,8 @@ export function HomePage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isDesktop = !!('atlasDesktop' in window);
   const { openSettings } = useUIStore();
-  const { data: counts } = useThreadCounts({ enabled: isAuthenticated });
+  const isGoogleUser = account?.provider === 'google';
+  const { data: counts } = useThreadCounts({ enabled: isGoogleUser });
   const { data: taskCounts } = useTaskCounts({ enabled: isAuthenticated });
   const { data: docListData } = useDocumentList(false, { enabled: isAuthenticated });
   const { data: drawingListData } = useDrawingList(false, { enabled: isAuthenticated });
@@ -520,7 +521,7 @@ export function HomePage() {
     d.setHours(23, 59, 59, 999);
     return d.toISOString();
   }, []);
-  const { data: todayEvents } = useCalendarEvents(todayStart, todayEnd, { enabled: isAuthenticated });
+  const { data: todayEvents } = useCalendarEvents(todayStart, todayEnd, { enabled: isGoogleUser });
 
   const rawName = account?.name || '';
   const cleanedName = rawName.replace(/^Dr\.?\s+/i, '');
@@ -862,7 +863,7 @@ export function HomePage() {
             color="#4a9e8f"
             badge={inboxUnread > 0 ? t('home.unread', { count: inboxUnread }) : undefined}
             onClick={() => {
-              if (isAuthenticated) { navigate(ROUTES.INBOX); }
+              if (isGoogleUser) { navigate(ROUTES.INBOX); }
               else { window.location.href = buildGoogleOAuthUrl(); }
             }}
           />
@@ -872,7 +873,7 @@ export function HomePage() {
             color="#7c6fbd"
             badge={eventCount > 0 ? t('home.eventsToday', { count: eventCount }) : undefined}
             onClick={() => {
-              if (isAuthenticated) { navigate(ROUTES.CALENDAR); }
+              if (isGoogleUser) { navigate(ROUTES.CALENDAR); }
               else { window.location.href = buildGoogleOAuthUrl(); }
             }}
           />

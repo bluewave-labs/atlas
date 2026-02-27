@@ -3,9 +3,10 @@ import { eq } from 'drizzle-orm';
 import * as authService from '../services/auth.service';
 import { triggerInitialSync } from '../services/sync.service';
 import { db } from '../config/database';
-import { accounts } from '../db/schema';
+import { accounts, users, userSettings } from '../db/schema';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
+import { encrypt } from '../utils/crypto';
 
 export async function getAuthUrl(req: Request, res: Response) {
   const redirectUri = req.query.redirect_uri as string || `${req.protocol}://${req.get('host')}/api/v1/auth/callback`;
@@ -175,5 +176,65 @@ export async function listAccounts(req: Request, res: Response) {
   } catch (error) {
     logger.error({ error }, 'Failed to list user accounts');
     res.status(500).json({ success: false, error: 'Failed to list accounts' });
+  }
+}
+
+// POST /api/auth/local — create a local (offline) identity for non-email features
+export async function createLocalUser(req: Request, res: Response) {
+  try {
+    const now = new Date().toISOString();
+
+    // Create user
+    const [user] = await db.insert(users).values({
+      createdAt: now,
+      updatedAt: now,
+    }).returning();
+
+    const localEmail = `local-${user.id}@atlasmail.local`;
+
+    // Create account with placeholder tokens
+    const [account] = await db.insert(accounts).values({
+      userId: user.id,
+      email: localEmail,
+      name: null,
+      pictureUrl: null,
+      provider: 'local',
+      providerId: user.id,
+      accessToken: encrypt('local-placeholder'),
+      refreshToken: encrypt('local-placeholder'),
+      tokenExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+    }).returning();
+
+    // Create default user settings (same as Google flow)
+    await db.insert(userSettings).values({ accountId: account.id });
+
+    // Issue JWT
+    const jwtTokens = authService.generateTokens(account);
+
+    res.json({
+      success: true,
+      data: {
+        accessToken: jwtTokens.accessToken,
+        refreshToken: jwtTokens.refreshToken,
+        account: {
+          id: account.id,
+          userId: account.userId,
+          email: account.email,
+          name: account.name,
+          pictureUrl: account.pictureUrl,
+          provider: account.provider,
+          providerId: account.providerId,
+          historyId: account.historyId ?? null,
+          lastSync: account.lastSync ?? null,
+          syncStatus: account.syncStatus as 'idle' | 'syncing' | 'error',
+          createdAt: account.createdAt,
+          updatedAt: account.updatedAt,
+        },
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error({ error, message }, 'Failed to create local user');
+    res.status(500).json({ success: false, error: message });
   }
 }

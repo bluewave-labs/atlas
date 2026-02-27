@@ -18,7 +18,8 @@ import { TablesPage } from './pages/tables';
 import { HomePage } from './pages/home';
 import { CommandPalette } from './components/ui/command-palette';
 import { ErrorBoundary } from './components/ui/error-boundary';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { api } from './lib/api-client';
 
 const DEV_MODE = import.meta.env.DEV && !import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -42,6 +43,27 @@ function DevAuthInit() {
       });
     }
   }, [setAccount]);
+  return null;
+}
+
+function LocalIdentityInit() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const addAccount = useAuthStore((s) => s.addAccount);
+  const called = useRef(false);
+
+  useEffect(() => {
+    if (DEV_MODE || isAuthenticated || called.current) return;
+    called.current = true;
+
+    api.post('/auth/local').then(({ data }) => {
+      const { accessToken, refreshToken, account } = data.data;
+      addAccount(account, accessToken, refreshToken);
+    }).catch(() => {
+      // Non-critical — user can still use Google OAuth to authenticate
+      called.current = false;
+    });
+  }, [isAuthenticated, addAccount]);
+
   return null;
 }
 
@@ -84,6 +106,7 @@ export function App() {
           <ShortcutProvider>
             <BrowserRouter>
             <DevAuthInit />
+            <LocalIdentityInit />
             <ErrorBoundary>
               <Routes>
                 <Route path={ROUTES.LOGIN} element={<LoginPage />} />
@@ -138,19 +161,11 @@ export function App() {
                 />
                 <Route
                   path={ROUTES.TABLES}
-                  element={
-                    <ProtectedRoute>
-                      <TablesPage />
-                    </ProtectedRoute>
-                  }
+                  element={<TablesPage />}
                 />
                 <Route
                   path={ROUTES.TABLE_DETAIL}
-                  element={
-                    <ProtectedRoute>
-                      <TablesPage />
-                    </ProtectedRoute>
-                  }
+                  element={<TablesPage />}
                 />
                 <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
               </Routes>

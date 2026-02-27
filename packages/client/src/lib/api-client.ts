@@ -48,6 +48,10 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    // Never retry or redirect for the local identity endpoint — it's unauthenticated
+    if (originalRequest?.url?.includes('/auth/local')) {
+      return Promise.reject(error);
+    }
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
