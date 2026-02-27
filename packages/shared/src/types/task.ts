@@ -4,6 +4,7 @@ export type TaskStatus = 'todo' | 'completed' | 'cancelled';
 export type TaskWhen = 'inbox' | 'today' | 'evening' | 'anytime' | 'someday';
 export type TaskPriority = 'none' | 'low' | 'medium' | 'high';
 export type TaskType = 'task' | 'heading';
+export type RecurrenceRule = 'daily' | 'weekdays' | 'weekly' | 'biweekly' | 'monthly' | 'yearly';
 
 export interface Task {
   id: string;
@@ -23,6 +24,8 @@ export interface Task {
   completedAt: string | null;
   sortOrder: number;
   tags: string[];
+  recurrenceRule: RecurrenceRule | null;
+  recurrenceParentId: string | null;
   isArchived: boolean;
   createdAt: string;
   updatedAt: string;
@@ -54,6 +57,7 @@ export interface CreateTaskInput {
   priority?: TaskPriority;
   dueDate?: string | null;
   tags?: string[];
+  recurrenceRule?: RecurrenceRule | null;
 }
 
 export interface UpdateTaskInput {
@@ -69,6 +73,7 @@ export interface UpdateTaskInput {
   priority?: TaskPriority;
   dueDate?: string | null;
   tags?: string[];
+  recurrenceRule?: RecurrenceRule | null;
   sortOrder?: number;
   isArchived?: boolean;
 }

@@ -6,6 +6,7 @@ import { queryKeys } from '../config/query-keys';
 export type TaskDefaultView = 'inbox' | 'today' | 'anytime';
 export type TaskCompletedBehavior = 'fade' | 'move' | 'hide';
 export type TaskSortOrder = 'manual' | 'priority' | 'dueDate' | 'title' | 'created';
+export type TaskViewMode = 'list' | 'board';
 
 interface TasksSettings {
   defaultView: TaskDefaultView;
@@ -18,6 +19,7 @@ interface TasksSettings {
   compactMode: boolean;
   completedBehavior: TaskCompletedBehavior;
   defaultSortOrder: TaskSortOrder;
+  viewMode: TaskViewMode;
 }
 
 const DEFAULTS: TasksSettings = {
@@ -31,6 +33,7 @@ const DEFAULTS: TasksSettings = {
   compactMode: false,
   completedBehavior: 'fade',
   defaultSortOrder: 'manual',
+  viewMode: 'list',
 };
 
 // Map from our local field names to server column names
@@ -45,6 +48,7 @@ const TO_SERVER: Record<keyof TasksSettings, string> = {
   compactMode: 'tasksCompactMode',
   completedBehavior: 'tasksCompletedBehavior',
   defaultSortOrder: 'tasksDefaultSort',
+  viewMode: 'tasksViewMode',
 };
 
 // Map from server column names to our local field names
@@ -109,5 +113,6 @@ export function useTasksSettingsStore() {
     setCompactMode: useCallback((v: boolean) => updateSetting('compactMode', v), [updateSetting]),
     setCompletedBehavior: useCallback((v: TaskCompletedBehavior) => updateSetting('completedBehavior', v), [updateSetting]),
     setDefaultSortOrder: useCallback((v: TaskSortOrder) => updateSetting('defaultSortOrder', v), [updateSetting]),
+    setViewMode: useCallback((v: TaskViewMode) => updateSetting('viewMode', v), [updateSetting]),
   };
 }

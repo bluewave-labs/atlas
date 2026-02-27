@@ -45,10 +45,10 @@ export async function createTask(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
     const accountId = req.auth!.accountId;
-    const { title, notes, description, icon, type, headingId, projectId, when, priority, dueDate, tags } = req.body;
+    const { title, notes, description, icon, type, headingId, projectId, when, priority, dueDate, tags, recurrenceRule } = req.body;
 
     const task = await taskService.createTask(userId, accountId, {
-      title, notes, description, icon, type, headingId, projectId, when, priority, dueDate, tags,
+      title, notes, description, icon, type, headingId, projectId, when, priority, dueDate, tags, recurrenceRule,
     });
 
     res.json({ success: true, data: task });
@@ -62,10 +62,10 @@ export async function updateTask(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
     const taskId = req.params.id as string;
-    const { title, notes, description, icon, type, headingId, projectId, status, when, priority, dueDate, tags, sortOrder, isArchived } = req.body;
+    const { title, notes, description, icon, type, headingId, projectId, status, when, priority, dueDate, tags, recurrenceRule, sortOrder, isArchived } = req.body;
 
     const task = await taskService.updateTask(userId, taskId, {
-      title, notes, description, icon, type, headingId, projectId, status, when, priority, dueDate, tags, sortOrder, isArchived,
+      title, notes, description, icon, type, headingId, projectId, status, when, priority, dueDate, tags, recurrenceRule, sortOrder, isArchived,
     });
 
     if (!task) {

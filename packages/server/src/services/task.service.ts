@@ -5,7 +5,54 @@ import { logger } from '../utils/logger';
 import type {
   CreateTaskInput, UpdateTaskInput,
   CreateProjectInput, UpdateProjectInput,
+  RecurrenceRule,
 } from '@atlasmail/shared';
+
+// ─── Recurrence helpers ──────────────────────────────────────────────
+
+function calculateNextDueDate(currentDueDate: string | null, rule: RecurrenceRule): string {
+  const base = currentDueDate ? new Date(currentDueDate + 'T00:00:00') : new Date();
+  // Use local date parts to avoid timezone issues
+  let y = base.getFullYear();
+  let m = base.getMonth();
+  let d = base.getDate();
+
+  switch (rule) {
+    case 'daily': {
+      const next = new Date(y, m, d + 1);
+      return fmt(next);
+    }
+    case 'weekdays': {
+      const next = new Date(y, m, d + 1);
+      // Skip Saturday (6) and Sunday (0)
+      while (next.getDay() === 0 || next.getDay() === 6) {
+        next.setDate(next.getDate() + 1);
+      }
+      return fmt(next);
+    }
+    case 'weekly':
+      return fmt(new Date(y, m, d + 7));
+    case 'biweekly':
+      return fmt(new Date(y, m, d + 14));
+    case 'monthly': {
+      // Same date next month, clamped to month end
+      const next = new Date(y, m + 1, 1); // first of next month
+      const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+      next.setDate(Math.min(d, lastDay));
+      return fmt(next);
+    }
+    case 'yearly': {
+      const next = new Date(y + 1, m, 1);
+      const lastDay = new Date(y + 1, m + 1, 0).getDate();
+      next.setDate(Math.min(d, lastDay));
+      return fmt(next);
+    }
+  }
+}
+
+function fmt(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
 
 // ─── Tasks ──────────────────────────────────────────────────────────
 
@@ -82,6 +129,7 @@ export async function createTask(userId: string, accountId: string, input: Creat
       priority: input.priority ?? 'none',
       dueDate: input.dueDate ?? null,
       tags: input.tags ?? [],
+      recurrenceRule: input.recurrenceRule ?? null,
       sortOrder,
       createdAt: now,
       updatedAt: now,
@@ -115,6 +163,7 @@ export async function updateTask(userId: string, taskId: string, input: UpdateTa
   if (input.priority !== undefined) updates.priority = input.priority;
   if (input.dueDate !== undefined) updates.dueDate = input.dueDate;
   if (input.tags !== undefined) updates.tags = input.tags;
+  if (input.recurrenceRule !== undefined) updates.recurrenceRule = input.recurrenceRule;
   if (input.sortOrder !== undefined) updates.sortOrder = input.sortOrder;
   if (input.isArchived !== undefined) updates.isArchived = input.isArchived;
 
@@ -129,7 +178,52 @@ export async function updateTask(userId: string, taskId: string, input: UpdateTa
     .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
     .limit(1);
 
-  return updated || null;
+  if (!updated) return null;
+
+  // Auto-create next recurring instance when completed/cancelled
+  if (
+    input.status &&
+    (input.status === 'completed' || input.status === 'cancelled') &&
+    updated.recurrenceRule
+  ) {
+    const nextDueDate = calculateNextDueDate(updated.dueDate, updated.recurrenceRule as RecurrenceRule);
+    const parentId = updated.recurrenceParentId || updated.id;
+
+    const [maxSort] = await db
+      .select({ max: sql<number>`COALESCE(MAX(${tasks.sortOrder}), -1)` })
+      .from(tasks)
+      .where(eq(tasks.userId, userId));
+
+    const nextSortOrder = (maxSort?.max ?? -1) + 1;
+
+    const [nextTask] = await db
+      .insert(tasks)
+      .values({
+        accountId: updated.accountId,
+        userId: updated.userId,
+        title: updated.title,
+        notes: updated.notes,
+        description: updated.description,
+        icon: updated.icon,
+        type: updated.type,
+        headingId: updated.headingId,
+        projectId: updated.projectId,
+        when: updated.when,
+        priority: updated.priority,
+        dueDate: nextDueDate,
+        tags: updated.tags as string[],
+        recurrenceRule: updated.recurrenceRule,
+        recurrenceParentId: parentId,
+        sortOrder: nextSortOrder,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+
+    logger.info({ userId, taskId: updated.id, nextTaskId: nextTask.id, nextDueDate }, 'Created next recurring task');
+  }
+
+  return updated;
 }
 
 export async function deleteTask(userId: string, taskId: string) {

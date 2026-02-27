@@ -5,6 +5,7 @@ import {
   Archive, BookOpen, Check, Trash2, X, ChevronRight, ChevronDown,
   Hash, CircleDot, MoreHorizontal, Moon, Sun, GripVertical,
   Video, Clock, FileText, Filter, Tag, CheckCircle2, Settings2,
+  Repeat, LayoutList, LayoutGrid,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -18,9 +19,10 @@ import { TaskNotesEditor } from '../components/tasks/task-notes-editor';
 import { queryKeys } from '../config/query-keys';
 import { api } from '../lib/api-client';
 import { ROUTES } from '../config/routes';
-import type { Task, TaskProject, TaskWhen } from '@atlasmail/shared';
+import type { Task, TaskProject, TaskWhen, RecurrenceRule } from '@atlasmail/shared';
 import { EmojiPicker } from '../components/shared/emoji-picker';
 import { TasksSettingsModal } from '../components/tasks/tasks-settings-modal';
+import { KanbanBoard } from '../components/tasks/kanban-board';
 import { useTasksSettingsStore } from '../stores/tasks-settings-store';
 import { useUIStore } from '../stores/ui-store';
 import '../styles/tasks.css';
@@ -119,6 +121,16 @@ const WHEN_OPTIONS: { value: TaskWhen; label: string; icon: typeof Inbox }[] = [
   { value: 'evening', label: 'This evening', icon: Moon },
   { value: 'anytime', label: 'Anytime', icon: CircleDot },
   { value: 'someday', label: 'Someday', icon: Coffee },
+];
+
+const RECURRENCE_OPTIONS: { value: RecurrenceRule | ''; labelKey: string }[] = [
+  { value: '', labelKey: 'tasks.repeatNone' },
+  { value: 'daily', labelKey: 'tasks.repeatDaily' },
+  { value: 'weekdays', labelKey: 'tasks.repeatWeekdays' },
+  { value: 'weekly', labelKey: 'tasks.repeatWeekly' },
+  { value: 'biweekly', labelKey: 'tasks.repeatBiweekly' },
+  { value: 'monthly', labelKey: 'tasks.repeatMonthly' },
+  { value: 'yearly', labelKey: 'tasks.repeatYearly' },
 ];
 
 // ─── When Badge Component (feature 7) ──────────────────────────────
@@ -281,11 +293,16 @@ function TaskItem({
           <WhenBadge when={task.when} dueDate={task.dueDate} showBadge={showWhenBadge} />
         </div>
 
-        {((showDueDate && task.dueDate) || (showProject && project) || task.tags.length > 0) && (
+        {((showDueDate && task.dueDate) || (showProject && project) || task.tags.length > 0 || task.recurrenceRule) && (
           <div className="task-meta-row">
             {showDueDate && task.dueDate && (
               <span className={getDueBadgeClass(task.dueDate)}>
                 {formatDueDate(task.dueDate)}
+              </span>
+            )}
+            {task.recurrenceRule && (
+              <span className="task-meta-recurrence" title={`Repeats ${task.recurrenceRule}`}>
+                <Repeat size={10} />
               </span>
             )}
             {showProject && project && (
@@ -550,6 +567,7 @@ function TaskDetailPanel({
   projects: TaskProject[];
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState(task.title);
   const [when, setWhen] = useState(task.when);
   const [priority, setPriority] = useState(task.priority);
@@ -707,6 +725,23 @@ function TaskDetailPanel({
             )}
           </div>
 
+          {/* Recurrence */}
+          <div className="task-detail-field">
+            <span className="task-detail-label">{t('tasks.repeat')}</span>
+            <select
+              className="task-recurrence-select"
+              value={task.recurrenceRule || ''}
+              onChange={e => {
+                const val = e.target.value || null;
+                updateTask.mutate({ id: task.id, recurrenceRule: val as RecurrenceRule | null });
+              }}
+            >
+              {RECURRENCE_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Project */}
           {project && (
             <div className="task-detail-field">
@@ -831,6 +866,15 @@ export function TasksPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // View mode (list/board) — board only available in inbox
+  const [viewMode, setViewMode] = useState<'list' | 'board'>(tasksSettings.viewMode || 'list');
+  const canShowBoard = activeSection === 'inbox';
+
+  // Auto-switch to list when leaving inbox
+  useEffect(() => {
+    if (!canShowBoard && viewMode === 'board') setViewMode('list');
+  }, [canShowBoard, viewMode]);
 
   // Drag state
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
@@ -1355,6 +1399,25 @@ export function TasksPage() {
                 )}
               </>
             )}
+
+            {canShowBoard && (
+              <div className="tasks-view-toggle">
+                <button
+                  className={`tasks-view-toggle-btn${viewMode === 'list' ? ' active' : ''}`}
+                  onClick={() => { setViewMode('list'); tasksSettings.setViewMode('list'); }}
+                  title={t('tasks.listView')}
+                >
+                  <LayoutList size={14} />
+                </button>
+                <button
+                  className={`tasks-view-toggle-btn${viewMode === 'board' ? ' active' : ''}`}
+                  onClick={() => { setViewMode('board'); tasksSettings.setViewMode('board'); }}
+                  title={t('tasks.boardView')}
+                >
+                  <LayoutGrid size={14} />
+                </button>
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1386,133 +1449,156 @@ export function TasksPage() {
 
         {/* Task list + detail */}
         <div className="tasks-content">
-          <div className={`tasks-list-container task-list-scroll${tasksSettings.compactMode ? ' compact' : ''}`}>
-            {/* Project header (features 9 + 10) */}
-            {activeProject && <ProjectHeader project={activeProject} />}
+          {viewMode === 'board' && canShowBoard ? (
+            /* ─── Kanban board view ─── */
+            <>
+              <KanbanBoard
+                tasks={displayTasks}
+                projects={projects}
+                onComplete={handleComplete}
+                onSelectTask={(id) => setSelectedTaskId(id)}
+              />
+              {/* Detail panel in board view */}
+              {selectedTask && selectedTask.type !== 'heading' && (
+                <TaskDetailPanel
+                  task={selectedTask}
+                  projects={projects}
+                  onClose={() => setSelectedTaskId(null)}
+                />
+              )}
+            </>
+          ) : (
+            /* ─── List view ─── */
+            <>
+              <div className={`tasks-list-container task-list-scroll${tasksSettings.compactMode ? ' compact' : ''}`}>
+                {/* Project header (features 9 + 10) */}
+                {activeProject && <ProjectHeader project={activeProject} />}
 
-            {/* Calendar events in Today view (feature 6) */}
-            {activeSection === 'today' && tasksSettings.showCalendarInToday && <TodayCalendarEvents />}
+                {/* Calendar events in Today view (feature 6) */}
+                {activeSection === 'today' && tasksSettings.showCalendarInToday && <TodayCalendarEvents />}
 
-            {/* ─── Today view with evening split (feature 2) ─── */}
-            {todayTasks ? (
-              <>
-                <NewTaskCreator defaultWhen="today" projectId={projectIdForNew} />
+                {/* ─── Today view with evening split (feature 2) ─── */}
+                {todayTasks ? (
+                  <>
+                    <NewTaskCreator defaultWhen="today" projectId={projectIdForNew} />
 
-                {todayTasks.daytime.length > 0 && (
-                  <CollapsibleSection label="Today" icon={Sun} color="#d97706" count={todayTasks.daytime.length}>
-                    {todayTasks.daytime.map(renderTaskItem)}
-                  </CollapsibleSection>
-                )}
-
-                {todayTasks.evening.length > 0 && (
-                  <CollapsibleSection label="This evening" icon={Moon} color="#6366f1" count={todayTasks.evening.length}>
-                    {todayTasks.evening.map(renderTaskItem)}
-                  </CollapsibleSection>
-                )}
-
-                {todayTasks.daytime.length === 0 && todayTasks.evening.length === 0 && !isLoading && (
-                  <EmptyState section={activeSection} seeding={seeding} onSeed={handleSeedSampleData} />
-                )}
-              </>
-            ) : projectTaskGroups ? (
-              /* ─── Project view with headings (feature 3 + 4) ─── */
-              <>
-                <NewTaskCreator defaultWhen={defaultWhen} projectId={projectIdForNew} />
-
-                {projectTaskGroups.map((group, idx) => (
-                  <div key={group.heading?.id || `ungrouped-${idx}`}>
-                    {group.heading && (
-                      <HeadingRow
-                        task={group.heading}
-                        childCount={group.tasks.length}
-                        isCollapsed={collapsedHeadings.has(group.heading.id)}
-                        onToggle={() => {
-                          setCollapsedHeadings(prev => {
-                            const next = new Set(prev);
-                            if (next.has(group.heading!.id)) next.delete(group.heading!.id);
-                            else next.add(group.heading!.id);
-                            return next;
-                          });
-                        }}
-                        onDelete={() => handleDeleteHeading(group.heading!.id)}
-                      />
+                    {todayTasks.daytime.length > 0 && (
+                      <CollapsibleSection label="Today" icon={Sun} color="#d97706" count={todayTasks.daytime.length}>
+                        {todayTasks.daytime.map(renderTaskItem)}
+                      </CollapsibleSection>
                     )}
-                    {(!group.heading || !collapsedHeadings.has(group.heading.id)) && group.tasks.map(renderTaskItem)}
-                  </div>
-                ))}
 
-                {projectIdForNew && <NewHeadingCreator projectId={projectIdForNew} />}
+                    {todayTasks.evening.length > 0 && (
+                      <CollapsibleSection label="This evening" icon={Moon} color="#6366f1" count={todayTasks.evening.length}>
+                        {todayTasks.evening.map(renderTaskItem)}
+                      </CollapsibleSection>
+                    )}
 
-                {displayTasks.filter(t => t.type !== 'heading').length === 0 && !isLoading && (
-                  <EmptyState section={activeSection} seeding={seeding} onSeed={handleSeedSampleData} />
+                    {todayTasks.daytime.length === 0 && todayTasks.evening.length === 0 && !isLoading && (
+                      <EmptyState section={activeSection} seeding={seeding} onSeed={handleSeedSampleData} />
+                    )}
+                  </>
+                ) : projectTaskGroups ? (
+                  /* ─── Project view with headings (feature 3 + 4) ─── */
+                  <>
+                    <NewTaskCreator defaultWhen={defaultWhen} projectId={projectIdForNew} />
+
+                    {projectTaskGroups.map((group, idx) => (
+                      <div key={group.heading?.id || `ungrouped-${idx}`}>
+                        {group.heading && (
+                          <HeadingRow
+                            task={group.heading}
+                            childCount={group.tasks.length}
+                            isCollapsed={collapsedHeadings.has(group.heading.id)}
+                            onToggle={() => {
+                              setCollapsedHeadings(prev => {
+                                const next = new Set(prev);
+                                if (next.has(group.heading!.id)) next.delete(group.heading!.id);
+                                else next.add(group.heading!.id);
+                                return next;
+                              });
+                            }}
+                            onDelete={() => handleDeleteHeading(group.heading!.id)}
+                          />
+                        )}
+                        {(!group.heading || !collapsedHeadings.has(group.heading.id)) && group.tasks.map(renderTaskItem)}
+                      </div>
+                    ))}
+
+                    {projectIdForNew && <NewHeadingCreator projectId={projectIdForNew} />}
+
+                    {displayTasks.filter(t => t.type !== 'heading').length === 0 && !isLoading && (
+                      <EmptyState section={activeSection} seeding={seeding} onSeed={handleSeedSampleData} />
+                    )}
+                  </>
+                ) : inboxGroups ? (
+                  /* ─── Inbox grouped by time periods ─── */
+                  <>
+                    <NewTaskCreator defaultWhen={defaultWhen} projectId={projectIdForNew} />
+
+                    {inboxGroups.map((group) => (
+                      group.noHeader ? (
+                        <div key={group.label}>
+                          {group.tasks.map(renderTaskItem)}
+                        </div>
+                      ) : (
+                        <CollapsibleSection
+                          key={group.label}
+                          label={group.label}
+                          icon={group.icon}
+                          color={group.color}
+                          count={group.tasks.length}
+                        >
+                          {group.tasks.map(renderTaskItem)}
+                        </CollapsibleSection>
+                      )
+                    ))}
+
+                    {displayTasks.length === 0 && !isLoading && (
+                      <EmptyState section={activeSection} seeding={seeding} onSeed={handleSeedSampleData} />
+                    )}
+                  </>
+                ) : (
+                  /* ─── Standard list view ─── */
+                  <>
+                    {activeSection !== 'logbook' && activeSection !== 'upcoming' && (
+                      <NewTaskCreator defaultWhen={defaultWhen} projectId={projectIdForNew} />
+                    )}
+
+                    {displayTasks.map(renderTaskItem)}
+
+                    {displayTasks.length === 0 && !isLoading && (
+                      <EmptyState section={activeSection} seeding={seeding} onSeed={handleSeedSampleData} />
+                    )}
+                  </>
                 )}
-              </>
-            ) : inboxGroups ? (
-              /* ─── Inbox grouped by time periods ─── */
-              <>
-                <NewTaskCreator defaultWhen={defaultWhen} projectId={projectIdForNew} />
 
-                {inboxGroups.map((group) => (
-                  group.noHeader ? (
-                    <div key={group.label}>
-                      {group.tasks.map(renderTaskItem)}
-                    </div>
-                  ) : (
-                    <CollapsibleSection
-                      key={group.label}
-                      label={group.label}
-                      icon={group.icon}
-                      color={group.color}
-                      count={group.tasks.length}
+                {/* ─── Completed section at bottom ─── */}
+                {completedTasks.length > 0 && activeSection !== 'logbook' && (
+                  <div className="task-completed-section">
+                    <button
+                      className="task-completed-section-header"
+                      onClick={() => setCompletedCollapsed(!completedCollapsed)}
                     >
-                      {group.tasks.map(renderTaskItem)}
-                    </CollapsibleSection>
-                  )
-                ))}
-
-                {displayTasks.length === 0 && !isLoading && (
-                  <EmptyState section={activeSection} seeding={seeding} onSeed={handleSeedSampleData} />
+                      <ChevronDown size={13} className={`task-section-chevron${completedCollapsed ? ' collapsed' : ''}`} />
+                      <CheckCircle2 size={13} />
+                      <span>Completed</span>
+                      <span className="task-section-count">{completedTasks.length}</span>
+                    </button>
+                    {!completedCollapsed && completedTasks.map(renderTaskItem)}
+                  </div>
                 )}
-              </>
-            ) : (
-              /* ─── Standard list view ─── */
-              <>
-                {activeSection !== 'logbook' && activeSection !== 'upcoming' && (
-                  <NewTaskCreator defaultWhen={defaultWhen} projectId={projectIdForNew} />
-                )}
-
-                {displayTasks.map(renderTaskItem)}
-
-                {displayTasks.length === 0 && !isLoading && (
-                  <EmptyState section={activeSection} seeding={seeding} onSeed={handleSeedSampleData} />
-                )}
-              </>
-            )}
-
-            {/* ─── Completed section at bottom ─── */}
-            {completedTasks.length > 0 && activeSection !== 'logbook' && (
-              <div className="task-completed-section">
-                <button
-                  className="task-completed-section-header"
-                  onClick={() => setCompletedCollapsed(!completedCollapsed)}
-                >
-                  <ChevronDown size={13} className={`task-section-chevron${completedCollapsed ? ' collapsed' : ''}`} />
-                  <CheckCircle2 size={13} />
-                  <span>Completed</span>
-                  <span className="task-section-count">{completedTasks.length}</span>
-                </button>
-                {!completedCollapsed && completedTasks.map(renderTaskItem)}
               </div>
-            )}
-          </div>
 
-          {/* Detail panel */}
-          {selectedTask && selectedTask.type !== 'heading' && (
-            <TaskDetailPanel
-              task={selectedTask}
-              projects={projects}
-              onClose={() => setSelectedTaskId(null)}
-            />
+              {/* Detail panel */}
+              {selectedTask && selectedTask.type !== 'heading' && (
+                <TaskDetailPanel
+                  task={selectedTask}
+                  projects={projects}
+                  onClose={() => setSelectedTaskId(null)}
+                />
+              )}
+            </>
           )}
         </div>
       </div>

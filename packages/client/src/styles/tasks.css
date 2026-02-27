@@ -434,6 +434,12 @@
   color: var(--color-text-tertiary);
 }
 
+.task-meta-recurrence {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-tertiary);
+}
+
 /* ─── Priority dots (Things 3 / TickTick colored flags) ──────────── */
 
 .task-priority-dot {
@@ -675,6 +681,23 @@
 }
 
 .task-date-input:focus {
+  border-color: var(--color-border-focus);
+}
+
+.task-recurrence-select {
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-sm);
+  padding: 3px var(--spacing-sm);
+  outline: none;
+  transition: border-color var(--transition-fast);
+  cursor: pointer;
+}
+
+.task-recurrence-select:focus {
   border-color: var(--color-border-focus);
 }
 
@@ -1522,4 +1545,209 @@
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
+}
+
+/* ─── Kanban Board ─────────────────────────────────────────────────── */
+
+.kanban-board {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px 16px;
+  overflow-x: auto;
+  flex: 1;
+  min-height: 0;
+  align-items: flex-start;
+}
+
+.kanban-column {
+  flex: 1;
+  min-width: 220px;
+  max-width: 320px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-primary);
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.kanban-column.drop-target {
+  border-color: var(--color-accent-primary);
+  box-shadow: 0 0 0 1px var(--color-accent-primary);
+}
+
+.kanban-column-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border-primary);
+  flex-shrink: 0;
+}
+
+.kanban-column-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+}
+
+.kanban-column-count {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-family);
+  margin-left: auto;
+}
+
+.kanban-column-body {
+  padding: 8px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 60px;
+}
+
+.kanban-column-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 12px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-family);
+}
+
+/* ─── Kanban Card ──────────────────────────────────────────────────── */
+
+.kanban-card {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  cursor: grab;
+  transition: box-shadow 150ms ease, border-color 150ms ease;
+  user-select: none;
+  touch-action: none;
+}
+
+.kanban-card:hover {
+  border-color: var(--color-border-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.kanban-card.drag-overlay {
+  box-shadow: var(--shadow-elevated);
+  border-color: var(--color-accent-primary);
+  cursor: grabbing;
+  transform: rotate(2deg);
+}
+
+.kanban-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+
+.kanban-card-content {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.kanban-card-title {
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  color: var(--color-text-primary);
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.kanban-card-title.completed {
+  text-decoration: line-through;
+  color: var(--color-text-tertiary);
+}
+
+.kanban-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 5px;
+  padding-left: 25px;
+}
+
+.kanban-card-due {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  font-family: var(--font-family);
+  color: var(--color-text-tertiary);
+}
+
+.kanban-card-due.overdue {
+  color: #ef4444;
+}
+
+.kanban-card-recurrence {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-tertiary);
+}
+
+.kanban-card-project {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-family: var(--font-family);
+  color: var(--color-text-tertiary);
+}
+
+.kanban-card-tags {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  font-family: var(--font-family);
+  color: var(--color-text-tertiary);
+}
+
+/* ─── View Toggle ──────────────────────────────────────────────────── */
+
+.tasks-view-toggle {
+  display: flex;
+  align-items: center;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.tasks-view-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.tasks-view-toggle-btn:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-secondary);
+}
+
+.tasks-view-toggle-btn.active {
+  background: var(--color-surface-selected);
+  color: var(--color-accent-primary);
 }

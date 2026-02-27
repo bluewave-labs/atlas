@@ -560,7 +560,18 @@
     "project": "Project",
     "tags": "Tags",
     "delete": "Delete",
-    "complete": "Complete"
+    "complete": "Complete",
+    "repeat": "Repeat",
+    "repeatNone": "None",
+    "repeatDaily": "Daily",
+    "repeatWeekdays": "Weekdays",
+    "repeatWeekly": "Weekly",
+    "repeatBiweekly": "Biweekly",
+    "repeatMonthly": "Monthly",
+    "repeatYearly": "Yearly",
+    "listView": "List view",
+    "boardView": "Board view",
+    "noTasksInColumn": "No tasks"
   },
   "errors": {
     "recipientRequired": "At least one recipient is required",

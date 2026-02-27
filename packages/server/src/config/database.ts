@@ -271,6 +271,10 @@ try { sqlite.prepare(`ALTER TABLE tasks ADD COLUMN icon TEXT`).run(); } catch { 
 try { sqlite.prepare(`ALTER TABLE task_projects ADD COLUMN description TEXT`).run(); } catch { /* column already exists */ }
 try { sqlite.prepare(`ALTER TABLE task_projects ADD COLUMN icon TEXT`).run(); } catch { /* column already exists */ }
 
+// ---- Recurring tasks columns -------------------------------------------------
+try { sqlite.prepare(`ALTER TABLE tasks ADD COLUMN recurrence_rule TEXT`).run(); } catch { /* column already exists */ }
+try { sqlite.prepare(`ALTER TABLE tasks ADD COLUMN recurrence_parent_id TEXT REFERENCES tasks(id) ON DELETE SET NULL`).run(); } catch { /* column already exists */ }
+
 // ---- Tasks settings columns on user_settings --------------------------------
 try { sqlite.prepare(`ALTER TABLE user_settings ADD COLUMN tasks_default_view TEXT NOT NULL DEFAULT 'inbox'`).run(); } catch { /* column already exists */ }
 try { sqlite.prepare(`ALTER TABLE user_settings ADD COLUMN tasks_confirm_delete INTEGER NOT NULL DEFAULT 1`).run(); } catch { /* column already exists */ }
@@ -282,6 +286,7 @@ try { sqlite.prepare(`ALTER TABLE user_settings ADD COLUMN tasks_show_notes_indi
 try { sqlite.prepare(`ALTER TABLE user_settings ADD COLUMN tasks_compact_mode INTEGER NOT NULL DEFAULT 0`).run(); } catch { /* column already exists */ }
 try { sqlite.prepare(`ALTER TABLE user_settings ADD COLUMN tasks_completed_behavior TEXT NOT NULL DEFAULT 'fade'`).run(); } catch { /* column already exists */ }
 try { sqlite.prepare(`ALTER TABLE user_settings ADD COLUMN tasks_default_sort TEXT NOT NULL DEFAULT 'manual'`).run(); } catch { /* column already exists */ }
+try { sqlite.prepare(`ALTER TABLE user_settings ADD COLUMN tasks_view_mode TEXT NOT NULL DEFAULT 'list'`).run(); } catch { /* column already exists */ }
 
 // Create FTS5 virtual table for full-text search across emails.
 // content='' means we manage the index manually (external content table).

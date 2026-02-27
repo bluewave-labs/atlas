@@ -150,6 +150,7 @@ export const userSettings = sqliteTable('user_settings', {
   tasksCompactMode: integer('tasks_compact_mode', { mode: 'boolean' }).notNull().default(false),
   tasksCompletedBehavior: text('tasks_completed_behavior').notNull().default('fade'),
   tasksDefaultSort: text('tasks_default_sort').notNull().default('manual'),
+  tasksViewMode: text('tasks_view_mode').notNull().default('list'),
   createdAt: timestampNow().notNull(),
   updatedAt: timestampNow().notNull(),
 });
@@ -336,6 +337,8 @@ export const tasks = sqliteTable('tasks', {
   dueDate: text('due_date'),
   completedAt: text('completed_at'),
   tags: text('tags', { mode: 'json' }).notNull().$type<string[]>().default([]),
+  recurrenceRule: text('recurrence_rule'),
+  recurrenceParentId: text('recurrence_parent_id').references((): AnySQLiteColumn => tasks.id, { onDelete: 'set null' }),
   sortOrder: integer('sort_order').notNull().default(0),
   isArchived: integer('is_archived', { mode: 'boolean' }).notNull().default(false),
   createdAt: timestampNow().notNull(),

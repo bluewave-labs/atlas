@@ -7,6 +7,7 @@ import {
   type TaskDefaultView,
   type TaskCompletedBehavior,
   type TaskSortOrder,
+  type TaskViewMode,
 } from '../../stores/tasks-settings-store';
 import {
   SettingsSection,
@@ -42,9 +43,15 @@ const DEFAULT_VIEW_OPTIONS: Array<{ value: TaskDefaultView; label: string }> = [
   { value: 'anytime', label: 'Anytime' },
 ];
 
+const VIEW_MODE_OPTIONS: Array<{ value: TaskViewMode; label: string }> = [
+  { value: 'list', label: 'List' },
+  { value: 'board', label: 'Board' },
+];
+
 export function TasksGeneralPanel() {
   const {
     defaultView, setDefaultView,
+    viewMode, setViewMode,
     confirmBeforeDelete, setConfirmBeforeDelete,
     showCalendarInToday, setShowCalendarInToday,
     showEveningSection, setShowEveningSection,
@@ -58,6 +65,13 @@ export function TasksGeneralPanel() {
             value={defaultView}
             options={DEFAULT_VIEW_OPTIONS}
             onChange={setDefaultView}
+          />
+        </SettingsRow>
+        <SettingsRow label="Default view mode" description="List or board layout for the inbox view.">
+          <SettingsSelect
+            value={viewMode}
+            options={VIEW_MODE_OPTIONS}
+            onChange={setViewMode}
           />
         </SettingsRow>
       </SettingsSection>
