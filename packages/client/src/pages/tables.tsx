@@ -2,7 +2,16 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AgGridReact } from 'ag-grid-react';
-import { AllCommunityModule, ModuleRegistry, type ColDef, type CellEditRequestEvent, type RowDragEndEvent, type ICellRendererParams } from 'ag-grid-community';
+import {
+  AllCommunityModule,
+  ModuleRegistry,
+  type ColDef,
+  type CellEditRequestEvent,
+  type RowDragEndEvent,
+  type ICellRendererParams,
+  type CellKeyDownEvent,
+  type ColumnResizedEvent,
+} from 'ag-grid-community';
 import {
   Plus,
   ArrowLeft,
@@ -11,6 +20,24 @@ import {
   Table2,
   LayoutGrid,
   Kanban,
+  Search,
+  X,
+  Undo2,
+  Redo2,
+  Type,
+  Hash,
+  CheckSquare,
+  ChevronDown,
+  List,
+  Calendar,
+  Link2,
+  AtSign,
+  DollarSign,
+  Phone,
+  Star,
+  Percent,
+  AlignLeft,
+  Paperclip,
 } from 'lucide-react';
 import {
   DndContext,
@@ -33,6 +60,13 @@ import {
 } from '../hooks/use-tables';
 import { ROUTES } from '../config/routes';
 import type { TableColumn, TableRow, TableFieldType, TableViewConfig } from '@atlasmail/shared';
+import { TableCustomHeader } from '../components/tables/TableCustomHeader';
+import { ColumnHeaderMenu } from '../components/tables/ColumnHeaderMenu';
+import { RowContextMenu } from '../components/tables/RowContextMenu';
+import { SortPopover } from '../components/tables/SortPopover';
+import { FilterPopover } from '../components/tables/FilterPopover';
+import { ExpandRowModal } from '../components/tables/ExpandRowModal';
+import { MultiSelectCellEditor } from '../components/tables/MultiSelectCellEditor';
 import '../styles/tables.css';
 
 // ─── AG Grid module registration ────────────────────────────────────
@@ -41,6 +75,7 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 // ─── Constants ──────────────────────────────────────────────────────
 
+const PLACEHOLDER_ROW_ID = '__placeholder__';
 const SIDEBAR_WIDTH_KEY = 'atlasmail_tables_sidebar_width';
 const DEFAULT_SIDEBAR_WIDTH = 260;
 const MIN_SIDEBAR_WIDTH = 200;
@@ -84,6 +119,48 @@ function getTagColor(value: string): string {
     hash = value.charCodeAt(i) + ((hash << 5) - hash);
   }
   return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length];
+}
+
+// ─── Field type icons ───────────────────────────────────────────────
+
+const FIELD_TYPE_ICONS: Record<TableFieldType, React.ComponentType<{ size?: number }>> = {
+  text: Type,
+  number: Hash,
+  checkbox: CheckSquare,
+  singleSelect: ChevronDown,
+  multiSelect: List,
+  date: Calendar,
+  url: Link2,
+  email: AtSign,
+  currency: DollarSign,
+  phone: Phone,
+  rating: Star,
+  percent: Percent,
+  longText: AlignLeft,
+  attachment: Paperclip,
+};
+
+// ─── Default columns/rows for new tables ────────────────────────────
+
+function createDefaultColumns(): TableColumn[] {
+  return [
+    { id: crypto.randomUUID(), name: 'Name', type: 'text', width: 250 },
+    { id: crypto.randomUUID(), name: 'Notes', type: 'longText', width: 300 },
+    {
+      id: crypto.randomUUID(),
+      name: 'Status',
+      type: 'singleSelect',
+      width: 180,
+      options: ['Todo', 'In progress', 'Done'],
+    },
+  ];
+}
+
+function createDefaultRows(count = 3): TableRow[] {
+  return Array.from({ length: count }, () => ({
+    _id: crypto.randomUUID(),
+    _createdAt: new Date().toISOString(),
+  }));
 }
 
 // ─── Cell renderers ─────────────────────────────────────────────────
@@ -176,8 +253,13 @@ function DateRenderer(params: ICellRendererParams) {
 
 // ─── Build AG Grid column defs ──────────────────────────────────────
 
-function buildColDefs(columns: TableColumn[], t: (key: string) => string): ColDef[] {
+function buildColDefs(
+  columns: TableColumn[],
+  t: (key: string) => string,
+  onMenuOpen?: (columnId: string, x: number, y: number) => void,
+): ColDef[] {
   return columns.map((col, idx) => {
+    const TypeIcon = FIELD_TYPE_ICONS[col.type];
     const base: ColDef = {
       field: col.id,
       headerName: col.name,
@@ -186,6 +268,12 @@ function buildColDefs(columns: TableColumn[], t: (key: string) => string): ColDe
       resizable: true,
       sortable: true,
       rowDrag: idx === 0,
+      headerComponent: TableCustomHeader,
+      headerComponentParams: {
+        fieldType: col.type,
+        fieldTypeIcon: TypeIcon,
+        onMenuOpen,
+      },
     };
 
     switch (col.type) {
@@ -208,7 +296,9 @@ function buildColDefs(columns: TableColumn[], t: (key: string) => string): ColDe
         break;
       case 'multiSelect':
         base.cellRenderer = MultiTagRenderer;
-        base.editable = false; // Multi-select needs custom handling
+        base.cellEditor = MultiSelectCellEditor;
+        base.cellEditorPopup = true;
+        base.cellEditorParams = { options: col.options || [] };
         break;
       case 'date':
         base.cellEditor = 'agDateCellEditor';
@@ -444,6 +534,20 @@ export function TablesPage() {
   const [localViewConfig, setLocalViewConfig] = useState<TableViewConfig>({ activeView: 'grid' });
   const [localTitle, setLocalTitle] = useState('');
 
+  // Search state
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchText, setSearchText] = useState('');
+
+  // Context menu states
+  const [columnMenu, setColumnMenu] = useState<{ columnId: string; x: number; y: number } | null>(null);
+  const [rowMenu, setRowMenu] = useState<{ rowId: string; x: number; y: number } | null>(null);
+  const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
+
+  // Undo/redo
+  const undoPastRef = useRef<Array<{ columns: TableColumn[]; rows: TableRow[] }>>([]);
+  const undoFutureRef = useRef<Array<{ columns: TableColumn[]; rows: TableRow[] }>>([]);
+  const [undoCounter, setUndoCounter] = useState(0); // triggers re-render for canUndo/canRedo
+
   // Fetch selected spreadsheet
   const { data: spreadsheet } = useTable(selectedId ?? undefined);
 
@@ -497,6 +601,146 @@ export function TablesPage() {
     [selectedId, autoSave],
   );
 
+  // ─── Undo/redo helpers ─────────────────────────────────────────────
+
+  const pushUndoState = useCallback(() => {
+    undoPastRef.current = [...undoPastRef.current.slice(-49), { columns: localColumns, rows: localRows }];
+    undoFutureRef.current = [];
+    setUndoCounter((c) => c + 1);
+  }, [localColumns, localRows]);
+
+  const handleUndo = useCallback(() => {
+    if (undoPastRef.current.length === 0) return;
+    const prev = undoPastRef.current.pop()!;
+    undoFutureRef.current.push({ columns: localColumns, rows: localRows });
+    setLocalColumns(prev.columns);
+    setLocalRows(prev.rows);
+    triggerAutoSave({ columns: prev.columns, rows: prev.rows });
+    setUndoCounter((c) => c + 1);
+  }, [localColumns, localRows, triggerAutoSave]);
+
+  const handleRedo = useCallback(() => {
+    if (undoFutureRef.current.length === 0) return;
+    const next = undoFutureRef.current.pop()!;
+    undoPastRef.current.push({ columns: localColumns, rows: localRows });
+    setLocalColumns(next.columns);
+    setLocalRows(next.rows);
+    triggerAutoSave({ columns: next.columns, rows: next.rows });
+    setUndoCounter((c) => c + 1);
+  }, [localColumns, localRows, triggerAutoSave]);
+
+  // undoCounter is referenced to ensure re-renders update canUndo/canRedo
+  const canUndo = undoCounter >= 0 && undoPastRef.current.length > 0;
+  const canRedo = undoCounter >= 0 && undoFutureRef.current.length > 0;
+
+  // Placeholder row style
+  const getRowStyle = useCallback((params: { data?: { _id?: string } }) => {
+    if (params.data?._id === PLACEHOLDER_ROW_ID) {
+      return { opacity: '0.4', fontStyle: 'italic' } as Record<string, string>;
+    }
+    return undefined;
+  }, []);
+
+  // ─── Data pipeline: filter → sort → rowData ─────────────────────
+
+  const filteredRows = useMemo(() => {
+    const filters = localViewConfig.filters;
+    if (!filters || filters.length === 0) return localRows;
+
+    return localRows.filter((row) => {
+      return filters.every((f) => {
+        const val = row[f.columnId];
+        const strVal = val != null ? String(val) : '';
+        const filterVal = f.value != null ? String(f.value) : '';
+
+        switch (f.operator) {
+          case 'contains': return strVal.toLowerCase().includes(filterVal.toLowerCase());
+          case 'doesNotContain': return !strVal.toLowerCase().includes(filterVal.toLowerCase());
+          case 'is': return strVal === filterVal;
+          case 'isNot': return strVal !== filterVal;
+          case 'isEmpty': return val == null || strVal === '';
+          case 'isNotEmpty': return val != null && strVal !== '';
+          case 'greaterThan': return Number(val) > Number(f.value);
+          case 'lessThan': return Number(val) < Number(f.value);
+          case 'isBefore': return new Date(strVal) < new Date(filterVal);
+          case 'isAfter': return new Date(strVal) > new Date(filterVal);
+          case 'isChecked': return val === true;
+          case 'isNotChecked': return val !== true;
+          case 'isAnyOf': {
+            const opts = Array.isArray(f.value) ? f.value : [];
+            return opts.includes(strVal);
+          }
+          case 'isNoneOf': {
+            const opts = Array.isArray(f.value) ? f.value : [];
+            return !opts.includes(strVal);
+          }
+          default: return true;
+        }
+      });
+    });
+  }, [localRows, localViewConfig.filters]);
+
+  const sortedRows = useMemo(() => {
+    const sorts = localViewConfig.sorts;
+    if (!sorts || sorts.length === 0) return filteredRows;
+
+    return [...filteredRows].sort((a, b) => {
+      for (const sort of sorts) {
+        const aVal = a[sort.columnId];
+        const bVal = b[sort.columnId];
+        const aStr = aVal != null ? String(aVal) : '';
+        const bStr = bVal != null ? String(bVal) : '';
+        const dir = sort.direction === 'desc' ? -1 : 1;
+
+        // Numeric comparison if both are numbers
+        const aNum = Number(aStr);
+        const bNum = Number(bStr);
+        if (!isNaN(aNum) && !isNaN(bNum) && aStr !== '' && bStr !== '') {
+          if (aNum !== bNum) return (aNum - bNum) * dir;
+          continue;
+        }
+
+        const cmp = aStr.localeCompare(bStr);
+        if (cmp !== 0) return cmp * dir;
+      }
+      return 0;
+    });
+  }, [filteredRows, localViewConfig.sorts]);
+
+  const rowData = sortedRows;
+
+  // Global keyboard shortcuts (undo, redo, search)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+
+      // Ctrl/Cmd+Z → undo
+      if (mod && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+        return;
+      }
+      // Ctrl/Cmd+Y or Ctrl/Cmd+Shift+Z → redo
+      if (mod && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        handleRedo();
+        return;
+      }
+      // Ctrl/Cmd+F → search
+      if (mod && e.key === 'f' && selectedId) {
+        e.preventDefault();
+        setShowSearch(true);
+      }
+      // Escape → close search
+      if (e.key === 'Escape' && showSearch) {
+        setShowSearch(false);
+        setSearchText('');
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [handleUndo, handleRedo, selectedId, showSearch]);
+
   // ─── Handlers ──────────────────────────────────────────────────────
 
   const handleSelectTable = useCallback(
@@ -508,7 +752,9 @@ export function TablesPage() {
   );
 
   const handleCreateTable = useCallback(async () => {
-    const created = await createTable.mutateAsync({});
+    const columns = createDefaultColumns();
+    const rows = createDefaultRows(3);
+    const created = await createTable.mutateAsync({ columns, rows });
     handleSelectTable(created.id);
   }, [createTable, handleSelectTable]);
 
@@ -540,6 +786,7 @@ export function TablesPage() {
 
   const handleAddColumn = useCallback(
     (name: string, type: TableFieldType, options?: string[]) => {
+      pushUndoState();
       const newCol: TableColumn = {
         id: crypto.randomUUID(),
         name,
@@ -551,10 +798,11 @@ export function TablesPage() {
       setLocalColumns(updated);
       triggerAutoSave({ columns: updated });
     },
-    [localColumns, triggerAutoSave],
+    [localColumns, triggerAutoSave, pushUndoState],
   );
 
   const handleAddRow = useCallback(() => {
+    pushUndoState();
     const newRow: TableRow = {
       _id: crypto.randomUUID(),
       _createdAt: new Date().toISOString(),
@@ -562,16 +810,170 @@ export function TablesPage() {
     const updated = [...localRows, newRow];
     setLocalRows(updated);
     triggerAutoSave({ rows: updated });
-  }, [localRows, triggerAutoSave]);
+  }, [localRows, triggerAutoSave, pushUndoState]);
 
   const handleDeleteRow = useCallback(
     (rowId: string) => {
+      pushUndoState();
       const updated = localRows.filter((r) => r._id !== rowId);
       setLocalRows(updated);
       triggerAutoSave({ rows: updated });
     },
+    [localRows, triggerAutoSave, pushUndoState],
+  );
+
+  // ─── Column context menu handlers ─────────────────────────────────
+
+  const handleRenameColumn = useCallback(
+    (colId: string, newName: string) => {
+      pushUndoState();
+      const updated = localColumns.map((c) =>
+        c.id === colId ? { ...c, name: newName } : c,
+      );
+      setLocalColumns(updated);
+      triggerAutoSave({ columns: updated });
+    },
+    [localColumns, triggerAutoSave, pushUndoState],
+  );
+
+  const handleDeleteColumn = useCallback(
+    (colId: string) => {
+      pushUndoState();
+      const updatedCols = localColumns.filter((c) => c.id !== colId);
+      const updatedRows = localRows.map((r) => {
+        const copy = { ...r };
+        delete copy[colId];
+        return copy;
+      });
+      setLocalColumns(updatedCols);
+      setLocalRows(updatedRows);
+      triggerAutoSave({ columns: updatedCols, rows: updatedRows });
+    },
+    [localColumns, localRows, triggerAutoSave, pushUndoState],
+  );
+
+  const handleDuplicateColumn = useCallback(
+    (colId: string) => {
+      pushUndoState();
+      const source = localColumns.find((c) => c.id === colId);
+      if (!source) return;
+      const newId = crypto.randomUUID();
+      const newCol: TableColumn = { ...source, id: newId, name: `${source.name} (copy)` };
+      const idx = localColumns.findIndex((c) => c.id === colId);
+      const updatedCols = [...localColumns];
+      updatedCols.splice(idx + 1, 0, newCol);
+      // Copy data from all rows
+      const updatedRows = localRows.map((r) => ({ ...r, [newId]: r[colId] }));
+      setLocalColumns(updatedCols);
+      setLocalRows(updatedRows);
+      triggerAutoSave({ columns: updatedCols, rows: updatedRows });
+    },
+    [localColumns, localRows, triggerAutoSave, pushUndoState],
+  );
+
+  const handleChangeColumnType = useCallback(
+    (colId: string, newType: TableFieldType) => {
+      pushUndoState();
+      const updated = localColumns.map((c) => {
+        if (c.id !== colId) return c;
+        const newCol: TableColumn = { ...c, type: newType };
+        // Add default options for select types
+        if ((newType === 'singleSelect' || newType === 'multiSelect') && !newCol.options?.length) {
+          newCol.options = ['Option 1', 'Option 2', 'Option 3'];
+        }
+        // Clear options for non-select types
+        if (newType !== 'singleSelect' && newType !== 'multiSelect') {
+          delete newCol.options;
+        }
+        return newCol;
+      });
+      setLocalColumns(updated);
+      triggerAutoSave({ columns: updated });
+    },
+    [localColumns, triggerAutoSave, pushUndoState],
+  );
+
+  const handleSortByColumn = useCallback(
+    (colId: string, direction: 'asc' | 'desc') => {
+      const sorts = [{ columnId: colId, direction }];
+      const updated = { ...localViewConfig, sorts };
+      setLocalViewConfig(updated);
+      triggerAutoSave({ viewConfig: updated });
+    },
+    [localViewConfig, triggerAutoSave],
+  );
+
+  // ─── Row context menu handlers ────────────────────────────────────
+
+  const handleInsertRowAbove = useCallback(
+    (rowId: string) => {
+      pushUndoState();
+      const idx = localRows.findIndex((r) => r._id === rowId);
+      if (idx < 0) return;
+      const newRow: TableRow = { _id: crypto.randomUUID(), _createdAt: new Date().toISOString() };
+      const updated = [...localRows];
+      updated.splice(idx, 0, newRow);
+      setLocalRows(updated);
+      triggerAutoSave({ rows: updated });
+    },
+    [localRows, triggerAutoSave, pushUndoState],
+  );
+
+  const handleInsertRowBelow = useCallback(
+    (rowId: string) => {
+      pushUndoState();
+      const idx = localRows.findIndex((r) => r._id === rowId);
+      if (idx < 0) return;
+      const newRow: TableRow = { _id: crypto.randomUUID(), _createdAt: new Date().toISOString() };
+      const updated = [...localRows];
+      updated.splice(idx + 1, 0, newRow);
+      setLocalRows(updated);
+      triggerAutoSave({ rows: updated });
+    },
+    [localRows, triggerAutoSave, pushUndoState],
+  );
+
+  const handleDuplicateRow = useCallback(
+    (rowId: string) => {
+      pushUndoState();
+      const idx = localRows.findIndex((r) => r._id === rowId);
+      if (idx < 0) return;
+      const source = localRows[idx];
+      const newRow: TableRow = { ...source, _id: crypto.randomUUID(), _createdAt: new Date().toISOString() };
+      const updated = [...localRows];
+      updated.splice(idx + 1, 0, newRow);
+      setLocalRows(updated);
+      triggerAutoSave({ rows: updated });
+    },
+    [localRows, triggerAutoSave, pushUndoState],
+  );
+
+  // Handle row context menu event from AG Grid
+  const handleCellContextMenu = useCallback(
+    (event: { data?: TableRow; event?: Event | null }) => {
+      const mouseEvent = event.event as MouseEvent | undefined;
+      if (!mouseEvent || !event.data) return;
+      if (event.data._id === PLACEHOLDER_ROW_ID) return;
+      mouseEvent.preventDefault();
+      setRowMenu({ rowId: event.data._id, x: mouseEvent.clientX, y: mouseEvent.clientY });
+    },
+    [],
+  );
+
+  // Handle row field update (for expand modal)
+  const handleUpdateRowField = useCallback(
+    (rowId: string, colId: string, value: unknown) => {
+      const updatedRows = localRows.map((r) =>
+        r._id === rowId ? { ...r, [colId]: value } : r,
+      );
+      setLocalRows(updatedRows);
+      triggerAutoSave({ rows: updatedRows });
+    },
     [localRows, triggerAutoSave],
   );
+
+  // Placeholder row for inline "add row"
+  const pinnedBottomRowData = useMemo(() => [{ _id: PLACEHOLDER_ROW_ID, _createdAt: '' }], []);
 
   // AG Grid cell edit (controlled / read-only edit)
   const handleCellEditRequest = useCallback(
@@ -580,11 +982,49 @@ export function TablesPage() {
       const colId = event.colDef.field!;
       const newValue = event.newValue;
 
+      pushUndoState();
+
+      // If editing the placeholder row, create a real row first
+      if (rowId === PLACEHOLDER_ROW_ID) {
+        const newRow: TableRow = {
+          _id: crypto.randomUUID(),
+          _createdAt: new Date().toISOString(),
+          [colId]: newValue,
+        };
+        const updated = [...localRows, newRow];
+        setLocalRows(updated);
+        triggerAutoSave({ rows: updated });
+        return;
+      }
+
       const updatedRows = localRows.map((r) =>
         r._id === rowId ? { ...r, [colId]: newValue } : r,
       );
       setLocalRows(updatedRows);
       triggerAutoSave({ rows: updatedRows });
+    },
+    [localRows, triggerAutoSave, pushUndoState],
+  );
+
+  // AG Grid cell keyboard handling
+  const handleCellKeyDown = useCallback(
+    (event: CellKeyDownEvent) => {
+      const kbEvent = event.event as KeyboardEvent | undefined;
+      if (!kbEvent) return;
+
+      // Delete/Backspace clears cell value (only when not in edit mode)
+      if ((kbEvent.key === 'Delete' || kbEvent.key === 'Backspace') && !(event as unknown as { editing?: boolean }).editing) {
+        const colId = event.colDef.field;
+        if (!colId) return;
+        const rowId = (event.data as TableRow)?._id;
+        if (!rowId || rowId === PLACEHOLDER_ROW_ID) return;
+
+        const updatedRows = localRows.map((r) =>
+          r._id === rowId ? { ...r, [colId]: undefined } : r,
+        );
+        setLocalRows(updatedRows);
+        triggerAutoSave({ rows: updatedRows });
+      }
     },
     [localRows, triggerAutoSave],
   );
@@ -604,6 +1044,24 @@ export function TablesPage() {
     [localRows, triggerAutoSave],
   );
 
+  // Column resize persistence
+  const handleColumnResized = useCallback(
+    (event: ColumnResizedEvent) => {
+      if (!event.finished || !event.column) return;
+      const colId = event.column.getColId();
+      // Skip row number column (no colId match in localColumns)
+      const colIndex = localColumns.findIndex((c) => c.id === colId);
+      if (colIndex < 0) return;
+      const newWidth = event.column.getActualWidth();
+      const updated = localColumns.map((c, i) =>
+        i === colIndex ? { ...c, width: newWidth } : c,
+      );
+      setLocalColumns(updated);
+      triggerAutoSave({ columns: updated });
+    },
+    [localColumns, triggerAutoSave],
+  );
+
   // View toggle
   const handleViewToggle = useCallback(
     (view: 'grid' | 'kanban') => {
@@ -615,9 +1073,28 @@ export function TablesPage() {
   );
 
   // AG Grid column defs
+  const ROW_NUMBER_COL: ColDef = useMemo(() => ({
+    headerName: '',
+    width: 50,
+    maxWidth: 50,
+    minWidth: 50,
+    pinned: 'left',
+    editable: false,
+    sortable: false,
+    resizable: false,
+    suppressMovable: true,
+    lockPosition: 'left',
+    cellStyle: { color: 'var(--color-text-tertiary)', textAlign: 'center', fontSize: '12px' },
+    valueGetter: (params) => params.node?.rowIndex != null ? params.node.rowIndex + 1 : '',
+  }), []);
+
+  const handleColumnMenuOpen = useCallback((columnId: string, x: number, y: number) => {
+    setColumnMenu({ columnId, x, y });
+  }, []);
+
   const columnDefs = useMemo(
-    () => buildColDefs(localColumns, t),
-    [localColumns, t],
+    () => [ROW_NUMBER_COL, ...buildColDefs(localColumns, t, handleColumnMenuOpen)],
+    [localColumns, t, ROW_NUMBER_COL, handleColumnMenuOpen],
   );
 
   // Kanban DnD
@@ -848,6 +1325,26 @@ export function TablesPage() {
                 )}
               </div>
 
+              <SortPopover
+                columns={localColumns}
+                viewConfig={localViewConfig}
+                onUpdate={(sorts) => {
+                  const updated = { ...localViewConfig, sorts };
+                  setLocalViewConfig(updated);
+                  triggerAutoSave({ viewConfig: updated });
+                }}
+              />
+
+              <FilterPopover
+                columns={localColumns}
+                viewConfig={localViewConfig}
+                onUpdate={(filters) => {
+                  const updated = { ...localViewConfig, filters };
+                  setLocalViewConfig(updated);
+                  triggerAutoSave({ viewConfig: updated });
+                }}
+              />
+
               <div className="tables-toolbar-spacer" />
 
               {/* Kanban group-by selector */}
@@ -876,6 +1373,33 @@ export function TablesPage() {
                 </select>
               )}
 
+              <button
+                className="tables-toolbar-btn"
+                onClick={handleUndo}
+                disabled={!canUndo}
+                title={t('tables.undo')}
+                style={{ opacity: canUndo ? 1 : 0.4 }}
+              >
+                <Undo2 size={14} />
+              </button>
+              <button
+                className="tables-toolbar-btn"
+                onClick={handleRedo}
+                disabled={!canRedo}
+                title={t('tables.redo')}
+                style={{ opacity: canRedo ? 1 : 0.4 }}
+              >
+                <Redo2 size={14} />
+              </button>
+
+              <button
+                className={`tables-toolbar-btn${showSearch ? ' active' : ''}`}
+                onClick={() => { setShowSearch(!showSearch); if (showSearch) setSearchText(''); }}
+                title={t('tables.search')}
+              >
+                <Search size={14} />
+              </button>
+
               {isSaving && (
                 <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
                   {t('tables.saving')}
@@ -901,6 +1425,23 @@ export function TablesPage() {
               </div>
             </div>
 
+            {/* Search bar */}
+            {showSearch && (
+              <div className="tables-search-bar">
+                <Search size={14} />
+                <input
+                  autoFocus
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  placeholder={t('tables.searchPlaceholder')}
+                  onKeyDown={(e) => { if (e.key === 'Escape') { setShowSearch(false); setSearchText(''); } }}
+                />
+                <button onClick={() => { setShowSearch(false); setSearchText(''); }}>
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+
             {/* Grid view */}
             {localViewConfig.activeView === 'grid' && (
               <>
@@ -908,16 +1449,27 @@ export function TablesPage() {
                   <div className={isDark ? 'ag-theme-quartz-dark' : 'ag-theme-quartz'}>
                     <AgGridReact
                       columnDefs={columnDefs}
-                      rowData={localRows}
+                      rowData={rowData}
                       getRowId={getRowId}
                       readOnlyEdit={true}
                       onCellEditRequest={handleCellEditRequest}
+                      onCellKeyDown={handleCellKeyDown}
+                      onColumnResized={handleColumnResized}
                       rowDragManaged={false}
                       onRowDragEnd={handleRowDragEnd}
                       animateRows={true}
                       undoRedoCellEditing={false}
                       suppressMoveWhenRowDragging={true}
                       rowSelection={{ mode: 'multiRow' }}
+                      enterNavigatesVertically={true}
+                      enterNavigatesVerticallyAfterEdit={true}
+                      enableCellTextSelection={true}
+                      ensureDomOrder={true}
+                      suppressContextMenu={true}
+                      onCellContextMenu={handleCellContextMenu}
+                      pinnedBottomRowData={pinnedBottomRowData}
+                      getRowStyle={getRowStyle}
+                      quickFilterText={searchText}
                       context={{ deleteRow: handleDeleteRow }}
                     />
                   </div>
@@ -976,6 +1528,58 @@ export function TablesPage() {
           </>
         )}
       </div>
+
+      {/* Column header context menu */}
+      {columnMenu && (() => {
+        const col = localColumns.find((c) => c.id === columnMenu.columnId);
+        if (!col) return null;
+        return (
+          <ColumnHeaderMenu
+            columnId={columnMenu.columnId}
+            columnName={col.name}
+            columnType={col.type}
+            x={columnMenu.x}
+            y={columnMenu.y}
+            onClose={() => setColumnMenu(null)}
+            onRename={handleRenameColumn}
+            onDelete={handleDeleteColumn}
+            onDuplicate={handleDuplicateColumn}
+            onChangeType={handleChangeColumnType}
+            onSortAsc={(colId) => handleSortByColumn(colId, 'asc')}
+            onSortDesc={(colId) => handleSortByColumn(colId, 'desc')}
+          />
+        );
+      })()}
+
+      {/* Row context menu */}
+      {rowMenu && (
+        <RowContextMenu
+          rowId={rowMenu.rowId}
+          x={rowMenu.x}
+          y={rowMenu.y}
+          onClose={() => setRowMenu(null)}
+          onInsertAbove={handleInsertRowAbove}
+          onInsertBelow={handleInsertRowBelow}
+          onDuplicate={handleDuplicateRow}
+          onExpand={(rowId) => setExpandedRowId(rowId)}
+          onDelete={handleDeleteRow}
+        />
+      )}
+
+      {/* Expand row modal */}
+      {expandedRowId && (() => {
+        const row = localRows.find((r) => r._id === expandedRowId);
+        if (!row) return null;
+        return (
+          <ExpandRowModal
+            row={row}
+            columns={localColumns}
+            open={true}
+            onOpenChange={(open) => { if (!open) setExpandedRowId(null); }}
+            onUpdateField={handleUpdateRowField}
+          />
+        );
+      })()}
 
       {/* Hover effect for sidebar delete buttons */}
       <style>{`
