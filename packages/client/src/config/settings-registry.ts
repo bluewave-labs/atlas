@@ -114,7 +114,7 @@ export const settingsCategories: SettingsCategory[] = [
   },
   {
     id: 'documents',
-    label: 'Documents',
+    label: 'Write',
     icon: FileText,
     panels: [
       { id: 'editor', label: 'Editor', icon: Type, component: DocsEditorPanel },
