@@ -742,10 +742,13 @@ export function TablesPage() {
           )}
 
           {filteredTables.map((table) => (
-            <button
+            <div
               key={table.id}
+              role="button"
+              tabIndex={0}
               className={`tables-sidebar-item${selectedId === table.id ? ' active' : ''}`}
               onClick={() => handleSelectTable(table.id)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSelectTable(table.id); }}
             >
               <Table2 size={14} />
               <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -765,7 +768,7 @@ export function TablesPage() {
               >
                 <Trash2 size={12} />
               </button>
-            </button>
+            </div>
           ))}
 
           {/* Trash section */}
@@ -784,7 +787,7 @@ export function TablesPage() {
               </button>
               {showTrash &&
                 archivedTables.map((table) => (
-                  <button
+                  <div
                     key={table.id}
                     className="tables-sidebar-item archived"
                   >
@@ -802,7 +805,7 @@ export function TablesPage() {
                     >
                       <RotateCcw size={12} />
                     </button>
-                  </button>
+                  </div>
                 ))}
             </>
           )}
