@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import routes from './routes';
@@ -6,6 +7,7 @@ import trackingRoutes from './routes/tracking.routes';
 import pushRoutes from './routes/push.routes';
 import { errorHandler } from './middleware/error-handler';
 import { apiLimiter } from './middleware/rate-limit';
+import { authMiddleware } from './middleware/auth';
 
 export function createApp() {
   const app = express();
@@ -24,6 +26,9 @@ export function createApp() {
 
   // Gmail push notification webhook — no auth (Pub/Sub can't send JWTs)
   app.use('/webhooks/push', pushRoutes);
+
+  // Serve uploaded files (auth via query token)
+  app.use('/api/v1/uploads', authMiddleware, express.static(path.join(__dirname, '../uploads')));
 
   app.use('/api/v1', apiLimiter);
   app.use('/api/v1', routes);

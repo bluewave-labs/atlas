@@ -10,6 +10,7 @@ import docsRoutes from './docs.routes';
 import drawingsRoutes from './drawings.routes';
 import tasksRoutes from './tasks.routes';
 import tablesRoutes from './tables.routes';
+import uploadRoutes from './upload.routes';
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use('/docs', docsRoutes);
 router.use('/drawings', drawingsRoutes);
 router.use('/tasks', tasksRoutes);
 router.use('/tables', tablesRoutes);
+router.use('/upload', uploadRoutes);
 
 export default router;

@@ -30,6 +30,18 @@ export interface TableRow {
   [columnId: string]: unknown;
 }
 
+export interface TableAttachment {
+  url: string;
+  name: string;
+  size: number;
+  type: string; // MIME type
+}
+
+export interface TableViewTab {
+  key: 'grid' | 'kanban' | 'calendar' | 'gallery';
+  label: string;
+}
+
 export interface TableViewConfig {
   activeView: 'grid' | 'kanban' | 'calendar' | 'gallery';
   kanbanGroupByColumnId?: string;
@@ -41,6 +53,9 @@ export interface TableViewConfig {
   frozenColumnCount?: number;
   rowColorMode?: 'none' | 'bySelectField';
   rowColorColumnId?: string;
+  setFilters?: Record<string, string[]>;
+  groupByColumnId?: string | null;
+  views?: TableViewTab[];
 }
 
 export interface Spreadsheet {

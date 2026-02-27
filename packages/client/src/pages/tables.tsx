@@ -26,20 +26,9 @@ import {
   X,
   Undo2,
   Redo2,
-  Type,
-  Hash,
   CheckSquare,
   ChevronDown,
-  List,
   Calendar,
-  Link2,
-  AtSign,
-  DollarSign,
-  Phone,
-  Star,
-  Percent,
-  AlignLeft,
-  Paperclip,
   Maximize2,
   LayoutTemplate,
   GalleryHorizontalEnd,
@@ -47,7 +36,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Copy,
+  Download,
+  Group,
+  Ungroup,
+  ExternalLink,
+  Paperclip,
+  FileIcon,
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import {
   DndContext,
   DragOverlay,
@@ -68,7 +64,8 @@ import {
   useAutoSaveTable,
 } from '../hooks/use-tables';
 import { ROUTES } from '../config/routes';
-import type { TableColumn, TableRow, TableFieldType, TableViewConfig } from '@atlasmail/shared';
+import type { TableColumn, TableRow, TableFieldType, TableViewConfig, TableAttachment, TableViewTab } from '@atlasmail/shared';
+import { api } from '../lib/api-client';
 import { TableCustomHeader } from '../components/tables/TableCustomHeader';
 import { useCellRangeSelection, isCellInRange } from '../hooks/use-cell-range-selection';
 import { ColumnHeaderMenu } from '../components/tables/ColumnHeaderMenu';
@@ -77,9 +74,21 @@ import { SortPopover } from '../components/tables/SortPopover';
 import { FilterPopover } from '../components/tables/FilterPopover';
 import { ExpandRowModal } from '../components/tables/ExpandRowModal';
 import { MultiSelectCellEditor } from '../components/tables/MultiSelectCellEditor';
+import { RichSelectCellEditor } from '../components/tables/RichSelectCellEditor';
 import { RowHeightPopover } from '../components/tables/RowHeightPopover';
 import { HideFieldsPopover } from '../components/tables/HideFieldsPopover';
 import { RowColorPopover } from '../components/tables/RowColorPopover';
+import { FindReplaceBar } from '../components/tables/FindReplaceBar';
+import { BatchEditOverlay } from '../components/tables/BatchEditOverlay';
+import { GroupHeaderRenderer } from '../components/tables/GroupHeaderRow';
+import { FormulaBar } from '../components/tables/FormulaBar';
+import { useFindReplace } from '../hooks/use-find-replace';
+import { useFillHandle } from '../hooks/use-fill-handle';
+import { useRowGrouping, isGroupHeaderRow } from '../hooks/use-row-grouping';
+import type { MaybeGroupedRow } from '../hooks/use-row-grouping';
+import { useFormulas } from '../hooks/use-formulas';
+import { isFormulaValue } from '../lib/formula-engine';
+import { getTagColor } from '../lib/tag-colors';
 import '../styles/tables.css';
 import '../styles/docs.css'; // Re-use .tg-* template gallery styles
 
@@ -92,6 +101,7 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 const PLACEHOLDER_ROW_ID = '__placeholder__';
 const ROW_HEIGHT_MAP: Record<string, number> = { short: 28, medium: 36, tall: 52, extraTall: 72 };
 const SIDEBAR_WIDTH_KEY = 'atlasmail_tables_sidebar_width';
+const LAST_TABLE_KEY = 'atlasmail_tables_last_selected';
 const DEFAULT_SIDEBAR_WIDTH = 260;
 const MIN_SIDEBAR_WIDTH = 200;
 const MAX_SIDEBAR_WIDTH = 400;
@@ -121,47 +131,9 @@ const FIELD_TYPES: { value: TableFieldType; label: string }[] = [
   { value: 'attachment', label: 'Attachment' },
 ];
 
-// ─── Tag color palette ──────────────────────────────────────────────
-
-const TAG_COLORS: { bg: string; text: string }[] = [
-  { bg: '#d4edda', text: '#155724' },
-  { bg: '#cce5ff', text: '#004085' },
-  { bg: '#f8d7da', text: '#721c24' },
-  { bg: '#fff3cd', text: '#856404' },
-  { bg: '#e2d5f1', text: '#4a1d96' },
-  { bg: '#d1ecf1', text: '#0c5460' },
-  { bg: '#ffeeba', text: '#7c5e10' },
-  { bg: '#fce4ec', text: '#880e4f' },
-  { bg: '#c3dafe', text: '#1e3a5f' },
-  { bg: '#e8f5e9', text: '#1b5e20' },
-];
-
-function getTagColor(value: string): { bg: string; text: string } {
-  let hash = 0;
-  for (let i = 0; i < value.length; i++) {
-    hash = value.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length];
-}
-
 // ─── Field type icons ───────────────────────────────────────────────
 
-const FIELD_TYPE_ICONS: Record<TableFieldType, React.ComponentType<{ size?: number }>> = {
-  text: Type,
-  number: Hash,
-  checkbox: CheckSquare,
-  singleSelect: ChevronDown,
-  multiSelect: List,
-  date: Calendar,
-  url: Link2,
-  email: AtSign,
-  currency: DollarSign,
-  phone: Phone,
-  rating: Star,
-  percent: Percent,
-  longText: AlignLeft,
-  attachment: Paperclip,
-};
+import { FIELD_TYPE_ICONS } from '../lib/field-type-icons';
 
 // ─── Default columns/rows for new tables ────────────────────────────
 
@@ -967,16 +939,21 @@ function MultiTagRenderer(params: ICellRendererParams) {
 function LinkRenderer(params: ICellRendererParams) {
   if (!params.value) return null;
   const url = String(params.value);
+  const href = url.startsWith('http') ? url : `https://${url}`;
   return (
-    <a
-      href={url.startsWith('http') ? url : `https://${url}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="tables-cell-link"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {url}
-    </a>
+    <span className="tables-cell-url">
+      <span className="tables-cell-url-text">{url}</span>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="tables-cell-url-open"
+        title="Open link"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <ExternalLink size={12} />
+      </a>
+    </span>
   );
 }
 
@@ -1020,11 +997,65 @@ function PercentRenderer(params: ICellRendererParams) {
   );
 }
 
+function AttachmentCellRenderer(params: ICellRendererParams) {
+  const attachments: TableAttachment[] = Array.isArray(params.value) ? params.value : [];
+  if (attachments.length === 0) {
+    return (
+      <span className="tables-cell-attachment tables-cell-attachment-empty">
+        <Paperclip size={13} />
+      </span>
+    );
+  }
+  const isImage = (type: string) => type.startsWith('image/');
+  const token = localStorage.getItem('atlasmail_token') || '';
+  return (
+    <div className="tables-cell-attachment">
+      {attachments.map((att, i) => (
+        <a
+          key={i}
+          className="tables-cell-attachment-chip"
+          href={`${att.url}?token=${token}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          title={att.name}
+        >
+          {isImage(att.type) ? (
+            <img className="tables-cell-attachment-img" src={`${att.url}?token=${token}`} alt={att.name} />
+          ) : (
+            <FileIcon size={12} />
+          )}
+          <span className="tables-cell-attachment-name">{att.name}</span>
+        </a>
+      ))}
+    </div>
+  );
+}
+
 function DateRenderer(params: ICellRendererParams) {
   if (!params.value) return null;
   const d = new Date(String(params.value));
   if (isNaN(d.getTime())) return <span>{String(params.value)}</span>;
   return <span>{d.toLocaleDateString()}</span>;
+}
+
+// ─── Row number header (select-all checkbox) ───────────────────────
+
+function RowNumberHeader(props: { api: { selectAll: () => void; deselectAll: () => void; getSelectedRows: () => unknown[] } }) {
+  const [allSelected, setAllSelected] = useState(false);
+  const toggle = () => {
+    if (allSelected) {
+      props.api.deselectAll();
+    } else {
+      props.api.selectAll();
+    }
+    setAllSelected(!allSelected);
+  };
+  return (
+    <span className="tables-row-number-header" onClick={toggle}>
+      {allSelected ? <CheckSquare size={14} /> : <span className="tables-row-cb-empty" />}
+    </span>
+  );
 }
 
 // ─── Add column header ("+") ────────────────────────────────────────
@@ -1050,8 +1081,6 @@ function buildColDefs(
   frozenColumnCount?: number,
   onHeaderClicked?: (colId: string) => void,
 ): ColDef[] {
-  // Find first visible column index for rowDrag handle
-  const firstVisibleIdx = columns.findIndex((c) => !hiddenColumns?.has(c.id));
   return columns.map((col, idx) => {
     const TypeIcon = FIELD_TYPE_ICONS[col.type];
     const base: ColDef = {
@@ -1061,7 +1090,6 @@ function buildColDefs(
       width: col.width || 180,
       resizable: true,
       sortable: true,
-      rowDrag: idx === firstVisibleIdx,
       hide: hiddenColumns?.has(col.id),
       headerComponent: TableCustomHeader,
       headerComponentParams: {
@@ -1081,6 +1109,25 @@ function buildColDefs(
           const rowIndex = params.node.rowIndex;
           if (rowIndex == null || params.node.rowPinned === 'bottom') return false;
           return isCellInRange(rowIndex, params.colDef.field, cellRangeRef.current, colIndexMapRef!.current);
+        },
+        'cell-find-match': (params: { context: Record<string, unknown>; colDef: { field?: string }; node: { rowIndex: number | null; rowPinned?: string | null } }) => {
+          const { findMatchSet } = params.context as { findMatchSet?: Set<string> };
+          if (!findMatchSet?.size || !params.colDef.field) return false;
+          const rowIndex = params.node.rowIndex;
+          if (rowIndex == null || params.node.rowPinned === 'bottom') return false;
+          return findMatchSet.has(`${rowIndex}:${params.colDef.field}`);
+        },
+        'cell-find-current': (params: { context: Record<string, unknown>; colDef: { field?: string }; node: { rowIndex: number | null; rowPinned?: string | null } }) => {
+          const { findCurrentMatchKey } = params.context as { findCurrentMatchKey?: string };
+          if (!findCurrentMatchKey || !params.colDef.field) return false;
+          const rowIndex = params.node.rowIndex;
+          if (rowIndex == null || params.node.rowPinned === 'bottom') return false;
+          return `${rowIndex}:${params.colDef.field}` === findCurrentMatchKey;
+        },
+        'cell-formula': (params: { data: Record<string, unknown>; colDef: { field?: string } }) => {
+          if (!params.colDef.field || !params.data) return false;
+          const val = params.data[params.colDef.field];
+          return typeof val === 'string' && val.startsWith('=');
         },
       },
     };
@@ -1106,8 +1153,9 @@ function buildColDefs(
         base.cellEditor = 'agCheckboxCellEditor';
         break;
       case 'singleSelect':
-        base.cellEditor = 'agSelectCellEditor';
-        base.cellEditorParams = { values: col.options || [] };
+        base.cellEditor = RichSelectCellEditor;
+        base.cellEditorPopup = true;
+        base.cellEditorParams = { options: col.options || [] };
         base.cellRenderer = TagRenderer;
         break;
       case 'multiSelect':
@@ -1121,9 +1169,12 @@ function buildColDefs(
         base.cellRenderer = DateRenderer;
         break;
       case 'url':
-      case 'attachment':
         base.cellEditor = 'agTextCellEditor';
         base.cellRenderer = LinkRenderer;
+        break;
+      case 'attachment':
+        base.cellRenderer = AttachmentCellRenderer;
+        base.editable = false;
         break;
       case 'email':
         base.cellEditor = 'agTextCellEditor';
@@ -1270,8 +1321,10 @@ function AddColumnPopover({
   const [name, setName] = useState('');
   const [type, setType] = useState<TableFieldType>('text');
   const [options, setOptions] = useState('');
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const typeDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     nameRef.current?.focus();
@@ -1288,7 +1341,19 @@ function AddColumnPopover({
     return () => document.removeEventListener('mousedown', handler);
   }, [onClose]);
 
+  // Close type dropdown on Escape
+  useEffect(() => {
+    if (!showTypeDropdown) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.stopPropagation(); setShowTypeDropdown(false); }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [showTypeDropdown]);
+
   const needsOptions = type === 'singleSelect' || type === 'multiSelect';
+  const selectedFieldType = FIELD_TYPES.find((ft) => ft.value === type);
+  const TypeIcon = FIELD_TYPE_ICONS[type];
 
   const handleSubmit = () => {
     if (!name.trim()) return;
@@ -1311,13 +1376,35 @@ function AddColumnPopover({
           onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
         />
       </div>
-      <div>
+      <div style={{ position: 'relative' }} ref={typeDropdownRef}>
         <label>{t('tables.fieldType')}</label>
-        <select value={type} onChange={(e) => setType(e.target.value as TableFieldType)}>
-          {FIELD_TYPES.map((ft) => (
-            <option key={ft.value} value={ft.value}>{ft.label}</option>
-          ))}
-        </select>
+        <button
+          className="tables-field-type-trigger"
+          onClick={() => setShowTypeDropdown(!showTypeDropdown)}
+          type="button"
+        >
+          <TypeIcon size={14} />
+          <span>{selectedFieldType?.label}</span>
+          <ChevronDown size={14} />
+        </button>
+        {showTypeDropdown && (
+          <div className="tables-field-type-dropdown">
+            {FIELD_TYPES.map((ft) => {
+              const Icon = FIELD_TYPE_ICONS[ft.value];
+              return (
+                <button
+                  key={ft.value}
+                  className={`tables-field-type-option${ft.value === type ? ' selected' : ''}`}
+                  onClick={() => { setType(ft.value); setShowTypeDropdown(false); }}
+                  type="button"
+                >
+                  <Icon size={14} />
+                  <span>{ft.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
       {needsOptions && (
         <div>
@@ -1350,7 +1437,9 @@ export function TablesPage() {
   const restoreTable = useRestoreTable();
   const { save: autoSave, isSaving } = useAutoSaveTable();
 
-  const [selectedId, setSelectedId] = useState<string | null>(paramId ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    paramId ?? localStorage.getItem(LAST_TABLE_KEY) ?? null,
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddColumn, setShowAddColumn] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(getSavedSidebarWidth);
@@ -1372,6 +1461,29 @@ export function TablesPage() {
   const [rowMenu, setRowMenu] = useState<{ rowId: string; x: number; y: number } | null>(null);
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+
+  // Attachment upload
+  const attachmentInputRef = useRef<HTMLInputElement>(null);
+  const pendingAttachmentCellRef = useRef<{ rowId: string; colId: string } | null>(null);
+
+  // View tabs
+  const [showAddViewDropdown, setShowAddViewDropdown] = useState(false);
+  const addViewBtnRef = useRef<HTMLButtonElement>(null);
+  const addViewDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close add-view dropdown on outside click
+  useEffect(() => {
+    if (!showAddViewDropdown) return;
+    const handler = (e: MouseEvent) => {
+      if (
+        addViewBtnRef.current?.contains(e.target as Node) ||
+        addViewDropdownRef.current?.contains(e.target as Node)
+      ) return;
+      setShowAddViewDropdown(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showAddViewDropdown]);
 
   // Calendar view state
   const [calendarMonth, setCalendarMonth] = useState(() => {
@@ -1402,10 +1514,18 @@ export function TablesPage() {
     if (paramId) setSelectedId(paramId);
   }, [paramId]);
 
+  // Sync URL when restored from localStorage (no paramId but selectedId exists)
+  useEffect(() => {
+    if (!paramId && selectedId) {
+      navigate(`/tables/${selectedId}`, { replace: true });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // If the selected table doesn't exist (404), clear selection and go back to list
   useEffect(() => {
     if (tableError && (tableError as any)?.response?.status === 404) {
       setSelectedId(null);
+      localStorage.removeItem(LAST_TABLE_KEY);
       navigate(ROUTES.TABLES, { replace: true });
     }
   }, [tableError, navigate]);
@@ -1496,44 +1616,65 @@ export function TablesPage() {
     return undefined;
   }, [localViewConfig.rowColorMode, localViewConfig.rowColorColumnId]);
 
-  // ─── Data pipeline: filter → sort → rowData ─────────────────────
+  // ─── Data pipeline: filter → setFilter → sort → group → rowData ──
 
   const filteredRows = useMemo(() => {
+    let result = localRows;
+
+    // Standard filters
     const filters = localViewConfig.filters;
-    if (!filters || filters.length === 0) return localRows;
+    if (filters && filters.length > 0) {
+      result = result.filter((row) => {
+        return filters.every((f) => {
+          const val = row[f.columnId];
+          const strVal = val != null ? String(val) : '';
+          const filterVal = f.value != null ? String(f.value) : '';
 
-    return localRows.filter((row) => {
-      return filters.every((f) => {
-        const val = row[f.columnId];
-        const strVal = val != null ? String(val) : '';
-        const filterVal = f.value != null ? String(f.value) : '';
-
-        switch (f.operator) {
-          case 'contains': return strVal.toLowerCase().includes(filterVal.toLowerCase());
-          case 'doesNotContain': return !strVal.toLowerCase().includes(filterVal.toLowerCase());
-          case 'is': return strVal === filterVal;
-          case 'isNot': return strVal !== filterVal;
-          case 'isEmpty': return val == null || strVal === '';
-          case 'isNotEmpty': return val != null && strVal !== '';
-          case 'greaterThan': return Number(val) > Number(f.value);
-          case 'lessThan': return Number(val) < Number(f.value);
-          case 'isBefore': return new Date(strVal) < new Date(filterVal);
-          case 'isAfter': return new Date(strVal) > new Date(filterVal);
-          case 'isChecked': return val === true;
-          case 'isNotChecked': return val !== true;
-          case 'isAnyOf': {
-            const opts = Array.isArray(f.value) ? f.value : [];
-            return opts.includes(strVal);
+          switch (f.operator) {
+            case 'contains': return strVal.toLowerCase().includes(filterVal.toLowerCase());
+            case 'doesNotContain': return !strVal.toLowerCase().includes(filterVal.toLowerCase());
+            case 'is': return strVal === filterVal;
+            case 'isNot': return strVal !== filterVal;
+            case 'isEmpty': return val == null || strVal === '';
+            case 'isNotEmpty': return val != null && strVal !== '';
+            case 'greaterThan': return Number(val) > Number(f.value);
+            case 'lessThan': return Number(val) < Number(f.value);
+            case 'isBefore': return new Date(strVal) < new Date(filterVal);
+            case 'isAfter': return new Date(strVal) > new Date(filterVal);
+            case 'isChecked': return val === true;
+            case 'isNotChecked': return val !== true;
+            case 'isAnyOf': {
+              const opts = Array.isArray(f.value) ? f.value : [];
+              return opts.includes(strVal);
+            }
+            case 'isNoneOf': {
+              const opts = Array.isArray(f.value) ? f.value : [];
+              return !opts.includes(strVal);
+            }
+            default: return true;
           }
-          case 'isNoneOf': {
-            const opts = Array.isArray(f.value) ? f.value : [];
-            return !opts.includes(strVal);
-          }
-          default: return true;
-        }
+        });
       });
-    });
-  }, [localRows, localViewConfig.filters]);
+    }
+
+    // Set filters (Excel-style checkbox filters)
+    const setFilters = localViewConfig.setFilters;
+    if (setFilters && Object.keys(setFilters).length > 0) {
+      result = result.filter((row) => {
+        return Object.entries(setFilters).every(([colId, allowedValues]) => {
+          const val = row[colId];
+          const strVal = val != null ? String(val) : '';
+          // For multi-select, check if any selected value is in the allowed list
+          if (Array.isArray(val)) {
+            return (val as string[]).some((v) => allowedValues.includes(String(v)));
+          }
+          return allowedValues.includes(strVal);
+        });
+      });
+    }
+
+    return result;
+  }, [localRows, localViewConfig.filters, localViewConfig.setFilters]);
 
   const sortedRows = useMemo(() => {
     const sorts = localViewConfig.sorts;
@@ -1562,7 +1703,21 @@ export function TablesPage() {
     });
   }, [filteredRows, localViewConfig.sorts]);
 
-  const rowData = sortedRows;
+  // ─── Row grouping ──────────────────────────────────────────────
+  const { groupedRows, toggleGroup, clearGrouping, isGrouped } = useRowGrouping({
+    rows: sortedRows,
+    groupByColumnId: localViewConfig.groupByColumnId ?? null,
+    columns: localColumns,
+  });
+
+  const rowData = isGrouped ? groupedRows : sortedRows;
+
+  // ─── Formulas ────────────────────────────────────────────────
+  const { getComputedValue, getCellReference } = useFormulas({
+    rows: localRows,
+    columns: localColumns,
+    hiddenColumns: localViewConfig.hiddenColumns,
+  });
 
   // Footer aggregation: sum/avg for first numeric column
   const footerAgg = useMemo(() => {
@@ -1638,7 +1793,62 @@ export function TablesPage() {
     rebuildColIndexMap();
   }, [localColumns, localViewConfig.hiddenColumns, rebuildColIndexMap]);
 
-  // Global keyboard shortcuts (undo, redo, search)
+  // ─── Find & replace ──────────────────────────────────────────
+  const handleUpdateRowsDirect = useCallback((updatedRows: TableRow[]) => {
+    setLocalRows(updatedRows);
+    triggerAutoSave({ rows: updatedRows });
+  }, [triggerAutoSave]);
+
+  const findReplace = useFindReplace({
+    gridRef,
+    rows: localRows,
+    columns: localColumns,
+    hiddenColumns: localViewConfig.hiddenColumns,
+    onUpdateRows: handleUpdateRowsDirect,
+    pushUndoState,
+  });
+
+  // ─── Fill handle ─────────────────────────────────────────────
+  const fillHandle = useFillHandle({
+    gridRef,
+    rows: localRows,
+    onUpdateRows: handleUpdateRowsDirect,
+    pushUndoState,
+  });
+
+  // ─── Batch edit state ────────────────────────────────────────
+  const [showBatchEdit, setShowBatchEdit] = useState(false);
+
+  // ─── Formula bar state ───────────────────────────────────────
+  const [focusedCellInfo, setFocusedCellInfo] = useState<{ rowId: string; colId: string; rowIndex: number } | null>(null);
+
+  // Track focused cell for formula bar
+  useEffect(() => {
+    const api = gridRef.current?.api;
+    if (!api) return;
+
+    const onCellFocused = () => {
+      const focused = api.getFocusedCell();
+      if (focused && focused.rowPinned == null) {
+        const rowNode = api.getDisplayedRowAtIndex(focused.rowIndex);
+        if (rowNode) {
+          const rowId = (rowNode.data as TableRow)?._id;
+          if (rowId && rowId !== PLACEHOLDER_ROW_ID) {
+            setFocusedCellInfo({ rowId, colId: focused.column.getColId(), rowIndex: focused.rowIndex });
+            return;
+          }
+        }
+      }
+      setFocusedCellInfo(null);
+    };
+
+    api.addEventListener('cellFocused', onCellFocused);
+    return () => {
+      api.removeEventListener('cellFocused', onCellFocused);
+    };
+  }, [gridRef, localRows]);
+
+  // Global keyboard shortcuts (undo, redo, search, find-replace)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       // Cell range selection shortcuts (Ctrl+C, Escape to clear range)
@@ -1658,14 +1868,25 @@ export function TablesPage() {
         handleRedo();
         return;
       }
-      // Ctrl/Cmd+F → search
+      // Ctrl/Cmd+F → open find & replace
       if (mod && e.key === 'f' && selectedId) {
         e.preventDefault();
-        setShowSearch(true);
+        findReplace.open();
+        return;
       }
-      // Escape → close search or clear selection
+      // Ctrl/Cmd+H → open find & replace (with replace focus)
+      if (mod && e.key === 'h' && selectedId) {
+        e.preventDefault();
+        findReplace.open();
+        return;
+      }
+      // Escape → close find/replace, close search, or clear selection
       if (e.key === 'Escape') {
-        if (showSearch) {
+        if (findReplace.isOpen) {
+          findReplace.close();
+        } else if (showBatchEdit) {
+          setShowBatchEdit(false);
+        } else if (showSearch) {
           setShowSearch(false);
           setSearchText('');
         } else if (selectedRowIds.length > 0) {
@@ -1676,13 +1897,15 @@ export function TablesPage() {
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [handleUndo, handleRedo, selectedId, showSearch, selectedRowIds, handleRangeGlobalKeyDown]);
+  }, [handleUndo, handleRedo, selectedId, showSearch, showBatchEdit, selectedRowIds, handleRangeGlobalKeyDown, findReplace]);
 
   // ─── Handlers ──────────────────────────────────────────────────────
 
   const handleSelectTable = useCallback(
     (id: string) => {
       setSelectedId(id);
+      setShowTemplates(false);
+      localStorage.setItem(LAST_TABLE_KEY, id);
       navigate(`/tables/${id}`, { replace: true });
     },
     [navigate],
@@ -1714,6 +1937,7 @@ export function TablesPage() {
       deleteTable.mutate(id);
       if (selectedId === id) {
         setSelectedId(null);
+        localStorage.removeItem(LAST_TABLE_KEY);
         navigate(ROUTES.TABLES, { replace: true });
       }
     },
@@ -1919,6 +2143,8 @@ export function TablesPage() {
       setSelectedRowIds(ids);
       // Mutual exclusion: clear cell range when rows are selected via checkbox
       if (ids.length > 0) clearRange();
+      // Refresh row number column so checkbox state updates
+      event.api.refreshCells({ columns: ['__row_number__'], force: true });
     },
     [clearRange],
   );
@@ -1971,6 +2197,54 @@ export function TablesPage() {
     [localRows, triggerAutoSave],
   );
 
+  // Attachment file upload handler
+  const handleAttachmentUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      const pending = pendingAttachmentCellRef.current;
+      if (!file || !pending) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const { data: resp } = await api.post('/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        const attachment: TableAttachment = resp.data;
+        const row = localRows.find((r) => r._id === pending.rowId);
+        const existing: TableAttachment[] = Array.isArray(row?.[pending.colId]) ? (row![pending.colId] as TableAttachment[]) : [];
+        const updated = [...existing, attachment];
+        handleUpdateRowField(pending.rowId, pending.colId, updated);
+      } catch {
+        // upload failed — silently ignore
+      }
+      // Reset file input
+      if (attachmentInputRef.current) attachmentInputRef.current.value = '';
+      pendingAttachmentCellRef.current = null;
+    },
+    [localRows, handleUpdateRowField],
+  );
+
+  // Handle cell click for attachment columns
+  const handleCellClickedWithAttachment = useCallback(
+    (event: any) => {
+      // Check if this is an attachment column
+      const colId = event.colDef?.field;
+      const col = localColumns.find((c) => c.id === colId);
+      if (col?.type === 'attachment') {
+        const rowId = event.data?._id;
+        if (rowId && rowId !== PLACEHOLDER_ROW_ID) {
+          pendingAttachmentCellRef.current = { rowId, colId };
+          attachmentInputRef.current?.click();
+          return;
+        }
+      }
+      // Fall through to range selection handler
+      handleRangeCellClicked(event);
+    },
+    [localColumns, handleRangeCellClicked],
+  );
+
   // Placeholder row for inline "add row"
   const pinnedBottomRowData = useMemo(() => [{ _id: PLACEHOLDER_ROW_ID, _createdAt: '' }], []);
 
@@ -2014,8 +2288,22 @@ export function TablesPage() {
       // Shift+Arrow / Arrow → cell range selection
       handleRangeKeyDown(event);
 
-      // Delete/Backspace clears cell value (only when not in edit mode)
+      // Typing with range selection → open batch edit
       const isEditing = gridRef.current?.api?.getEditingCells()?.length ?? 0;
+      if (
+        isEditing === 0 &&
+        getSelectedCellCount() > 1 &&
+        kbEvent.key.length === 1 &&
+        !kbEvent.metaKey &&
+        !kbEvent.ctrlKey &&
+        !kbEvent.altKey
+      ) {
+        kbEvent.preventDefault();
+        setShowBatchEdit(true);
+        return;
+      }
+
+      // Delete/Backspace clears cell value (only when not in edit mode)
       if ((kbEvent.key === 'Delete' || kbEvent.key === 'Backspace') && isEditing === 0) {
         // If a range is active, bulk-clear all cells in the range
         const rangeCells = getCellsInRange();
@@ -2198,6 +2486,106 @@ export function TablesPage() {
     [localColumns, triggerAutoSave],
   );
 
+  // ─── Excel export ──────────────────────────────────────────────
+  const handleExportExcel = useCallback(() => {
+    const hidden = new Set(localViewConfig.hiddenColumns || []);
+    const visibleCols = localColumns.filter((c) => !hidden.has(c.id));
+
+    const exportData = sortedRows.map((row) => {
+      const obj: Record<string, unknown> = {};
+      for (const col of visibleCols) {
+        let val = row[col.id];
+        // For formula cells, use computed value
+        if (isFormulaValue(val)) {
+          val = getComputedValue(row._id, col.id, val);
+        }
+        // Format arrays
+        if (Array.isArray(val)) val = val.join(', ');
+        obj[col.name] = val ?? '';
+      }
+      return obj;
+    });
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    XLSX.writeFile(wb, `${localTitle || 'table'}.xlsx`);
+  }, [localColumns, sortedRows, localViewConfig.hiddenColumns, localTitle, getComputedValue]);
+
+  // ─── Row grouping handlers ────────────────────────────────────
+  const handleGroupByColumn = useCallback(
+    (colId: string) => {
+      const updated = { ...localViewConfig, groupByColumnId: colId };
+      setLocalViewConfig(updated);
+      triggerAutoSave({ viewConfig: updated });
+    },
+    [localViewConfig, triggerAutoSave],
+  );
+
+  const handleUngroupRows = useCallback(() => {
+    const updated = { ...localViewConfig, groupByColumnId: null };
+    setLocalViewConfig(updated);
+    triggerAutoSave({ viewConfig: updated });
+    clearGrouping();
+  }, [localViewConfig, triggerAutoSave, clearGrouping]);
+
+
+
+  // ─── Batch edit handler ──────────────────────────────────────
+  const handleBatchEditConfirm = useCallback(
+    (value: string) => {
+      const cells = getCellsInRange();
+      if (cells.length === 0) return;
+
+      const api = gridRef.current?.api;
+      if (!api) return;
+
+      pushUndoState();
+
+      const updateMap = new Map<string, Record<string, unknown>>();
+      for (const cell of cells) {
+        const rowNode = api.getDisplayedRowAtIndex(cell.rowIndex);
+        if (!rowNode || rowNode.rowPinned === 'bottom') continue;
+        const rowId = (rowNode.data as TableRow)?._id;
+        if (!rowId || rowId === PLACEHOLDER_ROW_ID) continue;
+        if (!updateMap.has(rowId)) updateMap.set(rowId, {});
+        updateMap.get(rowId)![cell.colId] = value;
+      }
+
+      const updatedRows = localRows.map((r) => {
+        const updates = updateMap.get(r._id);
+        if (!updates) return r;
+        return { ...r, ...updates };
+      });
+
+      setLocalRows(updatedRows);
+      triggerAutoSave({ rows: updatedRows });
+      setShowBatchEdit(false);
+      clearRange();
+    },
+    [localRows, getCellsInRange, pushUndoState, triggerAutoSave, clearRange],
+  );
+
+  // ─── Formula bar edit handler ──────────────────────────────────
+  const handleFormulaBarEdit = useCallback(
+    (value: string) => {
+      if (!focusedCellInfo) return;
+      pushUndoState();
+      const updatedRows = localRows.map((r) =>
+        r._id === focusedCellInfo.rowId ? { ...r, [focusedCellInfo.colId]: value } : r,
+      );
+      setLocalRows(updatedRows);
+      triggerAutoSave({ rows: updatedRows });
+    },
+    [focusedCellInfo, localRows, pushUndoState, triggerAutoSave],
+  );
+
+  // Computed views list (default to just Grid view)
+  const currentViews: TableViewTab[] = useMemo(
+    () => localViewConfig.views?.length ? localViewConfig.views : [{ key: 'grid', label: 'Grid view' }],
+    [localViewConfig.views],
+  );
+
   // View toggle
   const handleViewToggle = useCallback(
     (view: TableViewConfig['activeView']) => {
@@ -2208,15 +2596,57 @@ export function TablesPage() {
     [localViewConfig, triggerAutoSave],
   );
 
-  // Row number cell renderer with expand icon on hover
+  // Add a new view tab
+  const handleAddView = useCallback(
+    (key: TableViewTab['key'], label: string) => {
+      const views = [...currentViews, { key, label }];
+      const updated = { ...localViewConfig, views, activeView: key };
+      setLocalViewConfig(updated);
+      triggerAutoSave({ viewConfig: updated });
+      setShowAddViewDropdown(false);
+    },
+    [currentViews, localViewConfig, triggerAutoSave],
+  );
+
+  // Remove a view tab (can't remove if only 1 left)
+  const handleRemoveView = useCallback(
+    (index: number) => {
+      if (currentViews.length <= 1) return;
+      const views = currentViews.filter((_, i) => i !== index);
+      const removedView = currentViews[index];
+      // If we removed the active view, switch to the first view
+      const activeView = removedView.key === localViewConfig.activeView
+        ? views[0].key
+        : localViewConfig.activeView;
+      const updated = { ...localViewConfig, views, activeView };
+      setLocalViewConfig(updated);
+      triggerAutoSave({ viewConfig: updated });
+    },
+    [currentViews, localViewConfig, triggerAutoSave],
+  );
+
+  // Row number cell renderer: [AG-drag-handle] | row number (checkbox on hover) | expand
   const RowNumberRenderer = useCallback((params: ICellRendererParams) => {
     const rowId = (params.data as TableRow)?._id;
+    const rowNum = params.node.rowIndex != null ? params.node.rowIndex + 1 : '';
     if (!rowId || rowId === PLACEHOLDER_ROW_ID) {
-      return <span className="tables-row-number">{params.node.rowIndex != null ? params.node.rowIndex + 1 : ''}</span>;
+      return <span className="tables-row-number">{rowNum}</span>;
     }
+    const isSelected = params.node.isSelected();
     return (
       <span className="tables-row-number-wrap">
-        <span className="tables-row-number">{params.node.rowIndex != null ? params.node.rowIndex + 1 : ''}</span>
+        <span
+          className={`tables-row-number-checkbox${isSelected ? ' is-checked' : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            params.node.setSelected(!isSelected);
+          }}
+        >
+          <span className="tables-row-num-text">{rowNum}</span>
+          <span className="tables-row-cb-icon">
+            {isSelected ? <CheckSquare size={14} /> : <span className="tables-row-cb-empty" />}
+          </span>
+        </span>
         <button
           className="tables-row-expand-btn"
           onClick={(e) => { e.stopPropagation(); setExpandedRowId(rowId); }}
@@ -2230,16 +2660,19 @@ export function TablesPage() {
 
   // AG Grid column defs
   const ROW_NUMBER_COL: ColDef = useMemo(() => ({
+    colId: '__row_number__',
     headerName: '',
-    width: 50,
-    maxWidth: 50,
-    minWidth: 50,
+    headerComponent: RowNumberHeader,
+    width: 80,
+    maxWidth: 80,
+    minWidth: 80,
     pinned: 'left',
     editable: false,
     sortable: false,
     resizable: false,
     suppressMovable: true,
     lockPosition: 'left',
+    rowDrag: true,
     cellRenderer: RowNumberRenderer,
     cellStyle: { padding: 0 },
   }), [RowNumberRenderer]);
@@ -2266,10 +2699,27 @@ export function TablesPage() {
     [localViewConfig.hiddenColumns],
   );
 
-  const columnDefs = useMemo(
-    () => [ROW_NUMBER_COL, ...buildColDefs(localColumns, t, handleColumnMenuOpen, hiddenColumnsSet, localViewConfig.frozenColumnCount, handleRangeHeaderClicked), ADD_COLUMN_COL],
-    [localColumns, t, ROW_NUMBER_COL, ADD_COLUMN_COL, handleColumnMenuOpen, hiddenColumnsSet, localViewConfig.frozenColumnCount, handleRangeHeaderClicked],
-  );
+  const columnDefs = useMemo(() => {
+    const baseDefs = buildColDefs(localColumns, t, handleColumnMenuOpen, hiddenColumnsSet, localViewConfig.frozenColumnCount, handleRangeHeaderClicked);
+    // Add formula valueGetter to each data column
+    const formulaDefs: ColDef[] = baseDefs.map((def) => {
+      if (!def.field) return def;
+      const fieldId = def.field;
+      return {
+        ...def,
+        valueGetter: (params) => {
+          const data = params.data as TableRow | undefined;
+          if (!data) return '';
+          const raw = data[fieldId];
+          if (isFormulaValue(raw)) {
+            return getComputedValue(data._id, fieldId, raw);
+          }
+          return raw;
+        },
+      } as ColDef;
+    });
+    return [ROW_NUMBER_COL, ...formulaDefs, ADD_COLUMN_COL];
+  }, [localColumns, t, ROW_NUMBER_COL, ADD_COLUMN_COL, handleColumnMenuOpen, hiddenColumnsSet, localViewConfig.frozenColumnCount, handleRangeHeaderClicked, getComputedValue]);
 
   // Kanban DnD
   const [draggedRowId, setDraggedRowId] = useState<string | null>(null);
@@ -2472,6 +2922,7 @@ export function TablesPage() {
           )}
         </div>
 
+
         {/* Resize handle */}
         <div className="tables-sidebar-resize" onMouseDown={handleResizeStart} />
       </div>
@@ -2514,62 +2965,135 @@ export function TablesPage() {
           </div>
         ) : (
           <>
-            {/* Selection bar (replaces toolbar when rows selected) */}
-            {selectedRowIds.length > 0 ? (
-              <div className="tables-selection-bar">
-                <span className="tables-selection-bar-count">
-                  {t('tables.rowsSelected', { count: selectedRowIds.length })}
-                </span>
-                <button className="tables-selection-bar-btn" onClick={handleBulkDuplicate}>
-                  <Copy size={14} /> {t('tables.duplicateSelected')}
-                </button>
-                <button className="tables-selection-bar-btn tables-selection-bar-btn-danger" onClick={handleBulkDelete}>
-                  <Trash2 size={14} /> {t('tables.deleteSelected')}
-                </button>
-                <button className="tables-selection-bar-close" onClick={handleClearSelection} title={t('tables.clearSelection')}>
-                  <X size={14} />
-                </button>
-              </div>
-            ) : (
-            /* Toolbar */
-            <div className="tables-toolbar">
+            {/* Purple topbar */}
+            <div className="tables-topbar">
               <input
-                className="tables-toolbar-title"
+                className="tables-topbar-title"
                 value={localTitle}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 onBlur={() => triggerAutoSave({ title: localTitle })}
               />
 
-              {/* View toggle — right after title */}
-              <div className="tables-view-toggle">
-                <button
-                  className={localViewConfig.activeView === 'grid' ? 'active' : ''}
-                  onClick={() => handleViewToggle('grid')}
-                  title={t('tables.gridView')}
-                >
-                  <LayoutGrid size={14} />
-                </button>
-                <button
-                  className={localViewConfig.activeView === 'kanban' ? 'active' : ''}
-                  onClick={() => handleViewToggle('kanban')}
-                  title={t('tables.kanbanView')}
-                >
-                  <Kanban size={14} />
-                </button>
-                <button
-                  className={localViewConfig.activeView === 'calendar' ? 'active' : ''}
-                  onClick={() => handleViewToggle('calendar')}
-                  title={t('tables.calendarView')}
-                >
-                  <Calendar size={14} />
-                </button>
-                <button
-                  className={localViewConfig.activeView === 'gallery' ? 'active' : ''}
-                  onClick={() => handleViewToggle('gallery')}
-                  title={t('tables.galleryView')}
-                >
-                  <GalleryHorizontalEnd size={14} />
-                </button>
+              {/* View tabs in topbar */}
+              <div className="tables-topbar-view-tabs">
+                {currentViews.map((v, idx) => {
+                  const VIEW_ICONS: Record<string, typeof LayoutGrid> = {
+                    grid: LayoutGrid,
+                    kanban: Kanban,
+                    calendar: Calendar,
+                    gallery: GalleryHorizontalEnd,
+                  };
+                  const Icon = VIEW_ICONS[v.key] || LayoutGrid;
+                  return (
+                    <button
+                      key={`${v.key}-${idx}`}
+                      className={`tables-topbar-view-tab${localViewConfig.activeView === v.key ? ' active' : ''}`}
+                      onClick={() => handleViewToggle(v.key)}
+                    >
+                      <Icon size={13} />
+                      <span>{v.label}</span>
+                      {currentViews.length > 1 && (
+                        <span
+                          className="tables-topbar-view-tab-close"
+                          onClick={(e) => { e.stopPropagation(); handleRemoveView(idx); }}
+                        >
+                          <X size={11} />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+                <div style={{ position: 'relative' }}>
+                  <button
+                    ref={addViewBtnRef}
+                    className="tables-topbar-view-tab tables-topbar-view-add"
+                    onClick={() => setShowAddViewDropdown(!showAddViewDropdown)}
+                    title="Add view"
+                  >
+                    <Plus size={13} />
+                  </button>
+                  {showAddViewDropdown && (
+                    <div ref={addViewDropdownRef} className="tables-add-view-dropdown">
+                      {[
+                        { key: 'grid' as const, icon: LayoutGrid, label: 'Grid view' },
+                        { key: 'kanban' as const, icon: Kanban, label: 'Kanban' },
+                        { key: 'calendar' as const, icon: Calendar, label: 'Calendar' },
+                        { key: 'gallery' as const, icon: GalleryHorizontalEnd, label: 'Gallery' },
+                      ].map((v) => (
+                        <button
+                          key={v.key}
+                          className="tables-add-view-option"
+                          onClick={() => handleAddView(v.key, v.label)}
+                        >
+                          <v.icon size={14} />
+                          <span>{v.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="tables-topbar-spacer" />
+
+              <button
+                className="tables-topbar-btn"
+                onClick={handleUndo}
+                disabled={!canUndo}
+                title={t('tables.undo')}
+              >
+                <Undo2 size={14} />
+              </button>
+              <button
+                className="tables-topbar-btn"
+                onClick={handleRedo}
+                disabled={!canRedo}
+                title={t('tables.redo')}
+              >
+                <Redo2 size={14} />
+              </button>
+
+              <button
+                className="tables-topbar-btn"
+                onClick={handleExportExcel}
+                title="Export to Excel"
+              >
+                <Download size={14} />
+              </button>
+
+              <button
+                className={`tables-topbar-btn${showSearch ? ' active' : ''}`}
+                onClick={() => { setShowSearch(!showSearch); if (showSearch) setSearchText(''); }}
+                title={t('tables.search')}
+              >
+                <Search size={14} />
+              </button>
+
+              {isSaving && (
+                <span className="tables-topbar-saving">
+                  {t('tables.saving')}
+                </span>
+              )}
+            </div>
+            {/* Tools row */}
+            <div className="tables-toolbar">
+              {/* View tabs */}
+              <div className="tables-view-tabs">
+                {[
+                  { key: 'grid' as const, icon: LayoutGrid, label: t('tables.gridView', 'Grid view') },
+                  { key: 'kanban' as const, icon: Kanban, label: t('tables.kanbanView', 'Kanban') },
+                  { key: 'calendar' as const, icon: Calendar, label: t('tables.calendarView', 'Calendar') },
+                  { key: 'gallery' as const, icon: GalleryHorizontalEnd, label: t('tables.galleryView', 'Gallery') },
+                ].map((v) => (
+                  <button
+                    key={v.key}
+                    className={`tables-view-tab${localViewConfig.activeView === v.key ? ' active' : ''}`}
+                    onClick={() => handleViewToggle(v.key)}
+                  >
+                    <v.icon size={14} />
+                    <span>{v.label}</span>
+                  </button>
+                ))}
               </div>
 
               <div className="tables-toolbar-divider" />
@@ -2615,9 +3139,27 @@ export function TablesPage() {
                 }}
               />
 
-              <button className="tables-toolbar-btn" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
-                <Layers size={14} /> {t('tables.group')}
-              </button>
+              {/* Group by button */}
+              {localViewConfig.groupByColumnId ? (
+                <button className="tables-toolbar-btn active" onClick={handleUngroupRows}>
+                  <Ungroup size={14} /> Ungroup
+                </button>
+              ) : (
+                <div style={{ position: 'relative' }}>
+                  <button
+                    className="tables-toolbar-btn"
+                    onClick={() => {
+                      // Auto-group by first select column
+                      const selectCol = localColumns.find((c) => c.type === 'singleSelect');
+                      if (selectCol) handleGroupByColumn(selectCol.id);
+                    }}
+                    disabled={!localColumns.some((c) => c.type === 'singleSelect')}
+                    style={{ opacity: localColumns.some((c) => c.type === 'singleSelect') ? 1 : 0.4 }}
+                  >
+                    <Group size={14} /> {t('tables.group')}
+                  </button>
+                </div>
+              )}
 
               <RowHeightPopover
                 viewConfig={localViewConfig}
@@ -2665,43 +3207,7 @@ export function TablesPage() {
                   ))}
                 </select>
               )}
-
-              <div className="tables-toolbar-divider" />
-
-              <button
-                className="tables-toolbar-btn"
-                onClick={handleUndo}
-                disabled={!canUndo}
-                title={t('tables.undo')}
-                style={{ opacity: canUndo ? 1 : 0.4 }}
-              >
-                <Undo2 size={14} />
-              </button>
-              <button
-                className="tables-toolbar-btn"
-                onClick={handleRedo}
-                disabled={!canRedo}
-                title={t('tables.redo')}
-                style={{ opacity: canRedo ? 1 : 0.4 }}
-              >
-                <Redo2 size={14} />
-              </button>
-
-              <button
-                className={`tables-toolbar-btn${showSearch ? ' active' : ''}`}
-                onClick={() => { setShowSearch(!showSearch); if (showSearch) setSearchText(''); }}
-                title={t('tables.search')}
-              >
-                <Search size={14} />
-              </button>
-
-              {isSaving && (
-                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
-                  {t('tables.saving')}
-                </span>
-              )}
             </div>
-            )}
 
             {/* Search bar */}
             {showSearch && (
@@ -2720,10 +3226,40 @@ export function TablesPage() {
               </div>
             )}
 
+            {/* Find & replace bar */}
+            {findReplace.isOpen && (
+              <FindReplaceBar
+                searchTerm={findReplace.searchTerm}
+                onSearchChange={findReplace.setSearchTerm}
+                replaceTerm={findReplace.replaceTerm}
+                onReplaceChange={findReplace.setReplaceTerm}
+                caseSensitive={findReplace.caseSensitive}
+                onCaseSensitiveToggle={() => findReplace.setCaseSensitive(!findReplace.caseSensitive)}
+                matchCount={findReplace.matches.length}
+                currentIndex={findReplace.currentMatchIndex}
+                onNext={findReplace.goToNext}
+                onPrev={findReplace.goToPrev}
+                onReplace={findReplace.replaceCurrent}
+                onReplaceAll={findReplace.replaceAll}
+                onClose={findReplace.close}
+              />
+            )}
+
+            {/* Formula bar */}
+            {localViewConfig.activeView === 'grid' && (
+              <FormulaBar
+                cellRef={focusedCellInfo ? getCellReference(focusedCellInfo.rowIndex, focusedCellInfo.colId) : ''}
+                rawValue={focusedCellInfo ? String(localRows.find((r) => r._id === focusedCellInfo.rowId)?.[focusedCellInfo.colId] ?? '') : ''}
+                computedValue={focusedCellInfo ? getComputedValue(focusedCellInfo.rowId, focusedCellInfo.colId, localRows.find((r) => r._id === focusedCellInfo.rowId)?.[focusedCellInfo.colId]) : ''}
+                isFormula={focusedCellInfo ? isFormulaValue(localRows.find((r) => r._id === focusedCellInfo.rowId)?.[focusedCellInfo.colId]) : false}
+                onEdit={handleFormulaBarEdit}
+              />
+            )}
+
             {/* Grid view */}
             {localViewConfig.activeView === 'grid' && (
               <>
-                <div className="tables-grid-container" onMouseDown={handleRangeCellMouseDown}>
+                <div className="tables-grid-container" onMouseDown={handleRangeCellMouseDown} style={{ position: 'relative' }}>
                   <div className={isDark ? 'ag-theme-quartz-dark' : 'ag-theme-quartz'}>
                     <AgGridReact
                       ref={gridRef}
@@ -2734,7 +3270,7 @@ export function TablesPage() {
                       readOnlyEdit={true}
                       onCellEditRequest={handleCellEditRequest}
                       onCellKeyDown={handleCellKeyDown}
-                      onCellClicked={handleRangeCellClicked}
+                      onCellClicked={handleCellClickedWithAttachment}
                       onCellEditingStarted={() => clearRange()}
                       onColumnResized={handleColumnResized}
                       onColumnMoved={handleColumnMoved}
@@ -2743,19 +3279,77 @@ export function TablesPage() {
                       animateRows={true}
                       undoRedoCellEditing={false}
                       suppressMoveWhenRowDragging={true}
-                      rowSelection={{ mode: 'multiRow', checkboxes: true, headerCheckbox: true }}
+                      rowSelection={{ mode: 'multiRow', checkboxes: false, headerCheckbox: false }}
                       onSelectionChanged={handleSelectionChanged}
                       enterNavigatesVertically={true}
                       enterNavigatesVerticallyAfterEdit={true}
                       ensureDomOrder={true}
                       suppressContextMenu={true}
                       onCellContextMenu={handleCellContextMenu}
-                      pinnedBottomRowData={pinnedBottomRowData}
+                      pinnedBottomRowData={isGrouped ? undefined : pinnedBottomRowData}
                       getRowStyle={getRowStyle}
                       quickFilterText={searchText}
-                      context={{ deleteRow: handleDeleteRow, ...rangeContext }}
+                      isFullWidthRow={(params) => {
+                        return isGroupHeaderRow(params.rowNode.data as MaybeGroupedRow);
+                      }}
+                      fullWidthCellRenderer={(params: ICellRendererParams) => (
+                        <GroupHeaderRenderer data={params.data} context={params.context} />
+                      )}
+                      context={{
+                        deleteRow: handleDeleteRow,
+                        ...rangeContext,
+                        findMatchSet: findReplace.matchSet,
+                        findCurrentMatchKey: findReplace.currentMatchKey,
+                        toggleGroup,
+                        groupByColumnType: localViewConfig.groupByColumnId
+                          ? localColumns.find((c) => c.id === localViewConfig.groupByColumnId)?.type
+                          : undefined,
+                      }}
                     />
                   </div>
+                  {/* Fill handle overlay */}
+                  {fillHandle.handlePos && (
+                    <div
+                      className="fill-handle"
+                      style={{
+                        position: 'absolute',
+                        top: fillHandle.handlePos.top,
+                        left: fillHandle.handlePos.left,
+                        width: 8,
+                        height: 8,
+                        background: 'var(--color-accent-primary)',
+                        borderRadius: 1,
+                        cursor: 'crosshair',
+                        zIndex: 10,
+                      }}
+                      onMouseDown={fillHandle.handleMouseDown}
+                    />
+                  )}
+                  {/* Batch edit overlay */}
+                  {showBatchEdit && (
+                    <BatchEditOverlay
+                      cellCount={getSelectedCellCount()}
+                      onConfirm={handleBatchEditConfirm}
+                      onCancel={() => setShowBatchEdit(false)}
+                    />
+                  )}
+                  {/* Floating selection bar */}
+                  {selectedRowIds.length > 0 && (
+                    <div className="tables-selection-float">
+                      <span className="tables-selection-float-count">
+                        {selectedRowIds.length}
+                      </span>
+                      <button className="tables-selection-float-btn" onClick={handleBulkDuplicate} title={t('tables.duplicateSelected')}>
+                        <Copy size={13} />
+                      </button>
+                      <button className="tables-selection-float-btn tables-selection-float-btn-danger" onClick={handleBulkDelete} title={t('tables.deleteSelected')}>
+                        <Trash2 size={13} />
+                      </button>
+                      <button className="tables-selection-float-btn" onClick={handleClearSelection} title={t('tables.clearSelection')}>
+                        <X size={13} />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="tables-footer">
                   <button className="tables-footer-btn" onClick={handleAddRow}>
@@ -3030,6 +3624,9 @@ export function TablesPage() {
             onInsertLeft={handleInsertColumnLeft}
             onInsertRight={handleInsertColumnRight}
             onEditDescription={handleEditColumnDescription}
+            onGroupBy={handleGroupByColumn}
+            onUngroup={handleUngroupRows}
+            isGroupedBy={localViewConfig.groupByColumnId === columnMenu.columnId}
           />
         );
       })()}
@@ -3063,6 +3660,14 @@ export function TablesPage() {
           />
         );
       })()}
+
+      {/* Hidden file input for attachment uploads */}
+      <input
+        type="file"
+        ref={attachmentInputRef}
+        style={{ display: 'none' }}
+        onChange={handleAttachmentUpload}
+      />
 
       {/* Hover effect for sidebar delete buttons */}
       <style>{`
