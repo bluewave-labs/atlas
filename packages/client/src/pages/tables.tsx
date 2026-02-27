@@ -3080,6 +3080,27 @@ export function TablesPage() {
             </div>
             {/* Tools row */}
             <div className="tables-toolbar">
+              {/* View tabs */}
+              <div className="tables-view-tabs">
+                {[
+                  { key: 'grid' as const, icon: LayoutGrid, label: t('tables.gridView', 'Grid view') },
+                  { key: 'kanban' as const, icon: Kanban, label: t('tables.kanbanView', 'Kanban') },
+                  { key: 'calendar' as const, icon: Calendar, label: t('tables.calendarView', 'Calendar') },
+                  { key: 'gallery' as const, icon: GalleryHorizontalEnd, label: t('tables.galleryView', 'Gallery') },
+                ].map((v) => (
+                  <button
+                    key={v.key}
+                    className={`tables-view-tab${localViewConfig.activeView === v.key ? ' active' : ''}`}
+                    onClick={() => handleViewToggle(v.key)}
+                  >
+                    <v.icon size={14} />
+                    <span>{v.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="tables-toolbar-divider" />
+
               <div style={{ position: 'relative' }}>
                 <button className="tables-toolbar-btn" onClick={() => setShowAddColumn(!showAddColumn)}>
                   <Plus size={14} /> {t('tables.column')}
