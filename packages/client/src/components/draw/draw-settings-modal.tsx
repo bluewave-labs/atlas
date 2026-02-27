@@ -44,7 +44,7 @@ const BG_COLORS: Record<DrawBackground, string> = {
   dark: '#1e1e1e',
 };
 
-function CanvasPanel() {
+export function DrawCanvasPanel() {
   const { t } = useTranslation();
   const {
     gridMode, setGridMode,
@@ -128,7 +128,7 @@ function CanvasPanel() {
 // Panel: Export
 // ---------------------------------------------------------------------------
 
-function ExportPanel() {
+export function DrawExportPanel() {
   const { t } = useTranslation();
   const {
     exportQuality, setExportQuality,
@@ -164,8 +164,8 @@ function ExportPanel() {
 // ---------------------------------------------------------------------------
 
 const PANELS: Record<DrawNavItemId, () => ReactElement> = {
-  canvas: CanvasPanel,
-  export: ExportPanel,
+  canvas: DrawCanvasPanel,
+  export: DrawExportPanel,
 };
 
 // ---------------------------------------------------------------------------

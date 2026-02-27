@@ -81,7 +81,7 @@ const FONT_STYLES: { id: DocFontStyle; label: string; fontFamily: string; previe
 // Panel: Editor
 // ---------------------------------------------------------------------------
 
-function EditorPanel() {
+export function DocsEditorPanel() {
   const {
     fontStyle, setFontStyle,
     smallText, setSmallText,
@@ -155,7 +155,7 @@ const SIDEBAR_DEFAULT_OPTIONS: Array<{ value: DocSidebarDefault; label: string }
   { value: 'recent', label: 'Recent' },
 ];
 
-function StartupPanel() {
+export function DocsStartupPanel() {
   const {
     openLastVisited, setOpenLastVisited,
     sidebarDefault, setSidebarDefault,
@@ -187,8 +187,8 @@ function StartupPanel() {
 // ---------------------------------------------------------------------------
 
 const PANELS: Record<DocNavItemId, () => ReactElement> = {
-  editor: EditorPanel,
-  startup: StartupPanel,
+  editor: DocsEditorPanel,
+  startup: DocsStartupPanel,
 };
 
 // ---------------------------------------------------------------------------

@@ -42,7 +42,7 @@ const DEFAULT_VIEW_OPTIONS: Array<{ value: TaskDefaultView; label: string }> = [
   { value: 'anytime', label: 'Anytime' },
 ];
 
-function GeneralPanel() {
+export function TasksGeneralPanel() {
   const {
     defaultView, setDefaultView,
     confirmBeforeDelete, setConfirmBeforeDelete,
@@ -84,7 +84,7 @@ function GeneralPanel() {
 // Panel: Appearance
 // ---------------------------------------------------------------------------
 
-function AppearancePanel() {
+export function TasksAppearancePanel() {
   const {
     showWhenBadges, setShowWhenBadges,
     showProjectInList, setShowProjectInList,
@@ -133,7 +133,7 @@ const SORT_OPTIONS: Array<{ value: TaskSortOrder; label: string }> = [
   { value: 'created', label: 'Date created' },
 ];
 
-function BehaviorPanel() {
+export function TasksBehaviorPanel() {
   const {
     completedBehavior, setCompletedBehavior,
     defaultSortOrder, setDefaultSortOrder,
@@ -169,9 +169,9 @@ function BehaviorPanel() {
 // ---------------------------------------------------------------------------
 
 const PANELS: Record<TasksNavItemId, () => ReactElement> = {
-  general: GeneralPanel,
-  appearance: AppearancePanel,
-  behavior: BehaviorPanel,
+  general: TasksGeneralPanel,
+  appearance: TasksAppearancePanel,
+  behavior: TasksBehaviorPanel,
 };
 
 const SIDEBAR_SECTIONS: TasksSidebarSection[] = [

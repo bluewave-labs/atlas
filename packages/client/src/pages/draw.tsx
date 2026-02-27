@@ -1561,7 +1561,7 @@ export function DrawPage() {
         selectedId={selectedId}
         onSelect={handleSelect}
         onNewFromTemplate={() => setShowTemplates(true)}
-        onOpenSettings={() => setShowSettings(true)}
+        onOpenSettings={() => navigate('/settings?app=draw&panel=canvas')}
         isCreating={createDrawing.isPending}
       />
 

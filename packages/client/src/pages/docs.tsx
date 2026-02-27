@@ -1079,7 +1079,7 @@ export function DocsPage() {
             isSaving={isSaving}
             onNavigate={handleSelect}
             onShowVersionHistory={() => setShowVersionHistory(true)}
-            onOpenSettings={() => setShowDocSettings(true)}
+            onOpenSettings={() => navigate('/settings?app=documents&panel=editor')}
           />
         )}
 

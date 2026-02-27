@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Mail, Calendar, FileText, Pencil, CheckSquare,
-  Clock, ArrowRight,
+  Clock, ArrowRight, Settings,
 } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
 import { useThreadCounts } from '../hooks/use-threads';
@@ -28,8 +28,8 @@ const BG_IMAGES = [
   'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&q=80&auto=format&fit=crop',
   // Calm lake with mountain reflection
   'https://images.unsplash.com/photo-1439853949127-fa647821eba0?w=1920&q=80&auto=format&fit=crop',
-  // Autumn forest with warm tones
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1920&q=80&auto=format&fit=crop',
+  // Autumn forest with golden foliage
+  'https://images.unsplash.com/photo-1507041957456-9c397ce39c97?w=1920&q=80&auto=format&fit=crop',
   // Lavender field at sunset
   'https://images.unsplash.com/photo-1499002238440-d264edd596ec?w=1920&q=80&auto=format&fit=crop',
   // Northern lights over snowy landscape
@@ -565,6 +565,41 @@ export function HomePage() {
           }}
         />
       )}
+
+      {/* Settings gear — top-right */}
+      <button
+        onClick={() => navigate(ROUTES.SETTINGS)}
+        aria-label="Settings"
+        style={{
+          position: 'absolute',
+          top: isDesktop ? 46 : 16,
+          right: 20,
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 36,
+          height: 36,
+          background: 'rgba(255,255,255,0.12)',
+          border: '1px solid rgba(255,255,255,0.18)',
+          borderRadius: '50%',
+          color: 'rgba(255,255,255,0.75)',
+          cursor: 'pointer',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          transition: 'background 0.2s, color 0.2s',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.22)';
+          e.currentTarget.style.color = '#fff';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.12)';
+          e.currentTarget.style.color = 'rgba(255,255,255,0.75)';
+        }}
+      >
+        <Settings size={18} />
+      </button>
 
       {/* Background images with ken burns + parallax + crossfade */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>

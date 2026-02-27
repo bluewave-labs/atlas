@@ -311,7 +311,7 @@ function ReadingPanePreview({ position }: { position: 'right' | 'bottom' | 'hidd
 // Panel: General
 // ---------------------------------------------------------------------------
 
-function GeneralPanel() {
+export function MailGeneralPanel() {
   const account = useAuthStore((s) => s.account);
   const updateAccount = useAuthStore((s) => s.updateAccount);
   const [displayName, setDisplayName] = useState(account?.name ?? '');
@@ -622,7 +622,7 @@ function GeneralPanel() {
 // Panel: Accounts
 // ---------------------------------------------------------------------------
 
-function AccountsPanel() {
+export function MailAccountsPanel() {
   const { t } = useTranslation();
   const account = useAuthStore((s) => s.account);
   const accounts = useAuthStore((s) => s.accounts);
@@ -851,7 +851,7 @@ function AccountsPanel() {
 // Panel: Appearance
 // ---------------------------------------------------------------------------
 
-function AppearancePanel() {
+export function MailAppearancePanel() {
   const { t } = useTranslation();
   const {
     theme,
@@ -1151,7 +1151,7 @@ function AppearancePanel() {
 // Panel: Notifications
 // ---------------------------------------------------------------------------
 
-function NotificationsPanel() {
+export function MailNotificationsPanel() {
   const { t } = useTranslation();
   const {
     desktopNotifications,
@@ -1482,7 +1482,7 @@ function SignatureEditor() {
   );
 }
 
-function ComposerPanel() {
+export function MailComposerPanel() {
   const {
     composeMode,
     undoSendDelay,
@@ -1566,7 +1566,7 @@ const AI_PROVIDERS: Array<{
   { id: 'custom', label: 'Custom (OpenAI-compatible)', description: 'Any endpoint that supports the OpenAI API format', placeholder: 'Enter API key...' },
 ];
 
-function AIPanel() {
+export function MailAIPanel() {
   const {
     aiEnabled, setAIEnabled,
     aiProvider, setAIProvider,
@@ -2002,7 +2002,7 @@ function AIPanel() {
 // Panel: Inbox
 // ---------------------------------------------------------------------------
 
-function InboxPanel() {
+export function MailInboxPanel() {
   const { autoAdvance, setAutoAdvance } = useSettingsStore();
 
   const options: Array<{
@@ -2057,7 +2057,7 @@ function InboxPanel() {
 // Panel: Reading pane
 // ---------------------------------------------------------------------------
 
-function ReadingPanePanel() {
+export function MailReadingPanePanel() {
   const { readingPane, setReadingPane } = useSettingsStore();
 
   const positions: Array<{
@@ -2115,7 +2115,7 @@ function ReadingPanePanel() {
 // Panel: Labels
 // ---------------------------------------------------------------------------
 
-function LabelsPanel() {
+export function MailLabelsPanel() {
   return (
     <div>
       <SettingsSection title="Labels" description="Labels are synced from your Gmail account">
@@ -2142,7 +2142,7 @@ function LabelsPanel() {
 // Panel: Keyboard shortcuts
 // ---------------------------------------------------------------------------
 
-function ShortcutsPanel() {
+export function MailShortcutsPanel() {
   const { t } = useTranslation();
   const categories: ShortcutCategory[] = ['navigation', 'actions', 'compose', 'search', 'ui'];
 
@@ -2234,7 +2234,7 @@ function ShortcutsPanel() {
 // Panel: About
 // ---------------------------------------------------------------------------
 
-function AboutPanel() {
+export function MailAboutPanel() {
   return (
     <div>
       <SettingsSection title="About AtlasMail">
@@ -2395,17 +2395,17 @@ function AboutPanel() {
 // ---------------------------------------------------------------------------
 
 const PANELS: Record<NavItemId, () => ReactElement> = {
-  general: GeneralPanel,
-  accounts: AccountsPanel,
-  appearance: AppearancePanel,
-  notifications: NotificationsPanel,
-  composer: ComposerPanel,
-  ai: AIPanel,
-  inbox: InboxPanel,
-  'reading-pane': ReadingPanePanel,
-  labels: LabelsPanel,
-  shortcuts: ShortcutsPanel,
-  about: AboutPanel,
+  general: MailGeneralPanel,
+  accounts: MailAccountsPanel,
+  appearance: MailAppearancePanel,
+  notifications: MailNotificationsPanel,
+  composer: MailComposerPanel,
+  ai: MailAIPanel,
+  inbox: MailInboxPanel,
+  'reading-pane': MailReadingPanePanel,
+  labels: MailLabelsPanel,
+  shortcuts: MailShortcutsPanel,
+  about: MailAboutPanel,
 };
 
 function usePanelTitles(): Record<NavItemId, string> {
@@ -2681,7 +2681,7 @@ export function SettingsModal() {
 // Sidebar nav button (extracted to keep hover state isolated)
 // ---------------------------------------------------------------------------
 
-function SidebarNavButton({
+export function SidebarNavButton({
   isActive,
   onClick,
   label,

@@ -1339,7 +1339,7 @@ export function TasksPage() {
         <div style={{ padding: '0 var(--spacing-sm) var(--spacing-md)' }}>
           <button
             className="task-nav-item"
-            onClick={() => setShowSettings(true)}
+            onClick={() => navigate('/settings?app=tasks&panel=general')}
           >
             <Settings2 size={16} color="var(--color-text-tertiary)" strokeWidth={1.8} />
             <span style={{ flex: 1 }}>Settings</span>

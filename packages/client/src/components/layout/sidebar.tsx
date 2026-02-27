@@ -1112,7 +1112,7 @@ export function Sidebar() {
         {/* Settings button */}
         <button
           className="sidebar-nav-btn"
-          onClick={toggleSettings}
+          onClick={() => navigate('/settings?app=global&panel=general')}
           aria-label={t('settings.title')}
           onMouseEnter={() => setSettingsHovered(true)}
           onMouseLeave={() => setSettingsHovered(false)}
