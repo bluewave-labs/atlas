@@ -1622,6 +1622,7 @@ export function TablesPage() {
   const {
     rangeContext,
     handleCellClicked: handleRangeCellClicked,
+    handleCellMouseDown: handleRangeCellMouseDown,
     handleHeaderClicked: handleRangeHeaderClicked,
     handleRangeKeyDown,
     handleGlobalKeyDown: handleRangeGlobalKeyDown,
@@ -2722,7 +2723,7 @@ export function TablesPage() {
             {/* Grid view */}
             {localViewConfig.activeView === 'grid' && (
               <>
-                <div className="tables-grid-container">
+                <div className="tables-grid-container" onMouseDown={handleRangeCellMouseDown}>
                   <div className={isDark ? 'ag-theme-quartz-dark' : 'ag-theme-quartz'}>
                     <AgGridReact
                       ref={gridRef}

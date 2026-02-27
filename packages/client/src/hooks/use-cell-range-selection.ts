@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import type { AgGridReact } from 'ag-grid-react';
 import type { CellClickedEvent } from 'ag-grid-community';
 
@@ -44,6 +44,7 @@ export function useCellRangeSelection(
   const rangeRef = useRef<CellRange | null>(null);
   const anchorRef = useRef<CellCoord | null>(null);
   const colIndexMapRef = useRef<Map<string, number>>(new Map());
+  const isDraggingRef = useRef(false);
   const [rangeVersion, setRangeVersion] = useState(0);
 
   // ── Helpers ────────────────────────────────────────────────────
@@ -80,12 +81,20 @@ export function useCellRangeSelection(
     const cols = api.getAllDisplayedColumns();
     cols.forEach((col, idx) => {
       const id = col.getColId();
-      if (!excludedColIds?.has(id)) {
-        map.set(id, idx);
-      }
+      // Only include data columns (those with a field defined)
+      const field = col.getColDef().field;
+      if (!field || excludedColIds?.has(id)) return;
+      map.set(id, idx);
     });
     colIndexMapRef.current = map;
   }, [gridRef, excludedColIds]);
+
+  // Ensures the map is populated before use (lazy rebuild)
+  const ensureColIndexMap = useCallback(() => {
+    if (colIndexMapRef.current.size === 0) {
+      rebuildColIndexMap();
+    }
+  }, [rebuildColIndexMap]);
 
   // ── Compute selected cell count ───────────────────────────────
 
@@ -105,6 +114,7 @@ export function useCellRangeSelection(
 
   const handleCellClicked = useCallback(
     (event: CellClickedEvent) => {
+      ensureColIndexMap();
       const colId = event.colDef.field;
       if (!colId || excludedColIds?.has(colId)) return;
       const rowIndex = event.rowIndex;
@@ -127,13 +137,14 @@ export function useCellRangeSelection(
         clearRange();
       }
     },
-    [gridRef, excludedColIds, setRange, clearRange],
+    [gridRef, excludedColIds, setRange, clearRange, ensureColIndexMap],
   );
 
   // ── Header clicked handler (select entire column) ─────────────
 
   const handleHeaderClicked = useCallback(
     (colId: string) => {
+      ensureColIndexMap();
       if (excludedColIds?.has(colId)) return;
       const api = gridRef.current?.api;
       if (!api) return;
@@ -158,7 +169,7 @@ export function useCellRangeSelection(
       setRange(newRange);
       gridRef.current?.api?.deselectAll();
     },
-    [gridRef, excludedColIds, setRange],
+    [gridRef, excludedColIds, setRange, ensureColIndexMap],
   );
 
   // ── Helper: get sorted column IDs from colIndexMap ─────────────
@@ -173,6 +184,7 @@ export function useCellRangeSelection(
 
   const handleRangeKeyDown = useCallback(
     (event: { event?: Event | null }) => {
+      ensureColIndexMap();
       const kbEvent = event.event as KeyboardEvent | undefined;
       if (!kbEvent) return;
 
@@ -264,7 +276,7 @@ export function useCellRangeSelection(
       setRange(newRange);
       api.deselectAll();
     },
-    [gridRef, excludedColIds, setRange, clearRange, getSortedColIds],
+    [gridRef, excludedColIds, setRange, clearRange, getSortedColIds, ensureColIndexMap],
   );
 
   // ── Clipboard copy ────────────────────────────────────────────
@@ -385,6 +397,85 @@ export function useCellRangeSelection(
     return cells;
   }, [gridRef]);
 
+  // ── Mouse drag selection ───────────────────────────────────────
+
+  const getCellCoordsFromPoint = useCallback((x: number, y: number): CellCoord | null => {
+    const el = document.elementFromPoint(x, y);
+    if (!el) return null;
+
+    // Find the ag-cell element
+    const cellEl = el.closest('.ag-cell') as HTMLElement | null;
+    if (!cellEl) return null;
+
+    const colId = cellEl.getAttribute('col-id');
+    if (!colId) return null;
+
+    // Only allow data columns (must be in our colIndexMap)
+    if (!colIndexMapRef.current.has(colId)) return null;
+
+    // Find the row element
+    const rowEl = cellEl.closest('.ag-row') as HTMLElement | null;
+    if (!rowEl) return null;
+
+    const rowIndexStr = rowEl.getAttribute('row-index');
+    if (rowIndexStr == null) return null;
+    const rowIndex = parseInt(rowIndexStr, 10);
+    if (isNaN(rowIndex) || rowIndex < 0) return null;
+
+    // Skip pinned bottom rows
+    if (rowEl.classList.contains('ag-row-pinned-bottom')) return null;
+
+    return { rowIndex, colId };
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDraggingRef.current || !anchorRef.current) return;
+
+    // Prevent text selection while dragging
+    e.preventDefault();
+
+    const coord = getCellCoordsFromPoint(e.clientX, e.clientY);
+    if (!coord) return;
+
+    // Only create/update range if we've moved to a different cell
+    const currentEnd = rangeRef.current?.end;
+    if (currentEnd && currentEnd.rowIndex === coord.rowIndex && currentEnd.colId === coord.colId) return;
+
+    const newRange: CellRange = {
+      anchor: anchorRef.current,
+      end: coord,
+    };
+    setRange(newRange);
+    gridRef.current?.api?.deselectAll();
+  }, [getCellCoordsFromPoint, setRange, gridRef]);
+
+  const handleMouseUp = useCallback(() => {
+    isDraggingRef.current = false;
+  }, []);
+
+  // Attach/detach global mousemove/mouseup listeners when dragging
+  useEffect(() => {
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [handleMouseMove, handleMouseUp]);
+
+  const handleCellMouseDown = useCallback((e: React.MouseEvent) => {
+    // Only start drag on left-click, without shift (shift+click is handled by handleCellClicked)
+    if (e.button !== 0 || e.shiftKey) return;
+
+    ensureColIndexMap();
+    const coord = getCellCoordsFromPoint(e.clientX, e.clientY);
+    if (!coord) return;
+
+    isDraggingRef.current = true;
+    anchorRef.current = coord;
+    // Don't set a range yet — only create range on mousemove (to not interfere with single clicks)
+  }, [ensureColIndexMap, getCellCoordsFromPoint]);
+
   // ── Return ────────────────────────────────────────────────────
 
   return {
@@ -395,6 +486,7 @@ export function useCellRangeSelection(
     },
     // Handlers
     handleCellClicked,
+    handleCellMouseDown,
     handleHeaderClicked,
     handleRangeKeyDown,
     handleGlobalKeyDown,
