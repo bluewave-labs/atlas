@@ -404,7 +404,19 @@
     "noEmailPreview": "No email preview",
     "recentDrawings": "{{count}} recent",
     "pendingTasks_one": "{{count}} task",
-    "pendingTasks_other": "{{count}} tasks"
+    "pendingTasks_other": "{{count}} tasks",
+    "comingUp": "Coming up",
+    "allDay": "All day",
+    "event": "Event",
+    "today": "Today",
+    "unreadEmails_one": "{{count}} unread email",
+    "unreadEmails_other": "{{count}} unread emails",
+    "pendingTasksFull_one": "{{count}} pending task",
+    "pendingTasksFull_other": "{{count}} pending tasks",
+    "documents_one": "{{count}} document",
+    "documents_other": "{{count}} documents",
+    "drawings_one": "{{count}} drawing",
+    "drawings_other": "{{count}} drawings"
   },
   "calendar": {
     "title": "Calendar",

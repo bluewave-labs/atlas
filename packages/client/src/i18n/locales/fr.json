@@ -341,7 +341,8 @@
     "documents": "Documents",
     "mail": "Mail",
     "write": "Écrire",
-    "draw": "Dessin"
+    "draw": "Dessin",
+    "tasks": "Tâches"
   },
   "home": {
     "goodMorning": "Bonjour !",
@@ -360,7 +361,21 @@
     "priorityEmails": "E-mails prioritaires",
     "noEmails": "Aucun e-mail",
     "noEmailPreview": "Aucun aperçu d'e-mail",
-    "recentDrawings": "{{count}} récent(s)"
+    "recentDrawings": "{{count}} récent(s)",
+    "pendingTasks_one": "{{count}} tâche",
+    "pendingTasks_other": "{{count}} tâches",
+    "comingUp": "À venir",
+    "allDay": "Toute la journée",
+    "event": "Événement",
+    "today": "Aujourd'hui",
+    "unreadEmails_one": "{{count}} e-mail non lu",
+    "unreadEmails_other": "{{count}} e-mails non lus",
+    "pendingTasksFull_one": "{{count}} tâche en attente",
+    "pendingTasksFull_other": "{{count}} tâches en attente",
+    "documents_one": "{{count}} document",
+    "documents_other": "{{count}} documents",
+    "drawings_one": "{{count}} dessin",
+    "drawings_other": "{{count}} dessins"
   },
   "calendar": {
     "title": "Calendrier",

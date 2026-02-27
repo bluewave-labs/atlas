@@ -341,7 +341,8 @@
     "documents": "Belgeler",
     "mail": "Mail",
     "write": "Yaz",
-    "draw": "Çizim"
+    "draw": "Çizim",
+    "tasks": "Görevler"
   },
   "home": {
     "goodMorning": "Günaydın!",
@@ -360,7 +361,21 @@
     "priorityEmails": "Öncelikli e-postalar",
     "noEmails": "E-posta yok",
     "noEmailPreview": "E-posta önizlemesi yok",
-    "recentDrawings": "{{count}} yeni"
+    "recentDrawings": "{{count}} yeni",
+    "pendingTasks_one": "{{count}} görev",
+    "pendingTasks_other": "{{count}} görev",
+    "comingUp": "Yaklaşan",
+    "allDay": "Tüm gün",
+    "event": "Etkinlik",
+    "today": "Bugün",
+    "unreadEmails_one": "{{count}} okunmamış e-posta",
+    "unreadEmails_other": "{{count}} okunmamış e-posta",
+    "pendingTasksFull_one": "{{count}} bekleyen görev",
+    "pendingTasksFull_other": "{{count}} bekleyen görev",
+    "documents_one": "{{count}} belge",
+    "documents_other": "{{count}} belge",
+    "drawings_one": "{{count}} çizim",
+    "drawings_other": "{{count}} çizim"
   },
   "calendar": {
     "title": "Takvim",

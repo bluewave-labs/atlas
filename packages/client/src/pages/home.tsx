@@ -775,7 +775,7 @@ export function HomePage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                   <Clock size={14} color="rgba(255,255,255,0.5)" />
                   <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Coming up
+                    {t('home.comingUp')}
                   </span>
                 </div>
                 {upcomingEvents.map((ev) => (
@@ -783,10 +783,10 @@ export function HomePage() {
                     <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, fontWeight: 500, minWidth: 48 }}>
                       {ev.startTime && !ev.isAllDay
                         ? new Date(ev.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                        : 'All day'}
+                        : t('home.allDay')}
                     </span>
                     <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 15, fontWeight: 500 }}>
-                      {ev.summary || 'Event'}
+                      {ev.summary || t('home.event')}
                     </span>
                   </div>
                 ))}
@@ -812,7 +812,7 @@ export function HomePage() {
                 }}
               >
                 <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
-                  Today
+                  {t('home.today')}
                 </span>
                 {inboxUnread > 0 && (
                   <button
@@ -825,7 +825,7 @@ export function HomePage() {
                   >
                     <Mail size={15} color="rgba(255,255,255,0.6)" />
                     <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 15, fontWeight: 500 }}>
-                      {inboxUnread} unread email{inboxUnread !== 1 ? 's' : ''}
+                      {t('home.unreadEmails', { count: inboxUnread })}
                     </span>
                     <ArrowRight size={13} color="rgba(255,255,255,0.3)" />
                   </button>
@@ -841,7 +841,7 @@ export function HomePage() {
                   >
                     <CheckSquare size={15} color="rgba(255,255,255,0.6)" />
                     <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 15, fontWeight: 500 }}>
-                      {pendingTaskCount} pending task{pendingTaskCount !== 1 ? 's' : ''}
+                      {t('home.pendingTasksFull', { count: pendingTaskCount })}
                     </span>
                     <ArrowRight size={13} color="rgba(255,255,255,0.3)" />
                   </button>
@@ -887,14 +887,14 @@ export function HomePage() {
             icon={FileText}
             label={t('nav.write')}
             color="#c4856c"
-            badge={docCount > 0 ? `${docCount} document${docCount !== 1 ? 's' : ''}` : undefined}
+            badge={docCount > 0 ? t('home.documents', { count: docCount }) : undefined}
             onClick={() => navigate(ROUTES.DOCS)}
           />
           <AppCard
             icon={Pencil}
             label={t('nav.draw')}
             color="#e06c9f"
-            badge={drawingCount > 0 ? `${drawingCount} drawing${drawingCount !== 1 ? 's' : ''}` : undefined}
+            badge={drawingCount > 0 ? t('home.drawings', { count: drawingCount }) : undefined}
             onClick={() => navigate(ROUTES.DRAW)}
           />
         </div>
