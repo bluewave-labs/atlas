@@ -26,7 +26,7 @@ interface ListDocsResponse {
   tree: DocumentTreeNode[];
 }
 
-export function useDocumentList(includeArchived = false) {
+export function useDocumentList(includeArchived = false, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: includeArchived ? [...queryKeys.docs.list, 'archived'] : queryKeys.docs.list,
     queryFn: async () => {
@@ -35,6 +35,7 @@ export function useDocumentList(includeArchived = false) {
       return data.data as ListDocsResponse;
     },
     staleTime: 30_000,
+    enabled: options?.enabled,
   });
 }
 

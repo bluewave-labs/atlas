@@ -10,7 +10,7 @@ interface ListDrawingsResponse {
   drawings: Drawing[];
 }
 
-export function useDrawingList(includeArchived = false) {
+export function useDrawingList(includeArchived = false, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: includeArchived ? [...queryKeys.drawings.list, 'archived'] : queryKeys.drawings.list,
     queryFn: async () => {
@@ -19,6 +19,7 @@ export function useDrawingList(includeArchived = false) {
       return data.data as ListDrawingsResponse;
     },
     staleTime: 30_000,
+    enabled: options?.enabled,
   });
 }
 

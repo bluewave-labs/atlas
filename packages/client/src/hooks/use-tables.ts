@@ -10,7 +10,7 @@ interface ListSpreadsheetsResponse {
   spreadsheets: Spreadsheet[];
 }
 
-export function useTableList(includeArchived = false) {
+export function useTableList(includeArchived = false, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: includeArchived ? [...queryKeys.tables.list, 'archived'] : queryKeys.tables.list,
     queryFn: async () => {
@@ -19,6 +19,7 @@ export function useTableList(includeArchived = false) {
       return data.data as ListSpreadsheetsResponse;
     },
     staleTime: 30_000,
+    enabled: options?.enabled,
   });
 }
 

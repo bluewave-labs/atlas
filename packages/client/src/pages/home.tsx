@@ -479,9 +479,9 @@ export function HomePage() {
   const { openSettings } = useUIStore();
   const { data: counts } = useThreadCounts({ enabled: isAuthenticated });
   const { data: taskCounts } = useTaskCounts({ enabled: isAuthenticated });
-  const { data: docListData } = useDocumentList();
-  const { data: drawingListData } = useDrawingList();
-  const { data: tableListData } = useTableList();
+  const { data: docListData } = useDocumentList(false, { enabled: isAuthenticated });
+  const { data: drawingListData } = useDrawingList(false, { enabled: isAuthenticated });
+  const { data: tableListData } = useTableList(false, { enabled: isAuthenticated });
   const parallax = useMouseParallax(15);
 
   // Image rotation — changes daily, crossfade on manual cycle
