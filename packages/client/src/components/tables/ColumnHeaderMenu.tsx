@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Type, Hash, CheckSquare, ChevronDown, List, Calendar, Link2,
   AtSign, DollarSign, Phone, Star, Percent, AlignLeft, Paperclip,
   Trash2, Copy, ArrowUpAZ, ArrowDownAZ, Pencil, EyeOff,
   Lock, Unlock, ArrowLeftToLine, ArrowRightToLine, FileText,
+  Group, Ungroup,
 } from 'lucide-react';
 import type { TableFieldType } from '@atlasmail/shared';
 
@@ -47,6 +48,9 @@ interface ColumnHeaderMenuProps {
   onInsertLeft: (colId: string) => void;
   onInsertRight: (colId: string) => void;
   onEditDescription: (colId: string, desc: string) => void;
+  onGroupBy?: (colId: string) => void;
+  onUngroup?: () => void;
+  isGroupedBy?: boolean;
 }
 
 export function ColumnHeaderMenu({
@@ -54,6 +58,7 @@ export function ColumnHeaderMenu({
   x, y, onClose,
   onRename, onDelete, onDuplicate, onChangeType, onSortAsc, onSortDesc,
   onHide, onFreeze, onUnfreeze, onInsertLeft, onInsertRight, onEditDescription,
+  onGroupBy, onUngroup, isGroupedBy,
 }: ColumnHeaderMenuProps) {
   const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -69,7 +74,7 @@ export function ColumnHeaderMenu({
 
   // Adjust position to stay in viewport
   const [pos, setPos] = useState({ x, y });
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = menuRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
@@ -245,6 +250,24 @@ export function ColumnHeaderMenu({
               <Lock size={14} />
               <span>{t('tables.freezeUpTo')}</span>
             </button>
+          )}
+
+          {/* Group by */}
+          {onGroupBy && (columnType === 'singleSelect' || columnType === 'multiSelect' || columnType === 'text') && (
+            <>
+              <div className="tables-context-menu-divider" />
+              {isGroupedBy ? (
+                <button className="tables-context-menu-item" onClick={() => { onUngroup?.(); onClose(); }}>
+                  <Ungroup size={14} />
+                  <span>{t('tables.ungroup', 'Ungroup')}</span>
+                </button>
+              ) : (
+                <button className="tables-context-menu-item" onClick={() => { onGroupBy(columnId); onClose(); }}>
+                  <Group size={14} />
+                  <span>{t('tables.groupByField', 'Group by this field')}</span>
+                </button>
+              )}
+            </>
           )}
 
           <div className="tables-context-menu-divider" />

@@ -83,6 +83,7 @@ import { HideFieldsPopover } from '../components/tables/HideFieldsPopover';
 import { RowColorPopover } from '../components/tables/RowColorPopover';
 import { useTablesSettingsStore } from '../stores/tables-settings-store';
 import { useUIStore } from '../stores/ui-store';
+import { useToastStore } from '../stores/toast-store';
 import { FindReplaceBar } from '../components/tables/FindReplaceBar';
 import { BatchEditOverlay } from '../components/tables/BatchEditOverlay';
 import { GroupHeaderRenderer } from '../components/tables/GroupHeaderRow';
@@ -94,6 +95,7 @@ import type { MaybeGroupedRow } from '../hooks/use-row-grouping';
 import { useFormulas } from '../hooks/use-formulas';
 import { isFormulaValue } from '../lib/formula-engine';
 import { getTagColor } from '../lib/tag-colors';
+import { FIELD_TYPE_ICONS } from '../lib/field-type-icons';
 import '../styles/tables.css';
 import '../styles/docs.css'; // Re-use .tg-* template gallery styles
 
@@ -137,8 +139,6 @@ const FIELD_TYPES: { value: TableFieldType; label: string }[] = [
 ];
 
 // ─── Field type icons ───────────────────────────────────────────────
-
-import { FIELD_TYPE_ICONS } from '../lib/field-type-icons';
 
 // ─── Default columns/rows for new tables ────────────────────────────
 
@@ -944,7 +944,14 @@ function MultiTagRenderer(params: ICellRendererParams) {
 function LinkRenderer(params: ICellRendererParams) {
   if (!params.value) return null;
   const url = String(params.value);
-  const href = url.startsWith('http') ? url : `https://${url}`;
+  let href: string;
+  try {
+    const parsed = new URL(url.startsWith('http') ? url : `https://${url}`);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return <span>{url}</span>;
+    href = parsed.href;
+  } catch {
+    return <span>{url}</span>;
+  }
   return (
     <span className="tables-cell-url">
       <span className="tables-cell-url-text">{url}</span>
@@ -1772,12 +1779,13 @@ export function TablesPage() {
     const avg = sum / values.length;
     const isCurrency = numCol.type === 'currency';
     const isPercent = numCol.type === 'percent';
+    const cs = tablesSettings.currencySymbol || '$';
     return {
       label: numCol.name,
-      sum: isCurrency ? `$${sum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : isPercent ? `${sum}%` : sum.toLocaleString(),
-      avg: isCurrency ? `$${avg.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : isPercent ? `${avg.toFixed(1)}%` : avg.toLocaleString(undefined, { maximumFractionDigits: 1 }),
+      sum: isCurrency ? `${cs}${sum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : isPercent ? `${sum}%` : sum.toLocaleString(),
+      avg: isCurrency ? `${cs}${avg.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : isPercent ? `${avg.toFixed(1)}%` : avg.toLocaleString(undefined, { maximumFractionDigits: 1 }),
     };
-  }, [localColumns, sortedRows]);
+  }, [localColumns, sortedRows, tablesSettings.currencySymbol]);
 
   // Calendar: effective date column + date→rows mapping
   const effectiveCalendarDateCol = useMemo(() => {
@@ -2255,7 +2263,7 @@ export function TablesPage() {
         const updated = [...existing, attachment];
         handleUpdateRowField(pending.rowId, pending.colId, updated);
       } catch {
-        // upload failed — silently ignore
+        useToastStore.getState().addToast({ message: t('tables.uploadFailed', 'File upload failed'), type: 'error' });
       }
       // Reset file input
       if (attachmentInputRef.current) attachmentInputRef.current.value = '';

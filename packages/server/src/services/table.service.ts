@@ -50,13 +50,6 @@ export async function getSpreadsheet(userId: string, spreadsheetId: string) {
 export async function createSpreadsheet(userId: string, accountId: string, input: CreateSpreadsheetInput) {
   const now = new Date().toISOString();
 
-  const [maxSort] = await db
-    .select({ max: sql<number>`COALESCE(MAX(${spreadsheets.sortOrder}), -1)` })
-    .from(spreadsheets)
-    .where(eq(spreadsheets.userId, userId));
-
-  const sortOrder = (maxSort?.max ?? -1) + 1;
-
   const [created] = await db
     .insert(spreadsheets)
     .values({
@@ -66,7 +59,7 @@ export async function createSpreadsheet(userId: string, accountId: string, input
       columns: input.columns ?? [],
       rows: input.rows ?? [],
       viewConfig: input.viewConfig ?? { activeView: 'grid' as const },
-      sortOrder,
+      sortOrder: sql`COALESCE((SELECT MAX(${spreadsheets.sortOrder}) FROM spreadsheets WHERE ${spreadsheets.userId} = ${userId}), -1) + 1`,
       color: input.color ?? null,
       icon: input.icon ?? null,
       createdAt: now,
@@ -98,16 +91,11 @@ export async function updateSpreadsheet(
   if (input.icon !== undefined) updates.icon = input.icon;
   if (input.guide !== undefined) updates.guide = input.guide;
 
-  await db
+  const [updated] = await db
     .update(spreadsheets)
     .set(updates)
-    .where(and(eq(spreadsheets.id, spreadsheetId), eq(spreadsheets.userId, userId)));
-
-  const [updated] = await db
-    .select()
-    .from(spreadsheets)
     .where(and(eq(spreadsheets.id, spreadsheetId), eq(spreadsheets.userId, userId)))
-    .limit(1);
+    .returning();
 
   return updated || null;
 }
@@ -115,7 +103,7 @@ export async function updateSpreadsheet(
 // ─── Delete (soft delete) a spreadsheet ──────────────────────────────
 
 export async function deleteSpreadsheet(userId: string, spreadsheetId: string) {
-  await updateSpreadsheet(userId, spreadsheetId, { isArchived: true });
+  return updateSpreadsheet(userId, spreadsheetId, { isArchived: true });
 }
 
 // ─── Restore an archived spreadsheet ─────────────────────────────────
@@ -123,16 +111,11 @@ export async function deleteSpreadsheet(userId: string, spreadsheetId: string) {
 export async function restoreSpreadsheet(userId: string, spreadsheetId: string) {
   const now = new Date().toISOString();
 
-  await db
+  const [restored] = await db
     .update(spreadsheets)
     .set({ isArchived: false, updatedAt: now })
-    .where(and(eq(spreadsheets.id, spreadsheetId), eq(spreadsheets.userId, userId)));
-
-  const [restored] = await db
-    .select()
-    .from(spreadsheets)
     .where(and(eq(spreadsheets.id, spreadsheetId), eq(spreadsheets.userId, userId)))
-    .limit(1);
+    .returning();
 
   return restored || null;
 }

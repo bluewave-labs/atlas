@@ -17,6 +17,7 @@
   background: var(--color-bg-secondary);
   flex-shrink: 0;
   overflow: hidden;
+  position: relative;
 }
 
 .tables-sidebar-header {
@@ -111,7 +112,7 @@
 /* ─── Sidebar bottom: views + settings ────────────────────────────── */
 
 .tables-sidebar-bottom {
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border-primary);
   padding: 8px;
   display: flex;
   flex-direction: column;
@@ -271,7 +272,8 @@
   align-items: center;
   gap: 2px;
   padding: 0 12px 4px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 
 .tables-topbar-view-tab {
@@ -362,7 +364,7 @@
 }
 
 .tables-add-view-option:hover {
-  background: var(--color-bg-hover);
+  background: var(--color-surface-hover, #f0f2f5);
 }
 
 /* ─── Toolbar (tools row) ────────────────────────────────────────── */
@@ -2743,7 +2745,7 @@
 }
 
 .tables-expand-attachment-remove:hover {
-  background: var(--color-bg-active);
+  background: var(--color-bg-active, #e4e7ec);
   color: var(--color-text-primary);
 }
 

@@ -96,7 +96,12 @@ export async function deleteSpreadsheet(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const spreadsheetId = req.params.id as string;
 
-    await tableService.deleteSpreadsheet(userId, spreadsheetId);
+    const result = await tableService.deleteSpreadsheet(userId, spreadsheetId);
+
+    if (!result) {
+      res.status(404).json({ success: false, error: 'Spreadsheet not found' });
+      return;
+    }
 
     res.json({ success: true, data: null });
   } catch (error) {

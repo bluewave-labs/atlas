@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api-client';
 import { queryKeys } from '../config/query-keys';
 import type { Spreadsheet, CreateSpreadsheetInput, UpdateSpreadsheetInput } from '@atlasmail/shared';
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 // ─── Queries ─────────────────────────────────────────────────────────
 
@@ -19,7 +19,7 @@ export function useTableList(includeArchived = false, options?: { enabled?: bool
       return data.data as ListSpreadsheetsResponse;
     },
     staleTime: 30_000,
-    enabled: options?.enabled,
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -32,6 +32,11 @@ export function useTable(id: string | undefined) {
     },
     enabled: !!id,
     staleTime: 10_000,
+    retry: (failureCount, error) => {
+      // Don't retry on 404 — the table doesn't exist
+      if ((error as any)?.response?.status === 404) return false;
+      return failureCount < 3;
+    },
   });
 }
 
@@ -64,7 +69,7 @@ export function useUpdateTable() {
     },
     onSuccess: (spreadsheet) => {
       queryClient.setQueryData(queryKeys.tables.detail(spreadsheet.id), spreadsheet);
-      queryClient.invalidateQueries({ queryKey: queryKeys.tables.list });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tables.all });
     },
   });
 }
@@ -103,14 +108,19 @@ export function useAutoSaveTable(delay = 2000) {
   const mutateRef = useRef(updateMutation.mutate);
   mutateRef.current = updateMutation.mutate;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastInputRef = useRef<{ id: string } & UpdateSpreadsheetInput | null>(null);
 
   const save = useCallback(
     (id: string, input: UpdateSpreadsheetInput) => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
+      lastInputRef.current = { id, ...input };
       timerRef.current = setTimeout(() => {
-        mutateRef.current({ id, ...input });
+        if (lastInputRef.current) {
+          mutateRef.current(lastInputRef.current);
+          lastInputRef.current = null;
+        }
       }, delay);
     },
     [delay],
@@ -121,6 +131,23 @@ export function useAutoSaveTable(delay = 2000) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
+    if (lastInputRef.current) {
+      mutateRef.current(lastInputRef.current);
+      lastInputRef.current = null;
+    }
+  }, []);
+
+  // Cleanup on unmount — flush pending save
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      if (lastInputRef.current) {
+        mutateRef.current(lastInputRef.current);
+        lastInputRef.current = null;
+      }
+    };
   }, []);
 
   return { save, flush, isSaving: updateMutation.isPending };

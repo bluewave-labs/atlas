@@ -106,12 +106,36 @@ export function ExpandRowModal({
 
     switch (col.type) {
       case 'text':
-      case 'email':
-      case 'url':
-      case 'phone':
         return (
           <input
             type="text"
+            className="tables-expand-input"
+            value={value != null ? String(value) : ''}
+            onChange={(e) => onUpdateField(row._id, col.id, e.target.value)}
+          />
+        );
+      case 'email':
+        return (
+          <input
+            type="email"
+            className="tables-expand-input"
+            value={value != null ? String(value) : ''}
+            onChange={(e) => onUpdateField(row._id, col.id, e.target.value)}
+          />
+        );
+      case 'url':
+        return (
+          <input
+            type="url"
+            className="tables-expand-input"
+            value={value != null ? String(value) : ''}
+            onChange={(e) => onUpdateField(row._id, col.id, e.target.value)}
+          />
+        );
+      case 'phone':
+        return (
+          <input
+            type="tel"
             className="tables-expand-input"
             value={value != null ? String(value) : ''}
             onChange={(e) => onUpdateField(row._id, col.id, e.target.value)}
@@ -126,7 +150,7 @@ export function ExpandRowModal({
             type="number"
             className="tables-expand-input"
             value={value != null ? String(value) : ''}
-            onChange={(e) => onUpdateField(row._id, col.id, e.target.value ? Number(e.target.value) : '')}
+            onChange={(e) => onUpdateField(row._id, col.id, e.target.value ? Number(e.target.value) : null)}
           />
         );
       case 'checkbox':
@@ -178,7 +202,7 @@ export function ExpandRowModal({
           <input
             type="date"
             className="tables-expand-input"
-            value={value != null ? String(value) : ''}
+            value={value != null ? String(value).slice(0, 10) : ''}
             onChange={(e) => onUpdateField(row._id, col.id, e.target.value)}
           />
         );
@@ -200,7 +224,7 @@ export function ExpandRowModal({
             {attachments.length > 0 && (
               <div className="tables-expand-attachment-list">
                 {attachments.map((att, i) => (
-                  <div key={i} className="tables-expand-attachment-chip">
+                  <div key={`${att.name}-${att.url}`} className="tables-expand-attachment-chip">
                     {isImage(att.type) ? (
                       <img className="tables-expand-attachment-thumb" src={`${att.url}?token=${token}`} alt={att.name} />
                     ) : (
