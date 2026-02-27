@@ -9,6 +9,8 @@ import { useAuthStore } from '../stores/auth-store';
 import { useThreadCounts } from '../hooks/use-threads';
 import { useCalendarEvents } from '../hooks/use-calendar';
 import { useTaskCounts } from '../hooks/use-tasks';
+import { useDocumentList } from '../hooks/use-documents';
+import { useDrawingList } from '../hooks/use-drawings';
 import { ROUTES } from '../config/routes';
 import { useUIStore } from '../stores/ui-store';
 import { buildGoogleOAuthUrl } from '../components/auth/login-page';
@@ -476,6 +478,8 @@ export function HomePage() {
   const { openSettings } = useUIStore();
   const { data: counts } = useThreadCounts({ enabled: isAuthenticated });
   const { data: taskCounts } = useTaskCounts({ enabled: isAuthenticated });
+  const { data: docListData } = useDocumentList();
+  const { data: drawingListData } = useDrawingList();
   const parallax = useMouseParallax(15);
 
   // Image rotation — changes daily, crossfade on manual cycle
@@ -524,6 +528,8 @@ export function HomePage() {
   const inboxUnread = counts?.categories?.all?.unread ?? 0;
   const eventCount = todayEvents?.length ?? 0;
   const pendingTaskCount = taskCounts?.total ?? 0;
+  const docCount = docListData?.documents?.length ?? 0;
+  const drawingCount = drawingListData?.drawings?.length ?? 0;
   const timeTint = getTimeTint(hour);
 
   // Upcoming events (next 3 that haven't ended yet)
@@ -881,12 +887,14 @@ export function HomePage() {
             icon={FileText}
             label={t('nav.write')}
             color="#c4856c"
+            badge={docCount > 0 ? `${docCount} document${docCount !== 1 ? 's' : ''}` : undefined}
             onClick={() => navigate(ROUTES.DOCS)}
           />
           <AppCard
             icon={Pencil}
             label={t('nav.draw')}
             color="#e06c9f"
+            badge={drawingCount > 0 ? `${drawingCount} drawing${drawingCount !== 1 ? 's' : ''}` : undefined}
             onClick={() => navigate(ROUTES.DRAW)}
           />
         </div>
