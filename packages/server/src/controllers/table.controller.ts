@@ -22,13 +22,15 @@ export async function createSpreadsheet(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
     const accountId = req.auth!.accountId;
-    const { title, columns, rows, viewConfig } = req.body;
+    const { title, columns, rows, viewConfig, color, icon } = req.body;
 
     const spreadsheet = await tableService.createSpreadsheet(userId, accountId, {
       title,
       columns,
       rows,
       viewConfig,
+      color,
+      icon,
     });
 
     res.json({ success: true, data: spreadsheet });
@@ -63,7 +65,7 @@ export async function updateSpreadsheet(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
     const spreadsheetId = req.params.id as string;
-    const { title, columns, rows, viewConfig, isArchived } = req.body;
+    const { title, columns, rows, viewConfig, isArchived, color, icon, guide } = req.body;
 
     const spreadsheet = await tableService.updateSpreadsheet(userId, spreadsheetId, {
       title,
@@ -71,6 +73,9 @@ export async function updateSpreadsheet(req: Request, res: Response) {
       rows,
       viewConfig,
       isArchived,
+      color,
+      icon,
+      guide,
     });
 
     if (!spreadsheet) {

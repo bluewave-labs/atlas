@@ -2619,3 +2619,201 @@
   color: var(--color-accent-primary);
   background: color-mix(in srgb, var(--color-accent-primary) 5%, transparent);
 }
+
+/* ─── Table header dropdown (color, icon, guide) ──────────────────── */
+
+.tables-topbar-chevron {
+  margin-left: -4px;
+  padding: 4px !important;
+  border-radius: 4px;
+}
+
+.table-header-dropdown {
+  width: 360px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary, #d0d5dd);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-header-dropdown-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  border: none;
+  background: none;
+  padding: 16px 16px 8px;
+  font-family: var(--font-family);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.table-header-dropdown-title:hover {
+  background: var(--color-bg-secondary);
+}
+
+.table-header-dropdown-title:focus {
+  background: var(--color-bg-secondary);
+}
+
+.table-header-dropdown-section {
+  border-top: 1px solid var(--color-border-primary, #d0d5dd);
+}
+
+.table-header-dropdown-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  width: 100%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  font-family: var(--font-family);
+}
+
+.table-header-dropdown-section-header:hover {
+  background: var(--color-bg-secondary);
+}
+
+.table-header-dropdown-section-body {
+  padding: 0 16px 12px;
+}
+
+.table-header-dropdown-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--color-border-primary, #d0d5dd);
+  margin-bottom: 10px;
+}
+
+.table-header-dropdown-tab {
+  flex: 1;
+  padding: 6px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  font-family: var(--font-family);
+  border-bottom: 2px solid transparent;
+  transition: color 150ms, border-color 150ms;
+}
+
+.table-header-dropdown-tab:hover {
+  color: var(--color-text-primary);
+}
+
+.table-header-dropdown-tab.active {
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-accent-primary);
+}
+
+.table-header-dropdown-colors {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 6px;
+}
+
+.table-header-dropdown-color {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: transform 100ms, border-color 100ms;
+  padding: 0;
+}
+
+.table-header-dropdown-color:hover {
+  transform: scale(1.15);
+}
+
+.table-header-dropdown-color.active {
+  border-color: var(--color-text-primary);
+}
+
+.table-header-dropdown-icons {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+}
+
+.table-header-dropdown-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  transition: background 100ms, color 100ms;
+  padding: 0;
+}
+
+.table-header-dropdown-icon:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+.table-header-dropdown-icon.active {
+  background: color-mix(in srgb, var(--color-accent-primary) 12%, transparent);
+  color: var(--color-accent-primary);
+  border-color: var(--color-accent-primary);
+}
+
+.table-guide-editor {
+  min-height: 80px;
+  border: 1px solid var(--color-border-primary, #d0d5dd);
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 13px;
+}
+
+.table-guide-editor .tiptap {
+  outline: none;
+  min-height: 60px;
+}
+
+.table-guide-editor .tiptap p.is-editor-empty:first-child::before {
+  color: var(--color-text-tertiary);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.table-guide-editor-content {
+  outline: none;
+  min-height: 60px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+}
+
+.table-guide-editor-content p {
+  margin: 0 0 4px;
+}
+
+.table-guide-editor-content p.is-editor-empty:first-child::before {
+  color: var(--color-text-tertiary);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

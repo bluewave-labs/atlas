@@ -23,6 +23,8 @@ export async function listSpreadsheets(userId: string, includeArchived = false) 
       viewConfig: spreadsheets.viewConfig,
       sortOrder: spreadsheets.sortOrder,
       isArchived: spreadsheets.isArchived,
+      color: spreadsheets.color,
+      icon: spreadsheets.icon,
       createdAt: spreadsheets.createdAt,
       updatedAt: spreadsheets.updatedAt,
     })
@@ -65,6 +67,8 @@ export async function createSpreadsheet(userId: string, accountId: string, input
       rows: input.rows ?? [],
       viewConfig: input.viewConfig ?? { activeView: 'grid' as const },
       sortOrder,
+      color: input.color ?? null,
+      icon: input.icon ?? null,
       createdAt: now,
       updatedAt: now,
     })
@@ -90,6 +94,9 @@ export async function updateSpreadsheet(
   if (input.rows !== undefined) updates.rows = input.rows;
   if (input.viewConfig !== undefined) updates.viewConfig = input.viewConfig;
   if (input.isArchived !== undefined) updates.isArchived = input.isArchived;
+  if (input.color !== undefined) updates.color = input.color;
+  if (input.icon !== undefined) updates.icon = input.icon;
+  if (input.guide !== undefined) updates.guide = input.guide;
 
   await db
     .update(spreadsheets)
@@ -144,6 +151,8 @@ export async function searchSpreadsheets(userId: string, query: string) {
       viewConfig: spreadsheets.viewConfig,
       sortOrder: spreadsheets.sortOrder,
       isArchived: spreadsheets.isArchived,
+      color: spreadsheets.color,
+      icon: spreadsheets.icon,
       createdAt: spreadsheets.createdAt,
       updatedAt: spreadsheets.updatedAt,
     })

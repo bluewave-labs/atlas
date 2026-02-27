@@ -321,6 +321,11 @@ sqlite.prepare(`
 try { sqlite.prepare(`CREATE INDEX IF NOT EXISTS idx_spreadsheets_user ON spreadsheets(user_id, is_archived)`).run(); } catch { /* */ }
 try { sqlite.prepare(`CREATE INDEX IF NOT EXISTS idx_spreadsheets_account ON spreadsheets(account_id, is_archived)`).run(); } catch { /* */ }
 
+// Spreadsheet appearance + guide columns
+try { sqlite.prepare(`ALTER TABLE spreadsheets ADD COLUMN color TEXT`).run(); } catch { /* column already exists */ }
+try { sqlite.prepare(`ALTER TABLE spreadsheets ADD COLUMN icon TEXT`).run(); } catch { /* column already exists */ }
+try { sqlite.prepare(`ALTER TABLE spreadsheets ADD COLUMN guide TEXT`).run(); } catch { /* column already exists */ }
+
 // Create FTS5 virtual table for full-text search across emails.
 // content='' means we manage the index manually (external content table).
 sqlite.prepare(`

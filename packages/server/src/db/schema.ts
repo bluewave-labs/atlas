@@ -374,6 +374,9 @@ export const spreadsheets = sqliteTable('spreadsheets', {
   viewConfig: text('view_config', { mode: 'json' }).notNull().$type<import('@atlasmail/shared').TableViewConfig>().default({ activeView: 'grid' } as import('@atlasmail/shared').TableViewConfig),
   sortOrder: integer('sort_order').notNull().default(0),
   isArchived: integer('is_archived', { mode: 'boolean' }).notNull().default(false),
+  color: text('color'),
+  icon: text('icon'),
+  guide: text('guide'),
   createdAt: timestampNow().notNull(),
   updatedAt: timestampNow().notNull(),
 }, (table) => ({

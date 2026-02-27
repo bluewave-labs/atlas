@@ -68,6 +68,9 @@ export interface Spreadsheet {
   viewConfig: TableViewConfig;
   sortOrder: number;
   isArchived: boolean;
+  color?: string;
+  icon?: string;
+  guide?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -77,6 +80,8 @@ export interface CreateSpreadsheetInput {
   columns?: TableColumn[];
   rows?: TableRow[];
   viewConfig?: TableViewConfig;
+  color?: string;
+  icon?: string;
 }
 
 export interface UpdateSpreadsheetInput {
@@ -85,4 +90,7 @@ export interface UpdateSpreadsheetInput {
   rows?: TableRow[];
   viewConfig?: TableViewConfig;
   isArchived?: boolean;
+  color?: string;
+  icon?: string;
+  guide?: string;
 }

@@ -70,6 +70,7 @@ import { api } from '../lib/api-client';
 import { TableCustomHeader } from '../components/tables/TableCustomHeader';
 import { useCellRangeSelection, isCellInRange } from '../hooks/use-cell-range-selection';
 import { ColumnHeaderMenu } from '../components/tables/ColumnHeaderMenu';
+import { TableHeaderDropdown, getTableIcon } from '../components/tables/TableHeaderDropdown';
 import { RowContextMenu } from '../components/tables/RowContextMenu';
 import { SortPopover } from '../components/tables/SortPopover';
 import { FilterPopover } from '../components/tables/FilterPopover';
@@ -1498,6 +1499,13 @@ export function TablesPage() {
   const addViewBtnRef = useRef<HTMLButtonElement>(null);
   const addViewDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Header dropdown (color, icon, guide)
+  const [showHeaderDropdown, setShowHeaderDropdown] = useState(false);
+  const headerChevronRef = useRef<HTMLButtonElement>(null);
+  const [localColor, setLocalColor] = useState<string | undefined>(undefined);
+  const [localIcon, setLocalIcon] = useState<string | undefined>(undefined);
+  const [localGuide, setLocalGuide] = useState<string | undefined>(undefined);
+
   // Close add-view dropdown on outside click
   useEffect(() => {
     if (!showAddViewDropdown) return;
@@ -1533,6 +1541,9 @@ export function TablesPage() {
       setLocalRows(spreadsheet.rows || []);
       setLocalViewConfig(spreadsheet.viewConfig || { activeView: 'grid' });
       setLocalTitle(spreadsheet.title || '');
+      setLocalColor(spreadsheet.color ?? undefined);
+      setLocalIcon(spreadsheet.icon ?? undefined);
+      setLocalGuide(spreadsheet.guide ?? undefined);
     }
   }, [spreadsheet]);
 
@@ -1585,7 +1596,7 @@ export function TablesPage() {
 
   // Auto-save trigger
   const triggerAutoSave = useCallback(
-    (updates: { columns?: TableColumn[]; rows?: TableRow[]; viewConfig?: TableViewConfig; title?: string }) => {
+    (updates: { columns?: TableColumn[]; rows?: TableRow[]; viewConfig?: TableViewConfig; title?: string; color?: string; icon?: string; guide?: string }) => {
       if (!selectedId) return;
       autoSave(selectedId, updates);
     },
@@ -2887,7 +2898,9 @@ export function TablesPage() {
             <div className="tables-sidebar-empty">{t('tables.noTables')}</div>
           )}
 
-          {filteredTables.map((table) => (
+          {filteredTables.map((table) => {
+            const SidebarIcon = getTableIcon(table.icon);
+            return (
             <div
               key={table.id}
               role="button"
@@ -2896,7 +2909,7 @@ export function TablesPage() {
               onClick={() => handleSelectTable(table.id)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleSelectTable(table.id); }}
             >
-              <Table2 size={14} />
+              <SidebarIcon size={14} style={table.color ? { color: table.color } : undefined} />
               <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {table.title}
               </span>
@@ -2915,7 +2928,8 @@ export function TablesPage() {
                 <Trash2 size={12} />
               </button>
             </div>
-          ))}
+            );
+          })}
 
           {/* Trash section */}
           {archivedTables.length > 0 && (
@@ -3029,7 +3043,7 @@ export function TablesPage() {
         ) : (
           <>
             {/* Purple topbar */}
-            <div className="tables-topbar">
+            <div className="tables-topbar" style={localColor ? { background: localColor } : undefined}>
               {/* Row 1: Title + actions */}
               <div className="tables-topbar-row">
                 <input
@@ -3038,6 +3052,41 @@ export function TablesPage() {
                   onChange={(e) => handleTitleChange(e.target.value)}
                   onBlur={() => triggerAutoSave({ title: localTitle })}
                 />
+                <button
+                  ref={headerChevronRef}
+                  className="tables-topbar-btn tables-topbar-chevron"
+                  onClick={() => setShowHeaderDropdown(!showHeaderDropdown)}
+                  title="Table settings"
+                >
+                  <ChevronDown size={14} />
+                </button>
+
+                {showHeaderDropdown && (
+                  <TableHeaderDropdown
+                    title={localTitle}
+                    color={localColor}
+                    icon={localIcon}
+                    guide={localGuide}
+                    anchorRect={headerChevronRef.current?.getBoundingClientRect() ?? null}
+                    onTitleChange={(title) => {
+                      setLocalTitle(title);
+                      triggerAutoSave({ title });
+                    }}
+                    onColorChange={(color) => {
+                      setLocalColor(color);
+                      triggerAutoSave({ color: color ?? '' });
+                    }}
+                    onIconChange={(icon) => {
+                      setLocalIcon(icon);
+                      triggerAutoSave({ icon: icon ?? '' });
+                    }}
+                    onGuideChange={(guide) => {
+                      setLocalGuide(guide);
+                      triggerAutoSave({ guide });
+                    }}
+                    onClose={() => setShowHeaderDropdown(false)}
+                  />
+                )}
 
                 <div className="tables-topbar-spacer" />
 
