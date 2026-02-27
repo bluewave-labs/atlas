@@ -425,7 +425,7 @@ function AppCard({
         <span
           style={{
             color: 'rgba(255,255,255,0.55)',
-            fontSize: 12,
+            fontSize: 14,
             marginTop: -8,
           }}
         >
@@ -730,19 +730,19 @@ export function HomePage() {
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                  <Clock size={12} color="rgba(255,255,255,0.5)" />
-                  <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <Clock size={14} color="rgba(255,255,255,0.5)" />
+                  <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Coming up
                   </span>
                 </div>
                 {upcomingEvents.map((ev) => (
                   <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 500, minWidth: 44 }}>
+                    <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, fontWeight: 500, minWidth: 48 }}>
                       {ev.startTime && !ev.isAllDay
                         ? new Date(ev.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         : 'All day'}
                     </span>
-                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13, fontWeight: 500 }}>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 15, fontWeight: 500 }}>
                       {ev.summary || 'Event'}
                     </span>
                   </div>
@@ -768,7 +768,7 @@ export function HomePage() {
                   minWidth: 160,
                 }}
               >
-                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
                   Today
                 </span>
                 {inboxUnread > 0 && (
@@ -780,11 +780,11 @@ export function HomePage() {
                       fontFamily: 'var(--font-family)', outline: 'none',
                     }}
                   >
-                    <Mail size={13} color="rgba(255,255,255,0.6)" />
-                    <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 500 }}>
+                    <Mail size={15} color="rgba(255,255,255,0.6)" />
+                    <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 15, fontWeight: 500 }}>
                       {inboxUnread} unread email{inboxUnread !== 1 ? 's' : ''}
                     </span>
-                    <ArrowRight size={11} color="rgba(255,255,255,0.3)" />
+                    <ArrowRight size={13} color="rgba(255,255,255,0.3)" />
                   </button>
                 )}
                 {pendingTaskCount > 0 && (
@@ -796,11 +796,11 @@ export function HomePage() {
                       fontFamily: 'var(--font-family)', outline: 'none',
                     }}
                   >
-                    <CheckSquare size={13} color="rgba(255,255,255,0.6)" />
-                    <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 500 }}>
+                    <CheckSquare size={15} color="rgba(255,255,255,0.6)" />
+                    <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 15, fontWeight: 500 }}>
                       {pendingTaskCount} pending task{pendingTaskCount !== 1 ? 's' : ''}
                     </span>
-                    <ArrowRight size={11} color="rgba(255,255,255,0.3)" />
+                    <ArrowRight size={13} color="rgba(255,255,255,0.3)" />
                   </button>
                 )}
               </div>
