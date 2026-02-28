@@ -31,8 +31,32 @@ import { getFileTypeIcon, formatBytes, formatRelativeDate, isImageFile } from '.
 import { ROUTES } from '../config/routes';
 import { useDriveSettingsStore, useDriveSettingsSync } from '../stores/drive-settings-store';
 import { useUIStore } from '../stores/ui-store';
+import { useQuery } from '@tanstack/react-query';
 import type { DriveItem, DriveShareLink } from '@atlasmail/shared';
 import '../styles/drive.css';
+
+// ─── Helpers ─────────────────────────────────────────────────────────
+
+/** Extract plain text from TipTap/ProseMirror JSON content */
+function extractTextFromContent(content: Record<string, unknown> | null): string {
+  if (!content) return '';
+  const lines: string[] = [];
+  function walk(node: any) {
+    if (!node) return;
+    if (node.type === 'text' && typeof node.text === 'string') {
+      lines.push(node.text);
+    }
+    if (Array.isArray(node.content)) {
+      node.content.forEach(walk);
+      // Add newline after block nodes
+      if (['paragraph', 'heading', 'blockquote', 'listItem', 'bulletList', 'orderedList'].includes(node.type)) {
+        lines.push('\n');
+      }
+    }
+  }
+  walk(content);
+  return lines.join('').trim();
+}
 
 // ─── Constants ───────────────────────────────────────────────────────
 
@@ -45,7 +69,7 @@ const VIEW_MODE_KEY = 'atlasmail_drive_view_mode';
 type ViewMode = 'list' | 'grid';
 type SidebarView = 'files' | 'favourites' | 'recent' | 'trash' | 'images' | 'documents' | 'videos' | 'audio';
 type SortBy = 'default' | 'name' | 'size' | 'date' | 'type';
-type TypeFilter = 'all' | 'folders' | 'documents' | 'spreadsheets' | 'presentations' | 'photos' | 'pdfs' | 'videos' | 'archives' | 'audio' | 'drawings';
+type TypeFilter = 'all' | 'folders' | 'documents' | 'spreadsheets' | 'presentations' | 'photos' | 'pdfs' | 'videos' | 'archives' | 'audio' | 'drawings' | 'word' | 'excel' | 'powerpoint' | 'code' | 'text';
 type ModifiedFilter = 'any' | 'today' | '7days' | '30days' | 'thisYear' | 'lastYear';
 
 const SORT_OPTIONS: { value: SortBy; label: string }[] = [
@@ -60,13 +84,18 @@ const TYPE_FILTER_OPTIONS: { value: TypeFilter; label: string }[] = [
   { value: 'all', label: 'Any type' },
   { value: 'folders', label: 'Folders' },
   { value: 'documents', label: 'Documents' },
+  { value: 'word', label: 'Word' },
   { value: 'spreadsheets', label: 'Spreadsheets' },
+  { value: 'excel', label: 'Excel' },
   { value: 'presentations', label: 'Presentations' },
+  { value: 'powerpoint', label: 'PowerPoint' },
   { value: 'photos', label: 'Photos & images' },
   { value: 'pdfs', label: 'PDFs' },
   { value: 'videos', label: 'Videos' },
-  { value: 'archives', label: 'Archives' },
   { value: 'audio', label: 'Audio' },
+  { value: 'archives', label: 'Archives' },
+  { value: 'code', label: 'Code' },
+  { value: 'text', label: 'Text files' },
   { value: 'drawings', label: 'Drawings' },
 ];
 
@@ -91,12 +120,18 @@ function matchesTypeFilter(item: DriveItem, filter: TypeFilter): boolean {
   switch (filter) {
     case 'documents':
       return mime === 'application/vnd.atlasmail.document' || (/word|document|\.docx?$|\.odt$|\.rtf$|text\/plain/.test(mime + name) && !mime.startsWith('application/pdf'));
+    case 'word':
+      return /word|\.docx?$|\.odt$|\.rtf$/.test(mime + name);
     case 'spreadsheets':
       return mime === 'application/vnd.atlasmail.spreadsheet' || /spreadsheet|excel|\.xlsx?$|\.csv$|\.ods$/.test(mime + name);
+    case 'excel':
+      return /excel|\.xlsx?$|\.ods$/.test(mime + name);
     case 'presentations':
       return /presentation|powerpoint|\.pptx?$|\.odp$/.test(mime + name);
+    case 'powerpoint':
+      return /powerpoint|\.pptx?$/.test(mime + name);
     case 'photos':
-      return mime.startsWith('image/');
+      return mime.startsWith('image/') && mime !== 'image/svg+xml';
     case 'pdfs':
       return mime === 'application/pdf' || name.endsWith('.pdf');
     case 'videos':
@@ -105,6 +140,10 @@ function matchesTypeFilter(item: DriveItem, filter: TypeFilter): boolean {
       return /zip|rar|7z|tar|gz|bz2|archive|compressed/.test(mime + name);
     case 'audio':
       return mime.startsWith('audio/');
+    case 'code':
+      return /javascript|typescript|json|xml|html|css|\.jsx?$|\.tsx?$|\.py$|\.rb$|\.go$|\.rs$|\.java$|\.php$|\.sh$|\.yaml$|\.yml$|\.toml$|\.sql$/.test(mime + name);
+    case 'text':
+      return mime.startsWith('text/') || /\.txt$|\.md$|\.log$|\.ini$|\.env$|\.cfg$/.test(name);
     case 'drawings':
       return mime === 'application/vnd.atlasmail.drawing' || /drawing|\.svg$|\.sketch$|\.fig$/.test(mime + name) || mime === 'image/svg+xml';
     default:
@@ -296,6 +335,17 @@ export function DrivePage() {
   const { data: foldersData } = useDriveFolders();
   const previewFileId = previewItem && previewItem.type === 'file' && isTextPreviewable(previewItem.mimeType, previewItem.name) ? previewItem.id : undefined;
   const { data: filePreviewData, isLoading: previewLoading } = useFilePreview(previewFileId);
+
+  // Linked resource content preview (Write documents)
+  const linkedDocId = previewItem?.linkedResourceType === 'document' ? previewItem.linkedResourceId : undefined;
+  const { data: linkedDocData } = useQuery({
+    queryKey: ['docs', 'detail', linkedDocId],
+    queryFn: async () => {
+      const { data } = await api.get(`/docs/${linkedDocId}`);
+      return data.data as { id: string; title: string; content: Record<string, unknown> | null };
+    },
+    enabled: !!linkedDocId,
+  });
 
   // Type filter queries
   const typeCategory = ['images', 'documents', 'videos', 'audio'].includes(sidebarView) ? sidebarView : undefined;
@@ -1806,6 +1856,34 @@ export function DrivePage() {
               <div className="drive-preview-icon">
                 <span style={{ color: 'var(--color-text-tertiary)', fontSize: 13 }}>Loading preview…</span>
               </div>
+            ) : previewItem.linkedResourceType === 'document' && linkedDocData ? (
+              <div className="drive-preview-text-content">
+                <pre className="drive-preview-pre" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                  {extractTextFromContent(linkedDocData.content) || '(empty document)'}
+                </pre>
+                <div style={{ padding: '12px 16px', borderTop: '1px solid var(--color-border-secondary)' }}>
+                  <button
+                    onClick={() => navigate(`/docs/${previewItem.linkedResourceId}`)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '6px 14px',
+                      border: '1px solid var(--color-border-primary)',
+                      borderRadius: 'var(--radius-md)',
+                      background: 'var(--color-surface-primary)',
+                      color: 'var(--color-text-primary)',
+                      fontSize: 13,
+                      cursor: 'pointer',
+                      width: '100%',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <ExternalLink size={14} />
+                    Open in editor
+                  </button>
+                </div>
+              </div>
             ) : previewItem.linkedResourceType && previewItem.linkedResourceId ? (
               <div className="drive-preview-icon" style={{ gap: 16 }}>
                 {(() => {
@@ -1813,12 +1891,11 @@ export function DrivePage() {
                   return <Icon size={64} />;
                 })()}
                 <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-                  {previewItem.linkedResourceType === 'document' ? 'Write document' : previewItem.linkedResourceType === 'drawing' ? 'Draw canvas' : 'Table spreadsheet'}
+                  {previewItem.linkedResourceType === 'drawing' ? 'Draw canvas' : 'Table spreadsheet'}
                 </span>
                 <button
                   onClick={() => {
-                    if (previewItem.linkedResourceType === 'document') navigate(`/docs/${previewItem.linkedResourceId}`);
-                    else if (previewItem.linkedResourceType === 'drawing') navigate(`/draw/${previewItem.linkedResourceId}`);
+                    if (previewItem.linkedResourceType === 'drawing') navigate(`/draw/${previewItem.linkedResourceId}`);
                     else if (previewItem.linkedResourceType === 'spreadsheet') navigate(`/tables/${previewItem.linkedResourceId}`);
                   }}
                   style={{
