@@ -16,7 +16,6 @@ declare module '@tiptap/core' {
   }
 }
 
-const MAX_PREVIEW_ROWS = 5;
 const MAX_PREVIEW_COLS = 6;
 
 /** Safely remove all children from an element */
@@ -175,6 +174,34 @@ export const TableEmbed = Node.create({
         maxHeight: '220px',
       });
 
+      // Allow mouse wheel and keyboard scrolling inside the embed
+      // without TipTap/ProseMirror intercepting the events
+      body.addEventListener('wheel', (e) => {
+        // Only stop propagation if the body is actually scrollable
+        const canScroll = body.scrollHeight > body.clientHeight;
+        if (!canScroll) return;
+
+        const atTop = body.scrollTop === 0;
+        const atBottom = body.scrollTop + body.clientHeight >= body.scrollHeight - 1;
+
+        // Allow the page to scroll if we're at the edge and scrolling further
+        if ((atTop && e.deltaY < 0) || (atBottom && e.deltaY > 0)) return;
+
+        e.stopPropagation();
+      });
+
+      body.tabIndex = 0;
+      body.addEventListener('keydown', (e) => {
+        if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) {
+          const canScroll = body.scrollHeight > body.clientHeight;
+          if (!canScroll) return;
+          e.stopPropagation();
+          // Let the browser handle the native scroll behavior
+        }
+      });
+      // Remove focus outline on the scrollable area
+      body.style.outline = 'none';
+
       const loadingEl = document.createElement('div');
       Object.assign(loadingEl.style, {
         padding: '20px 12px',
@@ -200,9 +227,8 @@ export const TableEmbed = Node.create({
             clearChildren(body);
 
             const cols = spreadsheet.columns.slice(0, MAX_PREVIEW_COLS);
-            const rows = spreadsheet.rows.slice(0, MAX_PREVIEW_ROWS);
+            const rows = spreadsheet.rows; // render all rows — body scrolls
             const hasMoreCols = spreadsheet.columns.length > MAX_PREVIEW_COLS;
-            const hasMoreRows = spreadsheet.rows.length > MAX_PREVIEW_ROWS;
 
             if (cols.length === 0) {
               const empty = document.createElement('div');
@@ -242,6 +268,9 @@ export const TableEmbed = Node.create({
                 textOverflow: 'ellipsis',
                 maxWidth: '180px',
                 background: 'var(--color-bg-tertiary)',
+                position: 'sticky',
+                top: '0',
+                zIndex: '1',
               });
               th.textContent = col.name;
               headRow.appendChild(th);
@@ -257,6 +286,9 @@ export const TableEmbed = Node.create({
                 color: 'var(--color-text-tertiary)',
                 borderBottom: '1px solid var(--color-border-primary)',
                 background: 'var(--color-bg-tertiary)',
+                position: 'sticky',
+                top: '0',
+                zIndex: '1',
               });
               th.textContent = `+${spreadsheet.columns.length - MAX_PREVIEW_COLS}`;
               headRow.appendChild(th);
@@ -307,7 +339,7 @@ export const TableEmbed = Node.create({
             body.appendChild(table);
 
             // Footer with row count (outside scrollable body)
-            if (hasMoreRows || spreadsheet.rows.length > 0) {
+            if (spreadsheet.rows.length > 0) {
               const footer = document.createElement('div');
               Object.assign(footer.style, {
                 padding: '6px 12px',
@@ -317,9 +349,7 @@ export const TableEmbed = Node.create({
                 background: 'var(--color-bg-tertiary)',
               });
               const total = spreadsheet.rows.length;
-              footer.textContent = hasMoreRows
-                ? `Showing ${MAX_PREVIEW_ROWS} of ${total} rows`
-                : `${total} row${total !== 1 ? 's' : ''}`;
+              footer.textContent = `${total} row${total !== 1 ? 's' : ''}`;
               dom.appendChild(footer);
             }
           })
