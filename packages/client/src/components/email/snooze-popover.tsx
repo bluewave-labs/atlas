@@ -9,8 +9,8 @@
 
 import { useState, useId, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { Clock, Sun, Calendar, Pencil } from 'lucide-react';
+import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 
 export interface SnoozePopoverProps {
   threadId: string;
@@ -179,26 +179,16 @@ export function SnoozePopover({ threadId, onSnooze, children }: SnoozePopoverPro
   }
 
   return (
-    <PopoverPrimitive.Root open={open} onOpenChange={handleOpenChange}>
-      <PopoverPrimitive.Trigger asChild>{children}</PopoverPrimitive.Trigger>
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
 
-      <PopoverPrimitive.Portal>
-        <PopoverPrimitive.Content
-          side="bottom"
-          align="start"
-          sideOffset={6}
-          style={{
-            width: '240px',
-            background: 'var(--color-bg-elevated)',
-            border: '1px solid var(--color-border-primary)',
-            borderRadius: 'var(--radius-lg)',
-            boxShadow: 'var(--shadow-lg)',
-            padding: 'var(--spacing-xs)',
-            outline: 'none',
-            zIndex: 9999,
-          }}
-          onOpenAutoFocus={(e) => e.preventDefault()}
-        >
+      <PopoverContent
+        side="bottom"
+        align="start"
+        sideOffset={6}
+        width={240}
+        style={{ padding: 'var(--spacing-xs)' }}
+      >
           {/* Preset options */}
           <OptionRow
             icon={Clock}
@@ -328,8 +318,7 @@ export function SnoozePopover({ threadId, onSnooze, children }: SnoozePopoverPro
               </div>
             </div>
           )}
-        </PopoverPrimitive.Content>
-      </PopoverPrimitive.Portal>
-    </PopoverPrimitive.Root>
+      </PopoverContent>
+    </Popover>
   );
 }

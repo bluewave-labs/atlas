@@ -9,8 +9,8 @@
 
 import { useState, useId } from 'react';
 import { useTranslation } from 'react-i18next';
-import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { Sun, Calendar, Pencil, Clock } from 'lucide-react';
+import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 
 export interface SendLaterPopoverProps {
   onSchedule: (date: Date) => void;
@@ -166,26 +166,16 @@ export function SendLaterPopover({ onSchedule, children }: SendLaterPopoverProps
   }
 
   return (
-    <PopoverPrimitive.Root open={open} onOpenChange={handleOpenChange}>
-      <PopoverPrimitive.Trigger asChild>{children}</PopoverPrimitive.Trigger>
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
 
-      <PopoverPrimitive.Portal>
-        <PopoverPrimitive.Content
-          side="top"
-          align="start"
-          sideOffset={6}
-          style={{
-            width: '240px',
-            background: 'var(--color-bg-elevated)',
-            border: '1px solid var(--color-border-primary)',
-            borderRadius: 'var(--radius-lg)',
-            boxShadow: 'var(--shadow-lg)',
-            padding: 'var(--spacing-xs)',
-            outline: 'none',
-            zIndex: 9999,
-          }}
-          onOpenAutoFocus={(e) => e.preventDefault()}
-        >
+      <PopoverContent
+        side="top"
+        align="start"
+        sideOffset={6}
+        width={240}
+        style={{ padding: 'var(--spacing-xs)' }}
+      >
           {/* Preset options */}
           <OptionRow
             icon={Sun}
@@ -317,8 +307,7 @@ export function SendLaterPopover({ onSchedule, children }: SendLaterPopoverProps
               </div>
             </div>
           )}
-        </PopoverPrimitive.Content>
-      </PopoverPrimitive.Portal>
-    </PopoverPrimitive.Root>
+      </PopoverContent>
+    </Popover>
   );
 }

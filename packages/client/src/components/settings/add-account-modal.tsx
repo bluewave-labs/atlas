@@ -1,6 +1,5 @@
 import { useState, type CSSProperties } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import {
   X,
@@ -14,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { config } from '../../config/env';
+import { Modal } from '../ui/modal';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -1062,43 +1062,13 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
         : 'IMAP / SMTP setup';
 
   return (
-    <Dialog.Root open={open} onOpenChange={handleOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'var(--color-bg-overlay)',
-            zIndex: 200,
-            animation: 'fadeIn 150ms ease',
-          }}
-        />
-
-        <Dialog.Content
-          aria-describedby={undefined}
-          style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 640,
-            maxWidth: 'calc(100vw - 48px)',
-            maxHeight: '80vh',
-            background: 'var(--color-bg-elevated)',
-            borderRadius: 'var(--radius-xl)',
-            boxShadow: 'var(--shadow-elevated)',
-            border: '1px solid var(--color-border-primary)',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            zIndex: 201,
-            animation: 'scaleIn 150ms ease',
-          }}
-        >
-          <VisuallyHidden.Root>
-            <Dialog.Title>{title}</Dialog.Title>
-          </VisuallyHidden.Root>
-
+    <Modal
+      open={open}
+      onOpenChange={handleOpenChange}
+      width={640}
+      height="80vh"
+      title={title}
+    >
           {/* Header */}
           <div
             style={{
@@ -1264,9 +1234,7 @@ export function AddAccountModal({ open, onOpenChange }: AddAccountModalProps) {
               />
             )}
           </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    </Modal>
   );
 }
 

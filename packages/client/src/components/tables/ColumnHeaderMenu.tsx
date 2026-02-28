@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Type, Hash, CheckSquare, ChevronDown, List, Calendar, Link2,
@@ -8,6 +8,7 @@ import {
   Group, Ungroup,
 } from 'lucide-react';
 import type { TableFieldType } from '@atlasmail/shared';
+import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from '../ui/context-menu';
 
 const FIELD_TYPE_OPTIONS: { value: TableFieldType; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
   { value: 'text', label: 'Text', icon: Type },
@@ -61,7 +62,6 @@ export function ColumnHeaderMenu({
   onGroupBy, onUngroup, isGroupedBy,
 }: ColumnHeaderMenuProps) {
   const { t } = useTranslation();
-  const menuRef = useRef<HTMLDivElement>(null);
   const [showTypeSubmenu, setShowTypeSubmenu] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(columnName);
@@ -71,32 +71,6 @@ export function ColumnHeaderMenu({
   const descRef = useRef<HTMLTextAreaElement>(null);
 
   const isFrozen = columnIndex < frozenCount;
-
-  // Adjust position to stay in viewport
-  const [pos, setPos] = useState({ x, y });
-  useLayoutEffect(() => {
-    const el = menuRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    let newX = x;
-    let newY = y;
-    if (rect.right > window.innerWidth) newX = window.innerWidth - rect.width - 8;
-    if (rect.bottom > window.innerHeight) newY = window.innerHeight - rect.height - 8;
-    if (newX < 0) newX = 8;
-    if (newY < 0) newY = 8;
-    setPos({ x: newX, y: newY });
-  }, [x, y]);
-
-  // Close on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [onClose]);
 
   // Focus rename input when renaming
   useEffect(() => {
@@ -120,11 +94,7 @@ export function ColumnHeaderMenu({
   };
 
   return (
-    <div
-      ref={menuRef}
-      className="tables-context-menu"
-      style={{ left: pos.x, top: pos.y }}
-    >
+    <ContextMenu x={x} y={y} onClose={onClose}>
       {isRenaming ? (
         <div className="tables-context-menu-rename">
           <input
@@ -167,18 +137,11 @@ export function ColumnHeaderMenu({
         </div>
       ) : (
         <>
-          <button className="tables-context-menu-item" onClick={() => setIsRenaming(true)}>
-            <Pencil size={14} />
-            <span>{t('tables.rename')}</span>
-          </button>
-
-          <button className="tables-context-menu-item" onClick={() => setIsEditingDesc(true)}>
-            <FileText size={14} />
-            <span>{t('tables.editDescription')}</span>
-          </button>
+          <ContextMenuItem icon={<Pencil size={14} />} label={t('tables.rename')} onClick={() => setIsRenaming(true)} />
+          <ContextMenuItem icon={<FileText size={14} />} label={t('tables.editDescription')} onClick={() => setIsEditingDesc(true)} />
 
           <div
-            className="tables-context-menu-item has-submenu"
+            className="context-menu-item has-submenu"
             onMouseEnter={() => setShowTypeSubmenu(true)}
             onMouseLeave={() => setShowTypeSubmenu(false)}
           >
@@ -192,7 +155,7 @@ export function ColumnHeaderMenu({
                   return (
                     <button
                       key={ft.value}
-                      className={`tables-context-menu-item${ft.value === columnType ? ' active' : ''}`}
+                      className={`context-menu-item${ft.value === columnType ? ' active' : ''}`}
                       onClick={() => { onChangeType(columnId, ft.value); onClose(); }}
                     >
                       <FtIcon size={13} />
@@ -204,80 +167,44 @@ export function ColumnHeaderMenu({
             )}
           </div>
 
-          <button className="tables-context-menu-item" onClick={() => { onInsertLeft(columnId); onClose(); }}>
-            <ArrowLeftToLine size={14} />
-            <span>{t('tables.insertLeft')}</span>
-          </button>
+          <ContextMenuItem icon={<ArrowLeftToLine size={14} />} label={t('tables.insertLeft')} onClick={() => { onInsertLeft(columnId); onClose(); }} />
+          <ContextMenuItem icon={<ArrowRightToLine size={14} />} label={t('tables.insertRight')} onClick={() => { onInsertRight(columnId); onClose(); }} />
+          <ContextMenuItem icon={<Copy size={14} />} label={t('tables.duplicateColumn')} onClick={() => { onDuplicate(columnId); onClose(); }} />
+          <ContextMenuItem icon={<ArrowUpAZ size={14} />} label={t('tables.sortAsc')} onClick={() => { onSortAsc(columnId); onClose(); }} />
+          <ContextMenuItem icon={<ArrowDownAZ size={14} />} label={t('tables.sortDesc')} onClick={() => { onSortDesc(columnId); onClose(); }} />
 
-          <button className="tables-context-menu-item" onClick={() => { onInsertRight(columnId); onClose(); }}>
-            <ArrowRightToLine size={14} />
-            <span>{t('tables.insertRight')}</span>
-          </button>
+          <ContextMenuSeparator />
 
-          <button className="tables-context-menu-item" onClick={() => { onDuplicate(columnId); onClose(); }}>
-            <Copy size={14} />
-            <span>{t('tables.duplicateColumn')}</span>
-          </button>
-
-          <button className="tables-context-menu-item" onClick={() => { onSortAsc(columnId); onClose(); }}>
-            <ArrowUpAZ size={14} />
-            <span>{t('tables.sortAsc')}</span>
-          </button>
-
-          <button className="tables-context-menu-item" onClick={() => { onSortDesc(columnId); onClose(); }}>
-            <ArrowDownAZ size={14} />
-            <span>{t('tables.sortDesc')}</span>
-          </button>
-
-          <div className="tables-context-menu-divider" />
-
-          <button className="tables-context-menu-item" onClick={() => { onHide(columnId); onClose(); }}>
-            <EyeOff size={14} />
-            <span>{t('tables.hideField')}</span>
-          </button>
+          <ContextMenuItem icon={<EyeOff size={14} />} label={t('tables.hideField')} onClick={() => { onHide(columnId); onClose(); }} />
 
           {isFrozen ? (
-            <button className="tables-context-menu-item" onClick={() => { onUnfreeze(); onClose(); }}>
-              <Unlock size={14} />
-              <span>{t('tables.unfreezeColumns')}</span>
-            </button>
+            <ContextMenuItem icon={<Unlock size={14} />} label={t('tables.unfreezeColumns')} onClick={() => { onUnfreeze(); onClose(); }} />
           ) : (
-            <button
-              className="tables-context-menu-item"
+            <ContextMenuItem
+              icon={<Lock size={14} />}
+              label={t('tables.freezeUpTo')}
               onClick={() => { onFreeze(columnId); onClose(); }}
               disabled={columnIndex >= 3}
-            >
-              <Lock size={14} />
-              <span>{t('tables.freezeUpTo')}</span>
-            </button>
+            />
           )}
 
           {/* Group by */}
           {onGroupBy && (columnType === 'singleSelect' || columnType === 'multiSelect' || columnType === 'text') && (
             <>
-              <div className="tables-context-menu-divider" />
+              <ContextMenuSeparator />
               {isGroupedBy ? (
-                <button className="tables-context-menu-item" onClick={() => { onUngroup?.(); onClose(); }}>
-                  <Ungroup size={14} />
-                  <span>{t('tables.ungroup', 'Ungroup')}</span>
-                </button>
+                <ContextMenuItem icon={<Ungroup size={14} />} label={t('tables.ungroup', 'Ungroup')} onClick={() => { onUngroup?.(); onClose(); }} />
               ) : (
-                <button className="tables-context-menu-item" onClick={() => { onGroupBy(columnId); onClose(); }}>
-                  <Group size={14} />
-                  <span>{t('tables.groupByField', 'Group by this field')}</span>
-                </button>
+                <ContextMenuItem icon={<Group size={14} />} label={t('tables.groupByField', 'Group by this field')} onClick={() => { onGroupBy(columnId); onClose(); }} />
               )}
             </>
           )}
 
-          <div className="tables-context-menu-divider" />
+          <ContextMenuSeparator />
 
-          <button className="tables-context-menu-item destructive" onClick={() => { onDelete(columnId); onClose(); }}>
-            <Trash2 size={14} />
-            <span>{t('tables.deleteColumn')}</span>
-          </button>
+          <ContextMenuItem icon={<Trash2 size={14} />} label={t('tables.deleteColumn')} onClick={() => { onDelete(columnId); onClose(); }} destructive />
         </>
       )}
-    </div>
+    </ContextMenu>
   );
 }

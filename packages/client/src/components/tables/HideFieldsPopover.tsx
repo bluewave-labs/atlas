@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import * as Popover from '@radix-ui/react-popover';
 import { EyeOff } from 'lucide-react';
 import type { TableColumn, TableViewConfig } from '@atlasmail/shared';
+import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 
 interface HideFieldsPopoverProps {
   columns: TableColumn[];
@@ -25,8 +25,8 @@ export function HideFieldsPopover({ columns, viewConfig, onUpdate }: HideFieldsP
   const hideAll = () => onUpdate(columns.map((c) => c.id));
 
   return (
-    <Popover.Root>
-      <Popover.Trigger asChild>
+    <Popover>
+      <PopoverTrigger asChild>
         <button
           className={`tables-toolbar-btn${hiddenCount > 0 ? ' active' : ''}`}
           title={t('tables.hideFields')}
@@ -35,30 +35,28 @@ export function HideFieldsPopover({ columns, viewConfig, onUpdate }: HideFieldsP
           {t('tables.hideFields')}
           {hiddenCount > 0 && <span className="tables-toolbar-badge">{hiddenCount}</span>}
         </button>
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content className="tables-popover-content" sideOffset={4} align="start" style={{ minWidth: 220 }}>
-          <div className="tables-popover-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span>{t('tables.hideFields')}</span>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button className="tables-hide-fields-action" onClick={showAll}>{t('tables.showAll')}</button>
-              <button className="tables-hide-fields-action" onClick={hideAll}>{t('tables.hideAll')}</button>
-            </div>
+      </PopoverTrigger>
+      <PopoverContent sideOffset={4} align="start" minWidth={220} style={{ padding: 8 }}>
+        <div className="popover-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>{t('tables.hideFields')}</span>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button className="tables-hide-fields-action" onClick={showAll}>{t('tables.showAll')}</button>
+            <button className="tables-hide-fields-action" onClick={hideAll}>{t('tables.hideAll')}</button>
           </div>
-          <div className="tables-hide-fields-list">
-            {columns.map((col) => (
-              <label key={col.id} className="tables-hide-fields-item">
-                <input
-                  type="checkbox"
-                  checked={!hidden.has(col.id)}
-                  onChange={() => toggle(col.id)}
-                />
-                <span>{col.name}</span>
-              </label>
-            ))}
-          </div>
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+        </div>
+        <div className="tables-hide-fields-list">
+          {columns.map((col) => (
+            <label key={col.id} className="tables-hide-fields-item">
+              <input
+                type="checkbox"
+                checked={!hidden.has(col.id)}
+                onChange={() => toggle(col.id)}
+              />
+              <span>{col.name}</span>
+            </label>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

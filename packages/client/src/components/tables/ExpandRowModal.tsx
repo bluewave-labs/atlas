@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as Dialog from '@radix-ui/react-dialog';
-import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { X, Paperclip, FileIcon, ChevronUp, ChevronDown, Plus } from 'lucide-react';
+import { Modal } from '../ui/modal';
 import type { TableColumn, TableRow, TableAttachment, TableFieldType } from '@atlasmail/shared';
 import { FIELD_TYPE_ICONS } from '../../lib/field-type-icons';
 import { api } from '../../lib/api-client';
@@ -275,14 +275,14 @@ export function ExpandRowModal({
   };
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="tables-expand-overlay" />
-        <Dialog.Content className="tables-expand-content">
-          <VisuallyHidden.Root>
-            <Dialog.Title>{t('tables.expandRow')}</Dialog.Title>
-          </VisuallyHidden.Root>
-
+    <Modal
+      open={open}
+      onOpenChange={onOpenChange}
+      width="90vw"
+      maxWidth={900}
+      height="90vh"
+      title={t('tables.expandRow')}
+    >
           {/* Top bar: nav arrows + close */}
           <div className="tables-expand-topbar">
             <div className="tables-expand-topbar-left">
@@ -380,9 +380,7 @@ export function ExpandRowModal({
             style={{ display: 'none' }}
             onChange={handleAttachmentUpload}
           />
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    </Modal>
   );
 }
 

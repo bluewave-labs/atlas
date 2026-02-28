@@ -1178,59 +1178,7 @@
   color: var(--color-text-secondary);
 }
 
-/* ─── Context menu (shared by column + row) ──────────────────────── */
-
-.tables-context-menu {
-  position: fixed;
-  z-index: 1000;
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-primary);
-  border-radius: 6px;
-  box-shadow: var(--shadow-lg);
-  padding: 4px;
-  min-width: 180px;
-  max-width: 260px;
-}
-
-.tables-context-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 5px 10px;
-  border: none;
-  background: none;
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  font-family: var(--font-family);
-  cursor: pointer;
-  border-radius: var(--radius-md, 4px);
-  transition: background 100ms ease;
-  position: relative;
-  text-align: left;
-}
-
-.tables-context-menu-item:hover {
-  background: var(--color-surface-hover);
-}
-
-.tables-context-menu-item.active {
-  color: var(--color-accent-primary);
-}
-
-.tables-context-menu-item.destructive {
-  color: var(--color-danger, #e53e3e);
-}
-
-.tables-context-menu-item.destructive:hover {
-  background: rgba(229, 62, 62, 0.08);
-}
-
-.tables-context-menu-divider {
-  height: 1px;
-  background: var(--color-border-primary);
-  margin: 4px 6px;
-}
+/* ─── Context menu (table-specific) ──────────────────────────────── */
 
 .tables-context-menu-rename {
   padding: 6px;
@@ -1304,25 +1252,7 @@
   background: var(--color-surface-hover);
 }
 
-/* ─── Sort / Filter popovers ─────────────────────────────────────── */
-
-.tables-popover-content {
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-lg, 8px);
-  box-shadow: var(--shadow-lg);
-  padding: 8px;
-  min-width: 320px;
-  max-width: 480px;
-  z-index: 100;
-}
-
-.tables-popover-header {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--color-text-primary);
-  padding: 4px 6px 8px;
-}
+/* ─── Sort / Filter popovers (table-specific) ───────────────────── */
 
 .tables-popover-empty {
   padding: 12px 6px;

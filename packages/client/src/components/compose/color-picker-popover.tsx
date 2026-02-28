@@ -13,8 +13,8 @@
 
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import * as PopoverPrimitive from '@radix-ui/react-popover';
 import type { Editor } from '@tiptap/react';
+import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -98,26 +98,16 @@ export function ColorPickerPopover({ mode, editor, children }: ColorPickerPopove
   }
 
   return (
-    <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
-      <PopoverPrimitive.Trigger asChild>{children}</PopoverPrimitive.Trigger>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
 
-      <PopoverPrimitive.Portal>
-        <PopoverPrimitive.Content
-          side="bottom"
-          align="start"
-          sideOffset={6}
-          onOpenAutoFocus={(e) => e.preventDefault()}
-          style={{
-            width: 200,
-            background: 'var(--color-bg-elevated)',
-            border: '1px solid var(--color-border-primary)',
-            borderRadius: 'var(--radius-lg)',
-            boxShadow: 'var(--shadow-lg)',
-            padding: 'var(--spacing-sm)',
-            outline: 'none',
-            zIndex: 9999,
-          }}
-        >
+      <PopoverContent
+        side="bottom"
+        align="start"
+        sideOffset={6}
+        width={200}
+        style={{ padding: 'var(--spacing-sm)' }}
+      >
           {/* Color swatch grid */}
           <div
             style={{
@@ -174,8 +164,7 @@ export function ColorPickerPopover({ mode, editor, children }: ColorPickerPopove
           >
             {t('compose.resetColor')}
           </button>
-        </PopoverPrimitive.Content>
-      </PopoverPrimitive.Portal>
-    </PopoverPrimitive.Root>
+      </PopoverContent>
+    </Popover>
   );
 }

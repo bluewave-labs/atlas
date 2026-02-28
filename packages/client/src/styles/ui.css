@@ -1,0 +1,73 @@
+/* ─── Shared context menu ──────────────────────────────────────── */
+
+.context-menu {
+  position: fixed;
+  z-index: 1000;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-primary);
+  border-radius: 6px;
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+  min-width: 180px;
+  max-width: 260px;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 10px;
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-family: var(--font-family);
+  cursor: pointer;
+  border-radius: var(--radius-md, 4px);
+  transition: background 100ms ease;
+  position: relative;
+  text-align: left;
+}
+
+.context-menu-item:hover {
+  background: var(--color-surface-hover);
+}
+
+.context-menu-item.active {
+  color: var(--color-accent-primary);
+}
+
+.context-menu-item.destructive {
+  color: var(--color-danger, #e53e3e);
+}
+
+.context-menu-item.destructive:hover {
+  background: rgba(229, 62, 62, 0.08);
+}
+
+.context-menu-separator {
+  height: 1px;
+  background: var(--color-border-primary);
+  margin: 4px 6px;
+}
+
+/* ─── Shared popover ──────────────────────────────────────────── */
+
+.popover-content {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg, 8px);
+  box-shadow: var(--shadow-lg);
+  padding: 8px;
+  min-width: 320px;
+  max-width: 480px;
+  z-index: 100;
+}
+
+.popover-header {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  padding: 4px 6px 8px;
+}

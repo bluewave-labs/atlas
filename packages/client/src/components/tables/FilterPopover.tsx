@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import * as Popover from '@radix-ui/react-popover';
 import { Filter, Plus, X } from 'lucide-react';
 import type { TableColumn, TableViewConfig, TableFieldType } from '@atlasmail/shared';
+import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 
 interface FilterRule {
   columnId: string;
@@ -108,8 +108,8 @@ export function FilterPopover({ columns, viewConfig, onUpdate }: FilterPopoverPr
   };
 
   return (
-    <Popover.Root>
-      <Popover.Trigger asChild>
+    <Popover>
+      <PopoverTrigger asChild>
         <button
           className={`tables-toolbar-btn${filters.length > 0 ? ' active' : ''}`}
           title={t('tables.filter')}
@@ -118,66 +118,60 @@ export function FilterPopover({ columns, viewConfig, onUpdate }: FilterPopoverPr
           {t('tables.filter')}
           {filters.length > 0 && <span className="tables-toolbar-badge">{filters.length}</span>}
         </button>
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content
-          className="tables-popover-content"
-          sideOffset={4}
-          align="start"
-        >
-          <div className="tables-popover-header">
-            <span>{t('tables.filter')}</span>
+      </PopoverTrigger>
+      <PopoverContent sideOffset={4} align="start" style={{ padding: 8 }}>
+        <div className="popover-header">
+          <span>{t('tables.filter')}</span>
+        </div>
+
+        {filters.length === 0 ? (
+          <div className="tables-popover-empty">{t('tables.noFilters')}</div>
+        ) : (
+          <div className="tables-popover-list">
+            {filters.map((filter, idx) => {
+              const col = columns.find((c) => c.id === filter.columnId);
+              const ops = col ? getOperatorsForType(col.type) : [];
+              const hideValue = noValueOperators.has(filter.operator);
+
+              return (
+                <div key={idx} className="tables-popover-rule">
+                  <select
+                    value={filter.columnId}
+                    onChange={(e) => handleChange(idx, 'columnId', e.target.value)}
+                  >
+                    {columns.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={filter.operator}
+                    onChange={(e) => handleChange(idx, 'operator', e.target.value)}
+                  >
+                    {ops.map((op) => (
+                      <option key={op.value} value={op.value}>{t(op.labelKey)}</option>
+                    ))}
+                  </select>
+                  {!hideValue && (
+                    <input
+                      value={filter.value != null ? String(filter.value) : ''}
+                      onChange={(e) => handleChange(idx, 'value', e.target.value)}
+                      placeholder="Value"
+                    />
+                  )}
+                  <button className="tables-popover-rule-remove" onClick={() => handleRemove(idx)}>
+                    <X size={14} />
+                  </button>
+                </div>
+              );
+            })}
           </div>
+        )}
 
-          {filters.length === 0 ? (
-            <div className="tables-popover-empty">{t('tables.noFilters')}</div>
-          ) : (
-            <div className="tables-popover-list">
-              {filters.map((filter, idx) => {
-                const col = columns.find((c) => c.id === filter.columnId);
-                const ops = col ? getOperatorsForType(col.type) : [];
-                const hideValue = noValueOperators.has(filter.operator);
-
-                return (
-                  <div key={idx} className="tables-popover-rule">
-                    <select
-                      value={filter.columnId}
-                      onChange={(e) => handleChange(idx, 'columnId', e.target.value)}
-                    >
-                      {columns.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                    <select
-                      value={filter.operator}
-                      onChange={(e) => handleChange(idx, 'operator', e.target.value)}
-                    >
-                      {ops.map((op) => (
-                        <option key={op.value} value={op.value}>{t(op.labelKey)}</option>
-                      ))}
-                    </select>
-                    {!hideValue && (
-                      <input
-                        value={filter.value != null ? String(filter.value) : ''}
-                        onChange={(e) => handleChange(idx, 'value', e.target.value)}
-                        placeholder="Value"
-                      />
-                    )}
-                    <button className="tables-popover-rule-remove" onClick={() => handleRemove(idx)}>
-                      <X size={14} />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          <button className="tables-popover-add" onClick={handleAdd}>
-            <Plus size={14} />
-            {t('tables.addFilter')}
-          </button>
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+        <button className="tables-popover-add" onClick={handleAdd}>
+          <Plus size={14} />
+          {t('tables.addFilter')}
+        </button>
+      </PopoverContent>
+    </Popover>
   );
 }

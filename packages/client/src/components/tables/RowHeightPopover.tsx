@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import * as Popover from '@radix-ui/react-popover';
 import { Rows3, Check } from 'lucide-react';
 import type { TableViewConfig } from '@atlasmail/shared';
+import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 
 type RowHeightKey = 'short' | 'medium' | 'tall' | 'extraTall';
 
@@ -22,29 +22,27 @@ export function RowHeightPopover({ viewConfig, onUpdate }: RowHeightPopoverProps
   const current = viewConfig.rowHeight || 'medium';
 
   return (
-    <Popover.Root>
-      <Popover.Trigger asChild>
+    <Popover>
+      <PopoverTrigger asChild>
         <button className="tables-toolbar-btn" title={t('tables.rowHeight')}>
           <Rows3 size={14} />
           {t('tables.rowHeight')}
         </button>
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content className="tables-popover-content" sideOffset={4} align="start" style={{ minWidth: 180 }}>
-          <div className="tables-popover-header">{t('tables.rowHeight')}</div>
-          {ROW_HEIGHT_OPTIONS.map((opt) => (
-            <button
-              key={opt.key}
-              className={`tables-context-menu-item${current === opt.key ? ' active' : ''}`}
-              onClick={() => onUpdate(opt.key)}
-            >
-              {current === opt.key && <Check size={14} />}
-              <span>{t(opt.labelKey)}</span>
-              <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--color-text-tertiary)' }}>{opt.px}px</span>
-            </button>
-          ))}
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+      </PopoverTrigger>
+      <PopoverContent sideOffset={4} align="start" minWidth={180} style={{ padding: 8 }}>
+        <div className="popover-header">{t('tables.rowHeight')}</div>
+        {ROW_HEIGHT_OPTIONS.map((opt) => (
+          <button
+            key={opt.key}
+            className={`context-menu-item${current === opt.key ? ' active' : ''}`}
+            onClick={() => onUpdate(opt.key)}
+          >
+            {current === opt.key && <Check size={14} />}
+            <span>{t(opt.labelKey)}</span>
+            <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--color-text-tertiary)' }}>{opt.px}px</span>
+          </button>
+        ))}
+      </PopoverContent>
+    </Popover>
   );
 }
