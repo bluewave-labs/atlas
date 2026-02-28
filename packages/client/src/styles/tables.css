@@ -581,20 +581,34 @@
   width: 100%;
   --ag-font-family: var(--font-family);
   --ag-font-size: 13px;
-  --ag-header-background-color: #1e2024;
+  --ag-background-color: #101114;
+  --ag-foreground-color: #f0f1f4;
+  --ag-header-background-color: #181a1e;
+  --ag-header-foreground-color: #adb4c2;
   --ag-border-color: #2a2d36;
-  --ag-row-border-color: #23262c;
-  --ag-row-hover-color: #22252b;
+  --ag-row-border-color: #1f2128;
+  --ag-row-hover-color: #1a1d22;
+  --ag-odd-row-background-color: #101114;
   --ag-selected-row-background-color: color-mix(in srgb, #7a9ab8 10%, transparent);
+  --ag-modal-overlay-background-color: rgba(0, 0, 0, 0.5);
   --ag-range-selection-border-color: var(--color-accent-primary);
   --ag-range-selection-border-style: solid;
-  --ag-range-selection-background-color: color-mix(in srgb, var(--color-accent-primary) 6%, transparent);
+  --ag-range-selection-background-color: color-mix(in srgb, var(--color-accent-primary) 8%, transparent);
   --ag-header-height: 34px;
   --ag-checkbox-checked-color: var(--color-accent-primary);
+  --ag-checkbox-unchecked-color: #3b4253;
   --ag-input-focus-border-color: var(--color-accent-primary);
+  --ag-input-border-color: #2a2d36;
+  --ag-data-color: #f0f1f4;
+  --ag-secondary-foreground-color: #adb4c2;
   --ag-header-column-resize-handle-color: #2a2d36;
   --ag-header-column-resize-handle-width: 1px;
   --ag-header-column-resize-handle-height: 50%;
+  --ag-cell-horizontal-padding: 10px;
+  --ag-control-panel-background-color: #181a1e;
+  --ag-subheader-background-color: #181a1e;
+  --ag-invalid-color: #e53e3e;
+  --ag-chip-background-color: #252830;
 }
 
 /* ─── AG Grid — Class-level overrides ────────────────────────────── */
