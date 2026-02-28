@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Mail, Calendar, FileText, Pencil, CheckSquare, Table2,
   Clock, ArrowRight, Settings,
+  Receipt, Users, Handshake, HardDrive,
 } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
 import { useThreadCounts } from '../hooks/use-threads';
@@ -369,18 +370,20 @@ function AppCard({
   color,
   badge,
   onClick,
+  upcoming,
 }: {
   icon: typeof Mail;
   label: string;
   color: string;
   badge?: string;
-  onClick: () => void;
+  onClick?: () => void;
+  upcoming?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
 
   return (
     <button
-      onClick={onClick}
+      onClick={upcoming ? undefined : onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -394,18 +397,41 @@ function AppCard({
         WebkitBackdropFilter: 'blur(20px)',
         border: '1px solid rgba(255,255,255,0.18)',
         borderRadius: 22,
-        cursor: 'pointer',
+        cursor: upcoming ? 'default' : 'pointer',
         transition: 'all 0.25s ease',
-        transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
-        boxShadow: hovered
+        transform: hovered && !upcoming ? 'translateY(-6px)' : 'translateY(0)',
+        boxShadow: hovered && !upcoming
           ? '0 24px 48px rgba(0,0,0,0.3)'
           : '0 8px 32px rgba(0,0,0,0.15)',
         width: 150,
         outline: 'none',
         fontFamily: 'var(--font-family)',
         position: 'relative',
+        opacity: upcoming ? 0.65 : 1,
       }}
     >
+      {upcoming && (
+        <span
+          style={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            fontSize: 10,
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            color: '#fff',
+            background: 'rgba(255,255,255,0.2)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            padding: '3px 8px',
+            borderRadius: 8,
+            lineHeight: 1.2,
+          }}
+        >
+          Soon
+        </span>
+      )}
       <div
         style={{
           width: 60,
@@ -417,7 +443,7 @@ function AppCard({
           justifyContent: 'center',
           boxShadow: `0 6px 20px ${color}55`,
           transition: 'transform 0.25s ease',
-          transform: hovered ? 'scale(1.08)' : 'scale(1)',
+          transform: hovered && !upcoming ? 'scale(1.08)' : 'scale(1)',
         }}
       >
         <Icon size={28} color="#fff" strokeWidth={1.7} />
@@ -856,7 +882,7 @@ export function HomePage() {
         )}
 
         {/* App cards */}
-        <div style={{ display: 'flex', gap: 20, marginTop: 36 }}>
+        <div style={{ display: 'flex', gap: 20, marginTop: 36, flexWrap: 'wrap', justifyContent: 'center' }}>
           <AppCard
             icon={Mail}
             label={t('nav.mail')}
@@ -904,6 +930,30 @@ export function HomePage() {
             color="#2d8a6e"
             badge={tableCount > 0 ? t('home.tables', { count: tableCount }) : undefined}
             onClick={() => navigate(ROUTES.TABLES)}
+          />
+          <AppCard
+            icon={Receipt}
+            label="Invoice"
+            color="#e67e22"
+            upcoming
+          />
+          <AppCard
+            icon={Users}
+            label="People"
+            color="#3b82f6"
+            upcoming
+          />
+          <AppCard
+            icon={Handshake}
+            label="CRM"
+            color="#8b5cf6"
+            upcoming
+          />
+          <AppCard
+            icon={HardDrive}
+            label="Drive"
+            color="#64748b"
+            upcoming
           />
         </div>
       </div>
