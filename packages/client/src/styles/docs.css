@@ -378,12 +378,12 @@
 .bubble-menu {
   display: flex;
   align-items: center;
-  gap: 1px;
-  padding: 4px;
+  gap: 2px;
+  padding: 4px 6px;
   background: var(--color-bg-elevated, #fff);
   border: 1px solid var(--color-border-primary);
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
   font-family: var(--font-family);
 }
 
@@ -391,18 +391,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   background: transparent;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   color: var(--color-text-secondary);
   cursor: pointer;
-  transition: background 0.1s ease, color 0.1s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .bubble-menu-btn:hover {
   background: var(--color-surface-hover);
+  color: var(--color-text-primary);
 }
 
 .bubble-menu-btn.is-active {
@@ -412,10 +413,11 @@
 
 .bubble-menu-divider {
   width: 1px;
-  height: 18px;
+  height: 20px;
   background: var(--color-border-primary);
-  margin: 0 3px;
+  margin: 0 4px;
   flex-shrink: 0;
+  opacity: 0.6;
 }
 
 /* ─── Cover image ────────────────────────────────────────────────────── */

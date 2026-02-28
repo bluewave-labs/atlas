@@ -983,7 +983,10 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
             tippyOptions={{ duration: 150 }}
             shouldShow={({ editor: e, state }) => {
               const { from, to } = state.selection;
-              return from !== to && !e.isActive('image');
+              if (from === to) return false;
+              // Hide on non-text atom blocks
+              if (e.isActive('image') || e.isActive('drawingEmbed') || e.isActive('tableEmbed') || e.isActive('resizableImage')) return false;
+              return true;
             }}
           >
             <BubbleToolbar editor={editor} />
@@ -1436,51 +1439,51 @@ function BubbleToolbar({ editor }: { editor: NonNullable<ReturnType<typeof useEd
     <div className="bubble-menu">
       {/* Undo / Redo */}
       <BubbleBtn
-        icon={<Undo2 size={14} />}
+        icon={<Undo2 size={16} />}
         active={false}
         onClick={() => editor.chain().focus().undo().run()}
         tooltip="Undo"
       />
       <BubbleBtn
-        icon={<Redo2 size={14} />}
+        icon={<Redo2 size={16} />}
         active={false}
         onClick={() => editor.chain().focus().redo().run()}
         tooltip="Redo"
       />
       <div className="bubble-menu-divider" />
       <BubbleBtn
-        icon={<Bold size={14} />}
+        icon={<Bold size={16} />}
         active={editor.isActive('bold')}
         onClick={() => editor.chain().focus().toggleBold().run()}
         tooltip="Bold"
       />
       <BubbleBtn
-        icon={<Italic size={14} />}
+        icon={<Italic size={16} />}
         active={editor.isActive('italic')}
         onClick={() => editor.chain().focus().toggleItalic().run()}
         tooltip="Italic"
       />
       <BubbleBtn
-        icon={<UnderlineIcon size={14} />}
+        icon={<UnderlineIcon size={16} />}
         active={editor.isActive('underline')}
         onClick={() => editor.chain().focus().toggleUnderline().run()}
         tooltip="Underline"
       />
       <BubbleBtn
-        icon={<Strikethrough size={14} />}
+        icon={<Strikethrough size={16} />}
         active={editor.isActive('strike')}
         onClick={() => editor.chain().focus().toggleStrike().run()}
         tooltip="Strikethrough"
       />
       <BubbleBtn
-        icon={<Code size={14} />}
+        icon={<Code size={16} />}
         active={editor.isActive('code')}
         onClick={() => editor.chain().focus().toggleCode().run()}
         tooltip="Code"
       />
       <div className="bubble-menu-divider" />
       <BubbleBtn
-        icon={<Highlighter size={14} />}
+        icon={<Highlighter size={16} />}
         active={editor.isActive('highlight')}
         onClick={() => editor.chain().focus().toggleHighlight().run()}
         tooltip="Highlight"
@@ -1488,7 +1491,7 @@ function BubbleToolbar({ editor }: { editor: NonNullable<ReturnType<typeof useEd
       {/* Color picker */}
       <div ref={colorRef} style={{ position: 'relative' }}>
         <BubbleBtn
-          icon={<Palette size={14} />}
+          icon={<Palette size={16} />}
           active={showColorPicker}
           onClick={() => setShowColorPicker((v) => !v)}
           tooltip="Text color"
@@ -1515,51 +1518,51 @@ function BubbleToolbar({ editor }: { editor: NonNullable<ReturnType<typeof useEd
         )}
       </div>
       <BubbleBtn
-        icon={<LinkIcon size={14} />}
+        icon={<LinkIcon size={16} />}
         active={editor.isActive('link')}
         onClick={addLink}
         tooltip="Link"
       />
       <div className="bubble-menu-divider" />
       <BubbleBtn
-        icon={<Type size={14} />}
+        icon={<Type size={16} />}
         active={editor.isActive('paragraph')}
         onClick={() => editor.chain().focus().setParagraph().run()}
         tooltip="Text"
       />
       <BubbleBtn
-        icon={<Heading1 size={14} />}
+        icon={<Heading1 size={16} />}
         active={editor.isActive('heading', { level: 1 })}
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
         tooltip="Heading 1"
       />
       <BubbleBtn
-        icon={<Heading2 size={14} />}
+        icon={<Heading2 size={16} />}
         active={editor.isActive('heading', { level: 2 })}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         tooltip="Heading 2"
       />
       <BubbleBtn
-        icon={<Heading3 size={14} />}
+        icon={<Heading3 size={16} />}
         active={editor.isActive('heading', { level: 3 })}
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
         tooltip="Heading 3"
       />
       <div className="bubble-menu-divider" />
       <BubbleBtn
-        icon={<List size={14} />}
+        icon={<List size={16} />}
         active={editor.isActive('bulletList')}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         tooltip="Bullet list"
       />
       <BubbleBtn
-        icon={<ListOrdered size={14} />}
+        icon={<ListOrdered size={16} />}
         active={editor.isActive('orderedList')}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         tooltip="Numbered list"
       />
       <BubbleBtn
-        icon={<ListChecks size={14} />}
+        icon={<ListChecks size={16} />}
         active={editor.isActive('taskList')}
         onClick={() => editor.chain().focus().toggleTaskList().run()}
         tooltip="To-do list"
