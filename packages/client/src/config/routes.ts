@@ -25,6 +25,7 @@ export const ROUTES = {
   ORG: '/org',
   ORG_MEMBERS: '/org/members',
   ORG_APPS: '/org/apps',
+  ORG_SETTINGS: '/org/settings',
   ADMIN_LOGIN: '/admin/login',
   ADMIN: '/admin',
   ADMIN_OVERVIEW: '/admin',

@@ -27,6 +27,7 @@ import { OrgLayout } from './pages/org/org-layout';
 import { OrgOverviewPage } from './pages/org/org-overview';
 import { OrgMembersPage } from './pages/org/org-members';
 import { OrgAppsPage } from './pages/org/org-apps';
+import { OrgSettingsPage } from './pages/org/org-settings';
 import { AdminLoginPage } from './pages/admin/admin-login';
 import { AdminLayout, AdminProtectedRoute } from './pages/admin/admin-layout';
 import { AdminOverviewPage } from './pages/admin/admin-overview';
@@ -191,6 +192,7 @@ export function App() {
                   <Route index element={<OrgOverviewPage />} />
                   <Route path="members" element={<OrgMembersPage />} />
                   <Route path="apps" element={<OrgAppsPage />} />
+                  <Route path="settings" element={<OrgSettingsPage />} />
                 </Route>
                 {/* Admin routes */}
                 <Route path={ROUTES.ADMIN_LOGIN} element={<AdminLoginPage />} />

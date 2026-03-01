@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   Building2,
   LayoutDashboard,
+  Settings,
   Users,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
@@ -31,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: ROUTES.ORG, label: 'Overview', icon: <LayoutDashboard size={16} />, end: true },
   { to: ROUTES.ORG_MEMBERS, label: 'Members', icon: <Users size={16} /> },
   { to: ROUTES.ORG_APPS, label: 'Apps', icon: <AppWindow size={16} /> },
+  { to: ROUTES.ORG_SETTINGS, label: 'Settings', icon: <Settings size={16} /> },
 ];
 
 // ---------------------------------------------------------------------------
@@ -41,6 +43,7 @@ function getPageTitle(pathname: string): string {
   if (pathname === ROUTES.ORG) return 'Overview';
   if (pathname.startsWith(ROUTES.ORG_MEMBERS)) return 'Members';
   if (pathname.startsWith(ROUTES.ORG_APPS)) return 'Apps';
+  if (pathname.startsWith(ROUTES.ORG_SETTINGS)) return 'Settings';
   return 'Organization';
 }
 
