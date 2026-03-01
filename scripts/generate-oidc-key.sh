@@ -5,6 +5,6 @@
 set -e
 
 KEY=$(openssl genrsa 2048 2>/dev/null)
-ESCAPED=$(echo "$KEY" | awk '{printf "%s\\n", $0}')
+ESCAPED=$(printf '%s' "$KEY" | awk '{printf "%s\\n", $0}')
 
 echo "OIDC_SIGNING_KEY=\"${ESCAPED}\""

@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import crypto from 'node:crypto';
 import { getPlatformDb } from '../../config/platform-database';
 import { appInstallations, appBackups } from '../../db/schema-platform';

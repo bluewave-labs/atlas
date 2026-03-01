@@ -73,7 +73,10 @@ export async function validateClient(tenantSlug: string, clientId: string): Prom
   if (!inst) return null;
 
   // Build redirect URI from subdomain
-  const redirectUri = `https://${inst.subdomain}.${tenantSlug}.atlas.so${
+  const isDocker = env.PLATFORM_RUNTIME === 'docker';
+  const protocol = isDocker ? 'http' : 'https';
+  const domain = isDocker ? 'localhost' : 'atlas.so';
+  const redirectUri = `${protocol}://${inst.subdomain}.${tenantSlug}.${domain}${
     (inst.customEnv as any)?.OIDC_CALLBACK_PATH || '/auth/oidc/callback'
   }`;
 
