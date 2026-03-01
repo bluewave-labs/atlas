@@ -437,7 +437,7 @@ function CreateOrgPrompt() {
               onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
               required
               placeholder="acme-corp"
-              pattern="[a-z0-9][a-z0-9-]*[a-z0-9]"
+              pattern="[a-z0-9][a-z0-9\-]*[a-z0-9]"
               style={inputStyle}
             />
             <p style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 4 }}>
