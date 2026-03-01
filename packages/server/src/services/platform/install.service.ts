@@ -78,13 +78,30 @@ export async function installApp(tenantId: string, input: InstallAppInput) {
       ? `http://host.docker.internal:${env.PORT}/oidc/tenants/${tenant.slug}`
       : `${env.PLATFORM_PUBLIC_URL || env.SERVER_PUBLIC_URL}/oidc/tenants/${tenant.slug}`;
 
+    // Platform-managed keys that user customEnv must never override
+    const PROTECTED_ENV_KEYS = new Set([
+      'ATLAS_TENANT_ID', 'ATLAS_INSTALLATION_ID',
+      'OIDC_ISSUER', 'OIDC_CLIENT_ID', 'OIDC_CLIENT_SECRET', 'OIDC_CALLBACK_PATH',
+      'DATABASE_URL', 'REDIS_URL', 'REDIS_PREFIX',
+    ]);
+
+    // Apply user customEnv first, then platform keys overwrite — platform always wins
+    const safeCustomEnv: Record<string, string> = {};
+    for (const [k, v] of Object.entries(input.customEnv ?? {})) {
+      if (!PROTECTED_ENV_KEYS.has(k)) {
+        safeCustomEnv[k] = v;
+      } else {
+        logger.warn({ key: k, installationId }, 'Blocked customEnv key — protected by platform');
+      }
+    }
+
     const containerEnv: Record<string, string> = {
+      ...safeCustomEnv,
       ATLAS_TENANT_ID: tenantId,
       ATLAS_INSTALLATION_ID: installationId,
       OIDC_ISSUER: oidcIssuer,
       OIDC_CLIENT_ID: oidcClientId,
       OIDC_CLIENT_SECRET: oidcClientSecret,
-      ...(input.customEnv ?? {}),
     };
 
     // Add addon connection strings
@@ -148,13 +165,20 @@ export async function installApp(tenantId: string, input: InstallAppInput) {
     logger.info({ installationId, tenantId, app: manifest.id }, 'App installed successfully');
     return updated;
   } catch (err) {
+    logger.error({ err, installationId }, 'App installation failed — cleaning up partial resources');
+
+    // Clean up any partially-created resources so they don't leak
+    try { await removeAppContainer(installationId, tenant.slug); } catch { /* may not exist */ }
+    try { await deprovisionAddons(installationId); } catch (cleanupErr) {
+      logger.error({ cleanupErr, installationId }, 'Failed to clean up addons after install failure');
+    }
+
     // Mark as error
     await db.update(appInstallations).set({
       status: 'error',
       updatedAt: new Date(),
     }).where(eq(appInstallations.id, installationId));
 
-    logger.error({ err, installationId }, 'App installation failed');
     throw err;
   }
 }

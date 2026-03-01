@@ -114,6 +114,9 @@ export async function exchangeCode(
   const codeData = authCodes.get(code);
   if (!codeData || codeData.clientId !== clientId) return null;
 
+  // Verify the code was issued for this tenant (prevents cross-tenant token theft)
+  if (codeData.tenantSlug !== tenantSlug) return null;
+
   // Verify code hasn't expired
   if (codeData.expiresAt < Date.now()) {
     authCodes.delete(code);

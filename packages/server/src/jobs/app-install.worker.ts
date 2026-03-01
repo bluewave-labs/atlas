@@ -161,13 +161,13 @@ export function startAppBackupWorker() {
 export async function addAppInstallJob(tenantId: string, input: InstallAppInput) {
   const queue = getInstallQueue();
   if (!queue) {
-    logger.warn('Redis not configured — running install in background (fire and forget)');
-    void Promise.resolve().then(async () => {
-      const { installApp } = await import('../services/platform/install.service');
-      await installApp(tenantId, input);
-    }).catch((err) => {
-      logger.error({ err, tenantId, catalogAppId: input.catalogAppId }, 'Background install failed');
-    });
+    // In development, run inline (no Redis needed). In production, Redis is required.
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Redis is required for app installation in production');
+    }
+    logger.warn('Redis not configured — running install inline (dev mode)');
+    const { installApp } = await import('../services/platform/install.service');
+    await installApp(tenantId, input);
     return;
   }
 

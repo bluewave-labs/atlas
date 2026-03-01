@@ -23,7 +23,7 @@ function resolveImage(manifestImage: string): string {
 }
 
 function containerName(installationId: string): string {
-  return `${CONTAINER_PREFIX}${installationId.slice(0, 12)}`;
+  return `${CONTAINER_PREFIX}${installationId.replace(/-/g, '')}`;
 }
 
 function tenantNetworkName(tenantSlug: string): string {
@@ -53,16 +53,25 @@ async function ensureTenantNetwork(tenantSlug: string): Promise<string> {
   }
 
   // Create isolated bridge network for this tenant
-  await docker.createNetwork({
-    Name: networkName,
-    Driver: 'bridge',
-    Labels: {
-      'atlas-managed': 'true',
-      'atlas-tenant': tenantSlug,
-    },
-  });
-
-  logger.info({ networkName, tenantSlug }, 'Tenant Docker network created');
+  // Wrapped in try/catch to handle concurrent creation (race condition)
+  try {
+    await docker.createNetwork({
+      Name: networkName,
+      Driver: 'bridge',
+      Labels: {
+        'atlas-managed': 'true',
+        'atlas-tenant': tenantSlug,
+      },
+    });
+    logger.info({ networkName, tenantSlug }, 'Tenant Docker network created');
+  } catch (err: any) {
+    // Ignore "already exists" error from concurrent creation
+    if (err?.statusCode === 409 || err?.message?.includes('already exists')) {
+      logger.debug({ networkName }, 'Tenant network already exists (concurrent creation)');
+    } else {
+      throw err;
+    }
+  }
 
   // Connect shared infrastructure containers so tenant apps can reach them
   await connectInfraContainers(networkName);

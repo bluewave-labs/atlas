@@ -148,6 +148,7 @@ export async function getAddonsForInstallation(installationId: string) {
 export async function deprovisionAddons(installationId: string) {
   const db = getPlatformDb();
   const addons = await getAddonsForInstallation(installationId);
+  const errors: Error[] = [];
 
   for (const addon of addons) {
     if (addon.addonType === 'postgresql' && env.ADDON_PG_ADMIN_URL && addon.database && addon.username) {
@@ -163,13 +164,21 @@ export async function deprovisionAddons(installationId: string) {
         await adminClient.query(`DROP ROLE IF EXISTS ${pg.escapeIdentifier(addon.username)}`);
         logger.info({ installationId, database: addon.database }, 'PostgreSQL addon deprovisioned');
       } catch (err) {
-        logger.error({ err, installationId }, 'Failed to deprovision PostgreSQL addon');
+        logger.error({ err, installationId, database: addon.database }, 'Failed to deprovision PostgreSQL addon');
+        errors.push(err as Error);
       } finally {
         await adminClient.end();
       }
     }
   }
 
-  // Remove addon records
-  await db.delete(appAddons).where(eq(appAddons.installationId, installationId));
+  // Remove addon records only if all addons were successfully deprovisioned
+  if (errors.length === 0) {
+    await db.delete(appAddons).where(eq(appAddons.installationId, installationId));
+  } else {
+    logger.warn(
+      { installationId, errorCount: errors.length },
+      'Some addons failed to deprovision — addon records preserved for manual cleanup',
+    );
+  }
 }

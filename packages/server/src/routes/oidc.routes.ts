@@ -72,7 +72,7 @@ router.get('/tenants/:slug/authorize', async (req, res) => {
     // Verify JWT
     let payload: any;
     try {
-      payload = jwt.verify(token, env.JWT_SECRET);
+      payload = jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] });
     } catch {
       const returnUrl = encodeURIComponent(req.originalUrl);
       res.redirect(`/login?return=${returnUrl}`);

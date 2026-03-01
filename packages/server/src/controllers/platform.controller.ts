@@ -4,6 +4,7 @@ import * as catalogService from '../services/platform/catalog.service';
 import * as installService from '../services/platform/install.service';
 import { addAppInstallJob, addAppBackupJob } from '../jobs/app-install.worker';
 import { logger } from '../utils/logger';
+import { env } from '../config/env';
 
 /** Safely extract a route param (Express 5 returns string | string[]). */
 function param(req: Request, name: string): string {
@@ -11,11 +12,58 @@ function param(req: Request, name: string): string {
   return Array.isArray(val) ? val[0] : val;
 }
 
+/** Guard: require platform DB to be configured. Returns true if NOT configured (caller should return). */
+function requirePlatformDb(res: Response): boolean {
+  if (!env.DATABASE_PLATFORM_URL) {
+    res.status(501).json({ success: false, error: 'Platform features are not configured' });
+    return true;
+  }
+  return false;
+}
+
+/** Shared helper: look up installation + verify tenant membership. */
+async function getInstallationWithAuth(req: Request, res: Response, requireAdmin = false) {
+  const inst = await installService.getInstallation(param(req, 'iid'));
+  if (!inst) {
+    res.status(404).json({ success: false, error: 'Installation not found' });
+    return null;
+  }
+
+  // Verify the installation belongs to the tenant specified in the URL
+  // This prevents IDOR attacks where a user guesses another tenant's installation ID
+  const urlTenantId = param(req, 'id');
+  if (inst.tenantId !== urlTenantId) {
+    res.status(404).json({ success: false, error: 'Installation not found' });
+    return null;
+  }
+
+  const membership = await tenantService.getTenantMembership(inst.tenantId, req.auth!.userId);
+  if (!membership) {
+    res.status(403).json({ success: false, error: 'Not authorized' });
+    return null;
+  }
+
+  if (requireAdmin && !['owner', 'admin'].includes(membership.role)) {
+    res.status(403).json({ success: false, error: 'Only owners and admins can perform this action' });
+    return null;
+  }
+
+  return inst;
+}
+
 // ─── Catalog ─────────────────────────────────────────────────────────
 
 export async function listCatalog(req: Request, res: Response) {
   try {
     const category = req.query.category as string | undefined;
+
+    // Fall back to disk manifests when platform DB is not configured
+    if (!env.DATABASE_PLATFORM_URL) {
+      const apps = catalogService.listCatalogAppsFromDisk({ category });
+      res.json({ success: true, data: { apps } });
+      return;
+    }
+
     const apps = await catalogService.listCatalogApps({ category });
     res.json({ success: true, data: { apps } });
   } catch (err) {
@@ -26,7 +74,20 @@ export async function listCatalog(req: Request, res: Response) {
 
 export async function getCatalogApp(req: Request, res: Response) {
   try {
-    const app = await catalogService.getCatalogApp(param(req, 'manifestId'));
+    const manifestId = param(req, 'manifestId');
+
+    // Fall back to disk manifests when platform DB is not configured
+    if (!env.DATABASE_PLATFORM_URL) {
+      const app = catalogService.getCatalogAppFromDisk(manifestId);
+      if (!app) {
+        res.status(404).json({ success: false, error: 'App not found' });
+        return;
+      }
+      res.json({ success: true, data: app });
+      return;
+    }
+
+    const app = await catalogService.getCatalogApp(manifestId);
     if (!app) {
       res.status(404).json({ success: false, error: 'App not found' });
       return;
@@ -42,6 +103,8 @@ export async function getCatalogApp(req: Request, res: Response) {
 
 export async function createTenant(req: Request, res: Response) {
   try {
+    if (requirePlatformDb(res)) return;
+
     const { slug, name, plan } = req.body;
     if (!slug || !name) {
       res.status(400).json({ success: false, error: 'slug and name are required' });
@@ -68,6 +131,19 @@ export async function createTenant(req: Request, res: Response) {
 
 export async function listMyTenants(req: Request, res: Response) {
   try {
+    if (!env.DATABASE_PLATFORM_URL) {
+      res.json({ success: true, data: { tenants: [] } });
+      return;
+    }
+
+    // In Docker dev mode, auto-add the current user to the dev tenant
+    if (env.PLATFORM_RUNTIME === 'docker' && process.env.NODE_ENV !== 'production') {
+      const devTenant = await tenantService.getTenantBySlug('dev');
+      if (devTenant) {
+        await tenantService.addTenantMember(devTenant.id, req.auth!.userId, 'owner');
+      }
+    }
+
     const tenants = await tenantService.listTenantsForUser(req.auth!.userId);
     res.json({ success: true, data: { tenants } });
   } catch (err) {
@@ -78,6 +154,8 @@ export async function listMyTenants(req: Request, res: Response) {
 
 export async function getTenant(req: Request, res: Response) {
   try {
+    if (requirePlatformDb(res)) return;
+
     const tenant = await tenantService.getTenantById(param(req, 'id'));
     if (!tenant) {
       res.status(404).json({ success: false, error: 'Tenant not found' });
@@ -102,9 +180,10 @@ export async function getTenant(req: Request, res: Response) {
 
 export async function listInstallations(req: Request, res: Response) {
   try {
+    if (requirePlatformDb(res)) return;
+
     const tenantId = param(req, 'id');
 
-    // Check membership
     const membership = await tenantService.getTenantMembership(tenantId, req.auth!.userId);
     if (!membership) {
       res.status(403).json({ success: false, error: 'Not a member of this tenant' });
@@ -121,6 +200,8 @@ export async function listInstallations(req: Request, res: Response) {
 
 export async function installApp(req: Request, res: Response) {
   try {
+    if (requirePlatformDb(res)) return;
+
     const tenantId = param(req, 'id');
 
     // Only owner/admin can install
@@ -157,18 +238,10 @@ export async function installApp(req: Request, res: Response) {
 
 export async function getInstallation(req: Request, res: Response) {
   try {
-    const inst = await installService.getInstallation(param(req, 'iid'));
-    if (!inst) {
-      res.status(404).json({ success: false, error: 'Installation not found' });
-      return;
-    }
+    if (requirePlatformDb(res)) return;
 
-    // Verify tenant membership
-    const membership = await tenantService.getTenantMembership(inst.tenantId, req.auth!.userId);
-    if (!membership) {
-      res.status(403).json({ success: false, error: 'Not authorized' });
-      return;
-    }
+    const inst = await getInstallationWithAuth(req, res);
+    if (!inst) return;
 
     res.json({ success: true, data: inst });
   } catch (err) {
@@ -179,7 +252,12 @@ export async function getInstallation(req: Request, res: Response) {
 
 export async function startApp(req: Request, res: Response) {
   try {
-    await installService.startApp(param(req, 'iid'));
+    if (requirePlatformDb(res)) return;
+
+    const inst = await getInstallationWithAuth(req, res, true);
+    if (!inst) return;
+
+    await installService.startApp(inst.id);
     res.json({ success: true, data: { status: 'running' } });
   } catch (err) {
     logger.error({ err }, 'Failed to start app');
@@ -189,7 +267,12 @@ export async function startApp(req: Request, res: Response) {
 
 export async function stopApp(req: Request, res: Response) {
   try {
-    await installService.stopApp(param(req, 'iid'));
+    if (requirePlatformDb(res)) return;
+
+    const inst = await getInstallationWithAuth(req, res, true);
+    if (!inst) return;
+
+    await installService.stopApp(inst.id);
     res.json({ success: true, data: { status: 'stopped' } });
   } catch (err) {
     logger.error({ err }, 'Failed to stop app');
@@ -199,7 +282,12 @@ export async function stopApp(req: Request, res: Response) {
 
 export async function restartApp(req: Request, res: Response) {
   try {
-    await installService.restartApp(param(req, 'iid'));
+    if (requirePlatformDb(res)) return;
+
+    const inst = await getInstallationWithAuth(req, res, true);
+    if (!inst) return;
+
+    await installService.restartApp(inst.id);
     res.json({ success: true, data: { status: 'restarting' } });
   } catch (err) {
     logger.error({ err }, 'Failed to restart app');
@@ -209,13 +297,12 @@ export async function restartApp(req: Request, res: Response) {
 
 export async function createBackup(req: Request, res: Response) {
   try {
-    const inst = await installService.getInstallation(param(req, 'iid'));
-    if (!inst) {
-      res.status(404).json({ success: false, error: 'Installation not found' });
-      return;
-    }
+    if (requirePlatformDb(res)) return;
 
-    await addAppBackupJob(param(req, 'iid'), 'manual');
+    const inst = await getInstallationWithAuth(req, res, true);
+    if (!inst) return;
+
+    await addAppBackupJob(inst.id, 'manual');
     res.status(202).json({ success: true, data: { status: 'pending', message: 'Backup started' } });
   } catch (err) {
     logger.error({ err }, 'Failed to create backup');
@@ -225,7 +312,12 @@ export async function createBackup(req: Request, res: Response) {
 
 export async function listBackups(req: Request, res: Response) {
   try {
-    const backups = await installService.listBackups(param(req, 'iid'));
+    if (requirePlatformDb(res)) return;
+
+    const inst = await getInstallationWithAuth(req, res);
+    if (!inst) return;
+
+    const backups = await installService.listBackups(inst.id);
     res.json({ success: true, data: { backups } });
   } catch (err) {
     logger.error({ err }, 'Failed to list backups');
@@ -235,20 +327,12 @@ export async function listBackups(req: Request, res: Response) {
 
 export async function uninstallApp(req: Request, res: Response) {
   try {
-    const inst = await installService.getInstallation(param(req, 'iid'));
-    if (!inst) {
-      res.status(404).json({ success: false, error: 'Installation not found' });
-      return;
-    }
+    if (requirePlatformDb(res)) return;
 
-    // Only owner/admin can uninstall
-    const membership = await tenantService.getTenantMembership(inst.tenantId, req.auth!.userId);
-    if (!membership || !['owner', 'admin'].includes(membership.role)) {
-      res.status(403).json({ success: false, error: 'Only owners and admins can uninstall apps' });
-      return;
-    }
+    const inst = await getInstallationWithAuth(req, res, true);
+    if (!inst) return;
 
-    await installService.uninstallApp(param(req, 'iid'));
+    await installService.uninstallApp(inst.id);
     res.json({ success: true, data: { message: 'App uninstalled' } });
   } catch (err) {
     logger.error({ err }, 'Failed to uninstall app');
