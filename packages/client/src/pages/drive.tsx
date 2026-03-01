@@ -2155,6 +2155,11 @@ export function DrivePage() {
                   const Icon = getFileTypeIcon(previewItem.mimeType, previewItem.type, previewItem.linkedResourceType);
                   return <Icon size={64} />;
                 })()}
+                {previewItem.type === 'file' && !previewItem.storagePath && !previewItem.linkedResourceType && (
+                  <span style={{ color: 'var(--color-text-tertiary)', fontSize: 12, marginTop: 8 }}>
+                    No preview available
+                  </span>
+                )}
               </div>
             )}
           </div>

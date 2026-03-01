@@ -2,7 +2,7 @@ import { db } from '../config/database';
 import { driveItems, driveItemVersions, driveShareLinks } from '../db/schema';
 import { eq, and, asc, desc, sql, isNull, inArray } from 'drizzle-orm';
 import { logger } from '../utils/logger';
-import { unlinkSync, existsSync, copyFileSync } from 'node:fs';
+import { unlinkSync, existsSync, copyFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import type { CreateDriveItemInput, UpdateDriveItemInput } from '@atlasmail/shared';
@@ -336,12 +336,24 @@ export async function seedSampleFolder(userId: string, accountId: string) {
     return f;
   };
 
-  // Helper to create a file (no actual storage, just metadata for demo)
-  const mkFile = async (name: string, mime: string, size: number, parentId?: string | null, opts?: { icon?: string; favourite?: boolean; created?: string; updated?: string }) => {
+  // Helper to create a file — optionally writes real content to disk for previews
+  const mkFile = async (name: string, mime: string, size: number, parentId?: string | null, opts?: { icon?: string; favourite?: boolean; created?: string; updated?: string; content?: string }) => {
+    let storagePath: string | null = null;
+    let actualSize = size;
+    if (opts?.content) {
+      const userDir = path.join(UPLOADS_DIR, userId);
+      if (!existsSync(userDir)) mkdirSync(userDir, { recursive: true });
+      const filename = `${crypto.randomUUID()}_${name}`;
+      const filePath = path.join(userDir, filename);
+      writeFileSync(filePath, opts.content, 'utf-8');
+      storagePath = `${userId}/${filename}`;
+      actualSize = Buffer.byteLength(opts.content, 'utf-8');
+    }
     await db.insert(driveItems).values({
-      accountId, userId, name, type: 'file', mimeType: mime, size,
+      accountId, userId, name, type: 'file', mimeType: mime, size: actualSize,
       parentId: parentId || null, icon: opts?.icon || null,
       isFavourite: opts?.favourite ? true : false,
+      storagePath,
       sortOrder: sort++,
       createdAt: opts?.created || ago(7), updatedAt: opts?.updated || ago(1),
     });
@@ -359,9 +371,78 @@ export async function seedSampleFolder(userId: string, accountId: string) {
   const reports = await mkFolder('Reports', work.id);
   const presentations = await mkFolder('Presentations', work.id);
 
-  await mkFile('Q4 planning notes.md', 'text/markdown', 4200, meetings.id, { created: ago(5), updated: ago(2) });
-  await mkFile('Weekly standup — Feb 24.md', 'text/markdown', 1800, meetings.id, { created: ago(4), updated: ago(4) });
-  await mkFile('Client call summary.md', 'text/markdown', 2400, meetings.id, { created: ago(2), updated: ago(1) });
+  await mkFile('Q4 planning notes.md', 'text/markdown', 4200, meetings.id, { created: ago(5), updated: ago(2), content: `# Q4 Planning Notes
+
+## Goals
+- Launch redesigned dashboard by end of October
+- Migrate remaining API endpoints to v2
+- Reduce page load time by 40%
+
+## Key Decisions
+1. **Framework**: Staying with React, upgrading to v19
+2. **State management**: Moving from Redux to Zustand
+3. **Testing**: Adopt Vitest for unit tests, Playwright for E2E
+
+## Timeline
+- **October**: Dashboard redesign + API migration
+- **November**: Performance optimization sprint
+- **December**: Polish, bug fixes, and launch prep
+
+## Action Items
+- [ ] Sarah: Finalize design tokens by Oct 5
+- [ ] Mike: Set up v2 API scaffolding
+- [ ] Team: Review new component library
+- [x] Alex: Complete competitive analysis
+
+## Notes
+The team agreed to do weekly demos every Friday at 3pm. Stakeholder review is scheduled for Nov 15.
+
+---
+*Last updated by Alex on Feb 26, 2026*
+` });
+  await mkFile('Weekly standup — Feb 24.md', 'text/markdown', 1800, meetings.id, { created: ago(4), updated: ago(4), content: `# Weekly Standup — Feb 24
+
+## Team Updates
+
+### Sarah (Design)
+- Finished icon set for navigation
+- Working on dark mode color tokens
+- Blocked: waiting for brand guidelines update
+
+### Mike (Backend)
+- Completed user authentication API refactor
+- Started on file upload service
+- No blockers
+
+### Alex (Frontend)
+- Shipped notification center
+- PR open for calendar year view
+- Need design review on settings modal
+
+## Reminders
+- Sprint retro on Wednesday
+- Design review Thursday at 2pm
+` });
+  await mkFile('Client call summary.md', 'text/markdown', 2400, meetings.id, { created: ago(2), updated: ago(1), content: `# Client Call Summary — Acme Corp
+
+**Date**: Feb 26, 2026
+**Attendees**: Alex, Sarah, John (Acme)
+
+## Discussion Points
+1. Timeline for Phase 2 delivery
+2. Additional feature requests
+3. Data migration plan
+
+## Key Takeaways
+- Client is happy with Phase 1 progress
+- They want **real-time collaboration** added to the roadmap
+- Data migration needs to be completed before March 15
+
+## Next Steps
+- Send updated SOW by end of week
+- Schedule technical deep-dive with their engineering team
+- Share prototype link for new dashboard
+` });
   await mkFile('Annual review 2025.pdf', 'application/pdf', 245000, reports.id, { favourite: true, created: ago(30), updated: ago(10) });
   await mkFile('Budget forecast.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 89000, reports.id, { created: ago(20), updated: ago(5) });
   await mkFile('Team metrics dashboard.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 67000, reports.id, { created: ago(12), updated: ago(3) });
@@ -369,21 +450,105 @@ export async function seedSampleFolder(userId: string, accountId: string) {
   await mkFile('Company overview.pptx', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 5400000, presentations.id, { created: ago(45), updated: ago(20) });
 
   // ─── Personal files ──────────────────────────────────────────────
-  await mkFile('Reading list.md', 'text/markdown', 1200, personal.id, { created: ago(60), updated: ago(3) });
+  await mkFile('Reading list.md', 'text/markdown', 1200, personal.id, { created: ago(60), updated: ago(3), content: `# Reading List
+
+## Currently Reading
+- **Designing Data-Intensive Applications** by Martin Kleppmann
+- **The Pragmatic Programmer** by Hunt & Thomas
+
+## Up Next
+- System Design Interview by Alex Xu
+- Clean Architecture by Robert C. Martin
+- Atomic Habits by James Clear
+
+## Finished
+- [x] The Phoenix Project
+- [x] Staff Engineer by Will Larson
+- [x] Refactoring by Martin Fowler
+` });
   await mkFile('Apartment lease.pdf', 'application/pdf', 180000, personal.id, { created: ago(90), updated: ago(90) });
   await mkFile('Tax documents 2025.pdf', 'application/pdf', 320000, personal.id, { favourite: true, created: ago(40), updated: ago(30) });
-  await mkFile('Recipes.md', 'text/markdown', 3400, personal.id, { created: ago(100), updated: ago(8) });
+  await mkFile('Recipes.md', 'text/markdown', 3400, personal.id, { created: ago(100), updated: ago(8), content: `# Favorite Recipes
+
+## Pasta Aglio e Olio
+- 400g spaghetti
+- 6 cloves garlic, thinly sliced
+- 1/2 cup olive oil
+- Red pepper flakes to taste
+- Fresh parsley, chopped
+- Parmesan cheese
+
+Cook pasta al dente. Sauté garlic in olive oil until golden. Toss with pasta, pepper flakes, and parsley.
+
+## Quick Chicken Stir-Fry
+- 500g chicken breast, cubed
+- Mixed vegetables (bell peppers, broccoli, snap peas)
+- 3 tbsp soy sauce
+- 1 tbsp sesame oil
+- Ginger and garlic
+
+High heat, cook chicken first, add veggies, sauce last. Serve over rice.
+
+---
+*Add more recipes here...*
+` });
 
   // ─── Projects subfolders & files ─────────────────────────────────
   const atlas = await mkFolder('Atlas redesign', projects.id, '🎨');
   const api = await mkFolder('API migration', projects.id, '⚡');
 
-  await mkFile('Design system tokens.json', 'application/json', 12000, atlas.id, { created: ago(10), updated: ago(2) });
+  await mkFile('Design system tokens.json', 'application/json', 12000, atlas.id, { created: ago(10), updated: ago(2), content: JSON.stringify({
+    colors: {
+      primary: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 700: '#1d4ed8', 900: '#1e3a5f' },
+      accent: { main: '#4a9e8f', light: '#6ec6b5', dark: '#2d7a6e' },
+      neutral: { 50: '#fafafa', 100: '#f5f5f5', 500: '#737373', 900: '#171717' },
+    },
+    spacing: { xs: '4px', sm: '8px', md: '12px', lg: '16px', xl: '24px', '2xl': '32px' },
+    borderRadius: { sm: '4px', md: '8px', lg: '12px', xl: '16px', full: '9999px' },
+    typography: {
+      fontFamily: { sans: 'Inter, system-ui, sans-serif', mono: 'JetBrains Mono, monospace' },
+      fontSize: { xs: '11px', sm: '13px', md: '14px', lg: '16px', xl: '20px', '2xl': '24px' },
+    },
+  }, null, 2) });
   await mkFile('Component inventory.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 45000, atlas.id, { created: ago(8), updated: ago(1) });
   await mkFile('Wireframes v2.fig', 'application/octet-stream', 890000, atlas.id, { created: ago(6), updated: ago(1) });
   await mkFile('Color palette.png', 'image/png', 156000, atlas.id, { created: ago(5), updated: ago(5) });
-  await mkFile('Migration checklist.md', 'text/markdown', 2800, api.id, { created: ago(14), updated: ago(3) });
-  await mkFile('Endpoint mapping.csv', 'text/csv', 8900, api.id, { created: ago(12), updated: ago(6) });
+  await mkFile('Migration checklist.md', 'text/markdown', 2800, api.id, { created: ago(14), updated: ago(3), content: `# API Migration Checklist
+
+## Phase 1 — Authentication
+- [x] JWT token refresh flow
+- [x] OAuth2 provider integration
+- [x] Session management
+- [x] Rate limiting
+
+## Phase 2 — Core Endpoints
+- [x] GET /api/v2/users
+- [x] POST /api/v2/users
+- [ ] PATCH /api/v2/users/:id
+- [ ] DELETE /api/v2/users/:id
+- [ ] GET /api/v2/teams
+
+## Phase 3 — Data Migration
+- [ ] Migrate user preferences
+- [ ] Backfill activity logs
+- [ ] Update webhook URLs
+- [ ] Notify third-party integrations
+
+## Rollback Plan
+If issues arise, revert the API gateway routing to point back to v1 endpoints. Database schema is backward compatible.
+` });
+  await mkFile('Endpoint mapping.csv', 'text/csv', 8900, api.id, { created: ago(12), updated: ago(6), content: `v1 Endpoint,v2 Endpoint,Method,Status,Notes
+/api/v1/auth/login,/api/v2/auth/login,POST,Done,Added refresh token support
+/api/v1/auth/logout,/api/v2/auth/logout,POST,Done,
+/api/v1/users,/api/v2/users,GET,Done,Added pagination
+/api/v1/users,/api/v2/users,POST,Done,
+/api/v1/users/:id,/api/v2/users/:id,GET,Done,
+/api/v1/users/:id,/api/v2/users/:id,PATCH,In Progress,Adding validation
+/api/v1/users/:id,/api/v2/users/:id,DELETE,Pending,Need soft-delete support
+/api/v1/teams,/api/v2/teams,GET,Pending,
+/api/v1/files,/api/v2/files,GET,Pending,Needs new upload flow
+/api/v1/files/upload,/api/v2/files/upload,POST,Pending,Switching to multipart
+` });
   await mkFile('Load test results.pdf', 'application/pdf', 410000, api.id, { created: ago(4), updated: ago(2) });
 
   // ─── Photos ──────────────────────────────────────────────────────
@@ -401,8 +566,31 @@ export async function seedSampleFolder(userId: string, accountId: string) {
 
   // ─── Root-level files ────────────────────────────────────────────
   await mkFile('Resume — latest.pdf', 'application/pdf', 156000, null, { favourite: true, created: ago(30), updated: ago(5) });
-  await mkFile('Quick notes.md', 'text/markdown', 890, null, { created: ago(1), updated: ago(0) });
-  await mkFile('Project ideas.md', 'text/markdown', 2100, null, { created: ago(15), updated: ago(2) });
+  await mkFile('Quick notes.md', 'text/markdown', 890, null, { created: ago(1), updated: ago(0), content: `# Quick Notes
+
+- Call dentist to reschedule appointment
+- Look into new monitoring tool (Grafana vs Datadog)
+- Buy birthday gift for Sarah
+- Review PR #284 before EOD
+- Update portfolio website with new projects
+` });
+  await mkFile('Project ideas.md', 'text/markdown', 2100, null, { created: ago(15), updated: ago(2), content: `# Project Ideas
+
+## 1. Personal Finance Tracker
+A simple app to track expenses and savings goals. Could use charts for visualization.
+
+## 2. Recipe Manager
+Scan recipes from websites, save them locally, and plan weekly meals.
+
+## 3. Habit Tracker
+Daily habit tracking with streaks and statistics. Mobile-first design.
+
+## 4. Open Source Contribution
+Find beginner-friendly issues in popular repos and start contributing.
+
+---
+*Brainstorm more ideas during weekend hackathon*
+` });
 
   logger.info({ userId }, 'Seeded sample drive folders and files');
 }
