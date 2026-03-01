@@ -13,6 +13,7 @@ import { useAdminAuthStore } from '../../stores/admin-auth-store';
 import { ROUTES } from '../../config/routes';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
+import { ScrollArea } from '../../components/ui/scroll-area';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -169,15 +170,15 @@ export function AdminLayout() {
     display: 'flex',
     flexDirection: 'column',
     gap: 2,
-    overflowY: 'auto',
+    overflow: 'hidden',
   };
 
   const sidebarFooterStyle: CSSProperties = {
     padding: 'var(--spacing-md)',
     borderTop: '1px solid var(--color-border-secondary)',
     display: 'flex',
-    alignItems: 'center',
-    gap: 'var(--spacing-sm)',
+    flexDirection: 'column',
+    gap: 'var(--spacing-xs)',
   };
 
   const avatarStyle: CSSProperties = {
@@ -270,44 +271,26 @@ export function AdminLayout() {
 
         {/* Nav */}
         <nav style={navStyle} aria-label="Admin navigation">
-          {NAV_ITEMS.map((item) => (
-            <NavLinkItem key={item.to} item={item} />
-          ))}
+          <ScrollArea>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '0 0 var(--spacing-xs)' }}>
+              {NAV_ITEMS.map((item) => (
+                <NavLinkItem key={item.to} item={item} />
+              ))}
+            </div>
+          </ScrollArea>
         </nav>
 
         {/* Footer */}
         <div style={sidebarFooterStyle}>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<ArrowLeft size={14} />}
             onClick={() => navigate(ROUTES.HOME)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--spacing-sm)',
-              width: '100%',
-              padding: '0 var(--spacing-sm)',
-              height: 34,
-              borderRadius: 'var(--radius-sm)',
-              border: 'none',
-              background: 'transparent',
-              color: 'var(--color-text-secondary)',
-              fontSize: 'var(--font-size-sm)',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-family)',
-              transition: 'background var(--transition-fast), color var(--transition-fast)',
-              marginBottom: 'var(--spacing-sm)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--color-surface-hover)';
-              e.currentTarget.style.color = 'var(--color-text-primary)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = 'var(--color-text-secondary)';
-            }}
+            style={{ width: '100%', justifyContent: 'flex-start', marginBottom: 'var(--spacing-sm)' }}
           >
-            <ArrowLeft size={14} />
             Back to home
-          </button>
+          </Button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
             <div style={avatarStyle} aria-hidden="true">
               {initials}

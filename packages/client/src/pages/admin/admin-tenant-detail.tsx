@@ -6,6 +6,7 @@ import { queryKeys } from '../../config/query-keys';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Chip } from '../../components/ui/chip';
+import { Skeleton } from '../../components/ui/skeleton';
 
 const PLANS = ['starter', 'pro', 'enterprise'];
 
@@ -56,8 +57,44 @@ export function AdminTenantDetailPage() {
 
   if (isLoading) {
     return (
-      <div style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-sm)' }}>
-        Loading...
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xl)' }}>
+        {/* Back button placeholder */}
+        <Skeleton width={140} height={28} borderRadius="var(--radius-md)" />
+        {/* Header card */}
+        <div style={{
+          background: 'var(--color-bg-primary)',
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid var(--color-border-primary)',
+          padding: 'var(--spacing-xl)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--spacing-lg)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
+            <Skeleton width={200} height={24} borderRadius="var(--radius-sm)" />
+            <Skeleton width={64} height={20} borderRadius="var(--radius-lg)" />
+            <Skeleton width={52} height={20} borderRadius="var(--radius-lg)" />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--spacing-md)', paddingTop: 'var(--spacing-md)', borderTop: '1px solid var(--color-border-secondary)' }}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+                <Skeleton width={80} height={12} borderRadius={3} />
+                <Skeleton width={100} height={16} borderRadius={3} />
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Table placeholders */}
+        {[0, 1].map((section) => (
+          <div key={section} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+            <Skeleton width={120} height={20} borderRadius="var(--radius-sm)" />
+            <div style={{ background: 'var(--color-bg-primary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-primary)', padding: 'var(--spacing-md)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} width="100%" height={36} borderRadius="var(--radius-sm)" />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     );
   }

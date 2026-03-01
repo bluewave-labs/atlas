@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { RefreshCw, Container } from 'lucide-react';
 import { useAdminContainers } from '../../hooks/use-admin';
 import { Badge } from '../../components/ui/badge';
+import { Skeleton } from '../../components/ui/skeleton';
 
 const thStyle: React.CSSProperties = {
   textAlign: 'left',
@@ -28,8 +29,27 @@ export function AdminContainersPage() {
 
   if (isLoading) {
     return (
-      <div style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-sm)', padding: 'var(--spacing-xl)' }}>
-        Loading...
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
+        {/* Header skeleton */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--spacing-sm)' }}>
+          <Skeleton width={100} height={20} borderRadius="var(--radius-sm)" />
+          <Skeleton width={160} height={16} borderRadius="var(--radius-sm)" />
+        </div>
+        {/* Table skeleton */}
+        <div style={{
+          background: 'var(--color-bg-primary)',
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid var(--color-border-primary)',
+          padding: 'var(--spacing-md)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--spacing-sm)',
+        }}>
+          <Skeleton width="100%" height={36} borderRadius="var(--radius-sm)" />
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} width="100%" height={44} borderRadius="var(--radius-sm)" />
+          ))}
+        </div>
       </div>
     );
   }

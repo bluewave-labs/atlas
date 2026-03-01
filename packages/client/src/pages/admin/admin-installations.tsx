@@ -4,6 +4,7 @@ import { useAdminInstallations, useInstallationAction } from '../../hooks/use-ad
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Chip } from '../../components/ui/chip';
+import { Skeleton } from '../../components/ui/skeleton';
 
 const STATUS_FILTERS = ['all', 'running', 'stopped', 'error', 'installing'] as const;
 type StatusFilter = typeof STATUS_FILTERS[number];
@@ -42,8 +43,31 @@ export function AdminInstallationsPage() {
 
   if (isLoading) {
     return (
-      <div style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-sm)', padding: 'var(--spacing-xl)' }}>
-        Loading...
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
+        {/* Header skeleton */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--spacing-sm)' }}>
+          <Skeleton width={100} height={20} borderRadius="var(--radius-sm)" />
+          <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} width={60} height={22} borderRadius="var(--radius-lg)" />
+            ))}
+          </div>
+        </div>
+        {/* Table skeleton */}
+        <div style={{
+          background: 'var(--color-bg-primary)',
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid var(--color-border-primary)',
+          padding: 'var(--spacing-md)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--spacing-sm)',
+        }}>
+          <Skeleton width="100%" height={36} borderRadius="var(--radius-sm)" />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} width="100%" height={44} borderRadius="var(--radius-sm)" />
+          ))}
+        </div>
       </div>
     );
   }

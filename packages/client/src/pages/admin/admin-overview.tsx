@@ -8,6 +8,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useAdminOverview } from '../../hooks/use-admin';
+import { Skeleton } from '../../components/ui/skeleton';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -102,33 +103,9 @@ function SkeletonCard() {
         boxShadow: 'var(--shadow-sm)',
       }}
     >
-      <div
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 'var(--radius-md)',
-          background: 'var(--color-border-primary)',
-          opacity: 0.5,
-        }}
-      />
-      <div
-        style={{
-          width: 48,
-          height: 28,
-          borderRadius: 'var(--radius-sm)',
-          background: 'var(--color-border-primary)',
-          opacity: 0.5,
-        }}
-      />
-      <div
-        style={{
-          width: 88,
-          height: 14,
-          borderRadius: 'var(--radius-sm)',
-          background: 'var(--color-border-primary)',
-          opacity: 0.35,
-        }}
-      />
+      <Skeleton width={40} height={40} borderRadius="var(--radius-md)" />
+      <Skeleton width={48} height={28} borderRadius="var(--radius-sm)" />
+      <Skeleton width={88} height={14} borderRadius="var(--radius-sm)" />
     </div>
   );
 }
