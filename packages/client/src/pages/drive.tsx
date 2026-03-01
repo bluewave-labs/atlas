@@ -229,6 +229,91 @@ function getFileExtension(name: string): string {
   return name.split('.').pop()?.toLowerCase() || '';
 }
 
+function getFriendlyTypeName(mimeType: string | null, name: string): string {
+  if (!mimeType) return 'File';
+  const ext = getFileExtension(name);
+  // By extension first for accuracy
+  const extMap: Record<string, string> = {
+    pdf: 'PDF document',
+    doc: 'MS Word document',
+    docx: 'MS Word document',
+    xls: 'MS Excel spreadsheet',
+    xlsx: 'MS Excel spreadsheet',
+    ppt: 'MS PowerPoint presentation',
+    pptx: 'MS PowerPoint presentation',
+    csv: 'CSV file',
+    json: 'JSON file',
+    xml: 'XML file',
+    html: 'HTML file',
+    css: 'CSS file',
+    js: 'JavaScript file',
+    ts: 'TypeScript file',
+    md: 'Markdown file',
+    txt: 'Plain text file',
+    rtf: 'Rich text document',
+    odt: 'OpenDocument text',
+    ods: 'OpenDocument spreadsheet',
+    odp: 'OpenDocument presentation',
+    zip: 'ZIP archive',
+    gz: 'GZip archive',
+    tar: 'TAR archive',
+    rar: 'RAR archive',
+    '7z': '7-Zip archive',
+    sql: 'SQL file',
+    yaml: 'YAML file',
+    yml: 'YAML file',
+    toml: 'TOML file',
+    ini: 'Configuration file',
+    log: 'Log file',
+    sh: 'Shell script',
+    svg: 'SVG image',
+    png: 'PNG image',
+    jpg: 'JPEG image',
+    jpeg: 'JPEG image',
+    gif: 'GIF image',
+    webp: 'WebP image',
+    bmp: 'Bitmap image',
+    ico: 'Icon file',
+    mp3: 'MP3 audio',
+    wav: 'WAV audio',
+    ogg: 'OGG audio',
+    flac: 'FLAC audio',
+    mp4: 'MP4 video',
+    mov: 'QuickTime video',
+    avi: 'AVI video',
+    mkv: 'MKV video',
+    webm: 'WebM video',
+  };
+  if (ext && extMap[ext]) return extMap[ext];
+  // By MIME type patterns
+  if (mimeType.includes('pdf')) return 'PDF document';
+  if (mimeType.includes('word') || mimeType.includes('document')) return 'MS Word document';
+  if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return 'MS Excel spreadsheet';
+  if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'MS PowerPoint presentation';
+  if (mimeType.startsWith('image/')) return `${mimeType.split('/')[1].toUpperCase()} image`;
+  if (mimeType.startsWith('video/')) return `${mimeType.split('/')[1].toUpperCase()} video`;
+  if (mimeType.startsWith('audio/')) return `${mimeType.split('/')[1].toUpperCase()} audio`;
+  if (mimeType.startsWith('text/')) return 'Text file';
+  if (mimeType.includes('zip') || mimeType.includes('archive') || mimeType.includes('compressed')) return 'Archive';
+  return 'File';
+}
+
+function renderBasicMarkdown(md: string): string {
+  return md
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/^### (.+)$/gm, '<h3 style="margin:12px 0 4px;font-size:14px;font-weight:600">$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2 style="margin:14px 0 4px;font-size:15px;font-weight:600">$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1 style="margin:16px 0 6px;font-size:17px;font-weight:700">$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code style="background:var(--color-bg-tertiary);padding:1px 4px;border-radius:3px;font-size:12px">$1</code>')
+    .replace(/^- (.+)$/gm, '<li style="margin-left:16px;list-style:disc">$1</li>')
+    .replace(/^\d+\. (.+)$/gm, '<li style="margin-left:16px;list-style:decimal">$1</li>')
+    .replace(/^---$/gm, '<hr style="border:none;border-top:1px solid var(--color-border-secondary);margin:12px 0">')
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
 function parseCsvToRows(content: string): string[][] {
   const rows: string[][] = [];
   const lines = content.split('\n');
@@ -260,6 +345,59 @@ function stripExtension(name: string, type: string): string {
   if (type !== 'file') return name;
   const lastDot = name.lastIndexOf('.');
   return lastDot > 0 ? name.slice(0, lastDot) : name;
+}
+
+// ─── Drawing SVG preview ─────────────────────────────────────────────
+
+function DrawingPreviewThumbnail({ content }: { content: Record<string, unknown> | null }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!content || !containerRef.current) return;
+    const elements = Array.isArray((content as any).elements) ? (content as any).elements : [];
+    if (elements.length === 0) {
+      setError(true);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const { exportToSvg } = await import('@excalidraw/excalidraw');
+        const appState = (content as any).appState || {};
+        const files = (content as any).files || {};
+        const svg = await exportToSvg({
+          elements,
+          appState: { ...appState, exportBackground: true, viewBackgroundColor: appState.viewBackgroundColor || '#ffffff' },
+          files,
+        });
+        if (cancelled || !containerRef.current) return;
+        svg.style.width = '100%';
+        svg.style.height = 'auto';
+        svg.style.maxHeight = '300px';
+        svg.style.display = 'block';
+        // Clear existing children safely
+        while (containerRef.current.firstChild) {
+          containerRef.current.removeChild(containerRef.current.firstChild);
+        }
+        containerRef.current.appendChild(svg);
+      } catch {
+        if (!cancelled) setError(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [content]);
+
+  if (error || !content) {
+    return (
+      <div className="drive-preview-icon" style={{ gap: 8, padding: 24 }}>
+        <span style={{ fontSize: 13, color: 'var(--color-text-tertiary)' }}>(empty canvas)</span>
+      </div>
+    );
+  }
+
+  return <div ref={containerRef} style={{ padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 100 }} />;
 }
 
 // ─── Drive page ──────────────────────────────────────────────────────
@@ -1863,6 +2001,17 @@ export function DrivePage() {
                       </div>
                     );
                   })()
+                ) : getFileExtension(previewItem.name) === 'md' ? (
+                  <>
+                    <div
+                      className="drive-preview-pre"
+                      style={{ whiteSpace: 'normal', fontFamily: 'var(--font-family)', fontSize: 13, lineHeight: 1.6 }}
+                      dangerouslySetInnerHTML={{ __html: renderBasicMarkdown(filePreviewData.content) }}
+                    />
+                    {filePreviewData.truncated && (
+                      <div className="drive-preview-truncated">File truncated — showing first 512 KB</div>
+                    )}
+                  </>
                 ) : (
                   <>
                     <pre className="drive-preview-pre">{filePreviewData.content}</pre>
@@ -1906,49 +2055,7 @@ export function DrivePage() {
               </div>
             ) : previewItem.linkedResourceType === 'drawing' && linkedDrawingData ? (
               <div className="drive-preview-text-content">
-                {(() => {
-                  const content = linkedDrawingData.content as Record<string, unknown> | null;
-                  const elements = (content && Array.isArray((content as any).elements)) ? (content as any).elements as Array<{ type: string; text?: string }> : [];
-                  if (elements.length === 0) return (
-                    <div className="drive-preview-icon" style={{ gap: 8, padding: 24 }}>
-                      <span style={{ fontSize: 13, color: 'var(--color-text-tertiary)' }}>(empty canvas)</span>
-                    </div>
-                  );
-                  const shapeCounts: Record<string, number> = {};
-                  elements.forEach((el) => {
-                    const t = el.type || 'unknown';
-                    shapeCounts[t] = (shapeCounts[t] || 0) + 1;
-                  });
-                  const textElements = elements.filter((el) => el.type === 'text' && el.text);
-                  return (
-                    <div style={{ padding: 16 }}>
-                      <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginBottom: 8 }}>
-                        {elements.length} element{elements.length !== 1 ? 's' : ''}
-                      </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: textElements.length > 0 ? 12 : 0 }}>
-                        {Object.entries(shapeCounts).map(([type, count]) => (
-                          <span key={type} style={{
-                            padding: '3px 8px',
-                            borderRadius: 'var(--radius-sm)',
-                            background: 'var(--color-surface-secondary)',
-                            fontSize: 11,
-                            color: 'var(--color-text-secondary)',
-                          }}>
-                            {count} {type}{count !== 1 ? 's' : ''}
-                          </span>
-                        ))}
-                      </div>
-                      {textElements.length > 0 && (
-                        <div style={{ borderTop: '1px solid var(--color-border-secondary)', paddingTop: 10 }}>
-                          <div style={{ fontSize: 11, color: 'var(--color-text-tertiary)', marginBottom: 6 }}>Text content</div>
-                          <pre className="drive-preview-pre" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 12 }}>
-                            {textElements.map((el) => el.text).join('\n')}
-                          </pre>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                <DrawingPreviewThumbnail content={linkedDrawingData.content} />
                 <div style={{ padding: '12px 16px', borderTop: '1px solid var(--color-border-secondary)' }}>
                   <button
                     onClick={() => navigate(`/draw/${previewItem.linkedResourceId}`)}
@@ -2064,7 +2171,7 @@ export function DrivePage() {
             {previewItem.mimeType && (
               <div className="drive-preview-meta-row">
                 <span className="drive-preview-meta-label">Type</span>
-                <span>{previewItem.mimeType}</span>
+                <span>{getFriendlyTypeName(previewItem.mimeType, previewItem.name)}</span>
               </div>
             )}
             {previewItem.tags && previewItem.tags.length > 0 && (
@@ -2709,12 +2816,16 @@ export function DrivePage() {
       />
 
       {iconPickerItem && (
-        <Modal open onOpenChange={() => setIconPickerItem(null)} title="Choose folder icon">
-          <EmojiPicker
-            onSelect={handleIconSelect}
-            onRemove={iconPickerItem.icon ? handleIconRemove : undefined}
-            onClose={() => setIconPickerItem(null)}
-          />
+        <Modal open onOpenChange={() => setIconPickerItem(null)} title="Choose icon" width={320}>
+          <Modal.Header title="Choose icon" />
+          <Modal.Body>
+            <EmojiPicker
+              inline
+              onSelect={handleIconSelect}
+              onRemove={iconPickerItem.icon ? handleIconRemove : undefined}
+              onClose={() => setIconPickerItem(null)}
+            />
+          </Modal.Body>
         </Modal>
       )}
     </div>

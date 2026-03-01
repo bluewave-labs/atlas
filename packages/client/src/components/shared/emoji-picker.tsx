@@ -32,21 +32,37 @@ interface EmojiPickerProps {
   onSelect: (emoji: string) => void;
   onRemove?: () => void;
   onClose: () => void;
+  /** Render as a static block instead of an absolutely positioned popover */
+  inline?: boolean;
 }
 
-export function EmojiPicker({ onSelect, onRemove, onClose }: EmojiPickerProps) {
+export function EmojiPicker({ onSelect, onRemove, onClose, inline }: EmojiPickerProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (inline) return;
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) onClose();
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [onClose]);
+    // Delay listener to avoid catching the click that opened the picker
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handler);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handler);
+    };
+  }, [onClose, inline]);
 
   return (
-    <div ref={ref} className="emoji-picker-popover" style={{ top: '100%', left: 0, marginTop: 4 }}>
+    <div
+      ref={ref}
+      className={inline ? undefined : 'emoji-picker-popover'}
+      style={inline
+        ? { padding: 8, width: '100%', boxSizing: 'border-box' as const }
+        : { top: '100%', left: 0, marginTop: 4 }
+      }
+    >
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
         <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
           Pick an icon
