@@ -5,6 +5,7 @@ import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Chip } from '../../components/ui/chip';
 import { Skeleton } from '../../components/ui/skeleton';
+import { ConfirmDialog } from '../../components/ui/confirm-dialog';
 
 const STATUS_FILTERS = ['all', 'running', 'stopped', 'error', 'installing'] as const;
 type StatusFilter = typeof STATUS_FILTERS[number];
@@ -40,6 +41,8 @@ export function AdminInstallationsPage() {
   const installAction = useInstallationAction();
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
+  const [confirmStopId, setConfirmStopId] = useState<string | null>(null);
+  const confirmStopInst = installations?.find((i) => i.id === confirmStopId);
 
   if (isLoading) {
     return (
@@ -193,7 +196,7 @@ export function AdminInstallationsPage() {
                             size="sm"
                             variant="secondary"
                             icon={<Square size={12} />}
-                            onClick={() => installAction.mutate({ id: inst.id, action: 'stop' })}
+                            onClick={() => setConfirmStopId(inst.id)}
                             disabled={installAction.isPending}
                             aria-label={`Stop ${inst.appName ?? inst.catalogAppId}`}
                           >
@@ -236,6 +239,22 @@ export function AdminInstallationsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Confirm stop */}
+      <ConfirmDialog
+        open={!!confirmStopId}
+        onOpenChange={(open) => { if (!open) setConfirmStopId(null); }}
+        title="Stop installation"
+        description={`Stop ${confirmStopInst?.appName ?? confirmStopInst?.catalogAppId ?? 'this installation'}? The app will become unavailable until restarted.`}
+        confirmLabel="Stop"
+        destructive
+        onConfirm={() => {
+          if (confirmStopId) {
+            installAction.mutate({ id: confirmStopId, action: 'stop' });
+            setConfirmStopId(null);
+          }
+        }}
+      />
     </div>
   );
 }

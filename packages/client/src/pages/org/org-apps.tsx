@@ -61,6 +61,7 @@ export function OrgAppsPage() {
   const [assignModalInstallation, setAssignModalInstallation] = useState<AppInstallation | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [uninstallTarget, setUninstallTarget] = useState<(AppInstallation & { appName: string }) | null>(null);
+  const [stopTarget, setStopTarget] = useState<(AppInstallation & { appName: string }) | null>(null);
 
   // Enrich installations with catalog metadata
   const enrichedInstallations = useMemo(() => {
@@ -247,7 +248,7 @@ export function OrgAppsPage() {
                       label="Stop"
                       size={30}
                       tooltip
-                      onClick={() => stopApp.mutate(inst.id)}
+                      onClick={() => setStopTarget(inst)}
                     />
                   )}
                   <IconButton
@@ -390,6 +391,22 @@ export function OrgAppsPage() {
         tenantSlug={undefined}
         installationStatus={currentInstallation?.status}
         onDone={handleInstallDone}
+      />
+
+      {/* Stop confirmation */}
+      <ConfirmDialog
+        open={!!stopTarget}
+        onOpenChange={(open) => { if (!open) setStopTarget(null); }}
+        title="Stop app"
+        description={`Stop ${stopTarget?.appName ?? 'this app'}? It will become unavailable until restarted.`}
+        confirmLabel="Stop"
+        destructive
+        onConfirm={() => {
+          if (stopTarget) {
+            stopApp.mutate(stopTarget.id);
+            setStopTarget(null);
+          }
+        }}
       />
 
       {/* Uninstall confirmation */}

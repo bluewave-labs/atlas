@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, AppWindow, Play, Square, RotateCw, Cpu, HardDrive, MemoryStick } from 'lucide-react';
 import { useAdminTenant, useUpdateTenantStatus, useUpdateTenantPlan, useInstallationAction } from '../../hooks/use-admin';
@@ -7,6 +8,8 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Chip } from '../../components/ui/chip';
 import { Skeleton } from '../../components/ui/skeleton';
+import { Select } from '../../components/ui/select';
+import { ConfirmDialog } from '../../components/ui/confirm-dialog';
 
 const PLANS = ['starter', 'pro', 'enterprise'];
 
@@ -50,6 +53,9 @@ export function AdminTenantDetailPage() {
   const planMutation = useUpdateTenantPlan();
   const installAction = useInstallationAction();
   const qc = useQueryClient();
+
+  const [confirmSuspend, setConfirmSuspend] = useState(false);
+  const [confirmStopId, setConfirmStopId] = useState<string | null>(null);
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: queryKeys.admin.tenant(id!) });
@@ -172,10 +178,11 @@ export function AdminTenantDetailPage() {
               size="sm"
               disabled={statusMutation.isPending}
               onClick={() => {
-                statusMutation.mutate(
-                  { id: tenant.id, status: isSuspended ? 'active' : 'suspended' },
-                  { onSuccess: invalidate },
-                );
+                if (isSuspended) {
+                  statusMutation.mutate({ id: tenant.id, status: 'active' }, { onSuccess: invalidate });
+                } else {
+                  setConfirmSuspend(true);
+                }
               }}
             >
               {isSuspended ? 'Activate' : 'Suspend'}
@@ -202,29 +209,19 @@ export function AdminTenantDetailPage() {
             }}>
               Plan
             </span>
-            <select
+            <Select
               value={tenant.plan}
-              onChange={(e) => {
-                planMutation.mutate({ id: tenant.id, plan: e.target.value }, { onSuccess: invalidate });
+              onChange={(val) => {
+                planMutation.mutate({ id: tenant.id, plan: val }, { onSuccess: invalidate });
               }}
-              style={{
-                padding: '5px 8px',
-                border: '1px solid var(--color-border-primary)',
-                borderRadius: 'var(--radius-sm)',
-                background: 'var(--color-bg-elevated)',
-                color: 'var(--color-text-primary)',
-                fontSize: 'var(--font-size-sm)',
-                fontFamily: 'var(--font-family)',
-                cursor: 'pointer',
-                outline: 'none',
-                width: '100%',
-                maxWidth: 140,
-              }}
-            >
-              {PLANS.map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
+              options={PLANS.map((p) => ({
+                value: p,
+                label: p,
+                color: PLAN_COLORS[p],
+              }))}
+              size="sm"
+              width={140}
+            />
           </div>
 
           {/* CPU */}
@@ -435,7 +432,7 @@ export function AdminTenantDetailPage() {
                             variant="secondary"
                             icon={<Square size={12} />}
                             disabled={installAction.isPending}
-                            onClick={() => installAction.mutate({ id: inst.id, action: 'stop' }, { onSuccess: invalidate })}
+                            onClick={() => setConfirmStopId(inst.id)}
                           >
                             Stop
                           </Button>
@@ -459,6 +456,34 @@ export function AdminTenantDetailPage() {
         </div>
       </div>
 
+      {/* Confirm suspend */}
+      <ConfirmDialog
+        open={confirmSuspend}
+        onOpenChange={setConfirmSuspend}
+        title="Suspend tenant"
+        description={`This will suspend "${tenant.name}" and stop all running installations. Users will lose access until reactivated.`}
+        confirmLabel="Suspend"
+        destructive
+        onConfirm={() => {
+          statusMutation.mutate({ id: tenant.id, status: 'suspended' }, { onSuccess: invalidate });
+        }}
+      />
+
+      {/* Confirm stop installation */}
+      <ConfirmDialog
+        open={!!confirmStopId}
+        onOpenChange={(open) => { if (!open) setConfirmStopId(null); }}
+        title="Stop installation"
+        description="This will stop the running application. Users will not be able to access it until it is started again."
+        confirmLabel="Stop"
+        destructive
+        onConfirm={() => {
+          if (confirmStopId) {
+            installAction.mutate({ id: confirmStopId, action: 'stop' }, { onSuccess: invalidate });
+            setConfirmStopId(null);
+          }
+        }}
+      />
     </div>
   );
 }

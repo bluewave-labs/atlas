@@ -13,6 +13,7 @@ import type { TenantMemberRole } from '@atlasmail/shared';
 import { Avatar } from '../../components/ui/avatar';
 import { Button } from '../../components/ui/button';
 import { Chip } from '../../components/ui/chip';
+import { Select } from '../../components/ui/select';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
@@ -288,26 +289,17 @@ export function OrgMembersPage() {
                       {user.role}
                     </Chip>
                   ) : (
-                    <select
+                    <Select
                       value={user.role}
-                      onChange={(e) => updateRole.mutate({ userId: user.userId, role: e.target.value as TenantMemberRole })}
-                      style={{
-                        padding: '2px 6px',
-                        fontSize: 11,
-                        fontWeight: 500,
-                        border: '1px solid var(--color-border-primary)',
-                        borderRadius: 'var(--radius-sm)',
-                        background: 'var(--color-bg-primary)',
-                        color: ROLE_COLORS[user.role] ?? ROLE_COLORS.member,
-                        cursor: 'pointer',
-                        fontFamily: 'var(--font-family)',
-                        outline: 'none',
-                      }}
-                    >
-                      <option value="owner">Owner</option>
-                      <option value="admin">Admin</option>
-                      <option value="member">Member</option>
-                    </select>
+                      onChange={(val) => updateRole.mutate({ userId: user.userId, role: val as TenantMemberRole })}
+                      options={[
+                        { value: 'owner', label: 'Owner', color: ROLE_COLORS.owner },
+                        { value: 'admin', label: 'Admin', color: ROLE_COLORS.admin },
+                        { value: 'member', label: 'Member', color: ROLE_COLORS.member },
+                      ]}
+                      size="sm"
+                      width={100}
+                    />
                   )}
                 </div>
 
@@ -405,27 +397,14 @@ export function OrgMembersPage() {
                 <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>
                   Role
                 </label>
-                <select
+                <Select
                   value={addForm.role}
-                  onChange={(e) => setAddForm({ ...addForm, role: e.target.value as TenantMemberRole })}
-                  style={{
-                    width: '100%',
-                    height: 34,
-                    padding: '0 var(--spacing-sm)',
-                    background: 'var(--color-bg-tertiary)',
-                    border: '1px solid var(--color-border-primary)',
-                    borderRadius: 'var(--radius-md)',
-                    color: 'var(--color-text-primary)',
-                    fontSize: 'var(--font-size-md)',
-                    fontFamily: 'var(--font-family)',
-                    outline: 'none',
-                    cursor: 'pointer',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  <option value="member">Member</option>
-                  <option value="admin">Admin</option>
-                </select>
+                  onChange={(val) => setAddForm({ ...addForm, role: val as TenantMemberRole })}
+                  options={[
+                    { value: 'member', label: 'Member' },
+                    { value: 'admin', label: 'Admin' },
+                  ]}
+                />
               </div>
             </div>
           </Modal.Body>
@@ -486,27 +465,14 @@ export function OrgMembersPage() {
                 <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>
                   Role
                 </label>
-                <select
+                <Select
                   value={inviteForm.role}
-                  onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value as TenantMemberRole })}
-                  style={{
-                    width: '100%',
-                    height: 34,
-                    padding: '0 var(--spacing-sm)',
-                    background: 'var(--color-bg-tertiary)',
-                    border: '1px solid var(--color-border-primary)',
-                    borderRadius: 'var(--radius-md)',
-                    color: 'var(--color-text-primary)',
-                    fontSize: 'var(--font-size-md)',
-                    fontFamily: 'var(--font-family)',
-                    outline: 'none',
-                    cursor: 'pointer',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  <option value="member">Member</option>
-                  <option value="admin">Admin</option>
-                </select>
+                  onChange={(val) => setInviteForm({ ...inviteForm, role: val as TenantMemberRole })}
+                  options={[
+                    { value: 'member', label: 'Member' },
+                    { value: 'admin', label: 'Admin' },
+                  ]}
+                />
               </div>
               <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', margin: 0 }}>
                 The user will receive an invitation link to set up their account.
