@@ -44,3 +44,39 @@ export interface MoveDocumentInput {
   parentId: string | null;
   sortOrder: number;
 }
+
+export interface DocumentComment {
+  id: string;
+  documentId: string;
+  userId: string;
+  accountId: string;
+  content: string;
+  selectionFrom: number | null;
+  selectionTo: number | null;
+  selectionText: string | null;
+  isResolved: boolean;
+  parentId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DocumentLink {
+  id: string;
+  sourceDocId: string;
+  targetDocId: string;
+  createdAt: string;
+}
+
+export interface CreateDocCommentInput {
+  content: string;
+  selectionFrom?: number;
+  selectionTo?: number;
+  selectionText?: string;
+  parentId?: string;
+}
+
+export interface Backlink {
+  id: string;
+  title: string;
+  icon: string | null;
+}

@@ -12,6 +12,7 @@ import tasksRoutes from './tasks.routes';
 import tablesRoutes from './tables.routes';
 import uploadRoutes from './upload.routes';
 import driveRoutes from './drive.routes';
+import notificationRoutes from './notification.routes';
 
 const router = Router();
 
@@ -28,5 +29,6 @@ router.use('/tasks', tasksRoutes);
 router.use('/tables', tablesRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/drive', driveRoutes);
+router.use('/notifications', notificationRoutes);
 
 export default router;

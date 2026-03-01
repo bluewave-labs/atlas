@@ -225,6 +225,10 @@ export const userSettings = sqliteTable('user_settings', {
   driveSortOrder: text('drive_sort_order').notNull().default('asc'),
   // Search
   recentSearches: text('recent_searches', { mode: 'json' }).notNull().$type<string[]>().default([]),
+  // Home
+  homeBgType: text('home_bg_type').notNull().default('unsplash'),
+  homeBgValue: text('home_bg_value'),
+  recentItems: text('recent_items', { mode: 'json' }).notNull().$type<string[]>().default([]),
   createdAt: timestampNow().notNull(),
   updatedAt: timestampNow().notNull(),
 });
@@ -413,6 +417,8 @@ export const tasks = sqliteTable('tasks', {
   tags: text('tags', { mode: 'json' }).notNull().$type<string[]>().default([]),
   recurrenceRule: text('recurrence_rule'),
   recurrenceParentId: text('recurrence_parent_id').references((): AnySQLiteColumn => tasks.id, { onDelete: 'set null' }),
+  sourceEmailId: text('source_email_id'),
+  sourceEmailSubject: text('source_email_subject'),
   sortOrder: integer('sort_order').notNull().default(0),
   isArchived: integer('is_archived', { mode: 'boolean' }).notNull().default(false),
   createdAt: timestampNow().notNull(),
@@ -519,4 +525,116 @@ export const drawings = sqliteTable('drawings', {
 }, (table) => ({
   accountIdx: index('idx_drawings_account').on(table.accountId, table.isArchived),
   userIdx: index('idx_drawings_user').on(table.userId, table.isArchived),
+}));
+
+// ─── Notifications ──────────────────────────────────────────────────
+
+export const notifications = sqliteTable('notifications', {
+  id: uuid().primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  accountId: text('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  type: text('type').notNull().default('reminder'), // reminder | task | system
+  title: text('title').notNull(),
+  body: text('body'),
+  sourceType: text('source_type'), // event | task | document
+  sourceId: text('source_id'),
+  isRead: integer('is_read', { mode: 'boolean' }).notNull().default(false),
+  createdAt: timestampNow().notNull(),
+}, (table) => ({
+  userIdx: index('idx_notifications_user').on(table.userId, table.isRead),
+  userCreatedIdx: index('idx_notifications_user_created').on(table.userId, table.createdAt),
+}));
+
+// ─── Push Subscriptions ─────────────────────────────────────────────
+
+export const pushSubscriptions = sqliteTable('push_subscriptions', {
+  id: uuid().primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  endpoint: text('endpoint').notNull(),
+  p256dh: text('p256dh').notNull(),
+  auth: text('auth').notNull(),
+  createdAt: timestampNow().notNull(),
+}, (table) => ({
+  userIdx: index('idx_push_subscriptions_user').on(table.userId),
+}));
+
+// ─── Subtasks ────────────────────────────────────────────────────────
+
+export const subtasks = sqliteTable('subtasks', {
+  id: uuid().primaryKey(),
+  taskId: text('task_id').notNull().references(() => tasks.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  title: text('title').notNull().default(''),
+  isCompleted: integer('is_completed', { mode: 'boolean' }).notNull().default(false),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestampNow().notNull(),
+}, (table) => ({
+  taskIdx: index('idx_subtasks_task').on(table.taskId, table.sortOrder),
+}));
+
+// ─── Task Activities ─────────────────────────────────────────────────
+
+export const taskActivities = sqliteTable('task_activities', {
+  id: uuid().primaryKey(),
+  taskId: text('task_id').notNull().references(() => tasks.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  action: text('action').notNull(), // created | updated | completed | subtask_added | subtask_completed
+  field: text('field'),
+  oldValue: text('old_value'),
+  newValue: text('new_value'),
+  createdAt: timestampNow().notNull(),
+}, (table) => ({
+  taskIdx: index('idx_task_activities_task').on(table.taskId, table.createdAt),
+}));
+
+// ─── Task Templates ──────────────────────────────────────────────────
+
+export const taskTemplates = sqliteTable('task_templates', {
+  id: uuid().primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  accountId: text('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  title: text('title').notNull().default('Untitled template'),
+  description: text('description'),
+  icon: text('icon'),
+  defaultWhen: text('default_when').notNull().default('inbox'),
+  defaultPriority: text('default_priority').notNull().default('none'),
+  defaultTags: text('default_tags', { mode: 'json' }).notNull().$type<string[]>().default([]),
+  subtaskTitles: text('subtask_titles', { mode: 'json' }).notNull().$type<string[]>().default([]),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestampNow().notNull(),
+}, (table) => ({
+  userIdx: index('idx_task_templates_user').on(table.userId),
+}));
+
+// ─── Document Comments ──────────────────────────────────────────────
+
+export const documentComments = sqliteTable('document_comments', {
+  id: uuid().primaryKey(),
+  documentId: text('document_id').notNull().references(() => documents.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  accountId: text('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  content: text('content').notNull(),
+  selectionFrom: integer('selection_from'),
+  selectionTo: integer('selection_to'),
+  selectionText: text('selection_text'),
+  isResolved: integer('is_resolved', { mode: 'boolean' }).notNull().default(false),
+  parentId: text('parent_id').references((): AnySQLiteColumn => documentComments.id, { onDelete: 'cascade' }),
+  createdAt: timestampNow().notNull(),
+  updatedAt: timestampNow().notNull(),
+}, (table) => ({
+  docIdx: index('idx_document_comments_doc').on(table.documentId),
+  parentIdx: index('idx_document_comments_parent').on(table.parentId),
+}));
+
+// ─── Document Links ─────────────────────────────────────────────────
+
+export const documentLinks = sqliteTable('document_links', {
+  id: uuid().primaryKey(),
+  sourceDocId: text('source_doc_id').notNull().references(() => documents.id, { onDelete: 'cascade' }),
+  targetDocId: text('target_doc_id').notNull().references(() => documents.id, { onDelete: 'cascade' }),
+  createdAt: timestampNow().notNull(),
+}, (table) => ({
+  sourceIdx: index('idx_document_links_source').on(table.sourceDocId),
+  targetIdx: index('idx_document_links_target').on(table.targetDocId),
+  uniqueLink: uniqueIndex('idx_document_links_unique').on(table.sourceDocId, table.targetDocId),
 }));

@@ -1,6 +1,6 @@
 import { db } from '../config/database';
-import { documents, documentVersions } from '../db/schema';
-import { eq, and, isNull, asc, sql } from 'drizzle-orm';
+import { documents, documentVersions, documentComments, documentLinks } from '../db/schema';
+import { eq, and, isNull, asc, desc, sql } from 'drizzle-orm';
 import { logger } from '../utils/logger';
 import type {
   CreateDocumentInput,
@@ -629,6 +629,11 @@ export async function updateDocument(
     await archiveDescendants(userId, documentId, true);
   }
 
+  // Sync document links when content changes
+  if (input.content !== undefined) {
+    await syncDocumentLinks(userId, documentId, input.content);
+  }
+
   const [updated] = await db
     .select()
     .from(documents)
@@ -847,4 +852,97 @@ export async function restoreVersion(userId: string, documentId: string, version
     title: version.title,
     content: version.content,
   });
+}
+
+// ─── Document Comments ───────────────────────────────────────────────
+
+export async function listComments(userId: string, documentId: string) {
+  return db.select().from(documentComments)
+    .where(eq(documentComments.documentId, documentId))
+    .orderBy(asc(documentComments.createdAt));
+}
+
+export async function createComment(userId: string, accountId: string, documentId: string, input: {
+  content: string; selectionFrom?: number; selectionTo?: number; selectionText?: string; parentId?: string;
+}) {
+  const now = new Date().toISOString();
+  const [created] = await db.insert(documentComments).values({
+    documentId, userId, accountId,
+    content: input.content,
+    selectionFrom: input.selectionFrom ?? null, selectionTo: input.selectionTo ?? null,
+    selectionText: input.selectionText ?? null,
+    parentId: input.parentId ?? null,
+    createdAt: now, updatedAt: now,
+  }).returning();
+  return created;
+}
+
+export async function updateComment(userId: string, commentId: string, data: { content?: string; isResolved?: boolean }) {
+  const now = new Date().toISOString();
+  const updates: Record<string, unknown> = { updatedAt: now };
+  if (data.content !== undefined) updates.content = data.content;
+  if (data.isResolved !== undefined) updates.isResolved = data.isResolved;
+  await db.update(documentComments).set(updates)
+    .where(and(eq(documentComments.id, commentId), eq(documentComments.userId, userId)));
+  const [updated] = await db.select().from(documentComments)
+    .where(and(eq(documentComments.id, commentId), eq(documentComments.userId, userId))).limit(1);
+  return updated || null;
+}
+
+export async function deleteComment(userId: string, commentId: string) {
+  await db.delete(documentComments)
+    .where(and(eq(documentComments.id, commentId), eq(documentComments.userId, userId)));
+}
+
+export async function resolveComment(userId: string, commentId: string) {
+  return updateComment(userId, commentId, { isResolved: true });
+}
+
+// ─── Document Links / Backlinks ──────────────────────────────────────
+
+export async function syncDocumentLinks(userId: string, docId: string, content: Record<string, unknown> | null) {
+  // Delete existing links from this document
+  await db.delete(documentLinks).where(eq(documentLinks.sourceDocId, docId));
+
+  if (!content) return;
+
+  // Parse content to find pageMention nodes (simple JSON walk)
+  const mentionedIds = new Set<string>();
+  function walk(obj: unknown) {
+    if (!obj || typeof obj !== 'object') return;
+    if (Array.isArray(obj)) { obj.forEach(walk); return; }
+    const o = obj as Record<string, unknown>;
+    if (o.type === 'pageMention' && typeof o.attrs === 'object' && o.attrs) {
+      const id = (o.attrs as Record<string, unknown>).pageId;
+      if (typeof id === 'string') mentionedIds.add(id);
+    }
+    if (o.content) walk(o.content);
+  }
+  walk(content);
+
+  // Insert links
+  const now = new Date().toISOString();
+  for (const targetId of mentionedIds) {
+    if (targetId === docId) continue; // Skip self-references
+    try {
+      await db.insert(documentLinks).values({
+        sourceDocId: docId, targetDocId: targetId, createdAt: now,
+      });
+    } catch { /* duplicate or missing target — ignore */ }
+  }
+}
+
+export async function getBacklinks(userId: string, docId: string) {
+  const links = await db.select({
+    id: documents.id,
+    title: documents.title,
+    icon: documents.icon,
+  }).from(documentLinks)
+    .innerJoin(documents, eq(documentLinks.sourceDocId, documents.id))
+    .where(and(
+      eq(documentLinks.targetDocId, docId),
+      eq(documents.userId, userId),
+      eq(documents.isArchived, false),
+    ));
+  return links;
 }

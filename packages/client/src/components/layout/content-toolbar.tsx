@@ -5,6 +5,7 @@ import { useEmailStore } from '../../stores/email-store';
 import { useUIStore } from '../../stores/ui-store';
 import { SearchBar } from '../search/search-bar';
 import { Chip } from '../ui/chip';
+import { NotificationCenter } from '../notifications/notification-center';
 import type { EmailCategory } from '@atlasmail/shared';
 import type { Mailbox } from '../../stores/email-store';
 import type { CSSProperties } from 'react';
@@ -193,8 +194,10 @@ export function ContentToolbar() {
           <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search..." />
         </div>
 
-        {/* Settings buttons */}
+        {/* Notifications & settings */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 4 }}>
+          <NotificationCenter />
+
           {/* Global app settings */}
           <button
             aria-label="App settings"

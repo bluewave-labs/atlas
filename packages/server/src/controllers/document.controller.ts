@@ -230,3 +230,87 @@ export async function restoreVersion(req: Request, res: Response) {
     res.status(500).json({ success: false, error: 'Failed to restore version' });
   }
 }
+
+// ─── Comments ────────────────────────────────────────────────────────
+
+export async function listComments(req: Request, res: Response) {
+  try {
+    const comments = await documentService.listComments(req.auth!.userId, req.params.id as string);
+    res.json({ success: true, data: comments });
+  } catch (error) {
+    logger.error({ error }, 'Failed to list comments');
+    res.status(500).json({ success: false, error: 'Failed to list comments' });
+  }
+}
+
+export async function createComment(req: Request, res: Response) {
+  try {
+    const comment = await documentService.createComment(req.auth!.userId, req.auth!.accountId, req.params.id as string, req.body);
+    res.json({ success: true, data: comment });
+  } catch (error) {
+    logger.error({ error }, 'Failed to create comment');
+    res.status(500).json({ success: false, error: 'Failed to create comment' });
+  }
+}
+
+export async function updateComment(req: Request, res: Response) {
+  try {
+    const comment = await documentService.updateComment(req.auth!.userId, req.params.commentId as string, req.body);
+    if (!comment) { res.status(404).json({ success: false, error: 'Comment not found' }); return; }
+    res.json({ success: true, data: comment });
+  } catch (error) {
+    logger.error({ error }, 'Failed to update comment');
+    res.status(500).json({ success: false, error: 'Failed to update comment' });
+  }
+}
+
+export async function deleteComment(req: Request, res: Response) {
+  try {
+    await documentService.deleteComment(req.auth!.userId, req.params.commentId as string);
+    res.json({ success: true, data: null });
+  } catch (error) {
+    logger.error({ error }, 'Failed to delete comment');
+    res.status(500).json({ success: false, error: 'Failed to delete comment' });
+  }
+}
+
+export async function resolveComment(req: Request, res: Response) {
+  try {
+    const comment = await documentService.resolveComment(req.auth!.userId, req.params.commentId as string);
+    if (!comment) { res.status(404).json({ success: false, error: 'Comment not found' }); return; }
+    res.json({ success: true, data: comment });
+  } catch (error) {
+    logger.error({ error }, 'Failed to resolve comment');
+    res.status(500).json({ success: false, error: 'Failed to resolve comment' });
+  }
+}
+
+// ─── Backlinks ───────────────────────────────────────────────────────
+
+export async function getBacklinks(req: Request, res: Response) {
+  try {
+    const backlinks = await documentService.getBacklinks(req.auth!.userId, req.params.id as string);
+    res.json({ success: true, data: backlinks });
+  } catch (error) {
+    logger.error({ error }, 'Failed to get backlinks');
+    res.status(500).json({ success: false, error: 'Failed to get backlinks' });
+  }
+}
+
+// ─── Import ──────────────────────────────────────────────────────────
+
+export async function importDocument(req: Request, res: Response) {
+  try {
+    // Simple import: accept { html, title } from client
+    // Client handles file conversion (mammoth for docx, marked for md)
+    const { html, title } = req.body;
+    const doc = await documentService.createDocument(req.auth!.userId, req.auth!.accountId, {
+      title: title || 'Imported document',
+      content: html ? { _html: html } : null,
+    });
+    res.json({ success: true, data: doc });
+  } catch (error) {
+    logger.error({ error }, 'Failed to import document');
+    res.status(500).json({ success: false, error: 'Failed to import document' });
+  }
+}

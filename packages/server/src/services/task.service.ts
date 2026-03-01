@@ -1,5 +1,5 @@
 import { db } from '../config/database';
-import { tasks, taskProjects } from '../db/schema';
+import { tasks, taskProjects, subtasks, taskActivities, taskTemplates } from '../db/schema';
 import { eq, and, asc, desc, sql, isNull } from 'drizzle-orm';
 import { logger } from '../utils/logger';
 import type {
@@ -130,6 +130,8 @@ export async function createTask(userId: string, accountId: string, input: Creat
       dueDate: input.dueDate ?? null,
       tags: input.tags ?? [],
       recurrenceRule: input.recurrenceRule ?? null,
+      sourceEmailId: (input as any).sourceEmailId ?? null,
+      sourceEmailSubject: (input as any).sourceEmailSubject ?? null,
       sortOrder,
       createdAt: now,
       updatedAt: now,
@@ -166,6 +168,8 @@ export async function updateTask(userId: string, taskId: string, input: UpdateTa
   if (input.recurrenceRule !== undefined) updates.recurrenceRule = input.recurrenceRule;
   if (input.sortOrder !== undefined) updates.sortOrder = input.sortOrder;
   if (input.isArchived !== undefined) updates.isArchived = input.isArchived;
+  if ((input as any).sourceEmailId !== undefined) updates.sourceEmailId = (input as any).sourceEmailId;
+  if ((input as any).sourceEmailSubject !== undefined) updates.sourceEmailSubject = (input as any).sourceEmailSubject;
 
   await db
     .update(tasks)
@@ -403,4 +407,122 @@ export async function getTaskCounts(userId: string) {
   counts.upcoming = tasksWithDueDate.length;
 
   return counts;
+}
+
+// ─── Subtasks ────────────────────────────────────────────────────────
+
+export async function listSubtasks(taskId: string) {
+  return db.select().from(subtasks).where(eq(subtasks.taskId, taskId))
+    .orderBy(asc(subtasks.sortOrder));
+}
+
+export async function createSubtask(userId: string, taskId: string, title: string) {
+  const now = new Date().toISOString();
+  const [maxSort] = await db.select({ max: sql<number>`COALESCE(MAX(${subtasks.sortOrder}), -1)` })
+    .from(subtasks).where(eq(subtasks.taskId, taskId));
+  const sortOrder = (maxSort?.max ?? -1) + 1;
+  const [created] = await db.insert(subtasks).values({
+    taskId, userId, title, sortOrder, createdAt: now,
+  }).returning();
+  await logActivity(userId, taskId, 'subtask_added', null, null, title);
+  return created;
+}
+
+export async function updateSubtask(userId: string, subtaskId: string, data: { title?: string; isCompleted?: boolean }) {
+  const updates: Record<string, unknown> = {};
+  if (data.title !== undefined) updates.title = data.title;
+  if (data.isCompleted !== undefined) updates.isCompleted = data.isCompleted;
+  await db.update(subtasks).set(updates).where(eq(subtasks.id, subtaskId));
+  const [updated] = await db.select().from(subtasks).where(eq(subtasks.id, subtaskId)).limit(1);
+  if (updated && data.isCompleted !== undefined) {
+    await logActivity(userId, updated.taskId, 'subtask_completed', null, null, updated.title);
+  }
+  return updated || null;
+}
+
+export async function deleteSubtask(subtaskId: string) {
+  await db.delete(subtasks).where(eq(subtasks.id, subtaskId));
+}
+
+export async function reorderSubtasks(taskId: string, subtaskIds: string[]) {
+  for (let i = 0; i < subtaskIds.length; i++) {
+    await db.update(subtasks).set({ sortOrder: i }).where(and(eq(subtasks.id, subtaskIds[i]), eq(subtasks.taskId, taskId)));
+  }
+}
+
+// ─── Task Activities ─────────────────────────────────────────────────
+
+export async function logActivity(userId: string, taskId: string, action: string, field: string | null, oldValue: string | null, newValue: string | null) {
+  await db.insert(taskActivities).values({
+    taskId, userId, action, field, oldValue, newValue, createdAt: new Date().toISOString(),
+  });
+}
+
+export async function listActivities(taskId: string, limit = 50) {
+  return db.select().from(taskActivities).where(eq(taskActivities.taskId, taskId))
+    .orderBy(desc(taskActivities.createdAt)).limit(limit);
+}
+
+// ─── Task Templates ─────────────────────────────────────────────────
+
+export async function listTemplates(userId: string) {
+  return db.select().from(taskTemplates).where(eq(taskTemplates.userId, userId))
+    .orderBy(asc(taskTemplates.sortOrder));
+}
+
+export async function createTemplate(userId: string, accountId: string, input: {
+  title: string; description?: string | null; icon?: string | null;
+  defaultWhen?: string; defaultPriority?: string; defaultTags?: string[]; subtaskTitles?: string[];
+}) {
+  const now = new Date().toISOString();
+  const [maxSort] = await db.select({ max: sql<number>`COALESCE(MAX(${taskTemplates.sortOrder}), -1)` })
+    .from(taskTemplates).where(eq(taskTemplates.userId, userId));
+  const [created] = await db.insert(taskTemplates).values({
+    userId, accountId,
+    title: input.title, description: input.description ?? null, icon: input.icon ?? null,
+    defaultWhen: input.defaultWhen ?? 'inbox', defaultPriority: input.defaultPriority ?? 'none',
+    defaultTags: input.defaultTags ?? [], subtaskTitles: input.subtaskTitles ?? [],
+    sortOrder: (maxSort?.max ?? -1) + 1, createdAt: now,
+  }).returning();
+  return created;
+}
+
+export async function updateTemplate(userId: string, templateId: string, input: Record<string, unknown>) {
+  const updates: Record<string, unknown> = {};
+  if (input.title !== undefined) updates.title = input.title;
+  if (input.description !== undefined) updates.description = input.description;
+  if (input.icon !== undefined) updates.icon = input.icon;
+  if (input.defaultWhen !== undefined) updates.defaultWhen = input.defaultWhen;
+  if (input.defaultPriority !== undefined) updates.defaultPriority = input.defaultPriority;
+  if (input.defaultTags !== undefined) updates.defaultTags = input.defaultTags;
+  if (input.subtaskTitles !== undefined) updates.subtaskTitles = input.subtaskTitles;
+  if (input.sortOrder !== undefined) updates.sortOrder = input.sortOrder;
+  await db.update(taskTemplates).set(updates).where(and(eq(taskTemplates.id, templateId), eq(taskTemplates.userId, userId)));
+  const [updated] = await db.select().from(taskTemplates).where(and(eq(taskTemplates.id, templateId), eq(taskTemplates.userId, userId))).limit(1);
+  return updated || null;
+}
+
+export async function deleteTemplate(userId: string, templateId: string) {
+  await db.delete(taskTemplates).where(and(eq(taskTemplates.id, templateId), eq(taskTemplates.userId, userId)));
+}
+
+export async function createTaskFromTemplate(userId: string, accountId: string, templateId: string) {
+  const [template] = await db.select().from(taskTemplates)
+    .where(and(eq(taskTemplates.id, templateId), eq(taskTemplates.userId, userId))).limit(1);
+  if (!template) return null;
+
+  const task = await createTask(userId, accountId, {
+    title: template.title,
+    when: template.defaultWhen as any,
+    priority: template.defaultPriority as any,
+    tags: template.defaultTags as string[],
+    icon: template.icon,
+  });
+
+  // Create subtasks from template
+  for (let i = 0; i < (template.subtaskTitles as string[]).length; i++) {
+    await createSubtask(userId, task.id, (template.subtaskTitles as string[])[i]);
+  }
+
+  return task;
 }

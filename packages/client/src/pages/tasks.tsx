@@ -13,6 +13,8 @@ import {
   useTaskList, useCreateTask, useUpdateTask, useDeleteTask,
   useProjectList, useCreateProject, useUpdateProject, useDeleteProject, useTaskCounts,
   useReorderTasks,
+  useSubtasks, useCreateSubtask, useUpdateSubtask, useDeleteSubtask,
+  useTaskActivities,
 } from '../hooks/use-tasks';
 import { useCalendarEvents } from '../hooks/use-calendar';
 import { TaskNotesEditor } from '../components/tasks/task-notes-editor';
@@ -290,6 +292,11 @@ function TaskItem({
               {task.title || 'Untitled'}
             </span>
           )}
+          {task.subtasks && task.subtasks.length > 0 && (
+            <span className="ml-1.5 text-[10px] text-gray-400 font-medium">
+              {task.subtasks.filter(s => s.isCompleted).length}/{task.subtasks.length}
+            </span>
+          )}
           <WhenBadge when={task.when} dueDate={task.dueDate} showBadge={showWhenBadge} />
         </div>
 
@@ -556,6 +563,150 @@ function NewHeadingCreator({
   );
 }
 
+// ─── Subtask Section ─────────────────────────────────────────────────
+
+function SubtaskSection({ taskId }: { taskId: string }) {
+  const { data: subtasks = [] } = useSubtasks(taskId);
+  const createSubtask = useCreateSubtask();
+  const updateSubtask = useUpdateSubtask();
+  const deleteSubtask = useDeleteSubtask();
+  const [newTitle, setNewTitle] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+
+  const completedCount = subtasks.filter(s => s.isCompleted).length;
+
+  const handleAdd = () => {
+    if (!newTitle.trim()) return;
+    createSubtask.mutate({ taskId, title: newTitle.trim() });
+    setNewTitle('');
+  };
+
+  return (
+    <div className="px-4 py-3 border-t border-gray-100">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Subtasks {subtasks.length > 0 && `(${completedCount}/${subtasks.length})`}
+        </span>
+        <button
+          onClick={() => setIsAdding(!isAdding)}
+          className="text-gray-400 hover:text-gray-600 cursor-pointer"
+        >
+          <Plus className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* Progress bar */}
+      {subtasks.length > 0 && (
+        <div className="w-full h-1.5 bg-gray-100 rounded-full mb-2">
+          <div
+            className="h-full bg-green-500 rounded-full transition-all duration-300"
+            style={{ width: `${(completedCount / subtasks.length) * 100}%` }}
+          />
+        </div>
+      )}
+
+      {/* Subtask list */}
+      <div className="space-y-1">
+        {subtasks.map((subtask) => (
+          <div key={subtask.id} className="flex items-center gap-2 group">
+            <input
+              type="checkbox"
+              checked={subtask.isCompleted}
+              onChange={(e) => updateSubtask.mutate({
+                subtaskId: subtask.id,
+                taskId,
+                isCompleted: e.target.checked,
+              })}
+              className="w-3.5 h-3.5 rounded border-gray-300 text-green-600 cursor-pointer"
+            />
+            <span className={`flex-1 text-sm ${subtask.isCompleted ? 'line-through text-gray-400' : 'text-gray-700'}`}>
+              {subtask.title}
+            </span>
+            <button
+              onClick={() => deleteSubtask.mutate({ subtaskId: subtask.id, taskId })}
+              className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 cursor-pointer transition-opacity"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Add subtask input */}
+      {isAdding && (
+        <div className="flex items-center gap-2 mt-2">
+          <input
+            type="text"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') setIsAdding(false); }}
+            placeholder="Add a subtask..."
+            className="flex-1 text-sm px-2 py-1 border border-gray-200 rounded focus:outline-none focus:border-blue-400"
+            autoFocus
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Activity Section ────────────────────────────────────────────────
+
+function ActivitySection({ taskId }: { taskId: string }) {
+  const { data: activities = [] } = useTaskActivities(taskId);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  if (activities.length === 0) return null;
+
+  function formatAction(activity: any): string {
+    if (activity.action === 'created') return 'Created this task';
+    if (activity.action === 'completed') return 'Completed this task';
+    if (activity.action === 'updated' && activity.field) {
+      return `Changed ${activity.field}`;
+    }
+    if (activity.action === 'subtask_added') return 'Added a subtask';
+    if (activity.action === 'subtask_completed') return 'Completed a subtask';
+    return activity.action;
+  }
+
+  function getRelativeTime(dateStr: string): string {
+    const now = Date.now();
+    const then = new Date(dateStr).getTime();
+    const diff = now - then;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  }
+
+  return (
+    <div className="px-4 py-3 border-t border-gray-100">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex items-center gap-1.5 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
+      >
+        {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+        <Clock className="w-3 h-3" />
+        Activity ({activities.length})
+      </button>
+
+      {isExpanded && (
+        <div className="mt-2 space-y-2 ml-1 border-l-2 border-gray-100 pl-3">
+          {activities.slice(0, 20).map((activity: any) => (
+            <div key={activity.id} className="text-xs">
+              <span className="text-gray-600">{formatAction(activity)}</span>
+              <span className="text-gray-400 ml-1.5">{getRelativeTime(activity.createdAt)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Task Detail Panel ──────────────────────────────────────────────
 
 function TaskDetailPanel({
@@ -758,6 +909,9 @@ function TaskDetailPanel({
           )}
         </div>
 
+        {/* Subtasks */}
+        <SubtaskSection taskId={task.id} />
+
         {/* Rich notes editor (below details) */}
         <div style={{ paddingTop: 16 }}>
           <TaskNotesEditor
@@ -768,6 +922,9 @@ function TaskDetailPanel({
             placeholder="Add notes..."
           />
         </div>
+
+        {/* Activity log */}
+        <ActivitySection taskId={task.id} />
       </div>
     </div>
   );

@@ -44,6 +44,8 @@ export const queryKeys = {
     list: ['docs', 'list'] as const,
     tree: ['docs', 'tree'] as const,
     detail: (id: string) => ['docs', 'detail', id] as const,
+    comments: (docId: string) => ['docs', 'comments', docId] as const,
+    backlinks: (docId: string) => ['docs', 'backlinks', docId] as const,
   },
   drawings: {
     all: ['drawings'] as const,
@@ -56,11 +58,18 @@ export const queryKeys = {
     detail: (id: string) => ['tasks', 'detail', id] as const,
     counts: ['tasks', 'counts'] as const,
     projects: ['tasks', 'projects'] as const,
+    subtasks: (taskId: string) => ['tasks', 'subtasks', taskId] as const,
+    activities: (taskId: string) => ['tasks', 'activities', taskId] as const,
+    templates: ['tasks', 'templates'] as const,
   },
   tables: {
     all: ['tables'] as const,
     list: ['tables', 'list'] as const,
     detail: (id: string) => ['tables', 'detail', id] as const,
+  },
+  notifications: {
+    all: ['notifications'] as const,
+    unreadCount: ['notifications', 'unread-count'] as const,
   },
   drive: {
     all: ['drive'] as const,

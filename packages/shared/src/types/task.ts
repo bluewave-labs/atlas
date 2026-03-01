@@ -27,8 +27,68 @@ export interface Task {
   recurrenceRule: RecurrenceRule | null;
   recurrenceParentId: string | null;
   isArchived: boolean;
+  sourceEmailId: string | null;
+  sourceEmailSubject: string | null;
+  subtasks?: Subtask[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Subtask {
+  id: string;
+  taskId: string;
+  userId: string;
+  title: string;
+  isCompleted: boolean;
+  sortOrder: number;
+  createdAt: string;
+}
+
+export interface TaskActivity {
+  id: string;
+  taskId: string;
+  userId: string;
+  action: string; // created | updated | completed | subtask_added | subtask_completed
+  field: string | null;
+  oldValue: string | null;
+  newValue: string | null;
+  createdAt: string;
+}
+
+export interface TaskTemplate {
+  id: string;
+  userId: string;
+  accountId: string;
+  title: string;
+  description: string | null;
+  icon: string | null;
+  defaultWhen: TaskWhen;
+  defaultPriority: TaskPriority;
+  defaultTags: string[];
+  subtaskTitles: string[];
+  sortOrder: number;
+  createdAt: string;
+}
+
+export interface CreateTaskTemplateInput {
+  title: string;
+  description?: string | null;
+  icon?: string | null;
+  defaultWhen?: TaskWhen;
+  defaultPriority?: TaskPriority;
+  defaultTags?: string[];
+  subtaskTitles?: string[];
+}
+
+export interface UpdateTaskTemplateInput {
+  title?: string;
+  description?: string | null;
+  icon?: string | null;
+  defaultWhen?: TaskWhen;
+  defaultPriority?: TaskPriority;
+  defaultTags?: string[];
+  subtaskTitles?: string[];
+  sortOrder?: number;
 }
 
 export interface TaskProject {
@@ -58,6 +118,8 @@ export interface CreateTaskInput {
   dueDate?: string | null;
   tags?: string[];
   recurrenceRule?: RecurrenceRule | null;
+  sourceEmailId?: string | null;
+  sourceEmailSubject?: string | null;
 }
 
 export interface UpdateTaskInput {
@@ -74,6 +136,8 @@ export interface UpdateTaskInput {
   dueDate?: string | null;
   tags?: string[];
   recurrenceRule?: RecurrenceRule | null;
+  sourceEmailId?: string | null;
+  sourceEmailSubject?: string | null;
   sortOrder?: number;
   isArchived?: boolean;
 }

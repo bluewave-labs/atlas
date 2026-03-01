@@ -5,6 +5,8 @@ import type {
   Task, TaskProject,
   CreateTaskInput, UpdateTaskInput,
   CreateProjectInput, UpdateProjectInput,
+  Subtask, TaskActivity, TaskTemplate,
+  CreateTaskTemplateInput, UpdateTaskTemplateInput,
 } from '@atlasmail/shared';
 
 // ─── Task Queries ───────────────────────────────────────────────────
@@ -181,6 +183,139 @@ export function useReorderTasks() {
   return useMutation({
     mutationFn: async (taskIds: string[]) => {
       await api.patch('/tasks/reorder', { taskIds });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
+    },
+  });
+}
+
+// ─── Subtask Hooks ──────────────────────────────────────────────────
+
+export function useSubtasks(taskId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.tasks.subtasks(taskId!),
+    queryFn: async () => {
+      const { data } = await api.get(`/tasks/${taskId}/subtasks`);
+      return data.data as Subtask[];
+    },
+    enabled: !!taskId,
+    staleTime: 10_000,
+  });
+}
+
+export function useCreateSubtask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ taskId, title }: { taskId: string; title: string }) => {
+      const { data } = await api.post(`/tasks/${taskId}/subtasks`, { title });
+      return data.data as Subtask;
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.subtasks(vars.taskId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
+    },
+  });
+}
+
+export function useUpdateSubtask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ subtaskId, taskId, ...input }: { subtaskId: string; taskId: string; title?: string; isCompleted?: boolean }) => {
+      const { data } = await api.patch(`/tasks/subtasks/${subtaskId}`, input);
+      return data.data as Subtask;
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.subtasks(vars.taskId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
+    },
+  });
+}
+
+export function useDeleteSubtask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ subtaskId, taskId }: { subtaskId: string; taskId: string }) => {
+      await api.delete(`/tasks/subtasks/${subtaskId}`);
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.subtasks(vars.taskId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
+    },
+  });
+}
+
+// ─── Activity Hooks ─────────────────────────────────────────────────
+
+export function useTaskActivities(taskId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.tasks.activities(taskId!),
+    queryFn: async () => {
+      const { data } = await api.get(`/tasks/${taskId}/activities`);
+      return data.data as TaskActivity[];
+    },
+    enabled: !!taskId,
+    staleTime: 30_000,
+  });
+}
+
+// ─── Template Hooks ─────────────────────────────────────────────────
+
+export function useTaskTemplates() {
+  return useQuery({
+    queryKey: queryKeys.tasks.templates,
+    queryFn: async () => {
+      const { data } = await api.get('/tasks/templates/list');
+      return data.data as TaskTemplate[];
+    },
+    staleTime: 60_000,
+  });
+}
+
+export function useCreateTaskTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateTaskTemplateInput) => {
+      const { data } = await api.post('/tasks/templates', input);
+      return data.data as TaskTemplate;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.templates });
+    },
+  });
+}
+
+export function useDeleteTaskTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (templateId: string) => {
+      await api.delete(`/tasks/templates/${templateId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.templates });
+    },
+  });
+}
+
+export function useCreateTaskFromTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (templateId: string) => {
+      const { data } = await api.post(`/tasks/from-template/${templateId}`);
+      return data.data as Task;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
+    },
+  });
+}
+
+export function useCreateTaskFromEmail() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ emailId, subject }: { emailId: string; subject: string }) => {
+      const { data } = await api.post('/tasks/from-email', { emailId, subject });
+      return data.data as Task;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });

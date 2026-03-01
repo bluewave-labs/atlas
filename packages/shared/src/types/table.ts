@@ -12,7 +12,10 @@ export type TableFieldType =
   | 'rating'
   | 'percent'
   | 'longText'
-  | 'attachment';
+  | 'attachment'
+  | 'linkedRecord'
+  | 'lookup'
+  | 'rollup';
 
 export interface TableColumn {
   id: string;
@@ -22,6 +25,11 @@ export interface TableColumn {
   options?: string[];
   required?: boolean;
   description?: string;
+  linkedTableId?: string;
+  linkedDisplayColumnId?: string;
+  lookupLinkedColumnId?: string;
+  lookupTargetColumnId?: string;
+  rollupFunction?: 'sum' | 'avg' | 'min' | 'max' | 'count' | 'countAll' | 'arrayUnique' | 'arrayFlatten';
 }
 
 export interface TableRow {
@@ -38,12 +46,12 @@ export interface TableAttachment {
 }
 
 export interface TableViewTab {
-  key: 'grid' | 'kanban' | 'calendar' | 'gallery';
+  key: 'grid' | 'kanban' | 'calendar' | 'gallery' | 'gantt';
   label: string;
 }
 
 export interface TableViewConfig {
-  activeView: 'grid' | 'kanban' | 'calendar' | 'gallery';
+  activeView: 'grid' | 'kanban' | 'calendar' | 'gallery' | 'gantt';
   kanbanGroupByColumnId?: string;
   calendarDateColumnId?: string;
   sorts?: Array<{ columnId: string; direction: 'asc' | 'desc' }>;
@@ -55,6 +63,9 @@ export interface TableViewConfig {
   rowColorColumnId?: string;
   setFilters?: Record<string, string[]>;
   groupByColumnId?: string | null;
+  ganttStartColumnId?: string;
+  ganttEndColumnId?: string;
+  ganttLabelColumnId?: string;
   views?: TableViewTab[];
 }
 

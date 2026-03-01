@@ -296,3 +296,151 @@ export async function seedSampleTasks(req: Request, res: Response) {
     res.status(500).json({ success: false, error: 'Failed to seed sample tasks' });
   }
 }
+
+// ─── Subtasks ────────────────────────────────────────────────────────
+
+export async function listSubtasks(req: Request, res: Response) {
+  try {
+    const taskId = req.params.id as string;
+    const subtasks = await taskService.listSubtasks(taskId);
+    res.json({ success: true, data: subtasks });
+  } catch (error) {
+    logger.error({ error }, 'Failed to list subtasks');
+    res.status(500).json({ success: false, error: 'Failed to list subtasks' });
+  }
+}
+
+export async function createSubtask(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const taskId = req.params.id as string;
+    const { title } = req.body;
+    const subtask = await taskService.createSubtask(userId, taskId, title || '');
+    res.json({ success: true, data: subtask });
+  } catch (error) {
+    logger.error({ error }, 'Failed to create subtask');
+    res.status(500).json({ success: false, error: 'Failed to create subtask' });
+  }
+}
+
+export async function updateSubtask(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const subtaskId = req.params.subtaskId as string;
+    const { title, isCompleted } = req.body;
+    const subtask = await taskService.updateSubtask(userId, subtaskId, { title, isCompleted });
+    if (!subtask) { res.status(404).json({ success: false, error: 'Subtask not found' }); return; }
+    res.json({ success: true, data: subtask });
+  } catch (error) {
+    logger.error({ error }, 'Failed to update subtask');
+    res.status(500).json({ success: false, error: 'Failed to update subtask' });
+  }
+}
+
+export async function deleteSubtask(req: Request, res: Response) {
+  try {
+    await taskService.deleteSubtask(req.params.subtaskId as string);
+    res.json({ success: true, data: null });
+  } catch (error) {
+    logger.error({ error }, 'Failed to delete subtask');
+    res.status(500).json({ success: false, error: 'Failed to delete subtask' });
+  }
+}
+
+export async function reorderSubtasks(req: Request, res: Response) {
+  try {
+    const taskId = req.params.id as string;
+    const { subtaskIds } = req.body;
+    await taskService.reorderSubtasks(taskId, subtaskIds);
+    res.json({ success: true, data: null });
+  } catch (error) {
+    logger.error({ error }, 'Failed to reorder subtasks');
+    res.status(500).json({ success: false, error: 'Failed to reorder subtasks' });
+  }
+}
+
+// ─── Activities ──────────────────────────────────────────────────────
+
+export async function listActivities(req: Request, res: Response) {
+  try {
+    const taskId = req.params.id as string;
+    const activities = await taskService.listActivities(taskId);
+    res.json({ success: true, data: activities });
+  } catch (error) {
+    logger.error({ error }, 'Failed to list activities');
+    res.status(500).json({ success: false, error: 'Failed to list activities' });
+  }
+}
+
+// ─── Templates ───────────────────────────────────────────────────────
+
+export async function listTemplates(req: Request, res: Response) {
+  try {
+    const templates = await taskService.listTemplates(req.auth!.userId);
+    res.json({ success: true, data: templates });
+  } catch (error) {
+    logger.error({ error }, 'Failed to list templates');
+    res.status(500).json({ success: false, error: 'Failed to list templates' });
+  }
+}
+
+export async function createTemplate(req: Request, res: Response) {
+  try {
+    const template = await taskService.createTemplate(req.auth!.userId, req.auth!.accountId, req.body);
+    res.json({ success: true, data: template });
+  } catch (error) {
+    logger.error({ error }, 'Failed to create template');
+    res.status(500).json({ success: false, error: 'Failed to create template' });
+  }
+}
+
+export async function updateTemplate(req: Request, res: Response) {
+  try {
+    const template = await taskService.updateTemplate(req.auth!.userId, req.params.templateId as string, req.body);
+    if (!template) { res.status(404).json({ success: false, error: 'Template not found' }); return; }
+    res.json({ success: true, data: template });
+  } catch (error) {
+    logger.error({ error }, 'Failed to update template');
+    res.status(500).json({ success: false, error: 'Failed to update template' });
+  }
+}
+
+export async function deleteTemplate(req: Request, res: Response) {
+  try {
+    await taskService.deleteTemplate(req.auth!.userId, req.params.templateId as string);
+    res.json({ success: true, data: null });
+  } catch (error) {
+    logger.error({ error }, 'Failed to delete template');
+    res.status(500).json({ success: false, error: 'Failed to delete template' });
+  }
+}
+
+export async function createTaskFromTemplate(req: Request, res: Response) {
+  try {
+    const task = await taskService.createTaskFromTemplate(req.auth!.userId, req.auth!.accountId, req.params.templateId as string);
+    if (!task) { res.status(404).json({ success: false, error: 'Template not found' }); return; }
+    res.json({ success: true, data: task });
+  } catch (error) {
+    logger.error({ error }, 'Failed to create task from template');
+    res.status(500).json({ success: false, error: 'Failed to create task from template' });
+  }
+}
+
+// ─── Email-to-Task ──────────────────────────────────────────────────
+
+export async function createTaskFromEmail(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const accountId = req.auth!.accountId;
+    const { emailId, subject, snippet } = req.body;
+    const task = await taskService.createTask(userId, accountId, {
+      title: subject || snippet || 'Task from email',
+      sourceEmailId: emailId,
+      sourceEmailSubject: subject || null,
+    } as any);
+    res.json({ success: true, data: task });
+  } catch (error) {
+    logger.error({ error }, 'Failed to create task from email');
+    res.status(500).json({ success: false, error: 'Failed to create task from email' });
+  }
+}

@@ -38,4 +38,7 @@ export interface UserSettings {
   tablesShowFieldTypeIcons: boolean;
   tablesDefaultRowCount: number;
   tablesIncludeRowIdsInExport: boolean;
+  homeBgType: 'unsplash' | 'solid' | 'gradient' | 'custom';
+  homeBgValue: string | null;
+  recentItems: string; // JSON array string
 }

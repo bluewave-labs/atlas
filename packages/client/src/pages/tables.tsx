@@ -44,6 +44,8 @@ import {
   Paperclip,
   FileIcon,
   Settings2,
+  GanttChart,
+  Upload,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import {
@@ -97,6 +99,7 @@ import { useFormulas } from '../hooks/use-formulas';
 import { isFormulaValue } from '../lib/formula-engine';
 import { getTagColor } from '../lib/tag-colors';
 import { FIELD_TYPE_ICONS } from '../lib/field-type-icons';
+import { GanttView } from '../components/tables/gantt-view';
 import '../styles/tables.css';
 import '../styles/docs.css'; // Re-use .tg-* template gallery styles
 
@@ -137,6 +140,9 @@ const FIELD_TYPES: { value: TableFieldType; label: string }[] = [
   { value: 'percent', label: 'Percent' },
   { value: 'longText', label: 'Long text' },
   { value: 'attachment', label: 'Attachment' },
+  { value: 'linkedRecord', label: 'Linked record' },
+  { value: 'lookup', label: 'Lookup' },
+  { value: 'rollup', label: 'Rollup' },
 ];
 
 // ─── Field type icons ───────────────────────────────────────────────
@@ -1819,6 +1825,17 @@ export function TablesPage() {
     [localColumns],
   );
 
+  // ─── Gantt column auto-detection ──────────────────────────────
+  const ganttColumns = useMemo(() => {
+    const dateColumns = localColumns.filter((c) => c.type === 'date');
+    const textColumns = localColumns.filter((c) => c.type === 'text');
+    return {
+      start: localViewConfig.ganttStartColumnId || dateColumns[0]?.id || null,
+      end: localViewConfig.ganttEndColumnId || dateColumns[1]?.id || dateColumns[0]?.id || null,
+      label: localViewConfig.ganttLabelColumnId || textColumns[0]?.id || null,
+    };
+  }, [localColumns, localViewConfig.ganttStartColumnId, localViewConfig.ganttEndColumnId, localViewConfig.ganttLabelColumnId]);
+
   // AG Grid ref (needed early for keyboard shortcuts)
   const gridRef = useRef<AgGridReact>(null);
 
@@ -2371,12 +2388,13 @@ export function TablesPage() {
     [localRows, handleUpdateRowField],
   );
 
-  // Handle cell click for attachment columns
+  // Handle cell click for attachment, singleSelect, and multiSelect columns
   const handleCellClickedWithAttachment = useCallback(
     (event: any) => {
-      // Check if this is an attachment column
       const colId = event.colDef?.field;
       const col = localColumns.find((c) => c.id === colId);
+
+      // Attachment columns → open file picker
       if (col?.type === 'attachment') {
         const rowId = event.data?._id;
         if (rowId && rowId !== PLACEHOLDER_ROW_ID) {
@@ -2385,6 +2403,21 @@ export function TablesPage() {
           return;
         }
       }
+
+      // Single/multi select → open editor on single click
+      if (col?.type === 'singleSelect' || col?.type === 'multiSelect') {
+        const rowId = event.data?._id;
+        if (rowId && rowId !== PLACEHOLDER_ROW_ID) {
+          const api = gridRef.current?.api;
+          if (api && api.getEditingCells().length === 0) {
+            api.startEditingCell({
+              rowIndex: event.rowIndex,
+              colKey: colId,
+            });
+          }
+        }
+      }
+
       // Fall through to range selection handler
       handleRangeCellClicked(event);
     },
@@ -2660,6 +2693,64 @@ export function TablesPage() {
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
     XLSX.writeFile(wb, `${localTitle || 'table'}.xlsx`);
   }, [localColumns, sortedRows, localViewConfig.hiddenColumns, localTitle, getComputedValue, tablesSettings.includeRowIdsInExport]);
+
+  // ─── CSV/Excel import ──────────────────────────────────────────
+  const importInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportCSV = useCallback(() => {
+    importInputRef.current?.click();
+  }, []);
+
+  const handleFileImport = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer);
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as unknown[][];
+
+      if (jsonData.length < 1) return;
+
+      const headers = (jsonData[0] as string[]).map((h) => String(h || 'Column'));
+      const dataRows = jsonData.slice(1);
+
+      // Infer column types from sample data
+      const columns: TableColumn[] = headers.map((header, idx) => {
+        const sampleValues = dataRows.slice(0, 10).map((r) => r[idx]).filter(Boolean);
+        let type: TableFieldType = 'text';
+        if (sampleValues.length > 0 && sampleValues.every((v) => typeof v === 'number' || !isNaN(Number(v)))) {
+          type = 'number';
+        } else if (sampleValues.length > 0 && sampleValues.every((v) => typeof v === 'boolean' || v === 'true' || v === 'false')) {
+          type = 'checkbox';
+        }
+
+        return { id: crypto.randomUUID(), name: header, type, width: 150 };
+      });
+
+      const rows: TableRow[] = dataRows.map((row) => {
+        const cells: Record<string, unknown> = {
+          _id: crypto.randomUUID(),
+          _createdAt: new Date().toISOString(),
+        };
+        columns.forEach((col, idx) => {
+          cells[col.id] = row[idx] ?? '';
+        });
+        return cells as TableRow;
+      });
+
+      const title = file.name.replace(/\.(csv|xlsx?|xls)$/i, '');
+      const created = await createTable.mutateAsync({ title, columns, rows });
+      handleSelectTable(created.id);
+    } catch (error) {
+      console.error('Import failed:', error);
+    }
+
+    // Reset input
+    e.target.value = '';
+  }, [createTable, handleSelectTable]);
 
   // ─── Row grouping handlers ────────────────────────────────────
   const handleGroupByColumn = useCallback(
@@ -3087,6 +3178,7 @@ export function TablesPage() {
               { key: 'kanban' as const, icon: Kanban, label: t('tables.kanbanView', 'Kanban') },
               { key: 'calendar' as const, icon: Calendar, label: t('tables.calendarView', 'Calendar') },
               { key: 'gallery' as const, icon: GalleryHorizontalEnd, label: t('tables.galleryView', 'Gallery') },
+              { key: 'gantt' as const, icon: GanttChart, label: t('tables.ganttView', 'Gantt') },
             ].map((v) => (
               <button
                 key={v.key}
@@ -3224,6 +3316,14 @@ export function TablesPage() {
                 </button>
 
                 <button
+                  className="tables-topbar-btn"
+                  onClick={handleImportCSV}
+                  title="Import CSV/Excel"
+                >
+                  <Upload size={14} />
+                </button>
+
+                <button
                   className={`tables-topbar-btn${showSearch ? ' active' : ''}`}
                   onClick={() => { setShowSearch(!showSearch); if (showSearch) setSearchText(''); }}
                   title={t('tables.search')}
@@ -3292,6 +3392,7 @@ export function TablesPage() {
                         { key: 'kanban' as const, icon: Kanban, label: 'Kanban' },
                         { key: 'calendar' as const, icon: Calendar, label: 'Calendar' },
                         { key: 'gallery' as const, icon: GalleryHorizontalEnd, label: 'Gallery' },
+                        { key: 'gantt' as const, icon: GanttChart, label: 'Gantt' },
                       ].map((v) => (
                         <button
                           key={v.key}
@@ -3471,7 +3572,7 @@ export function TablesPage() {
             {/* Grid view */}
             {localViewConfig.activeView === 'grid' && (
               <>
-                <div className="tables-grid-container" onMouseDown={handleRangeCellMouseDown} style={{ position: 'relative' }}>
+                <div className="tables-grid-container" onMouseDown={handleRangeCellMouseDown} onContextMenu={(e) => e.preventDefault()} style={{ position: 'relative' }}>
                   <div className={isDark ? 'ag-theme-quartz-dark' : 'ag-theme-quartz'}>
                     <AgGridReact
                       ref={gridRef}
@@ -3804,6 +3905,17 @@ export function TablesPage() {
                 })}
               </div>
             )}
+
+            {/* Gantt view */}
+            {localViewConfig.activeView === 'gantt' && (
+              <GanttView
+                columns={localColumns}
+                rows={sortedRows as TableRow[]}
+                startColumnId={ganttColumns.start}
+                endColumnId={ganttColumns.end}
+                labelColumnId={ganttColumns.label}
+              />
+            )}
           </>
         )}
       </div>
@@ -3889,6 +4001,15 @@ export function TablesPage() {
         ref={attachmentInputRef}
         style={{ display: 'none' }}
         onChange={handleAttachmentUpload}
+      />
+
+      {/* Hidden file input for CSV/Excel import */}
+      <input
+        type="file"
+        ref={importInputRef}
+        accept=".csv,.xlsx,.xls"
+        style={{ display: 'none' }}
+        onChange={handleFileImport}
       />
 
       {/* Hover effect for sidebar delete buttons */}

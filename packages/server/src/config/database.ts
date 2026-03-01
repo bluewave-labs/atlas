@@ -468,6 +468,143 @@ sqlite.prepare(`
 try { sqlite.prepare(`CREATE INDEX IF NOT EXISTS idx_share_links_token ON drive_share_links(share_token)`).run(); } catch { /* */ }
 try { sqlite.prepare(`CREATE INDEX IF NOT EXISTS idx_share_links_item ON drive_share_links(drive_item_id)`).run(); } catch { /* */ }
 
+// ---- Notifications table -----------------------------------------------------
+
+sqlite.prepare(`
+  CREATE TABLE IF NOT EXISTS notifications (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    type TEXT NOT NULL DEFAULT 'reminder',
+    title TEXT NOT NULL,
+    body TEXT,
+    source_type TEXT,
+    source_id TEXT,
+    is_read INTEGER NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL
+  )
+`).run();
+
+try { sqlite.prepare(`CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, is_read)`).run(); } catch { /* */ }
+try { sqlite.prepare(`CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, createdAt)`).run(); } catch { /* */ }
+
+// ---- Push subscriptions table ------------------------------------------------
+
+sqlite.prepare(`
+  CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    endpoint TEXT NOT NULL,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+  )
+`).run();
+
+try { sqlite.prepare(`CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(user_id)`).run(); } catch { /* */ }
+
+// ---- Subtasks table ----------------------------------------------------------
+
+sqlite.prepare(`
+  CREATE TABLE IF NOT EXISTS subtasks (
+    id TEXT PRIMARY KEY,
+    task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL DEFAULT '',
+    is_completed INTEGER NOT NULL DEFAULT 0,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL
+  )
+`).run();
+
+try { sqlite.prepare(`CREATE INDEX IF NOT EXISTS idx_subtasks_task ON subtasks(task_id, sort_order)`).run(); } catch { /* */ }
+
+// ---- Task activities table ---------------------------------------------------
+
+sqlite.prepare(`
+  CREATE TABLE IF NOT EXISTS task_activities (
+    id TEXT PRIMARY KEY,
+    task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    action TEXT NOT NULL,
+    field TEXT,
+    old_value TEXT,
+    new_value TEXT,
+    createdAt TEXT NOT NULL
+  )
+`).run();
+
+try { sqlite.prepare(`CREATE INDEX IF NOT EXISTS idx_task_activities_task ON task_activities(task_id, createdAt)`).run(); } catch { /* */ }
+
+// ---- Task templates table ----------------------------------------------------
+
+sqlite.prepare(`
+  CREATE TABLE IF NOT EXISTS task_templates (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    title TEXT NOT NULL DEFAULT 'Untitled template',
+    description TEXT,
+    icon TEXT,
+    default_when TEXT NOT NULL DEFAULT 'inbox',
+    default_priority TEXT NOT NULL DEFAULT 'none',
+    default_tags TEXT NOT NULL DEFAULT '[]',
+    subtask_titles TEXT NOT NULL DEFAULT '[]',
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL
+  )
+`).run();
+
+try { sqlite.prepare(`CREATE INDEX IF NOT EXISTS idx_task_templates_user ON task_templates(user_id)`).run(); } catch { /* */ }
+
+// ---- Document comments table -------------------------------------------------
+
+sqlite.prepare(`
+  CREATE TABLE IF NOT EXISTS document_comments (
+    id TEXT PRIMARY KEY,
+    document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    selection_from INTEGER,
+    selection_to INTEGER,
+    selection_text TEXT,
+    is_resolved INTEGER NOT NULL DEFAULT 0,
+    parent_id TEXT REFERENCES document_comments(id) ON DELETE CASCADE,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL
+  )
+`).run();
+
+try { sqlite.prepare(`CREATE INDEX IF NOT EXISTS idx_document_comments_doc ON document_comments(document_id)`).run(); } catch { /* */ }
+try { sqlite.prepare(`CREATE INDEX IF NOT EXISTS idx_document_comments_parent ON document_comments(parent_id)`).run(); } catch { /* */ }
+
+// ---- Document links table ----------------------------------------------------
+
+sqlite.prepare(`
+  CREATE TABLE IF NOT EXISTS document_links (
+    id TEXT PRIMARY KEY,
+    source_doc_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    target_doc_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    createdAt TEXT NOT NULL
+  )
+`).run();
+
+try { sqlite.prepare(`CREATE INDEX IF NOT EXISTS idx_document_links_source ON document_links(source_doc_id)`).run(); } catch { /* */ }
+try { sqlite.prepare(`CREATE INDEX IF NOT EXISTS idx_document_links_target ON document_links(target_doc_id)`).run(); } catch { /* */ }
+try { sqlite.prepare(`CREATE UNIQUE INDEX IF NOT EXISTS idx_document_links_unique ON document_links(source_doc_id, target_doc_id)`).run(); } catch { /* */ }
+
+// ---- ALTER TABLE migrations for existing tables ------------------------------
+
+// Tasks: source email columns
+try { sqlite.prepare(`ALTER TABLE tasks ADD COLUMN source_email_id TEXT`).run(); } catch { /* column already exists */ }
+try { sqlite.prepare(`ALTER TABLE tasks ADD COLUMN source_email_subject TEXT`).run(); } catch { /* column already exists */ }
+
+// User settings: home background & recent items
+try { sqlite.prepare(`ALTER TABLE user_settings ADD COLUMN home_bg_type TEXT NOT NULL DEFAULT 'unsplash'`).run(); } catch { /* column already exists */ }
+try { sqlite.prepare(`ALTER TABLE user_settings ADD COLUMN home_bg_value TEXT`).run(); } catch { /* column already exists */ }
+try { sqlite.prepare(`ALTER TABLE user_settings ADD COLUMN recent_items TEXT NOT NULL DEFAULT '[]'`).run(); } catch { /* column already exists */ }
+
 // Create FTS5 virtual table for full-text search across emails.
 // content='' means we manage the index manually (external content table).
 sqlite.prepare(`
