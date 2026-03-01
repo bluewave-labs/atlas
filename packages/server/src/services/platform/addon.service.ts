@@ -57,25 +57,32 @@ async function provisionPostgresql(installationId: string, tenantSlug: string): 
 
   try {
     // Create user + database (idempotent via IF NOT EXISTS)
+    // Use pg.escapeIdentifier/escapeLiteral for DDL to prevent SQL injection
+    const safeUser = pg.escapeIdentifier(username);
+    const safePassword = pg.escapeLiteral(password);
+    const safeDbName = pg.escapeIdentifier(dbName);
+
     await adminClient.query(`
       DO $$
       BEGIN
-        IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '${username}') THEN
-          CREATE ROLE "${username}" LOGIN PASSWORD '${password}';
+        IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = ${pg.escapeLiteral(username)}) THEN
+          CREATE ROLE ${safeUser} LOGIN PASSWORD ${safePassword};
         END IF;
       END $$;
     `);
-    await adminClient.query(`CREATE DATABASE "${dbName}" OWNER "${username}"`).catch((err) => {
+    await adminClient.query(`CREATE DATABASE ${safeDbName} OWNER ${safeUser}`).catch((err) => {
       if ((err as any).code !== '42P04') throw err; // 42P04 = database already exists
     });
-    await adminClient.query(`GRANT ALL PRIVILEGES ON DATABASE "${dbName}" TO "${username}"`);
+    await adminClient.query(`GRANT ALL PRIVILEGES ON DATABASE ${safeDbName} TO ${safeUser}`);
   } finally {
     await adminClient.end();
   }
 
   // Parse admin URL for host/port
   const url = new URL(env.ADDON_PG_ADMIN_URL);
-  const host = url.hostname;
+  // For Docker runtime, app containers reach postgres via the Docker network
+  // hostname ("postgres") rather than localhost
+  const host = env.PLATFORM_RUNTIME === 'docker' ? 'postgres' : url.hostname;
   const port = parseInt(url.port || '5432', 10);
 
   // Store addon record
@@ -101,7 +108,8 @@ async function provisionRedis(installationId: string, tenantSlug: string): Promi
   }
 
   const url = new URL(env.ADDON_REDIS_URL);
-  const host = url.hostname;
+  // For Docker runtime, app containers reach redis via Docker network hostname
+  const host = env.PLATFORM_RUNTIME === 'docker' ? 'redis' : url.hostname;
   const port = parseInt(url.port || '6379', 10);
   const prefix = `app:${tenantSlug}:${installationId.slice(0, 8)}:`;
 
@@ -146,13 +154,13 @@ export async function deprovisionAddons(installationId: string) {
       const adminClient = new pg.Client({ connectionString: env.ADDON_PG_ADMIN_URL });
       await adminClient.connect();
       try {
-        // Terminate existing connections
-        await adminClient.query(`
-          SELECT pg_terminate_backend(pid) FROM pg_stat_activity
-          WHERE datname = '${addon.database}' AND pid <> pg_backend_pid()
-        `);
-        await adminClient.query(`DROP DATABASE IF EXISTS "${addon.database}"`);
-        await adminClient.query(`DROP ROLE IF EXISTS "${addon.username}"`);
+        // Terminate existing connections (parameterized query for datname)
+        await adminClient.query(
+          'SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()',
+          [addon.database],
+        );
+        await adminClient.query(`DROP DATABASE IF EXISTS ${pg.escapeIdentifier(addon.database)}`);
+        await adminClient.query(`DROP ROLE IF EXISTS ${pg.escapeIdentifier(addon.username)}`);
         logger.info({ installationId, database: addon.database }, 'PostgreSQL addon deprovisioned');
       } catch (err) {
         logger.error({ err, installationId }, 'Failed to deprovision PostgreSQL addon');

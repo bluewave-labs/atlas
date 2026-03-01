@@ -4,8 +4,10 @@ import { logger } from './utils/logger';
 import { startSyncWorker, stopSyncWorker } from './jobs/sync-worker';
 import { startSyncScheduler, stopSyncScheduler } from './jobs/sync-scheduler';
 import { purgeOldArchivedDrawings } from './services/drawing.service';
-import { startAppInstallWorker, startAppHealthWorker, startAppBackupWorker, stopPlatformWorkers } from './jobs/app-install.worker';
+import { startAppInstallWorker, startAppHealthWorker, startAppBackupWorker, startHealthCheckScheduler, stopPlatformWorkers } from './jobs/app-install.worker';
 import { migratePlatformSchema, closePlatformDb } from './config/platform-database';
+import { seedCatalogFromManifests } from './services/platform/catalog.service';
+import { getTenantBySlug, createTenant } from './services/platform/tenant.service';
 
 const PURGE_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 let purgeTimer: ReturnType<typeof setInterval> | null = null;
@@ -24,11 +26,29 @@ app.listen(env.PORT, async () => {
 
   // Platform: run PostgreSQL migrations + start platform workers
   if (env.DATABASE_PLATFORM_URL) {
+    if (!env.OIDC_SIGNING_KEY) {
+      logger.error('OIDC_SIGNING_KEY is required when platform features are enabled (DATABASE_PLATFORM_URL is set)');
+      process.exit(1);
+    }
     try {
       await migratePlatformSchema();
+      await seedCatalogFromManifests();
       startAppInstallWorker();
       startAppHealthWorker();
+      startHealthCheckScheduler();
       startAppBackupWorker();
+
+      // Auto-create a dev tenant for local Docker runtime
+      if (env.PLATFORM_RUNTIME === 'docker') {
+        const existing = await getTenantBySlug('dev');
+        if (!existing) {
+          // Use a placeholder owner ID — the first user to log in can be mapped
+          const devOwnerId = '00000000-0000-0000-0000-000000000000';
+          await createTenant({ slug: 'dev', name: 'Dev Tenant', plan: 'enterprise' }, devOwnerId);
+          logger.info('Auto-created dev tenant for Docker runtime');
+        }
+      }
+
       logger.info('Platform services initialized');
     } catch (err) {
       logger.error({ err }, 'Platform initialization failed — platform features will be unavailable');

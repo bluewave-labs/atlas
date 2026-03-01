@@ -12,17 +12,18 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().default(''),
   JWT_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
-  TOKEN_ENCRYPTION_KEY: z.string().min(32),
+  TOKEN_ENCRYPTION_KEY: z.string().regex(/^[0-9a-f]{64}$/i, 'TOKEN_ENCRYPTION_KEY must be a 64-character hex string (32 bytes for AES-256)'),
   SERVER_PUBLIC_URL: z.string().url().default('http://localhost:3001'),
   GOOGLE_PUBSUB_TOPIC: z.string().optional(), // e.g. projects/my-proj/topics/gmail-push
 
   // ─── Platform (optional — only needed when marketplace features are enabled) ──
+  PLATFORM_RUNTIME: z.enum(['docker', 'k8s']).default('k8s'), // docker for local dev, k8s for production
   DATABASE_PLATFORM_URL: z.string().optional(),     // PostgreSQL connection string for control plane
   ADDON_PG_ADMIN_URL: z.string().optional(),         // PostgreSQL admin URL for provisioning app DBs
   ADDON_REDIS_URL: z.string().optional(),            // Redis URL for addon provisioning
   S3_BACKUP_BUCKET: z.string().optional(),           // S3 bucket for app backups
-  OIDC_SIGNING_KEY: z.string().optional(),           // RSA private key (PEM) for OIDC token signing
-  PLATFORM_PUBLIC_URL: z.string().optional(),        // e.g. https://atlas.so
+  OIDC_SIGNING_KEY: z.string().min(100, 'OIDC_SIGNING_KEY must be a PEM-encoded RSA private key').optional(),
+  PLATFORM_PUBLIC_URL: z.string().url().optional(),  // e.g. https://atlas.so
 });
 
 export const env = envSchema.parse(process.env);

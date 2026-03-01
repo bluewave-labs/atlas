@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import * as oidcService from '../services/platform/oidc.service';
@@ -9,7 +10,12 @@ const router = Router();
 // ─── Discovery ───────────────────────────────────────────────────────
 
 router.get('/tenants/:slug/.well-known/openid-configuration', (req, res) => {
-  const doc = oidcService.getDiscoveryDocument(String(req.params.slug));
+  // Use the request's Host header as the base URL so the discovery document
+  // returns URLs that work from wherever the caller is (browser or Docker container).
+  const proto = req.protocol;
+  const host = req.get('host');
+  const requestBaseUrl = host ? `${proto}://${host}` : undefined;
+  const doc = oidcService.getDiscoveryDocument(String(req.params.slug), requestBaseUrl);
   res.json(doc);
 });
 
@@ -21,8 +27,6 @@ router.get('/tenants/:slug/.well-known/jwks.json', (_req, res) => {
     return;
   }
 
-  // Extract public key from private key
-  const crypto = require('node:crypto');
   const publicKey = crypto.createPublicKey(env.OIDC_SIGNING_KEY);
   const jwk = publicKey.export({ format: 'jwk' });
 
@@ -50,10 +54,16 @@ router.get('/tenants/:slug/authorize', async (req, res) => {
       return;
     }
 
+    // Validate redirect_uri against registered value (RFC 6749 requirement)
+    if (redirect_uri && redirect_uri !== client.redirectUri) {
+      res.status(400).json({ error: 'invalid_request', error_description: 'redirect_uri mismatch' });
+      return;
+    }
+    const effectiveRedirectUri = client.redirectUri;
+
     // Check for existing Atlas session (JWT from cookie or Authorization header)
     const token = req.cookies?.atlas_token || req.headers.authorization?.replace('Bearer ', '');
     if (!token) {
-      // Redirect to Atlas login with return URL
       const returnUrl = encodeURIComponent(req.originalUrl);
       res.redirect(`/login?return=${returnUrl}`);
       return;
@@ -91,10 +101,10 @@ router.get('/tenants/:slug/authorize', async (req, res) => {
       email: payload.email,
       tenantSlug: slug,
       tenantId: tenant.id,
-      redirectUri: redirect_uri || client.redirectUri,
+      redirectUri: effectiveRedirectUri,
     });
 
-    const redirectTo = new URL(redirect_uri || client.redirectUri);
+    const redirectTo = new URL(effectiveRedirectUri);
     redirectTo.searchParams.set('code', code);
     if (state) redirectTo.searchParams.set('state', state);
 
@@ -152,14 +162,15 @@ router.get('/tenants/:slug/userinfo', async (req, res) => {
       return;
     }
 
-    const crypto = require('node:crypto');
     const publicKey = crypto.createPublicKey(env.OIDC_SIGNING_KEY);
     const payload = jwt.verify(accessToken, publicKey, { algorithms: ['RS256'] }) as any;
 
     res.json({
       sub: payload.sub,
       email: payload.email || `${payload.sub}@atlas.so`,
-      tenant_id: payload.tenant_id,
+      name: payload.name,
+      atlas_tenant_id: payload.atlas_tenant_id,
+      atlas_roles: payload.atlas_roles,
     });
   } catch {
     res.status(401).json({ error: 'invalid_token' });

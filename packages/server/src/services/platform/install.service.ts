@@ -6,6 +6,7 @@ import { getCatalogAppById } from './catalog.service';
 import { getTenantById } from './tenant.service';
 import { provisionAddons, deprovisionAddons } from './addon.service';
 import { deployApp, createIngressRoute, deleteAppResources, scaleDeployment, restartDeployment, checkDeploymentHealth } from './k8s.service';
+import { deployAppContainer, removeAppContainer, startAppContainer, stopAppContainer, restartAppContainer, getContainerHealth } from './docker.service';
 import { encrypt } from '../../utils/crypto';
 import { logger } from '../../utils/logger';
 import { env } from '../../config/env';
@@ -48,14 +49,23 @@ export async function installApp(tenantId: string, input: InstallAppInput) {
     }
 
     // 2. Build env vars for container
-    const hostname = `${input.subdomain}.${tenant.slug}.atlas.so`;
+    const isDocker = env.PLATFORM_RUNTIME === 'docker';
+    const hostname = isDocker
+      ? `${input.subdomain}.${tenant.slug}.localhost`
+      : `${input.subdomain}.${tenant.slug}.atlas.so`;
     const oidcClientId = `atlas-${manifest.id}-${installationId.slice(0, 8)}`;
     const oidcClientSecret = crypto.randomBytes(32).toString('base64url');
+
+    // For Docker containers, OIDC issuer must use host.docker.internal so the
+    // container can reach the Atlas server running on the host machine.
+    const oidcIssuer = isDocker
+      ? `http://host.docker.internal:${env.PORT}/oidc/tenants/${tenant.slug}`
+      : `${env.PLATFORM_PUBLIC_URL || env.SERVER_PUBLIC_URL}/oidc/tenants/${tenant.slug}`;
 
     const containerEnv: Record<string, string> = {
       ATLAS_TENANT_ID: tenantId,
       ATLAS_INSTALLATION_ID: installationId,
-      OIDC_ISSUER: `${env.PLATFORM_PUBLIC_URL || env.SERVER_PUBLIC_URL}/oidc/tenants/${tenant.slug}`,
+      OIDC_ISSUER: oidcIssuer,
       OIDC_CLIENT_ID: oidcClientId,
       OIDC_CLIENT_SECRET: oidcClientSecret,
       ...(input.customEnv ?? {}),
@@ -72,37 +82,55 @@ export async function installApp(tenantId: string, input: InstallAppInput) {
       }
     }
 
-    // 3. Deploy to K8s
-    await deployApp({
-      namespace: tenant.k8sNamespace,
-      deploymentName,
-      manifest,
-      envVars: containerEnv,
-      installationId,
-    });
+    // Inject OIDC callback path from manifest so the OIDC provider uses the correct redirect_uri
+    if (manifest.sso?.oidcCallbackPath) {
+      containerEnv.OIDC_CALLBACK_PATH = manifest.sso.oidcCallbackPath;
+    }
 
-    // 4. Create IngressRoute
-    const serviceName = `${deploymentName}-svc`;
-    await createIngressRoute({
-      namespace: tenant.k8sNamespace,
-      installationId,
-      hostname,
-      serviceName,
-      servicePort: manifest.runtime.httpPort,
-      tlsSecretName: `${tenant.k8sNamespace}-tls`,
-    });
+    // App-specific env vars (some apps need extra configuration beyond generic OIDC/DB)
+    applyAppSpecificEnv(manifest.id, containerEnv, hostname, oidcClientId, oidcClientSecret);
+
+    // 3. Deploy app
+    if (isDocker) {
+      await deployAppContainer({
+        installationId,
+        manifest,
+        envVars: containerEnv,
+        subdomain: input.subdomain,
+        tenantSlug: tenant.slug,
+      });
+    } else {
+      await deployApp({
+        namespace: tenant.k8sNamespace,
+        deploymentName,
+        manifest,
+        envVars: containerEnv,
+        installationId,
+      });
+
+      // 4. Create IngressRoute (K8s only — Docker uses Traefik labels)
+      const serviceName = `${deploymentName}-svc`;
+      await createIngressRoute({
+        namespace: tenant.k8sNamespace,
+        installationId,
+        hostname,
+        serviceName,
+        servicePort: manifest.runtime.httpPort,
+        tlsSecretName: `${tenant.k8sNamespace}-tls`,
+      });
+    }
 
     // 5. Update installation with OIDC + addon refs
-    await db.update(appInstallations).set({
+    const [updated] = await db.update(appInstallations).set({
       oidcClientId,
       oidcClientSecret: encrypt(oidcClientSecret),
       addonRefs,
       status: 'running',
       updatedAt: new Date(),
-    }).where(eq(appInstallations.id, installationId));
+    }).where(eq(appInstallations.id, installationId)).returning();
 
     logger.info({ installationId, tenantId, app: manifest.id }, 'App installed successfully');
-    return installation;
+    return updated;
   } catch (err) {
     // Mark as error
     await db.update(appInstallations).set({
@@ -121,6 +149,12 @@ export async function getInstallation(installationId: string) {
   return inst ?? null;
 }
 
+export async function listRunningInstallationIds(): Promise<string[]> {
+  const db = getPlatformDb();
+  const rows = await db.select({ id: appInstallations.id }).from(appInstallations).where(eq(appInstallations.status, 'running'));
+  return rows.map((r) => r.id);
+}
+
 export async function listInstallations(tenantId: string) {
   const db = getPlatformDb();
   return db.select().from(appInstallations).where(eq(appInstallations.tenantId, tenantId));
@@ -130,10 +164,13 @@ export async function startApp(installationId: string) {
   const inst = await getInstallation(installationId);
   if (!inst || !inst.k8sDeploymentName) throw new Error('Installation not found');
 
-  const tenant = await getTenantById(inst.tenantId);
-  if (!tenant) throw new Error('Tenant not found');
-
-  await scaleDeployment(tenant.k8sNamespace, inst.k8sDeploymentName, 1);
+  if (env.PLATFORM_RUNTIME === 'docker') {
+    await startAppContainer(installationId);
+  } else {
+    const tenant = await getTenantById(inst.tenantId);
+    if (!tenant) throw new Error('Tenant not found');
+    await scaleDeployment(tenant.k8sNamespace, inst.k8sDeploymentName, 1);
+  }
 
   const db = getPlatformDb();
   await db.update(appInstallations).set({ status: 'running', updatedAt: new Date() }).where(eq(appInstallations.id, installationId));
@@ -143,10 +180,13 @@ export async function stopApp(installationId: string) {
   const inst = await getInstallation(installationId);
   if (!inst || !inst.k8sDeploymentName) throw new Error('Installation not found');
 
-  const tenant = await getTenantById(inst.tenantId);
-  if (!tenant) throw new Error('Tenant not found');
-
-  await scaleDeployment(tenant.k8sNamespace, inst.k8sDeploymentName, 0);
+  if (env.PLATFORM_RUNTIME === 'docker') {
+    await stopAppContainer(installationId);
+  } else {
+    const tenant = await getTenantById(inst.tenantId);
+    if (!tenant) throw new Error('Tenant not found');
+    await scaleDeployment(tenant.k8sNamespace, inst.k8sDeploymentName, 0);
+  }
 
   const db = getPlatformDb();
   await db.update(appInstallations).set({ status: 'stopped', updatedAt: new Date() }).where(eq(appInstallations.id, installationId));
@@ -156,10 +196,13 @@ export async function restartApp(installationId: string) {
   const inst = await getInstallation(installationId);
   if (!inst || !inst.k8sDeploymentName) throw new Error('Installation not found');
 
-  const tenant = await getTenantById(inst.tenantId);
-  if (!tenant) throw new Error('Tenant not found');
-
-  await restartDeployment(tenant.k8sNamespace, inst.k8sDeploymentName);
+  if (env.PLATFORM_RUNTIME === 'docker') {
+    await restartAppContainer(installationId);
+  } else {
+    const tenant = await getTenantById(inst.tenantId);
+    if (!tenant) throw new Error('Tenant not found');
+    await restartDeployment(tenant.k8sNamespace, inst.k8sDeploymentName);
+  }
 }
 
 export async function uninstallApp(installationId: string) {
@@ -170,8 +213,10 @@ export async function uninstallApp(installationId: string) {
   const tenant = await getTenantById(inst.tenantId);
   if (!tenant) throw new Error('Tenant not found');
 
-  // 1. Delete K8s resources
-  if (inst.k8sDeploymentName) {
+  // 1. Delete runtime resources
+  if (env.PLATFORM_RUNTIME === 'docker') {
+    await removeAppContainer(installationId);
+  } else if (inst.k8sDeploymentName) {
     await deleteAppResources(tenant.k8sNamespace, inst.k8sDeploymentName, installationId);
   }
 
@@ -189,10 +234,16 @@ export async function updateHealthStatus(installationId: string) {
   const inst = await getInstallation(installationId);
   if (!inst || !inst.k8sDeploymentName || inst.status !== 'running') return;
 
-  const tenant = await getTenantById(inst.tenantId);
-  if (!tenant) return;
+  let health: 'healthy' | 'unhealthy' | 'unknown';
 
-  const health = await checkDeploymentHealth(tenant.k8sNamespace, inst.k8sDeploymentName);
+  if (env.PLATFORM_RUNTIME === 'docker') {
+    health = await getContainerHealth(installationId);
+  } else {
+    const tenant = await getTenantById(inst.tenantId);
+    if (!tenant) return;
+    health = await checkDeploymentHealth(tenant.k8sNamespace, inst.k8sDeploymentName);
+  }
+
   await db.update(appInstallations).set({
     lastHealthStatus: health,
     updatedAt: new Date(),
@@ -212,4 +263,45 @@ export async function createBackupRecord(installationId: string, triggeredBy: st
 export async function listBackups(installationId: string) {
   const db = getPlatformDb();
   return db.select().from(appBackups).where(eq(appBackups.installationId, installationId));
+}
+
+// ---------------------------------------------------------------------------
+// App-specific env var overrides
+// ---------------------------------------------------------------------------
+
+function applyAppSpecificEnv(
+  manifestId: string,
+  envVars: Record<string, string>,
+  hostname: string,
+  oidcClientId: string,
+  oidcClientSecret: string,
+) {
+  const protocol = env.PLATFORM_RUNTIME === 'docker' ? 'http' : 'https';
+  const appUrl = `${protocol}://${hostname}`;
+
+  switch (manifestId) {
+    case 'com.atlas.calcom': {
+      // Cal.com uses NextAuth and needs specific env var names
+      envVars.NEXTAUTH_SECRET = crypto.randomBytes(32).toString('base64url');
+      envVars.NEXTAUTH_URL = appUrl;
+      envVars.NEXT_PUBLIC_WEBAPP_URL = appUrl;
+      envVars.CALENDSO_ENCRYPTION_KEY = crypto.randomBytes(24).toString('base64url');
+      // Cal.com OIDC/SAML SSO uses these env vars
+      envVars.SAML_DATABASE_URL = envVars.DATABASE_URL;
+      envVars.SAML_CLIENT_SECRET_VERIFIER = crypto.randomBytes(24).toString('base64url');
+      envVars.SAML_ADMINS = ''; // managed via Atlas tenant roles
+      break;
+    }
+    case 'com.atlas.nocodb': {
+      envVars.NC_PUBLIC_URL = appUrl;
+      break;
+    }
+    case 'com.atlas.gitea': {
+      envVars.GITEA__server__ROOT_URL = appUrl;
+      envVars.GITEA__server__DOMAIN = hostname;
+      break;
+    }
+    default:
+      break;
+  }
 }

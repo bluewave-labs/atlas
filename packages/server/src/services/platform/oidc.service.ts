@@ -37,8 +37,8 @@ function getSigningKey(): string {
 /**
  * Get OIDC discovery document for a tenant.
  */
-export function getDiscoveryDocument(tenantSlug: string) {
-  const baseUrl = env.PLATFORM_PUBLIC_URL || env.SERVER_PUBLIC_URL;
+export function getDiscoveryDocument(tenantSlug: string, requestBaseUrl?: string) {
+  const baseUrl = requestBaseUrl || env.PLATFORM_PUBLIC_URL || env.SERVER_PUBLIC_URL;
   const issuer = `${baseUrl}/oidc/tenants/${tenantSlug}`;
 
   return {
