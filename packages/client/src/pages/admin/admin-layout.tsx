@@ -2,6 +2,7 @@ import { useRef, type CSSProperties, type ReactNode } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   AppWindow,
+  ArrowLeft,
   Building2,
   Container,
   LayoutDashboard,
@@ -276,20 +277,53 @@ export function AdminLayout() {
 
         {/* Footer */}
         <div style={sidebarFooterStyle}>
-          <div style={avatarStyle} aria-hidden="true">
-            {initials}
+          <button
+            onClick={() => navigate(ROUTES.HOME)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--spacing-sm)',
+              width: '100%',
+              padding: '0 var(--spacing-sm)',
+              height: 34,
+              borderRadius: 'var(--radius-sm)',
+              border: 'none',
+              background: 'transparent',
+              color: 'var(--color-text-secondary)',
+              fontSize: 'var(--font-size-sm)',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-family)',
+              transition: 'background var(--transition-fast), color var(--transition-fast)',
+              marginBottom: 'var(--spacing-sm)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--color-surface-hover)';
+              e.currentTarget.style.color = 'var(--color-text-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = 'var(--color-text-secondary)';
+            }}
+          >
+            <ArrowLeft size={14} />
+            Back to home
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+            <div style={avatarStyle} aria-hidden="true">
+              {initials}
+            </div>
+            <span style={footerUsernameStyle} title={username ?? undefined}>
+              {username}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<LogOut size={14} />}
+              onClick={handleLogout}
+              aria-label="Log out"
+              style={{ flexShrink: 0, color: 'var(--color-text-tertiary)' }}
+            />
           </div>
-          <span style={footerUsernameStyle} title={username ?? undefined}>
-            {username}
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<LogOut size={14} />}
-            onClick={handleLogout}
-            aria-label="Log out"
-            style={{ flexShrink: 0, color: 'var(--color-text-tertiary)' }}
-          />
         </div>
       </aside>
 
