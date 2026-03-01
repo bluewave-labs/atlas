@@ -96,6 +96,7 @@ export interface SettingsCategory {
   id: string;
   label: string;
   icon: LucideIcon;
+  color?: string;
   panels: SettingsPanel[];
 }
 
@@ -108,11 +109,13 @@ export const settingsCategories: SettingsCategory[] = [
     id: 'global',
     label: 'Global',
     icon: Globe,
+    color: '#6b7280',
     panels: [
       { id: 'general', label: 'General', icon: Settings, component: MailGeneralPanel },
       { id: 'accounts', label: 'Accounts', icon: Users, component: MailAccountsPanel },
       { id: 'appearance', label: 'Appearance', icon: Palette, component: MailAppearancePanel },
       { id: 'notifications', label: 'Notifications', icon: Bell, component: MailNotificationsPanel },
+      { id: 'home-background', label: 'Home background', icon: Image, component: HomeBackgroundPanel },
       { id: 'about', label: 'About', icon: Info, component: MailAboutPanel },
     ],
   },
@@ -120,6 +123,7 @@ export const settingsCategories: SettingsCategory[] = [
     id: 'mail',
     label: 'Mail',
     icon: Mail,
+    color: '#4a9e8f',
     panels: [
       { id: 'composer', label: 'Composer', icon: PenLine, component: MailComposerPanel },
       { id: 'ai', label: 'AI assistant in Mail', icon: Sparkles, component: MailAIPanel },
@@ -133,24 +137,17 @@ export const settingsCategories: SettingsCategory[] = [
     id: 'calendar',
     label: 'Calendar',
     icon: Calendar,
+    color: '#7c6fbd',
     panels: [
       { id: 'general', label: 'General', icon: Settings, component: CalendarGeneralPanel },
       { id: 'appearance', label: 'Appearance', icon: Palette, component: CalendarAppearancePanel },
     ],
   },
   {
-    id: 'tables',
-    label: 'Tables',
-    icon: Table2,
-    panels: [
-      { id: 'general', label: 'General', icon: Settings, component: TablesGeneralPanel },
-      { id: 'regional', label: 'Regional', icon: Languages, component: TablesRegionalPanel },
-    ],
-  },
-  {
     id: 'tasks',
     label: 'Tasks',
     icon: CheckSquare,
+    color: '#6366f1',
     panels: [
       { id: 'general', label: 'General', icon: Settings, component: TasksGeneralPanel },
       { id: 'appearance', label: 'Appearance', icon: Eye, component: TasksAppearancePanel },
@@ -161,6 +158,7 @@ export const settingsCategories: SettingsCategory[] = [
     id: 'documents',
     label: 'Write',
     icon: FileText,
+    color: '#c4856c',
     panels: [
       { id: 'editor', label: 'Editor', icon: Type, component: DocsEditorPanel },
       { id: 'startup', label: 'Startup', icon: Rocket, component: DocsStartupPanel },
@@ -170,27 +168,31 @@ export const settingsCategories: SettingsCategory[] = [
     id: 'draw',
     label: 'Draw',
     icon: Pencil,
+    color: '#e06c9f',
     panels: [
       { id: 'canvas', label: 'Canvas', icon: Palette, component: DrawCanvasPanel },
       { id: 'export', label: 'Export', icon: Download, component: DrawExportPanel },
     ],
   },
   {
+    id: 'tables',
+    label: 'Tables',
+    icon: Table2,
+    color: '#2d8a6e',
+    panels: [
+      { id: 'general', label: 'General', icon: Settings, component: TablesGeneralPanel },
+      { id: 'regional', label: 'Regional', icon: Languages, component: TablesRegionalPanel },
+    ],
+  },
+  {
     id: 'drive',
     label: 'Drive',
     icon: HardDrive,
+    color: '#64748b',
     panels: [
       { id: 'general', label: 'General', icon: Settings, component: DriveGeneralPanel },
       { id: 'display', label: 'Display', icon: Eye, component: DriveDisplayPanel },
       { id: 'files', label: 'Files', icon: File, component: DriveFilesPanel },
-    ],
-  },
-  {
-    id: 'home',
-    label: 'Home',
-    icon: Home,
-    panels: [
-      { id: 'background', label: 'Background', icon: Image, component: HomeBackgroundPanel },
     ],
   },
 ];

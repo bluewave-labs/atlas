@@ -314,10 +314,11 @@ export async function getStorageUsage(userId: string) {
 // ─── Seed sample folder on first visit ───────────────────────────────
 
 export async function seedSampleFolder(userId: string, accountId: string) {
+  // Check if seed data already exists by looking for a known sample folder name
   const existing = await db
     .select({ id: driveItems.id })
     .from(driveItems)
-    .where(eq(driveItems.userId, userId))
+    .where(and(eq(driveItems.userId, userId), eq(driveItems.name, 'Work'), eq(driveItems.type, 'folder')))
     .limit(1);
 
   if (existing.length > 0) return;

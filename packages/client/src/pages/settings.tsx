@@ -140,6 +140,7 @@ export function SettingsModal() {
                 onClick={() => handleCategoryClick(cat.id)}
                 label={cat.label}
                 icon={<Icon size={16} />}
+                color={cat.color}
               />
             );
           })}
@@ -282,11 +283,13 @@ function CategoryButton({
   onClick,
   label,
   icon,
+  color,
 }: {
   isActive: boolean;
   onClick: () => void;
   label: string;
   icon: ReactNode;
+  color?: string;
 }) {
   const [hovered, setHovered] = useState(false);
 
@@ -309,7 +312,7 @@ function CategoryButton({
             : 'transparent',
         border: 'none',
         borderRadius: 'var(--radius-md)',
-        color: isActive ? 'var(--color-accent-primary)' : 'var(--color-text-secondary)',
+        color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
         fontSize: 'var(--font-size-sm)',
         fontFamily: 'var(--font-family)',
         fontWeight: isActive
@@ -327,7 +330,7 @@ function CategoryButton({
           display: 'inline-flex',
           alignItems: 'center',
           flexShrink: 0,
-          color: isActive ? 'var(--color-accent-primary)' : 'currentColor',
+          color: color || 'currentColor',
         }}
       >
         {icon}
