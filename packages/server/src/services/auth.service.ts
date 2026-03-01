@@ -6,6 +6,7 @@ import { createOAuth2Client } from '../config/google';
 import { env } from '../config/env';
 import { encrypt } from '../utils/crypto';
 import type { AuthPayload } from '../middleware/auth';
+import crypto from 'node:crypto';
 
 export async function exchangeCodeForTokens(code: string, redirectUri: string) {
   const oauth2Client = createOAuth2Client(redirectUri);
@@ -85,8 +86,9 @@ export async function findOrCreateAccount(
   return { account, isNew: true };
 }
 
-export function generateTokens(account: { id: string; email: string; userId: string }) {
+export function generateTokens(account: { id: string; email: string; userId: string }, tenantId?: string) {
   const payload: AuthPayload = { userId: account.userId, accountId: account.id, email: account.email };
+  if (tenantId) payload.tenantId = tenantId;
   const accessToken = jwt.sign(payload, env.JWT_SECRET, { expiresIn: '1h' });
   const refreshToken = jwt.sign(payload, env.JWT_REFRESH_SECRET, { expiresIn: '30d' });
   return { accessToken, refreshToken };
@@ -94,6 +96,56 @@ export function generateTokens(account: { id: string; email: string; userId: str
 
 export function verifyRefreshToken(token: string): AuthPayload {
   return jwt.verify(token, env.JWT_REFRESH_SECRET) as AuthPayload;
+}
+
+export async function findAccountByEmail(email: string) {
+  const [account] = await db.select().from(accounts).where(eq(accounts.email, email)).limit(1);
+  return account ?? null;
+}
+
+export async function createPasswordAccount(opts: {
+  email: string;
+  name: string;
+  passwordHash: string;
+  userId?: string;
+}): Promise<{ user: typeof users.$inferSelect; account: typeof accounts.$inferSelect }> {
+  const now = new Date().toISOString();
+
+  let userId = opts.userId;
+  let user: typeof users.$inferSelect;
+
+  if (userId) {
+    const [existing] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    if (!existing) throw new Error('User not found');
+    user = existing;
+    // Update name/email on the user row
+    [user] = await db.update(users).set({ name: opts.name, email: opts.email, updatedAt: now }).where(eq(users.id, userId)).returning();
+  } else {
+    [user] = await db.insert(users).values({
+      name: opts.name,
+      email: opts.email,
+      createdAt: now,
+      updatedAt: now,
+    }).returning();
+    userId = user.id;
+  }
+
+  const [account] = await db.insert(accounts).values({
+    userId: userId!,
+    email: opts.email,
+    name: opts.name,
+    pictureUrl: null,
+    provider: 'password',
+    providerId: `password-${crypto.randomUUID()}`,
+    passwordHash: opts.passwordHash,
+    accessToken: encrypt('password-placeholder'),
+    refreshToken: encrypt('password-placeholder'),
+    tokenExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+  }).returning();
+
+  await db.insert(userSettings).values({ accountId: account.id });
+
+  return { user, account };
 }
 
 export async function listUserAccounts(userId: string) {

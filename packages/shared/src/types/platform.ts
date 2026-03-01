@@ -39,6 +39,48 @@ export interface TenantMember {
   createdAt: string;
 }
 
+// ─── Registration & Auth ─────────────────────────────────────────────
+
+export interface RegisterTenantInput {
+  companyName: string;
+  companySlug: string;
+  userName: string;
+  email: string;
+  password: string;
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+export interface CreateTenantUserInput {
+  email: string;
+  name: string;
+  password: string;
+  role?: TenantMemberRole;
+}
+
+export interface TenantInvitation {
+  id: string;
+  tenantId: string;
+  email: string;
+  role: TenantMemberRole;
+  invitedBy: string;
+  token: string;
+  expiresAt: string;
+  acceptedAt: string | null;
+  createdAt: string;
+}
+
+export interface TenantUser {
+  userId: string;
+  email: string;
+  name: string | null;
+  role: TenantMemberRole;
+  createdAt: string;
+}
+
 // ─── App Catalog ─────────────────────────────────────────────────────
 
 export interface AtlasManifest {

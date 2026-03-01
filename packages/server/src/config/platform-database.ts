@@ -74,6 +74,19 @@ export async function migratePlatformSchema() {
         UNIQUE(tenant_id, user_id)
       );
 
+      CREATE TABLE IF NOT EXISTS tenant_invitations (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        email VARCHAR(255) NOT NULL,
+        role VARCHAR(50) NOT NULL DEFAULT 'member',
+        invited_by UUID NOT NULL,
+        token VARCHAR(255) UNIQUE NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL,
+        accepted_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(tenant_id, email)
+      );
+
       CREATE TABLE IF NOT EXISTS app_catalog (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         manifest_id VARCHAR(255) UNIQUE NOT NULL,
@@ -147,6 +160,7 @@ export async function migratePlatformSchema() {
     // Create indexes idempotently
     const indexes = [
       'CREATE INDEX IF NOT EXISTS idx_tenants_owner ON tenants(owner_id)',
+      'CREATE INDEX IF NOT EXISTS idx_tenant_invitations_token ON tenant_invitations(token)',
       'CREATE INDEX IF NOT EXISTS idx_app_catalog_category ON app_catalog(category)',
       'CREATE INDEX IF NOT EXISTS idx_installations_tenant ON app_installations(tenant_id)',
       'CREATE INDEX IF NOT EXISTS idx_addons_installation ON app_addons(installation_id)',

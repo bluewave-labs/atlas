@@ -34,6 +34,23 @@ export const tenantMembers = pgTable('tenant_members', {
   uniqueMember: uniqueIndex('idx_tenant_members_unique').on(table.tenantId, table.userId),
 }));
 
+// ─── Tenant Invitations ─────────────────────────────────────────────
+
+export const tenantInvitations = pgTable('tenant_invitations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  email: varchar('email', { length: 255 }).notNull(),
+  role: varchar('role', { length: 50 }).notNull().default('member'),
+  invitedBy: uuid('invited_by').notNull(),
+  token: varchar('token', { length: 255 }).unique().notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  acceptedAt: timestamp('accepted_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  tenantEmailIdx: uniqueIndex('idx_tenant_invitations_tenant_email').on(table.tenantId, table.email),
+  tokenIdx: uniqueIndex('idx_tenant_invitations_token').on(table.token),
+}));
+
 // ─── App Catalog ─────────────────────────────────────────────────────
 
 export const appCatalog = pgTable('app_catalog', {

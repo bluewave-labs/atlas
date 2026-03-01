@@ -26,6 +26,13 @@ sqlite.prepare(`
   )
 `).run();
 
+// Add name and email columns to users table
+try { sqlite.prepare(`ALTER TABLE users ADD COLUMN name TEXT`).run(); } catch { /* column already exists */ }
+try { sqlite.prepare(`ALTER TABLE users ADD COLUMN email TEXT`).run(); } catch { /* column already exists */ }
+
+// Add password_hash column to accounts table
+try { sqlite.prepare(`ALTER TABLE accounts ADD COLUMN password_hash TEXT`).run(); } catch { /* column already exists */ }
+
 // Add user_id column to accounts. For existing rows, create a user per account.
 try {
   sqlite.prepare(`ALTER TABLE accounts ADD COLUMN user_id TEXT REFERENCES users(id) ON DELETE CASCADE`).run();

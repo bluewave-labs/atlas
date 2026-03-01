@@ -79,6 +79,7 @@ export const queryKeys = {
     installations: (tenantId: string) => ['platform', 'installations', tenantId] as const,
     assignments: (tenantId: string, installationId: string) =>
       ['platform', 'assignments', tenantId, installationId] as const,
+    tenantUsers: (tenantId: string) => ['platform', 'tenant-users', tenantId] as const,
   },
   drive: {
     all: ['drive'] as const,

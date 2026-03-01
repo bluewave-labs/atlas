@@ -7,6 +7,7 @@ export interface AuthPayload {
   userId: string;
   accountId: string;
   email: string;
+  tenantId?: string;
 }
 
 declare global {

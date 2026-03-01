@@ -8,6 +8,8 @@ import { useAuthStore } from './stores/auth-store';
 import { ROUTES } from './config/routes';
 import { InboxPage } from './pages/inbox';
 import { LoginPage } from './pages/login';
+import { RegisterPage } from './pages/register';
+import { InvitationPage } from './pages/invitation';
 import { OAuthCallback } from './components/auth/oauth-callback';
 import { SettingsPage, SettingsModal } from './pages/settings';
 import { CalendarPage } from './pages/calendar';
@@ -17,11 +19,11 @@ import { TasksPage } from './pages/tasks';
 import { TablesPage } from './pages/tables';
 import { DrivePage } from './pages/drive';
 import { MarketplacePage } from './pages/marketplace';
+import { TeamSettingsPage } from './pages/team-settings';
 import { HomePage } from './pages/home';
 import { CommandPalette } from './components/ui/command-palette';
 import { ErrorBoundary } from './components/ui/error-boundary';
-import { useEffect, useRef, type ReactNode } from 'react';
-import { api } from './lib/api-client';
+import { useEffect, type ReactNode } from 'react';
 import { AdminLoginPage } from './pages/admin/admin-login';
 import { AdminLayout, AdminProtectedRoute } from './pages/admin/admin-layout';
 import { AdminOverviewPage } from './pages/admin/admin-overview';
@@ -55,72 +57,6 @@ function DevAuthInit() {
   return null;
 }
 
-// Stable client ID persisted in localStorage so the server can identify
-// returning local users and avoid creating duplicate accounts.
-function getOrCreateClientId(): string {
-  const key = 'atlasmail_client_id';
-  let id = localStorage.getItem(key);
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem(key, id);
-  }
-  return id;
-}
-
-function LocalIdentityInit() {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const addAccount = useAuthStore((s) => s.addAccount);
-  const setLoading = useAuthStore((s) => s.setLoading);
-  const inflight = useRef(false);
-
-  useEffect(() => {
-    if (DEV_MODE || isAuthenticated || inflight.current) return;
-    inflight.current = true;
-    // Signal that auth is initialising so pages can wait before firing API calls
-    setLoading(true);
-
-    const clientId = getOrCreateClientId();
-    api.post('/auth/local', { clientId }).then(({ data }) => {
-      const { accessToken, refreshToken, account } = data.data;
-      addAccount(account, accessToken, refreshToken);
-    }).catch(() => {
-      // Non-critical — user can still use Google OAuth to authenticate
-      setLoading(false);
-    }).finally(() => {
-      inflight.current = false;
-    });
-  }, [isAuthenticated, addAccount, setLoading]);
-
-  return null;
-}
-
-/** Waits for auth init (local or Google) before rendering children. Does NOT redirect. */
-function AuthReadyGate({ children }: { children: ReactNode }) {
-  const { t } = useTranslation();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const isLoading = useAuthStore((s) => s.isLoading);
-
-  if (!isAuthenticated && isLoading && !DEV_MODE) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100vh',
-          background: 'var(--color-bg-primary)',
-          color: 'var(--color-text-secondary)',
-          fontFamily: 'var(--font-family)',
-          fontSize: 'var(--font-size-md)',
-        }}
-      >
-        {t('common.loading')}
-      </div>
-    );
-  }
-
-  return <>{children}</>;
-}
 
 /** Requires Google OAuth. Redirects to HOME if not authenticated. */
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -148,7 +84,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   }
 
   if (!isAuthenticated && !DEV_MODE) {
-    return <Navigate to={ROUTES.HOME} replace />;
+    return <Navigate to={ROUTES.LOGIN} replace />;
   }
 
   return <>{children}</>;
@@ -162,14 +98,19 @@ export function App() {
           <ShortcutProvider>
             <BrowserRouter>
             <DevAuthInit />
-            <LocalIdentityInit />
             <ErrorBoundary>
               <Routes>
                 <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+                <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+                <Route path={ROUTES.INVITATION} element={<InvitationPage />} />
                 <Route path={ROUTES.AUTH_CALLBACK} element={<OAuthCallback />} />
                 <Route
                   path={ROUTES.HOME}
-                  element={<HomePage />}
+                  element={
+                    <ProtectedRoute>
+                      <HomePage />
+                    </ProtectedRoute>
+                  }
                 />
                 <Route
                   path={ROUTES.INBOX}
@@ -197,43 +138,47 @@ export function App() {
                 />
                 <Route
                   path={ROUTES.DOCS}
-                  element={<AuthReadyGate><DocsPage /></AuthReadyGate>}
+                  element={<ProtectedRoute><DocsPage /></ProtectedRoute>}
                 />
                 <Route
                   path={ROUTES.DOC_DETAIL}
-                  element={<AuthReadyGate><DocsPage /></AuthReadyGate>}
+                  element={<ProtectedRoute><DocsPage /></ProtectedRoute>}
                 />
                 <Route
                   path={ROUTES.DRAW}
-                  element={<AuthReadyGate><DrawPage /></AuthReadyGate>}
+                  element={<ProtectedRoute><DrawPage /></ProtectedRoute>}
                 />
                 <Route
                   path={ROUTES.DRAW_DETAIL}
-                  element={<AuthReadyGate><DrawPage /></AuthReadyGate>}
+                  element={<ProtectedRoute><DrawPage /></ProtectedRoute>}
                 />
                 <Route
                   path={ROUTES.TASKS}
-                  element={<AuthReadyGate><TasksPage /></AuthReadyGate>}
+                  element={<ProtectedRoute><TasksPage /></ProtectedRoute>}
                 />
                 <Route
                   path={ROUTES.TABLES}
-                  element={<AuthReadyGate><TablesPage /></AuthReadyGate>}
+                  element={<ProtectedRoute><TablesPage /></ProtectedRoute>}
                 />
                 <Route
                   path={ROUTES.TABLE_DETAIL}
-                  element={<AuthReadyGate><TablesPage /></AuthReadyGate>}
+                  element={<ProtectedRoute><TablesPage /></ProtectedRoute>}
                 />
                 <Route
                   path={ROUTES.DRIVE}
-                  element={<AuthReadyGate><DrivePage /></AuthReadyGate>}
+                  element={<ProtectedRoute><DrivePage /></ProtectedRoute>}
                 />
                 <Route
                   path={ROUTES.DRIVE_FOLDER}
-                  element={<AuthReadyGate><DrivePage /></AuthReadyGate>}
+                  element={<ProtectedRoute><DrivePage /></ProtectedRoute>}
                 />
                 <Route
                   path={ROUTES.MARKETPLACE}
-                  element={<AuthReadyGate><MarketplacePage /></AuthReadyGate>}
+                  element={<ProtectedRoute><MarketplacePage /></ProtectedRoute>}
+                />
+                <Route
+                  path={ROUTES.TENANT_USERS}
+                  element={<ProtectedRoute><TeamSettingsPage /></ProtectedRoute>}
                 />
                 {/* Admin routes */}
                 <Route path={ROUTES.ADMIN_LOGIN} element={<AdminLoginPage />} />

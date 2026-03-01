@@ -4,7 +4,7 @@ export interface Account {
   email: string;
   name: string | null;
   pictureUrl: string | null;
-  provider: 'google' | 'microsoft' | 'yahoo' | 'imap' | 'local';
+  provider: 'google' | 'microsoft' | 'yahoo' | 'imap' | 'local' | 'password';
   providerId: string;
   historyId: number | null;
   lastSync: string | null;

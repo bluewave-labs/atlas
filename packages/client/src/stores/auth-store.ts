@@ -57,9 +57,21 @@ function clearActiveTokens() {
 
 // ─── State shape ────────────────────────────────────────────────────────────
 
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(payload);
+  } catch {
+    return null;
+  }
+}
+
 interface AuthState {
   account: Account | null;
   accounts: Account[];
+  tenantId: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 
@@ -79,9 +91,9 @@ interface AuthState {
 // Restore persisted accounts and figure out the active account on startup.
 // The active account is whichever account's tokens are in `atlasmail_token`.
 // We match by looking for the active token in the token map.
-function deriveInitialState(): { account: Account | null; accounts: Account[] } {
+function deriveInitialState(): { account: Account | null; accounts: Account[]; tenantId: string | null } {
   const accounts = readAccounts();
-  if (accounts.length === 0) return { account: null, accounts: [] };
+  if (accounts.length === 0) return { account: null, accounts: [], tenantId: null };
 
   const tokenMap = readTokenMap();
 
@@ -94,7 +106,8 @@ function deriveInitialState(): { account: Account | null; accounts: Account[] } 
       // Re-sync the active token keys in case they drifted
       localStorage.setItem('atlasmail_token', tokens.access);
       localStorage.setItem('atlasmail_refresh_token', tokens.refresh);
-      return { account: active, accounts };
+      const payload = decodeJwtPayload(tokens.access);
+      return { account: active, accounts, tenantId: (payload?.tenantId as string) ?? null };
     }
   }
 
@@ -103,7 +116,8 @@ function deriveInitialState(): { account: Account | null; accounts: Account[] } 
     const tokens = tokenMap[acct.id];
     if (tokens) {
       writeActiveTokens(acct.id, tokens.access, tokens.refresh);
-      return { account: acct, accounts };
+      const payload = decodeJwtPayload(tokens.access);
+      return { account: acct, accounts, tenantId: (payload?.tenantId as string) ?? null };
     }
   }
 
@@ -111,7 +125,7 @@ function deriveInitialState(): { account: Account | null; accounts: Account[] } 
   clearActiveTokens();
   localStorage.removeItem('atlasmail_accounts');
   localStorage.removeItem('atlasmail_tokens');
-  return { account: null, accounts: [] };
+  return { account: null, accounts: [], tenantId: null };
 }
 
 const initial = deriveInitialState();
@@ -119,6 +133,7 @@ const initial = deriveInitialState();
 export const useAuthStore = create<AuthState>((set, get) => ({
   account: initial.account,
   accounts: initial.accounts,
+  tenantId: initial.tenantId,
   isAuthenticated: !!initial.account,
   // deriveInitialState() always resolves to a definite state — no async step needed.
   isLoading: false,
@@ -142,7 +157,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     writeAccounts(updated);
     writeActiveTokens(account.id, accessToken, refreshToken);
 
-    set({ accounts: updated, account, isAuthenticated: true, isLoading: false });
+    const payload = decodeJwtPayload(accessToken);
+    set({ accounts: updated, account, tenantId: (payload?.tenantId as string) ?? null, isAuthenticated: true, isLoading: false });
   },
 
   // ── switchAccount ────────────────────────────────────────────────────────

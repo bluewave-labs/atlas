@@ -10,6 +10,8 @@ const timestampNow = () => text().$defaultFn(() => new Date().toISOString());
 // ─── Users (groups multiple accounts under one person) ──────────────
 export const users = sqliteTable('users', {
   id: uuid().primaryKey(),
+  name: text('name'),
+  email: text('email'),
   createdAt: timestampNow().notNull(),
   updatedAt: timestampNow().notNull(),
 });
@@ -22,6 +24,7 @@ export const accounts = sqliteTable('accounts', {
   pictureUrl: text('picture_url'),
   provider: text('provider').notNull().default('google'),
   providerId: text('provider_id').notNull(),
+  passwordHash: text('password_hash'),
   accessToken: text('access_token').notNull(),
   refreshToken: text('refresh_token').notNull(),
   tokenExpiresAt: timestamp().notNull(),

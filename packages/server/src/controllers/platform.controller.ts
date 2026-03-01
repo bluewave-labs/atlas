@@ -1,12 +1,14 @@
 import type { Request, Response } from 'express';
 import * as tenantService from '../services/platform/tenant.service';
+import * as tenantUserService from '../services/platform/tenant-user.service';
 import * as catalogService from '../services/platform/catalog.service';
 import * as installService from '../services/platform/install.service';
 import * as assignmentService from '../services/platform/assignment.service';
 import { addAppInstallJob, addAppBackupJob } from '../jobs/app-install.worker';
 import { logger } from '../utils/logger';
 import { env } from '../config/env';
-import type { AppRole } from '@atlasmail/shared';
+import { validatePasswordStrength } from '../utils/password';
+import type { AppRole, TenantMemberRole } from '@atlasmail/shared';
 
 /** Safely extract a route param (Express 5 returns string | string[]). */
 function param(req: Request, name: string): string {
@@ -175,6 +177,146 @@ export async function getTenant(req: Request, res: Response) {
   } catch (err) {
     logger.error({ err }, 'Failed to get tenant');
     res.status(500).json({ success: false, error: 'Failed to get tenant' });
+  }
+}
+
+// ─── Tenant Users ────────────────────────────────────────────────────
+
+export async function listTenantUsers(req: Request, res: Response) {
+  try {
+    if (requirePlatformDb(res)) return;
+
+    const tenantId = param(req, 'id');
+    const membership = await tenantService.getTenantMembership(tenantId, req.auth!.userId);
+    if (!membership) {
+      res.status(403).json({ success: false, error: 'Not a member of this tenant' });
+      return;
+    }
+
+    const users = await tenantUserService.listTenantUsers(tenantId);
+    res.json({ success: true, data: { users } });
+  } catch (err) {
+    logger.error({ err }, 'Failed to list tenant users');
+    res.status(500).json({ success: false, error: 'Failed to list tenant users' });
+  }
+}
+
+export async function createTenantUser(req: Request, res: Response) {
+  try {
+    if (requirePlatformDb(res)) return;
+
+    const tenantId = param(req, 'id');
+    const membership = await tenantService.getTenantMembership(tenantId, req.auth!.userId);
+    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+      res.status(403).json({ success: false, error: 'Only owners and admins can create users' });
+      return;
+    }
+
+    const { email, name, password, role } = req.body;
+    if (!email || !name || !password) {
+      res.status(400).json({ success: false, error: 'email, name, and password are required' });
+      return;
+    }
+
+    const strength = validatePasswordStrength(password);
+    if (!strength.valid) {
+      res.status(400).json({ success: false, error: strength.error });
+      return;
+    }
+
+    const user = await tenantUserService.createTenantUser(tenantId, { email, name, password, role });
+    res.status(201).json({ success: true, data: user });
+  } catch (err: any) {
+    if (err?.message?.includes('UNIQUE constraint failed') || err?.code === '23505') {
+      res.status(409).json({ success: false, error: 'A user with this email already exists' });
+      return;
+    }
+    logger.error({ err }, 'Failed to create tenant user');
+    res.status(500).json({ success: false, error: 'Failed to create tenant user' });
+  }
+}
+
+export async function removeTenantUser(req: Request, res: Response) {
+  try {
+    if (requirePlatformDb(res)) return;
+
+    const tenantId = param(req, 'id');
+    const userId = param(req, 'userId');
+
+    const membership = await tenantService.getTenantMembership(tenantId, req.auth!.userId);
+    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+      res.status(403).json({ success: false, error: 'Only owners and admins can remove users' });
+      return;
+    }
+
+    // Prevent removing yourself
+    if (userId === req.auth!.userId) {
+      res.status(400).json({ success: false, error: 'Cannot remove yourself from the tenant' });
+      return;
+    }
+
+    await tenantUserService.removeTenantUser(tenantId, userId);
+    res.json({ success: true, data: { message: 'User removed' } });
+  } catch (err) {
+    logger.error({ err }, 'Failed to remove tenant user');
+    res.status(500).json({ success: false, error: 'Failed to remove tenant user' });
+  }
+}
+
+export async function updateTenantUserRole(req: Request, res: Response) {
+  try {
+    if (requirePlatformDb(res)) return;
+
+    const tenantId = param(req, 'id');
+    const userId = param(req, 'userId');
+    const { role } = req.body;
+
+    const validRoles: TenantMemberRole[] = ['owner', 'admin', 'member'];
+    if (!role || !validRoles.includes(role)) {
+      res.status(400).json({ success: false, error: `role must be one of: ${validRoles.join(', ')}` });
+      return;
+    }
+
+    const membership = await tenantService.getTenantMembership(tenantId, req.auth!.userId);
+    if (!membership || membership.role !== 'owner') {
+      res.status(403).json({ success: false, error: 'Only owners can change user roles' });
+      return;
+    }
+
+    await tenantUserService.updateTenantUserRole(tenantId, userId, role);
+    res.json({ success: true, data: { message: 'Role updated' } });
+  } catch (err) {
+    logger.error({ err }, 'Failed to update tenant user role');
+    res.status(500).json({ success: false, error: 'Failed to update tenant user role' });
+  }
+}
+
+export async function inviteTenantUser(req: Request, res: Response) {
+  try {
+    if (requirePlatformDb(res)) return;
+
+    const tenantId = param(req, 'id');
+    const membership = await tenantService.getTenantMembership(tenantId, req.auth!.userId);
+    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+      res.status(403).json({ success: false, error: 'Only owners and admins can invite users' });
+      return;
+    }
+
+    const { email, role = 'member' } = req.body;
+    if (!email) {
+      res.status(400).json({ success: false, error: 'email is required' });
+      return;
+    }
+
+    const invitation = await tenantUserService.inviteUser(tenantId, email, role, req.auth!.userId);
+    res.status(201).json({ success: true, data: invitation });
+  } catch (err: any) {
+    if (err?.code === '23505') {
+      res.status(409).json({ success: false, error: 'An invitation for this email already exists' });
+      return;
+    }
+    logger.error({ err }, 'Failed to invite user');
+    res.status(500).json({ success: false, error: 'Failed to invite user' });
   }
 }
 

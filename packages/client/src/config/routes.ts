@@ -1,5 +1,8 @@
 export const ROUTES = {
   LOGIN: '/login',
+  REGISTER: '/register',
+  INVITATION: '/invitation/:token',
+  TENANT_USERS: '/settings/team',
   AUTH_CALLBACK: '/auth/callback',
   HOME: '/',
   INBOX: '/mail',
