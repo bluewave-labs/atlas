@@ -11,14 +11,20 @@ export function useInstalledApps() {
   const { data: installations, isLoading } = useInstallations(activeTenant?.id);
   const { data: catalogApps } = useCatalog();
 
+  // Only show successfully installed apps (running or stopped), not errored/installing
+  const activeInstallations = installations?.filter(
+    (inst) => inst.status === 'running' || inst.status === 'stopped',
+  );
+
   // Enrich installations with catalog metadata (name, icon, color)
-  const enriched = installations?.map((inst) => {
+  const enriched = activeInstallations?.map((inst) => {
     const catalog = catalogApps?.find((c) => c.id === inst.catalogAppId);
     return {
       ...inst,
       name: catalog?.name ?? inst.subdomain,
       iconUrl: catalog?.iconUrl ?? null,
       color: catalog?.color ?? '#666',
+      manifestId: catalog?.manifestId ?? null,
     };
   });
 
