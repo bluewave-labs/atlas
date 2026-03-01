@@ -979,10 +979,10 @@ export function HomePage() {
         {/* Quick-create actions */}
         <div className="flex gap-2 justify-center" style={{ marginTop: 28, marginBottom: 16 }}>
           {[
-            { label: 'New email', icon: '\u2709', onClick: handleNewEmail },
-            { label: 'New document', icon: '\uD83D\uDCC4', onClick: handleNewDocument },
-            { label: 'New task', icon: '\u2611', onClick: handleNewTask },
-            { label: 'New drawing', icon: '\u270F', onClick: handleNewDrawing },
+            { label: 'New email', icon: <Mail className="w-3.5 h-3.5" />, onClick: handleNewEmail },
+            { label: 'New document', icon: <FileText className="w-3.5 h-3.5" />, onClick: handleNewDocument },
+            { label: 'New task', icon: <CheckSquare className="w-3.5 h-3.5" />, onClick: handleNewTask },
+            { label: 'New drawing', icon: <Pencil className="w-3.5 h-3.5" />, onClick: handleNewDrawing },
           ].map((action) => (
             <button
               key={action.label}
@@ -990,7 +990,7 @@ export function HomePage() {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
                 text-white/90 bg-white/15 hover:bg-white/25 backdrop-blur-sm transition-colors cursor-pointer"
             >
-              <span>{action.icon}</span>
+              {action.icon}
               {action.label}
             </button>
           ))}
@@ -1002,7 +1002,12 @@ export function HomePage() {
             <h3 className="text-xs font-medium text-white/60 uppercase tracking-wider" style={{ marginBottom: 8 }}>Recent</h3>
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
               {recentItems.slice(0, 10).map((item) => {
-                const typeIcons: Record<string, string> = { doc: '\uD83D\uDCC4', drawing: '\uD83C\uDFA8', table: '\uD83D\uDCCA', task: '\u2611' };
+                const typeIconMap: Record<string, React.ReactNode> = {
+                  doc: <FileText className="w-4 h-4 text-white/70" />,
+                  drawing: <Pencil className="w-4 h-4 text-white/70" />,
+                  table: <Table2 className="w-4 h-4 text-white/70" />,
+                  task: <CheckSquare className="w-4 h-4 text-white/70" />,
+                };
                 const typePaths: Record<string, string> = { doc: '/docs/', drawing: '/draw/', table: '/tables/', task: '/tasks' };
                 return (
                   <button
@@ -1013,7 +1018,7 @@ export function HomePage() {
                       text-left"
                     style={{ minWidth: 140, maxWidth: 200 }}
                   >
-                    <span className="text-sm">{typeIcons[item.type] || '\uD83D\uDCCE'}</span>
+                    {typeIconMap[item.type] || <FileText className="w-4 h-4 text-white/70" />}
                     <div style={{ minWidth: 0 }}>
                       <div className="text-xs text-white/90 font-medium truncate">{item.title}</div>
                       <div className="text-white/50" style={{ fontSize: 10 }}>{item.type}</div>
