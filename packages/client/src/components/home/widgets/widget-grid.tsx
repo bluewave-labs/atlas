@@ -4,10 +4,10 @@ import { api } from '../../../lib/api-client';
 import { queryKeys } from '../../../config/query-keys';
 import { widgetRegistry } from './registry';
 
-const WIDGET_W = 120;
-const WIDGET_H = 80;
-const GAP = 10;
-const COLS = 5;
+const WIDGET_W = 240;
+const WIDGET_H = 160;
+const GAP = 14;
+const COLS = 3;
 
 export function WidgetGrid() {
   const { data: settings } = useQuery({

@@ -397,20 +397,20 @@ function AppCard({
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 10,
-        padding: '22px 14px 18px',
+        gap: 6,
+        padding: '12px 8px 10px',
         background: hovered ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         border: '1px solid rgba(255,255,255,0.18)',
-        borderRadius: 18,
+        borderRadius: 14,
         cursor: upcoming ? 'default' : 'pointer',
         transition: 'all 0.25s ease',
         transform: hovered && !upcoming ? 'translateY(-4px)' : 'translateY(0)',
         boxShadow: hovered && !upcoming
-          ? '0 20px 40px rgba(0,0,0,0.3)'
-          : '0 6px 24px rgba(0,0,0,0.15)',
-        width: 120,
+          ? '0 12px 28px rgba(0,0,0,0.3)'
+          : '0 4px 16px rgba(0,0,0,0.15)',
+        width: 80,
         outline: 'none',
         fontFamily: 'var(--font-family)',
         position: 'relative',
@@ -441,9 +441,9 @@ function AppCard({
       )}
       <div
         style={{
-          width: 48,
-          height: 48,
-          borderRadius: 14,
+          width: 38,
+          height: 38,
+          borderRadius: 11,
           background: color,
           display: 'flex',
           alignItems: 'center',
@@ -453,9 +453,9 @@ function AppCard({
           transform: hovered && !upcoming ? 'scale(1.08)' : 'scale(1)',
         }}
       >
-        <Icon size={22} color="#fff" strokeWidth={1.7} />
+        <Icon size={18} color="#fff" strokeWidth={1.7} />
       </div>
-      <span style={{ color: '#fff', fontSize: 13, fontWeight: 500 }}>
+      <span style={{ color: '#fff', fontSize: 11, fontWeight: 500 }}>
         {label}
       </span>
       {badge && (
@@ -532,7 +532,6 @@ export function HomePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const now = useCurrentTime();
-  const weather = useWeather();
   const account = useAuthStore((s) => s.account);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isDesktop = !!('atlasDesktop' in window);
@@ -818,279 +817,36 @@ export function HomePage() {
         }}
       />
 
-      {/* Center content */}
+      {/* Main layout: app icons left, content center */}
       <div
         className="home-content-entrance"
         style={{
           position: 'relative',
           zIndex: 10,
           display: 'flex',
-          flexDirection: 'column',
+          flexDirection: 'row',
           alignItems: 'center',
-          textAlign: 'center',
+          width: '100%',
+          height: '100%',
+          padding: '0 24px',
+          gap: 40,
         }}
       >
-        {/* Clock */}
-        <span
+        {/* Left sidebar — App icons */}
+        <div
           style={{
-            color: '#fff',
-            fontSize: 72,
-            fontWeight: 300,
-            lineHeight: 1,
-            letterSpacing: '-1.5px',
-            textShadow: '0 2px 20px rgba(0,0,0,0.2)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+            alignItems: 'center',
+            flexShrink: 0,
+            overflowY: 'auto',
+            maxHeight: 'calc(100vh - 48px)',
+            paddingTop: isDesktop ? 48 : 16,
+            paddingBottom: 16,
+            width: 96,
           }}
         >
-          {formatTime(now)}
-        </span>
-
-        {/* Date + Weather */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 10 }}>
-          <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 20, fontWeight: 500, letterSpacing: '0.01em' }}>
-            {formatDate(now)}
-          </span>
-          {weather && (
-            <>
-              <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 20 }}>·</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <WeatherIconSVG code={weather.icon} size={28} />
-                <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 19, fontWeight: 400 }}>
-                  {weather.temp}°C{weather.description ? `, ${weather.description}` : ''}
-                  {weather.city ? ` · ${weather.city}` : ''}
-                </span>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Greeting */}
-        <h1
-          style={{
-            color: '#fff',
-            fontSize: 48,
-            fontWeight: 600,
-            margin: '32px 0 0',
-            textShadow: '0 2px 30px rgba(0,0,0,0.25)',
-            lineHeight: 1.15,
-            letterSpacing: '-0.5px',
-          }}
-        >
-          {firstName ? `${t(greetingKey)}, ${firstName}` : t(greetingKey)}
-        </h1>
-
-        {!firstName && (
-          <p
-            style={{
-              color: 'rgba(255,255,255,0.7)',
-              fontSize: 18,
-              margin: '6px 0 0',
-              fontWeight: 400,
-              textShadow: '0 1px 8px rgba(0,0,0,0.2)',
-            }}
-          >
-            {t('home.whatToDo')}
-          </p>
-        )}
-
-        {/* Today at a glance */}
-        {(upcomingEvents.length > 0 || pendingTaskCount > 0) && (
-          <div
-            style={{
-              marginTop: 28,
-              display: 'flex',
-              gap: 12,
-              alignItems: 'stretch',
-            }}
-          >
-            {/* Upcoming events */}
-            {upcomingEvents.length > 0 && (
-              <button
-                onClick={() => navigate(ROUTES.CALENDAR)}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 8,
-                  padding: '14px 20px',
-                  background: 'rgba(255,255,255,0.1)',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  borderRadius: 14,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  fontFamily: 'var(--font-family)',
-                  outline: 'none',
-                  transition: 'background 0.2s',
-                  minWidth: 200,
-                  maxWidth: 280,
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.18)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                  <Clock size={14} color="rgba(255,255,255,0.5)" />
-                  <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {t('home.comingUp')}
-                  </span>
-                </div>
-                {upcomingEvents.map((ev) => (
-                  <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, fontWeight: 500, minWidth: 48 }}>
-                      {ev.startTime && !ev.isAllDay
-                        ? new Date(ev.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                        : t('home.allDay')}
-                    </span>
-                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 15, fontWeight: 500 }}>
-                      {ev.summary || t('home.event')}
-                    </span>
-                  </div>
-                ))}
-              </button>
-            )}
-
-            {/* Quick stats */}
-            {(inboxUnread > 0 || pendingTaskCount > 0) && (
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 8,
-                  padding: '14px 20px',
-                  background: 'rgba(255,255,255,0.1)',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  borderRadius: 14,
-                  textAlign: 'left',
-                  fontFamily: 'var(--font-family)',
-                  minWidth: 160,
-                }}
-              >
-                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
-                  {t('home.today')}
-                </span>
-                {inboxUnread > 0 && (
-                  <button
-                    onClick={() => navigate(ROUTES.INBOX)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                      fontFamily: 'var(--font-family)', outline: 'none',
-                    }}
-                  >
-                    <Mail size={15} color="rgba(255,255,255,0.6)" />
-                    <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 15, fontWeight: 500 }}>
-                      {t('home.unreadEmails', { count: inboxUnread })}
-                    </span>
-                    <ArrowRight size={13} color="rgba(255,255,255,0.3)" />
-                  </button>
-                )}
-                {pendingTaskCount > 0 && (
-                  <button
-                    onClick={() => navigate(ROUTES.TASKS)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                      fontFamily: 'var(--font-family)', outline: 'none',
-                    }}
-                  >
-                    <CheckSquare size={15} color="rgba(255,255,255,0.6)" />
-                    <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 15, fontWeight: 500 }}>
-                      {t('home.pendingTasksFull', { count: pendingTaskCount })}
-                    </span>
-                    <ArrowRight size={13} color="rgba(255,255,255,0.3)" />
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Quick-create actions */}
-        <div style={{ display: 'flex', flexDirection: 'row', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginTop: 28, marginBottom: 16 }}>
-          {[
-            { label: 'New email', icon: <Mail size={14} />, onClick: handleNewEmail },
-            { label: 'New document', icon: <FileText size={14} />, onClick: handleNewDocument },
-            { label: 'New task', icon: <CheckSquare size={14} />, onClick: handleNewTask },
-            { label: 'New drawing', icon: <Pencil size={14} />, onClick: handleNewDrawing },
-          ].map((action) => (
-            <button
-              key={action.label}
-              onClick={action.onClick}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '6px 14px',
-                borderRadius: 9999,
-                fontSize: 12,
-                fontWeight: 500,
-                color: 'rgba(255,255,255,0.9)',
-                background: 'rgba(255,255,255,0.15)',
-                backdropFilter: 'blur(8px)',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'background 0.15s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.25)')}
-              onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
-            >
-              {action.icon}
-              {action.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Recent items */}
-        {recentItems.length > 0 && (
-          <div style={{ marginBottom: 16, maxWidth: 670, width: '100%', padding: '0 16px' }}>
-            <h3 style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Recent</h3>
-            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8 }}>
-              {recentItems.slice(0, 10).map((item) => {
-                const typeIconMap: Record<string, React.ReactNode> = {
-                  doc: <FileText size={16} color="rgba(255,255,255,0.7)" />,
-                  drawing: <Pencil size={16} color="rgba(255,255,255,0.7)" />,
-                  table: <Table2 size={16} color="rgba(255,255,255,0.7)" />,
-                  task: <CheckSquare size={16} color="rgba(255,255,255,0.7)" />,
-                };
-                const typePaths: Record<string, string> = { doc: '/docs/', drawing: '/draw/', table: '/tables/', task: '/tasks' };
-                return (
-                  <button
-                    key={`${item.type}-${item.id}`}
-                    onClick={() => navigate(typePaths[item.type] + (item.type === 'task' ? '' : item.id))}
-                    style={{
-                      flexShrink: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
-                      borderRadius: 8,
-                      background: 'rgba(255,255,255,0.1)',
-                      backdropFilter: 'blur(8px)',
-                      border: 'none',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      minWidth: 140,
-                      maxWidth: 200,
-                      transition: 'background 0.15s ease',
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.2)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
-                  >
-                    {typeIconMap[item.type] || <FileText size={16} color="rgba(255,255,255,0.7)" />}
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.9)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</div>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>{item.type}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* App cards */}
-        <div style={{ display: 'flex', gap: 14, marginTop: 8, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 670 }}>
           <AppCard
             icon={Mail}
             label={t('nav.mail')}
@@ -1175,8 +931,270 @@ export function HomePage() {
           />
         </div>
 
-        {/* Widgets */}
-        <WidgetGrid />
+        {/* Center content — Clock, greeting, widgets */}
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            overflowY: 'auto',
+            maxHeight: 'calc(100vh - 48px)',
+            paddingTop: 24,
+            paddingBottom: 24,
+          }}
+        >
+          {/* Clock */}
+          <span
+            style={{
+              color: '#fff',
+              fontSize: 72,
+              fontWeight: 300,
+              lineHeight: 1,
+              letterSpacing: '-1.5px',
+              textShadow: '0 2px 20px rgba(0,0,0,0.2)',
+            }}
+          >
+            {formatTime(now)}
+          </span>
+
+          {/* Date (no weather) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 10 }}>
+            <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 20, fontWeight: 500, letterSpacing: '0.01em' }}>
+              {formatDate(now)}
+            </span>
+          </div>
+
+          {/* Greeting */}
+          <h1
+            style={{
+              color: '#fff',
+              fontSize: 48,
+              fontWeight: 600,
+              margin: '32px 0 0',
+              textShadow: '0 2px 30px rgba(0,0,0,0.25)',
+              lineHeight: 1.15,
+              letterSpacing: '-0.5px',
+            }}
+          >
+            {firstName ? `${t(greetingKey)}, ${firstName}` : t(greetingKey)}
+          </h1>
+
+          {!firstName && (
+            <p
+              style={{
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: 18,
+                margin: '6px 0 0',
+                fontWeight: 400,
+                textShadow: '0 1px 8px rgba(0,0,0,0.2)',
+              }}
+            >
+              {t('home.whatToDo')}
+            </p>
+          )}
+
+          {/* Today at a glance */}
+          {(upcomingEvents.length > 0 || pendingTaskCount > 0) && (
+            <div
+              style={{
+                marginTop: 28,
+                display: 'flex',
+                gap: 12,
+                alignItems: 'stretch',
+              }}
+            >
+              {/* Upcoming events */}
+              {upcomingEvents.length > 0 && (
+                <button
+                  onClick={() => navigate(ROUTES.CALENDAR)}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 8,
+                    padding: '14px 20px',
+                    background: 'rgba(255,255,255,0.1)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: 14,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontFamily: 'var(--font-family)',
+                    outline: 'none',
+                    transition: 'background 0.2s',
+                    minWidth: 200,
+                    maxWidth: 280,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.18)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                    <Clock size={14} color="rgba(255,255,255,0.5)" />
+                    <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {t('home.comingUp')}
+                    </span>
+                  </div>
+                  {upcomingEvents.map((ev) => (
+                    <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, fontWeight: 500, minWidth: 48 }}>
+                        {ev.startTime && !ev.isAllDay
+                          ? new Date(ev.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                          : t('home.allDay')}
+                      </span>
+                      <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 15, fontWeight: 500 }}>
+                        {ev.summary || t('home.event')}
+                      </span>
+                    </div>
+                  ))}
+                </button>
+              )}
+
+              {/* Quick stats */}
+              {(inboxUnread > 0 || pendingTaskCount > 0) && (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 8,
+                    padding: '14px 20px',
+                    background: 'rgba(255,255,255,0.1)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: 14,
+                    textAlign: 'left',
+                    fontFamily: 'var(--font-family)',
+                    minWidth: 160,
+                  }}
+                >
+                  <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
+                    {t('home.today')}
+                  </span>
+                  {inboxUnread > 0 && (
+                    <button
+                      onClick={() => navigate(ROUTES.INBOX)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                        fontFamily: 'var(--font-family)', outline: 'none',
+                      }}
+                    >
+                      <Mail size={15} color="rgba(255,255,255,0.6)" />
+                      <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 15, fontWeight: 500 }}>
+                        {t('home.unreadEmails', { count: inboxUnread })}
+                      </span>
+                      <ArrowRight size={13} color="rgba(255,255,255,0.3)" />
+                    </button>
+                  )}
+                  {pendingTaskCount > 0 && (
+                    <button
+                      onClick={() => navigate(ROUTES.TASKS)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                        fontFamily: 'var(--font-family)', outline: 'none',
+                      }}
+                    >
+                      <CheckSquare size={15} color="rgba(255,255,255,0.6)" />
+                      <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 15, fontWeight: 500 }}>
+                        {t('home.pendingTasksFull', { count: pendingTaskCount })}
+                      </span>
+                      <ArrowRight size={13} color="rgba(255,255,255,0.3)" />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Quick-create actions */}
+          <div style={{ display: 'flex', flexDirection: 'row', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginTop: 28, marginBottom: 16 }}>
+            {[
+              { label: 'New email', icon: <Mail size={14} />, onClick: handleNewEmail },
+              { label: 'New document', icon: <FileText size={14} />, onClick: handleNewDocument },
+              { label: 'New task', icon: <CheckSquare size={14} />, onClick: handleNewTask },
+              { label: 'New drawing', icon: <Pencil size={14} />, onClick: handleNewDrawing },
+            ].map((action) => (
+              <button
+                key={action.label}
+                onClick={action.onClick}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '6px 14px',
+                  borderRadius: 9999,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: 'rgba(255,255,255,0.9)',
+                  background: 'rgba(255,255,255,0.15)',
+                  backdropFilter: 'blur(8px)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.25)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
+              >
+                {action.icon}
+                {action.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Recent items */}
+          {recentItems.length > 0 && (
+            <div style={{ marginBottom: 16, maxWidth: 780, width: '100%', padding: '0 16px' }}>
+              <h3 style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Recent</h3>
+              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8 }}>
+                {recentItems.slice(0, 10).map((item) => {
+                  const typeIconMap: Record<string, React.ReactNode> = {
+                    doc: <FileText size={16} color="rgba(255,255,255,0.7)" />,
+                    drawing: <Pencil size={16} color="rgba(255,255,255,0.7)" />,
+                    table: <Table2 size={16} color="rgba(255,255,255,0.7)" />,
+                    task: <CheckSquare size={16} color="rgba(255,255,255,0.7)" />,
+                  };
+                  const typePaths: Record<string, string> = { doc: '/docs/', drawing: '/draw/', table: '/tables/', task: '/tasks' };
+                  return (
+                    <button
+                      key={`${item.type}-${item.id}`}
+                      onClick={() => navigate(typePaths[item.type] + (item.type === 'task' ? '' : item.id))}
+                      style={{
+                        flexShrink: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '8px 12px',
+                        borderRadius: 8,
+                        background: 'rgba(255,255,255,0.1)',
+                        backdropFilter: 'blur(8px)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        minWidth: 140,
+                        maxWidth: 200,
+                        transition: 'background 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.2)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
+                    >
+                      {typeIconMap[item.type] || <FileText size={16} color="rgba(255,255,255,0.7)" />}
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.9)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</div>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>{item.type}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Widgets — centered, 2x size */}
+          <WidgetGrid />
+        </div>
       </div>
     </div>
   );
