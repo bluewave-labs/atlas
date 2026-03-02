@@ -1,4 +1,4 @@
-import { useRef, type CSSProperties, type ReactNode } from 'react';
+import { type CSSProperties, type ReactNode } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   AppWindow,
@@ -9,7 +9,7 @@ import {
   LogOut,
   Shield,
 } from 'lucide-react';
-import { useAdminAuthStore } from '../../stores/admin-auth-store';
+import { useAuthStore } from '../../stores/auth-store';
 import { ROUTES } from '../../config/routes';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -62,18 +62,15 @@ function getInitials(name: string): string {
 // ---------------------------------------------------------------------------
 
 export function AdminProtectedRoute({ children }: { children: ReactNode }) {
-  const hydrate = useAdminAuthStore((s) => s.hydrate);
-  const isAuthenticated = useAdminAuthStore((s) => s.isAuthenticated);
-  const hydrated = useRef(false);
-
-  // Hydrate synchronously on first render to avoid redirect flash
-  if (!hydrated.current) {
-    hydrated.current = true;
-    hydrate();
-  }
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isSuperAdmin = useAuthStore((s) => s.isSuperAdmin);
 
   if (!isAuthenticated) {
-    return <Navigate to={ROUTES.ADMIN_LOGIN} replace />;
+    return <Navigate to={ROUTES.LOGIN} replace />;
+  }
+
+  if (!isSuperAdmin) {
+    return <Navigate to={ROUTES.HOME} replace />;
   }
 
   return <>{children}</>;
@@ -84,17 +81,18 @@ export function AdminProtectedRoute({ children }: { children: ReactNode }) {
 // ---------------------------------------------------------------------------
 
 export function AdminLayout() {
-  const username = useAdminAuthStore((s) => s.username);
-  const logout = useAdminAuthStore((s) => s.logout);
+  const account = useAuthStore((s) => s.account);
+  const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
+  const displayName = account?.name ?? 'Admin';
   const pageTitle = getPageTitle(pathname);
-  const initials = getInitials(username ?? 'A');
+  const initials = getInitials(displayName);
 
   const handleLogout = () => {
     logout();
-    navigate(ROUTES.ADMIN_LOGIN, { replace: true });
+    navigate(ROUTES.LOGIN, { replace: true });
   };
 
   // -------------------------------------------------------------------------
@@ -295,8 +293,8 @@ export function AdminLayout() {
             <div style={avatarStyle} aria-hidden="true">
               {initials}
             </div>
-            <span style={footerUsernameStyle} title={username ?? undefined}>
-              {username}
+            <span style={footerUsernameStyle} title={displayName}>
+              {displayName}
             </span>
             <Button
               variant="ghost"

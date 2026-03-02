@@ -22,7 +22,6 @@ import { useInstalledApps } from '../hooks/use-installed-apps';
 import { AppIcon } from '../components/marketplace/app-icons';
 import { ROUTES } from '../config/routes';
 import { useUIStore } from '../stores/ui-store';
-import { useAdminAuthStore } from '../stores/admin-auth-store';
 import { buildGoogleOAuthUrl } from '../components/auth/login-page';
 import { WidgetGrid } from '../components/home/widgets/widget-grid';
 import '../styles/home.css';
@@ -623,9 +622,7 @@ export function HomePage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isDesktop = !!('atlasDesktop' in window);
   const { openSettings } = useUIStore();
-  const adminHydrate = useAdminAuthStore((s) => s.hydrate);
-  const isAdminAuthenticated = useAdminAuthStore((s) => s.isAuthenticated);
-  useEffect(() => { adminHydrate(); }, [adminHydrate]);
+  const isSuperAdmin = useAuthStore((s) => s.isSuperAdmin);
   const isGoogleUser = account?.provider === 'google';
   const { data: counts } = useThreadCounts({ enabled: isGoogleUser });
   const { data: taskCounts } = useTaskCounts({ enabled: isAuthenticated });
@@ -864,7 +861,7 @@ export function HomePage() {
         </button>
 
         {/* Admin button — only visible to super admins */}
-        {isAdminAuthenticated && (
+        {isSuperAdmin && (
           <button
             onClick={() => navigate(ROUTES.ADMIN)}
             aria-label="Admin"

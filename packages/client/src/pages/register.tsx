@@ -55,7 +55,7 @@ export function RegisterPage() {
         companyName,
         companySlug,
         userName,
-        email,
+        email: email || undefined,
         password,
       });
       const { accessToken, refreshToken, account } = data.data;
@@ -197,9 +197,11 @@ export function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="jane@acme.com"
-              required
               style={inputStyle}
             />
+            <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>
+              Optional — for notifications
+            </span>
           </div>
 
           <div style={{ marginBottom: 16 }}>

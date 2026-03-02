@@ -8,6 +8,7 @@ export interface AuthPayload {
   accountId: string;
   email: string;
   tenantId?: string;
+  isSuperAdmin?: boolean;
 }
 
 declare global {

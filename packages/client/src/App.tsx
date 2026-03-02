@@ -30,7 +30,6 @@ import { OrgAppsPage } from './pages/org/org-apps';
 import { OrgSettingsPage } from './pages/org/org-settings';
 import { ForgotPasswordPage } from './pages/forgot-password';
 import { ResetPasswordPage } from './pages/reset-password';
-import { AdminLoginPage } from './pages/admin/admin-login';
 import { AdminLayout, AdminProtectedRoute } from './pages/admin/admin-layout';
 import { AdminOverviewPage } from './pages/admin/admin-overview';
 import { AdminTenantsPage } from './pages/admin/admin-tenants';
@@ -199,7 +198,7 @@ export function App() {
                   <Route path="settings" element={<OrgSettingsPage />} />
                 </Route>
                 {/* Admin routes */}
-                <Route path={ROUTES.ADMIN_LOGIN} element={<AdminLoginPage />} />
+                <Route path={ROUTES.ADMIN_LOGIN} element={<Navigate to={ROUTES.LOGIN} replace />} />
                 <Route
                   path={ROUTES.ADMIN}
                   element={

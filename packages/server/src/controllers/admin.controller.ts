@@ -1,6 +1,4 @@
 import type { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import { db } from '../config/database';
 import { tenants, tenantMembers, appInstallations, appCatalog, appUserAssignments } from '../db/schema';
@@ -8,36 +6,56 @@ import { eq, count } from 'drizzle-orm';
 import { listAtlasContainers } from '../services/platform/docker.service';
 import { startApp, stopApp, restartApp } from '../services/platform/install.service';
 import { logger } from '../utils/logger';
+import * as tenantService from '../services/platform/tenant.service';
+import { createPasswordAccount } from '../services/auth.service';
+import { hashPassword } from '../utils/password';
 
-// ─── Login ──────────────────────────────────────────────────────────────────
+// ─── Create tenant ──────────────────────────────────────────────────────────
 
-export async function login(req: Request, res: Response) {
-  const { username, password } = req.body;
+export async function createTenant(req: Request, res: Response) {
+  try {
+    const { name, slug, ownerName, ownerPassword } = req.body;
 
-  if (!username || !password) {
-    res.status(400).json({ success: false, error: 'Username and password are required' });
-    return;
+    if (!name || !slug) {
+      res.status(400).json({ success: false, error: 'name and slug are required' });
+      return;
+    }
+
+    if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(slug) || slug.length > 63) {
+      res.status(400).json({ success: false, error: 'Slug must be lowercase alphanumeric with hyphens, max 63 chars' });
+      return;
+    }
+
+    // Check slug uniqueness
+    const existingTenant = await tenantService.getTenantBySlug(slug);
+    if (existingTenant) {
+      res.status(409).json({ success: false, error: 'Slug already taken' });
+      return;
+    }
+
+    // If owner details provided, create a user for this tenant
+    let ownerId: string;
+    if (ownerName && ownerPassword) {
+      const email = `${slug.replace(/[^a-z0-9]/g, '')}@${slug}.local`;
+      const passwordHash = await hashPassword(ownerPassword);
+      const { user } = await createPasswordAccount({ email, name: ownerName, passwordHash });
+      ownerId = user.id;
+    } else {
+      // Use the super admin as the owner
+      ownerId = req.auth!.userId;
+    }
+
+    const tenant = await tenantService.createTenant({ slug, name }, ownerId);
+
+    res.status(201).json({ success: true, data: tenant });
+  } catch (err: any) {
+    if (err?.code === '23505') {
+      res.status(409).json({ success: false, error: 'Slug already taken' });
+      return;
+    }
+    logger.error({ err }, 'Failed to create tenant');
+    res.status(500).json({ success: false, error: 'Failed to create tenant' });
   }
-
-  if (!env.ADMIN_USERNAME || !env.ADMIN_PASSWORD_HASH) {
-    res.status(503).json({ success: false, error: 'Admin credentials not configured' });
-    return;
-  }
-
-  // Always run bcrypt.compare to prevent timing-based username enumeration
-  const valid = await bcrypt.compare(password, env.ADMIN_PASSWORD_HASH);
-  if (!valid || username !== env.ADMIN_USERNAME) {
-    res.status(401).json({ success: false, error: 'Invalid credentials' });
-    return;
-  }
-
-  const token = jwt.sign(
-    { role: 'system_admin', username },
-    env.JWT_SECRET,
-    { expiresIn: '8h' },
-  );
-
-  res.json({ success: true, data: { token, username } });
 }
 
 // ─── Overview ───────────────────────────────────────────────────────────────

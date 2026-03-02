@@ -671,6 +671,11 @@ export async function runMigrations() {
       ALTER TABLE app_installations ADD COLUMN IF NOT EXISTS provisioning_enabled BOOLEAN NOT NULL DEFAULT FALSE;
     `);
 
+    // Add super admin column to users (idempotent)
+    await client.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS is_super_admin BOOLEAN NOT NULL DEFAULT FALSE;
+    `);
+
     // ─── Indexes ────────────────────────────────────────────────────
 
     const indexes = [

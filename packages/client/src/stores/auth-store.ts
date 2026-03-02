@@ -72,6 +72,7 @@ interface AuthState {
   account: Account | null;
   accounts: Account[];
   tenantId: string | null;
+  isSuperAdmin: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
 
@@ -91,9 +92,9 @@ interface AuthState {
 // Restore persisted accounts and figure out the active account on startup.
 // The active account is whichever account's tokens are in `atlasmail_token`.
 // We match by looking for the active token in the token map.
-function deriveInitialState(): { account: Account | null; accounts: Account[]; tenantId: string | null } {
+function deriveInitialState(): { account: Account | null; accounts: Account[]; tenantId: string | null; isSuperAdmin: boolean } {
   const accounts = readAccounts();
-  if (accounts.length === 0) return { account: null, accounts: [], tenantId: null };
+  if (accounts.length === 0) return { account: null, accounts: [], tenantId: null, isSuperAdmin: false };
 
   const tokenMap = readTokenMap();
 
@@ -107,7 +108,7 @@ function deriveInitialState(): { account: Account | null; accounts: Account[]; t
       localStorage.setItem('atlasmail_token', tokens.access);
       localStorage.setItem('atlasmail_refresh_token', tokens.refresh);
       const payload = decodeJwtPayload(tokens.access);
-      return { account: active, accounts, tenantId: (payload?.tenantId as string) ?? null };
+      return { account: active, accounts, tenantId: (payload?.tenantId as string) ?? null, isSuperAdmin: !!(payload?.isSuperAdmin) };
     }
   }
 
@@ -117,7 +118,7 @@ function deriveInitialState(): { account: Account | null; accounts: Account[]; t
     if (tokens) {
       writeActiveTokens(acct.id, tokens.access, tokens.refresh);
       const payload = decodeJwtPayload(tokens.access);
-      return { account: acct, accounts, tenantId: (payload?.tenantId as string) ?? null };
+      return { account: acct, accounts, tenantId: (payload?.tenantId as string) ?? null, isSuperAdmin: !!(payload?.isSuperAdmin) };
     }
   }
 
@@ -125,7 +126,7 @@ function deriveInitialState(): { account: Account | null; accounts: Account[]; t
   clearActiveTokens();
   localStorage.removeItem('atlasmail_accounts');
   localStorage.removeItem('atlasmail_tokens');
-  return { account: null, accounts: [], tenantId: null };
+  return { account: null, accounts: [], tenantId: null, isSuperAdmin: false };
 }
 
 const initial = deriveInitialState();
@@ -134,6 +135,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   account: initial.account,
   accounts: initial.accounts,
   tenantId: initial.tenantId,
+  isSuperAdmin: initial.isSuperAdmin,
   isAuthenticated: !!initial.account,
   // deriveInitialState() always resolves to a definite state — no async step needed.
   isLoading: false,
@@ -158,7 +160,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     writeActiveTokens(account.id, accessToken, refreshToken);
 
     const payload = decodeJwtPayload(accessToken);
-    set({ accounts: updated, account, tenantId: (payload?.tenantId as string) ?? null, isAuthenticated: true, isLoading: false });
+    set({ accounts: updated, account, tenantId: (payload?.tenantId as string) ?? null, isSuperAdmin: !!(payload?.isSuperAdmin), isAuthenticated: true, isLoading: false });
   },
 
   // ── switchAccount ────────────────────────────────────────────────────────
@@ -174,7 +176,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!tokens) return;
 
     writeActiveTokens(accountId, tokens.access, tokens.refresh);
-    set({ account: target, isAuthenticated: true });
+    const payload = decodeJwtPayload(tokens.access);
+    set({ account: target, tenantId: (payload?.tenantId as string) ?? null, isSuperAdmin: !!(payload?.isSuperAdmin), isAuthenticated: true });
 
     window.dispatchEvent(new CustomEvent('atlasmail:account-switch', { detail: { accountId } }));
   },
@@ -240,7 +243,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       clearActiveTokens();
       localStorage.removeItem('atlasmail_accounts');
       localStorage.removeItem('atlasmail_tokens');
-      set({ account: null, accounts: [], isAuthenticated: false });
+      set({ account: null, accounts: [], isAuthenticated: false, isSuperAdmin: false });
     }
   },
 }));

@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { eq } from 'drizzle-orm';
+import { eq, count } from 'drizzle-orm';
 import { db } from '../config/database';
 import { accounts, users, userSettings } from '../db/schema';
 import { createOAuth2Client } from '../config/google';
@@ -86,12 +86,23 @@ export async function findOrCreateAccount(
   return { account, isNew: true };
 }
 
-export function generateTokens(account: { id: string; email: string; userId: string }, tenantId?: string) {
+export function generateTokens(account: { id: string; email: string; userId: string }, tenantId?: string, isSuperAdmin?: boolean) {
   const payload: AuthPayload = { userId: account.userId, accountId: account.id, email: account.email };
   if (tenantId) payload.tenantId = tenantId;
+  if (isSuperAdmin) payload.isSuperAdmin = true;
   const accessToken = jwt.sign(payload, env.JWT_SECRET, { expiresIn: '1h' });
   const refreshToken = jwt.sign(payload, env.JWT_REFRESH_SECRET, { expiresIn: '30d' });
   return { accessToken, refreshToken };
+}
+
+export async function isUserSuperAdmin(userId: string): Promise<boolean> {
+  const [row] = await db.select({ isSuperAdmin: users.isSuperAdmin }).from(users).where(eq(users.id, userId)).limit(1);
+  return row?.isSuperAdmin === true;
+}
+
+export async function getUserCount(): Promise<number> {
+  const [row] = await db.select({ count: count() }).from(users);
+  return row?.count ?? 0;
 }
 
 export function verifyRefreshToken(token: string): AuthPayload {

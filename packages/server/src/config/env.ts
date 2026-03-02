@@ -35,9 +35,6 @@ const envSchema = z.object({
   // ─── CORS ─────────────────────────────────────────────────────────────────
   CORS_ORIGINS: z.string().default('http://localhost:5180'),  // comma-separated origins
 
-  // ─── System Admin ──────────────────────────────────────────────────────────
-  ADMIN_USERNAME: z.string().optional(),
-  ADMIN_PASSWORD_HASH: z.string().optional(),        // bcrypt hash
 });
 
 export const env = envSchema.parse(process.env);

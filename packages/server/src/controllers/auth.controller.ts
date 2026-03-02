@@ -108,8 +108,8 @@ export async function register(req: Request, res: Response) {
   try {
     const { companyName, companySlug, userName, email, password } = req.body;
 
-    if (!companyName || !companySlug || !userName || !email || !password) {
-      res.status(400).json({ success: false, error: 'All fields are required: companyName, companySlug, userName, email, password' });
+    if (!companyName || !companySlug || !userName || !password) {
+      res.status(400).json({ success: false, error: 'companyName, companySlug, userName, and password are required' });
       return;
     }
 
@@ -125,34 +125,41 @@ export async function register(req: Request, res: Response) {
       return;
     }
 
+    // Auto-generate email if not provided
+    const effectiveEmail = email || `${companySlug.replace(/[^a-z0-9]/g, '')}@${companySlug}.local`;
+
     // Check email uniqueness
-    const existing = await authService.findAccountByEmail(email);
+    const existing = await authService.findAccountByEmail(effectiveEmail);
     if (existing) {
       res.status(409).json({ success: false, error: 'An account with this email already exists' });
       return;
     }
 
     // Check slug uniqueness BEFORE creating user to avoid orphan rows
-    if (env.OIDC_SIGNING_KEY) {
-      const existingTenant = await tenantService.getTenantBySlug(companySlug);
-      if (existingTenant) {
-        res.status(409).json({ success: false, error: 'Company slug already taken' });
-        return;
-      }
+    const existingTenant = await tenantService.getTenantBySlug(companySlug);
+    if (existingTenant) {
+      res.status(409).json({ success: false, error: 'Company slug already taken' });
+      return;
     }
 
     // Create user + account
     const passwordHash = await hashPassword(password);
-    const { user, account } = await authService.createPasswordAccount({ email, name: userName, passwordHash });
+    const { user, account } = await authService.createPasswordAccount({ email: effectiveEmail, name: userName, passwordHash });
+
+    // Check if this is the first user → make super admin
+    const userCount = await authService.getUserCount();
+    let isSuperAdmin = false;
+    if (userCount === 1) {
+      isSuperAdmin = true;
+      await db.update(users).set({ isSuperAdmin: true }).where(eq(users.id, user.id));
+    }
 
     // Create tenant and add owner
     let tenant = null;
     let tenantId: string | undefined;
     try {
-      if (env.OIDC_SIGNING_KEY) {
-        tenant = await tenantService.createTenant({ slug: companySlug, name: companyName }, user.id);
-        tenantId = tenant.id;
-      }
+      tenant = await tenantService.createTenant({ slug: companySlug, name: companyName }, user.id);
+      tenantId = tenant.id;
     } catch (err: any) {
       if (err?.code === '23505') {
         // Race condition: slug was taken between our check and insert
@@ -162,7 +169,7 @@ export async function register(req: Request, res: Response) {
       throw err;
     }
 
-    const jwtTokens = authService.generateTokens(account, tenantId);
+    const jwtTokens = authService.generateTokens(account, tenantId, isSuperAdmin);
 
     // Send welcome email (fire and forget)
     import('../services/email.service').then(({ sendWelcomeEmail }) => {
@@ -222,17 +229,18 @@ export async function loginWithPassword(req: Request, res: Response) {
     // Look up tenant membership
     let tenantId: string | undefined;
     try {
-      if (env.OIDC_SIGNING_KEY) {
-        const tenants = await tenantService.listTenantsForUser(account.userId);
-        if (tenants.length > 0) {
-          tenantId = tenants[0].id;
-        }
+      const tenants = await tenantService.listTenantsForUser(account.userId);
+      if (tenants.length > 0) {
+        tenantId = tenants[0].id;
       }
     } catch {
       // Platform features may not be configured — proceed without tenantId
     }
 
-    const jwtTokens = authService.generateTokens(account, tenantId);
+    // Check super admin status
+    const isSuperAdmin = await authService.isUserSuperAdmin(account.userId);
+
+    const jwtTokens = authService.generateTokens(account, tenantId, isSuperAdmin);
 
     res.json({
       success: true,
@@ -290,21 +298,22 @@ export async function refreshToken(req: Request, res: Response) {
     // Include tenantId in refreshed tokens
     let tenantId: string | undefined;
     try {
-      if (env.OIDC_SIGNING_KEY) {
-        const tenants = await tenantService.listTenantsForUser(userId);
-        if (tenants.length > 0) {
-          tenantId = tenants[0].id;
-        }
+      const tenants = await tenantService.listTenantsForUser(userId);
+      if (tenants.length > 0) {
+        tenantId = tenants[0].id;
       }
     } catch {
       // Platform features may not be configured
     }
 
+    // Check super admin status
+    const isSuperAdmin = await authService.isUserSuperAdmin(userId);
+
     const newTokens = authService.generateTokens({
       id: payload.accountId,
       email: payload.email,
       userId,
-    }, tenantId);
+    }, tenantId, isSuperAdmin);
 
     res.json({
       success: true,

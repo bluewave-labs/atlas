@@ -1,19 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
-
-export interface AdminPayload {
-  role: 'system_admin';
-  username: string;
-}
-
-declare global {
-  namespace Express {
-    interface Request {
-      admin?: AdminPayload;
-    }
-  }
-}
+import type { AuthPayload } from './auth';
 
 export function adminAuthMiddleware(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
@@ -25,16 +13,16 @@ export function adminAuthMiddleware(req: Request, res: Response, next: NextFunct
   const token = authHeader.slice(7);
 
   try {
-    const payload = jwt.verify(token, env.JWT_SECRET) as AdminPayload;
+    const payload = jwt.verify(token, env.JWT_SECRET) as AuthPayload;
 
-    if (payload.role !== 'system_admin') {
+    if (!payload.isSuperAdmin) {
       res.status(403).json({ success: false, error: 'Insufficient privileges' });
       return;
     }
 
-    req.admin = payload;
+    req.auth = payload;
     next();
   } catch {
-    res.status(401).json({ success: false, error: 'Invalid or expired admin token' });
+    res.status(401).json({ success: false, error: 'Invalid or expired token' });
   }
 }

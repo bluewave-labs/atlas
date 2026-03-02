@@ -1,23 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminApi } from '../lib/admin-api-client';
+import { api } from '../lib/api-client';
 import { queryKeys } from '../config/query-keys';
-import { useAdminAuthStore } from '../stores/admin-auth-store';
-
-// ─── Auth ───────────────────────────────────────────────────────────────────
-
-export function useAdminLogin() {
-  const login = useAdminAuthStore((s) => s.login);
-
-  return useMutation({
-    mutationFn: async (credentials: { username: string; password: string }) => {
-      const { data } = await adminApi.post('/admin/login', credentials);
-      return data.data as { token: string; username: string };
-    },
-    onSuccess: (data) => {
-      login(data.token, data.username);
-    },
-  });
-}
 
 // ─── Overview ───────────────────────────────────────────────────────────────
 
@@ -25,7 +8,7 @@ export function useAdminOverview() {
   return useQuery({
     queryKey: queryKeys.admin.overview,
     queryFn: async () => {
-      const { data } = await adminApi.get('/admin/overview');
+      const { data } = await api.get('/admin/overview');
       return data.data as {
         tenants: number;
         installations: { running: number; stopped: number; error: number; installing: number; total: number };
@@ -59,7 +42,7 @@ export function useAdminTenants() {
   return useQuery({
     queryKey: queryKeys.admin.tenants,
     queryFn: async () => {
-      const { data } = await adminApi.get('/admin/tenants');
+      const { data } = await api.get('/admin/tenants');
       return data.data as AdminTenant[];
     },
   });
@@ -86,7 +69,7 @@ export function useAdminTenant(id: string) {
   return useQuery({
     queryKey: queryKeys.admin.tenant(id),
     queryFn: async () => {
-      const { data } = await adminApi.get(`/admin/tenants/${id}`);
+      const { data } = await api.get(`/admin/tenants/${id}`);
       return data.data as AdminTenantDetail;
     },
     enabled: !!id,
@@ -97,7 +80,7 @@ export function useUpdateTenantStatus() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { data } = await adminApi.put(`/admin/tenants/${id}/status`, { status });
+      const { data } = await api.put(`/admin/tenants/${id}/status`, { status });
       return data.data;
     },
     onSuccess: () => {
@@ -110,11 +93,25 @@ export function useUpdateTenantPlan() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, plan }: { id: string; plan: string }) => {
-      const { data } = await adminApi.put(`/admin/tenants/${id}/plan`, { plan });
+      const { data } = await api.put(`/admin/tenants/${id}/plan`, { plan });
       return data.data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.admin.tenants });
+    },
+  });
+}
+
+export function useCreateTenant() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { name: string; slug: string; ownerName?: string; ownerPassword?: string }) => {
+      const { data } = await api.post('/admin/tenants', payload);
+      return data.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.admin.tenants });
+      qc.invalidateQueries({ queryKey: queryKeys.admin.overview });
     },
   });
 }
@@ -140,7 +137,7 @@ export function useAdminInstallations() {
   return useQuery({
     queryKey: queryKeys.admin.installations,
     queryFn: async () => {
-      const { data } = await adminApi.get('/admin/installations');
+      const { data } = await api.get('/admin/installations');
       return data.data as AdminInstallation[];
     },
   });
@@ -150,7 +147,7 @@ export function useInstallationAction() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, action }: { id: string; action: 'start' | 'stop' | 'restart' }) => {
-      const { data } = await adminApi.post(`/admin/installations/${id}/${action}`);
+      const { data } = await api.post(`/admin/installations/${id}/${action}`);
       return data;
     },
     onSuccess: () => {
@@ -176,7 +173,7 @@ export function useAdminContainers() {
   return useQuery({
     queryKey: queryKeys.admin.containers,
     queryFn: async () => {
-      const { data } = await adminApi.get('/admin/containers');
+      const { data } = await api.get('/admin/containers');
       return data.data as AdminContainer[];
     },
     refetchInterval: 10_000,
