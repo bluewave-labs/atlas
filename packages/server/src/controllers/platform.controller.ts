@@ -656,7 +656,7 @@ export async function retryProvisioning(req: Request, res: Response) {
     if (!inst) return;
 
     const logId = param(req, 'logId');
-    await provisioningService.retryFailedProvisioning(logId);
+    await provisioningService.retryFailedProvisioning(logId, inst.id);
     res.json({ success: true, data: { message: 'Retry enqueued' } });
   } catch (err: any) {
     logger.error({ err }, 'Failed to retry provisioning');

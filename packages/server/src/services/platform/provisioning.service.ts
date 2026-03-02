@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '../../config/database';
 import { appInstallations, provisioningLog, users } from '../../db/schema';
 import { getCatalogAppById } from './catalog.service';
@@ -227,17 +227,23 @@ export async function setupProvisioningToken(installationId: string) {
 export async function getProvisioningLog(installationId: string, limit = 50, offset = 0) {
   return db.select().from(provisioningLog)
     .where(eq(provisioningLog.installationId, installationId))
-    .orderBy(provisioningLog.createdAt)
+    .orderBy(desc(provisioningLog.createdAt))
     .limit(limit)
     .offset(offset);
 }
 
-export async function retryFailedProvisioning(logEntryId: string) {
+export async function retryFailedProvisioning(logEntryId: string, installationId?: string) {
   const [entry] = await db.select().from(provisioningLog)
     .where(eq(provisioningLog.id, logEntryId))
     .limit(1);
 
   if (!entry) throw new Error('Log entry not found');
+
+  // Verify the log entry belongs to the expected installation (prevents IDOR)
+  if (installationId && entry.installationId !== installationId) {
+    throw new Error('Log entry not found');
+  }
+
   if (entry.status !== 'failed') throw new Error('Can only retry failed entries');
 
   // Reset to pending
@@ -357,7 +363,7 @@ export async function processProvisioningJob(data: {
     await db.update(provisioningLog).set({
       status: 'success',
       completedAt: new Date(),
-      attempts: (await db.select().from(provisioningLog).where(eq(provisioningLog.id, logEntryId)).limit(1))[0]?.attempts + 1 || 1,
+      attempts: sql`${provisioningLog.attempts} + 1`,
     }).where(eq(provisioningLog.id, logEntryId));
 
     logger.info({ logEntryId, action, installationId, userId }, 'Provisioning job completed successfully');
@@ -370,13 +376,10 @@ export async function processProvisioningJob(data: {
     }
 
     // Update log with error
-    const currentEntry = await db.select().from(provisioningLog).where(eq(provisioningLog.id, logEntryId)).limit(1);
-    const currentAttempts = currentEntry[0]?.attempts || 0;
-
     await db.update(provisioningLog).set({
       status: 'failed',
       errorMessage,
-      attempts: currentAttempts + 1,
+      attempts: sql`${provisioningLog.attempts} + 1`,
     }).where(eq(provisioningLog.id, logEntryId));
 
     throw err; // Re-throw so BullMQ can retry
