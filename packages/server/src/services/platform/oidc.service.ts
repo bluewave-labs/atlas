@@ -170,11 +170,16 @@ export async function exchangeCode(
     { algorithm: 'RS256', keyid: 'atlas-oidc-1' },
   );
 
-  // Issue opaque access_token (for userinfo endpoint)
+  // Issue access_token (for userinfo endpoint) — must include all claims
+  // that the userinfo endpoint returns, since it reads them from this token.
   const accessToken = jwt.sign(
     {
       sub: codeData.userId,
-      tenant_id: codeData.tenantId,
+      email: codeData.email,
+      name: codeData.email.split('@')[0],
+      atlas_tenant_id: codeData.tenantId,
+      atlas_roles: roles,
+      atlas_app_role: codeData.appRole,
       client_id: clientId,
       scope: 'openid profile email',
     },
