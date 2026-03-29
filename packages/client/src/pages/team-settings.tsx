@@ -8,6 +8,8 @@ import {
   useInviteTenantUser,
 } from '../hooks/use-platform';
 import type { TenantMemberRole } from '@atlasmail/shared';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
 
 export function TeamSettingsPage() {
   const tenantId = useAuthStore((s) => s.tenantId);
@@ -34,36 +36,18 @@ export function TeamSettingsPage() {
     );
   }
 
-  const inputStyle: React.CSSProperties = {
+  const selectStyle: React.CSSProperties = {
     width: '100%',
-    padding: '8px 12px',
-    border: '1px solid #d0d5dd',
-    borderRadius: 4,
-    fontSize: 14,
+    height: '34px',
+    padding: '0 var(--spacing-sm)',
+    background: 'var(--color-bg-tertiary)',
+    border: '1px solid var(--color-border-primary)',
+    borderRadius: 'var(--radius-md)',
+    color: 'var(--color-text-primary)',
+    fontSize: 'var(--font-size-md)',
+    fontFamily: 'var(--font-family)',
     outline: 'none',
-    background: 'var(--color-bg-primary)',
-    color: 'var(--color-text-primary)',
-    boxSizing: 'border-box',
-  };
-
-  const labelStyle: React.CSSProperties = {
-    display: 'block',
-    fontSize: 13,
-    fontWeight: 500,
-    marginBottom: 6,
-    color: 'var(--color-text-primary)',
-  };
-
-  const buttonStyle: React.CSSProperties = {
-    padding: '6px 14px',
-    height: 34,
-    background: '#13715B',
-    color: '#fff',
-    border: 'none',
-    borderRadius: 4,
-    fontSize: 13,
-    fontWeight: 500,
-    cursor: 'pointer',
+    boxSizing: 'border-box' as const,
   };
 
   async function handleAddUser(e: React.FormEvent) {
@@ -103,20 +87,17 @@ export function TeamSettingsPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h2 style={{ fontSize: 20, fontWeight: 600, color: 'var(--color-text-primary)' }}>Team members</h2>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            onClick={() => setShowInviteModal(true)}
-            style={{ ...buttonStyle, background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', border: '1px solid #d0d5dd' }}
-          >
+          <Button variant="secondary" size="sm" onClick={() => setShowInviteModal(true)}>
             Invite user
-          </button>
-          <button onClick={() => setShowAddModal(true)} style={buttonStyle}>
+          </Button>
+          <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
             Add user
-          </button>
+          </Button>
         </div>
       </div>
 
       {inviteSuccess && (
-        <div style={{ padding: '8px 12px', marginBottom: 16, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 4, color: '#16a34a', fontSize: 13 }}>
+        <div style={{ padding: '8px 12px', marginBottom: 16, background: 'var(--color-success-bg)', border: '1px solid var(--color-success-border)', borderRadius: 'var(--radius-md)', color: 'var(--color-success)', fontSize: 13 }}>
           {inviteSuccess}
         </div>
       )}
@@ -126,7 +107,7 @@ export function TeamSettingsPage() {
       ) : (
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
           <thead>
-            <tr style={{ borderBottom: '1px solid #d0d5dd' }}>
+            <tr style={{ borderBottom: '1px solid var(--color-border-primary)' }}>
               <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 500, color: 'var(--color-text-secondary)', fontSize: 13 }}>Name</th>
               <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 500, color: 'var(--color-text-secondary)', fontSize: 13 }}>Email</th>
               <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 500, color: 'var(--color-text-secondary)', fontSize: 13 }}>Role</th>
@@ -136,7 +117,7 @@ export function TeamSettingsPage() {
           </thead>
           <tbody>
             {users?.map((user) => (
-              <tr key={user.userId} style={{ borderBottom: '1px solid #f0f0f0' }}>
+              <tr key={user.userId} style={{ borderBottom: '1px solid var(--color-border-secondary)' }}>
                 <td style={{ padding: '10px 12px', color: 'var(--color-text-primary)' }}>{user.name || '—'}</td>
                 <td style={{ padding: '10px 12px', color: 'var(--color-text-secondary)' }}>{user.email}</td>
                 <td style={{ padding: '10px 12px' }}>
@@ -150,8 +131,8 @@ export function TeamSettingsPage() {
                       padding: '2px 8px',
                       fontSize: 12,
                       fontWeight: 500,
-                      border: '1px solid #d0d5dd',
-                      borderRadius: 4,
+                      border: '1px solid var(--color-border-primary)',
+                      borderRadius: 'var(--radius-md)',
                       background: 'var(--color-bg-primary)',
                       color: roleBadgeColor[user.role] || '#6b7280',
                       cursor: user.userId === currentUserId ? 'default' : 'pointer',
@@ -167,24 +148,17 @@ export function TeamSettingsPage() {
                 </td>
                 <td style={{ padding: '10px 12px', textAlign: 'right' }}>
                   {user.userId !== currentUserId && (
-                    <button
+                    <Button
+                      variant="danger"
+                      size="sm"
                       onClick={() => {
                         if (confirm(`Remove ${user.email} from the team?`)) {
                           removeUser.mutate(user.userId);
                         }
                       }}
-                      style={{
-                        padding: '4px 10px',
-                        fontSize: 12,
-                        background: 'transparent',
-                        color: '#dc2626',
-                        border: '1px solid #fecaca',
-                        borderRadius: 4,
-                        cursor: 'pointer',
-                      }}
                     >
                       Remove
-                    </button>
+                    </Button>
                   )}
                 </td>
               </tr>
@@ -212,8 +186,8 @@ export function TeamSettingsPage() {
               width: 420,
               padding: 24,
               background: 'var(--color-bg-secondary)',
-              border: '1px solid #d0d5dd',
-              borderRadius: 8,
+              border: '1px solid var(--color-border-primary)',
+              borderRadius: 'var(--radius-lg)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -221,37 +195,34 @@ export function TeamSettingsPage() {
               Add team member
             </h3>
             {error && (
-              <div style={{ padding: '8px 12px', marginBottom: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 4, color: '#dc2626', fontSize: 13 }}>
+              <div style={{ padding: '8px 12px', marginBottom: 12, background: 'var(--color-error-bg)', border: '1px solid var(--color-error-border)', borderRadius: 'var(--radius-md)', color: 'var(--color-error)', fontSize: 13 }}>
                 {error}
               </div>
             )}
             <form onSubmit={handleAddUser}>
               <div style={{ marginBottom: 12 }}>
-                <label style={labelStyle}>Email</label>
-                <input type="email" value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} required style={inputStyle} />
+                <Input label="Email" type="email" value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} required />
               </div>
               <div style={{ marginBottom: 12 }}>
-                <label style={labelStyle}>Name</label>
-                <input type="text" value={addForm.name} onChange={(e) => setAddForm({ ...addForm, name: e.target.value })} required style={inputStyle} />
+                <Input label="Name" type="text" value={addForm.name} onChange={(e) => setAddForm({ ...addForm, name: e.target.value })} required />
               </div>
               <div style={{ marginBottom: 12 }}>
-                <label style={labelStyle}>Password</label>
-                <input type="password" value={addForm.password} onChange={(e) => setAddForm({ ...addForm, password: e.target.value })} required minLength={8} style={inputStyle} />
+                <Input label="Password" type="password" value={addForm.password} onChange={(e) => setAddForm({ ...addForm, password: e.target.value })} required minLength={8} />
               </div>
               <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>Role</label>
-                <select value={addForm.role} onChange={(e) => setAddForm({ ...addForm, role: e.target.value as TenantMemberRole })} style={inputStyle}>
+                <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 500, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 'var(--spacing-xs)' }}>Role</label>
+                <select value={addForm.role} onChange={(e) => setAddForm({ ...addForm, role: e.target.value as TenantMemberRole })} style={selectStyle}>
                   <option value="member">Member</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                <button type="button" onClick={() => { setShowAddModal(false); setError(''); }} style={{ ...buttonStyle, background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', border: '1px solid #d0d5dd' }}>
+                <Button variant="secondary" size="sm" type="button" onClick={() => { setShowAddModal(false); setError(''); }}>
                   Cancel
-                </button>
-                <button type="submit" disabled={createUser.isPending} style={buttonStyle}>
+                </Button>
+                <Button variant="primary" size="sm" type="submit" disabled={createUser.isPending}>
                   {createUser.isPending ? 'Adding...' : 'Add user'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -277,8 +248,8 @@ export function TeamSettingsPage() {
               width: 420,
               padding: 24,
               background: 'var(--color-bg-secondary)',
-              border: '1px solid #d0d5dd',
-              borderRadius: 8,
+              border: '1px solid var(--color-border-primary)',
+              borderRadius: 'var(--radius-lg)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -286,18 +257,17 @@ export function TeamSettingsPage() {
               Invite team member
             </h3>
             {error && (
-              <div style={{ padding: '8px 12px', marginBottom: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 4, color: '#dc2626', fontSize: 13 }}>
+              <div style={{ padding: '8px 12px', marginBottom: 12, background: 'var(--color-error-bg)', border: '1px solid var(--color-error-border)', borderRadius: 'var(--radius-md)', color: 'var(--color-error)', fontSize: 13 }}>
                 {error}
               </div>
             )}
             <form onSubmit={handleInvite}>
               <div style={{ marginBottom: 12 }}>
-                <label style={labelStyle}>Email</label>
-                <input type="email" value={inviteForm.email} onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })} required style={inputStyle} />
+                <Input label="Email" type="email" value={inviteForm.email} onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })} required />
               </div>
               <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>Role</label>
-                <select value={inviteForm.role} onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value as TenantMemberRole })} style={inputStyle}>
+                <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 500, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 'var(--spacing-xs)' }}>Role</label>
+                <select value={inviteForm.role} onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value as TenantMemberRole })} style={selectStyle}>
                   <option value="member">Member</option>
                   <option value="admin">Admin</option>
                 </select>
@@ -306,12 +276,12 @@ export function TeamSettingsPage() {
                 The user will receive an invitation link to set up their account.
               </p>
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                <button type="button" onClick={() => { setShowInviteModal(false); setError(''); }} style={{ ...buttonStyle, background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', border: '1px solid #d0d5dd' }}>
+                <Button variant="secondary" size="sm" type="button" onClick={() => { setShowInviteModal(false); setError(''); }}>
                   Cancel
-                </button>
-                <button type="submit" disabled={inviteUser.isPending} style={buttonStyle}>
+                </Button>
+                <Button variant="primary" size="sm" type="submit" disabled={inviteUser.isPending}>
                   {inviteUser.isPending ? 'Sending...' : 'Send invitation'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
