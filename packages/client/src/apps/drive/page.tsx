@@ -10,6 +10,8 @@ import {
   ExternalLink, Table2,
 } from 'lucide-react';
 import { AppSidebar } from '../../components/layout/app-sidebar';
+import { Button } from '../../components/ui/button';
+import { IconButton } from '../../components/ui/icon-button';
 import {
   useDriveItems, useDriveBreadcrumbs, useDriveFavourites, useDriveRecent,
   useDriveTrash, useDriveSearch, useCreateFolder, useUploadFiles,
@@ -1225,31 +1227,16 @@ export function DrivePage() {
         search={
           <div className="drive-sidebar-actions">
             <div ref={newDropdownRef} style={{ flex: 1, position: 'relative' }}>
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<Plus size={14} />}
                 onClick={() => setNewDropdownOpen((v) => !v)}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  height: 32,
-                  border: '1px solid var(--color-border-primary)',
-                  borderRadius: 'var(--radius-md)',
-                  background: 'var(--color-bg-primary)',
-                  color: 'var(--color-text-secondary)',
-                  fontSize: 'var(--font-size-sm)',
-                  fontFamily: 'var(--font-family)',
-                  cursor: 'pointer',
-                  transition: 'background var(--transition-fast)',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--color-bg-primary)'; }}
+                style={{ width: '100%', gap: 6 }}
               >
-                <Plus size={14} />
                 New
                 <ChevronDown size={12} />
-              </button>
+              </Button>
               {newDropdownOpen && (
                 <div style={{
                   position: 'absolute',
@@ -1321,30 +1308,15 @@ export function DrivePage() {
                 </div>
               )}
             </div>
-            <button
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Upload size={14} />}
               onClick={() => fileInputRef.current?.click()}
-              style={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                height: 32,
-                border: 'none',
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--color-accent-primary)',
-                color: '#fff',
-                fontSize: 'var(--font-size-sm)',
-                fontFamily: 'var(--font-family)',
-                cursor: 'pointer',
-                transition: 'background var(--transition-fast)',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-accent-primary-hover, #0f6350)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--color-accent-primary)'; }}
+              style={{ flex: 1 }}
             >
-              <Upload size={14} />
               Upload
-            </button>
+            </Button>
           </div>
         }
         footer={storageData ? (
@@ -1474,26 +1446,18 @@ export function DrivePage() {
           <div className="drive-toolbar-right">
             {/* Type filter dropdown */}
             <div ref={typeDropdownRef} style={{ position: 'relative' }}>
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setTypeDropdownOpen(!typeDropdownOpen)}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  height: 32,
-                  padding: '0 10px',
-                  border: '1px solid var(--color-border-primary)',
-                  borderRadius: 'var(--radius-md)',
-                  background: typeFilter !== 'all' ? 'color-mix(in srgb, var(--color-accent-primary) 8%, var(--color-bg-primary))' : 'var(--color-bg-primary)',
-                  color: typeFilter !== 'all' ? 'var(--color-accent-primary)' : 'var(--color-text-secondary)',
-                  fontSize: 'var(--font-size-xs)',
-                  fontFamily: 'var(--font-family)',
-                  cursor: 'pointer',
+                  background: typeFilter !== 'all' ? 'color-mix(in srgb, var(--color-accent-primary) 8%, var(--color-bg-primary))' : undefined,
+                  color: typeFilter !== 'all' ? 'var(--color-accent-primary)' : undefined,
                 }}
               >
                 {TYPE_FILTER_OPTIONS.find((o) => o.value === typeFilter)?.label || 'Type'}
                 <ChevronDown size={12} />
-              </button>
+              </Button>
               {typeDropdownOpen && (
                 <div className="drive-sort-dropdown" style={{ minWidth: 180 }}>
                   {TYPE_FILTER_OPTIONS.map((opt) => (
@@ -1512,26 +1476,18 @@ export function DrivePage() {
 
             {/* Modified filter dropdown */}
             <div ref={modifiedDropdownRef} style={{ position: 'relative' }}>
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setModifiedDropdownOpen(!modifiedDropdownOpen)}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  height: 32,
-                  padding: '0 10px',
-                  border: '1px solid var(--color-border-primary)',
-                  borderRadius: 'var(--radius-md)',
-                  background: modifiedFilter !== 'any' ? 'color-mix(in srgb, var(--color-accent-primary) 8%, var(--color-bg-primary))' : 'var(--color-bg-primary)',
-                  color: modifiedFilter !== 'any' ? 'var(--color-accent-primary)' : 'var(--color-text-secondary)',
-                  fontSize: 'var(--font-size-xs)',
-                  fontFamily: 'var(--font-family)',
-                  cursor: 'pointer',
+                  background: modifiedFilter !== 'any' ? 'color-mix(in srgb, var(--color-accent-primary) 8%, var(--color-bg-primary))' : undefined,
+                  color: modifiedFilter !== 'any' ? 'var(--color-accent-primary)' : undefined,
                 }}
               >
                 {getModifiedFilterOptions().find((o) => o.value === modifiedFilter)?.label || 'Modified'}
                 <ChevronDown size={12} />
-              </button>
+              </Button>
               {modifiedDropdownOpen && (
                 <div className="drive-sort-dropdown" style={{ minWidth: 180 }}>
                   {getModifiedFilterOptions().map((opt) => (
@@ -1550,26 +1506,14 @@ export function DrivePage() {
 
             {/* Sort dropdown */}
             <div ref={sortDropdownRef} style={{ position: 'relative' }}>
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  height: 32,
-                  padding: '0 10px',
-                  border: '1px solid var(--color-border-primary)',
-                  borderRadius: 'var(--radius-md)',
-                  background: 'var(--color-bg-primary)',
-                  color: 'var(--color-text-secondary)',
-                  fontSize: 'var(--font-size-xs)',
-                  fontFamily: 'var(--font-family)',
-                  cursor: 'pointer',
-                }}
               >
                 {SORT_OPTIONS.find((s) => s.value === sortBy)?.label || 'Sort'}
                 <ChevronDown size={12} />
-              </button>
+              </Button>
               {sortDropdownOpen && (
                 <div className="drive-sort-dropdown">
                   {SORT_OPTIONS.map((opt) => (
@@ -1598,50 +1542,22 @@ export function DrivePage() {
             </div>
 
             {/* View toggle */}
-            <button
+            <IconButton
+              icon={viewMode === 'list' ? <LayoutGrid size={16} /> : <LayoutList size={16} />}
+              label={viewMode === 'list' ? 'Grid view' : 'List view'}
+              size={32}
               onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-              title={viewMode === 'list' ? 'Grid view' : 'List view'}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 32,
-                height: 32,
-                border: '1px solid var(--color-border-primary)',
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--color-bg-primary)',
-                color: 'var(--color-text-secondary)',
-                cursor: 'pointer',
-                transition: 'background var(--transition-fast)',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--color-bg-primary)'; }}
-            >
-              {viewMode === 'list' ? <LayoutGrid size={16} /> : <LayoutList size={16} />}
-            </button>
+              style={{ border: '1px solid var(--color-border-primary)' }}
+            />
 
             {/* Settings */}
-            <button
+            <IconButton
+              icon={<Settings size={16} />}
+              label="Drive settings"
+              size={32}
               onClick={() => openSettings('drive')}
-              title="Drive settings"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 32,
-                height: 32,
-                border: '1px solid var(--color-border-primary)',
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--color-bg-primary)',
-                color: 'var(--color-text-secondary)',
-                cursor: 'pointer',
-                transition: 'background var(--transition-fast)',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--color-bg-primary)'; }}
-            >
-              <Settings size={16} />
-            </button>
+              style={{ border: '1px solid var(--color-border-primary)' }}
+            />
           </div>
         </div>
 
@@ -1906,23 +1822,12 @@ export function DrivePage() {
           />
           <div className="drive-preview-header">
             <span className="drive-preview-title">{previewItem.name}</span>
-            <button
+            <IconButton
+              icon={<X size={16} />}
+              label="Close preview"
+              size={28}
               onClick={() => setPreviewItem(null)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 28,
-                height: 28,
-                border: 'none',
-                borderRadius: 'var(--radius-sm)',
-                background: 'transparent',
-                color: 'var(--color-text-secondary)',
-                cursor: 'pointer',
-              }}
-            >
-              <X size={16} />
-            </button>
+            />
           </div>
 
           <div className="drive-preview-body">
@@ -2009,52 +1914,30 @@ export function DrivePage() {
                   {extractTextFromContent(linkedDocData.content) || '(empty document)'}
                 </pre>
                 <div style={{ padding: '12px 16px', borderTop: '1px solid var(--color-border-secondary)' }}>
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={<ExternalLink size={14} />}
                     onClick={() => navigate(`/docs/${previewItem.linkedResourceId}`)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      padding: '6px 14px',
-                      border: '1px solid var(--color-border-primary)',
-                      borderRadius: 'var(--radius-md)',
-                      background: 'var(--color-surface-primary)',
-                      color: 'var(--color-text-primary)',
-                      fontSize: 13,
-                      cursor: 'pointer',
-                      width: '100%',
-                      justifyContent: 'center',
-                    }}
+                    style={{ width: '100%' }}
                   >
-                    <ExternalLink size={14} />
                     Open in editor
-                  </button>
+                  </Button>
                 </div>
               </div>
             ) : previewItem.linkedResourceType === 'drawing' && linkedDrawingData ? (
               <div className="drive-preview-text-content">
                 <DrawingPreviewThumbnail content={linkedDrawingData.content} />
                 <div style={{ padding: '12px 16px', borderTop: '1px solid var(--color-border-secondary)' }}>
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={<ExternalLink size={14} />}
                     onClick={() => navigate(`/draw/${previewItem.linkedResourceId}`)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      padding: '6px 14px',
-                      border: '1px solid var(--color-border-primary)',
-                      borderRadius: 'var(--radius-md)',
-                      background: 'var(--color-surface-primary)',
-                      color: 'var(--color-text-primary)',
-                      fontSize: 13,
-                      cursor: 'pointer',
-                      width: '100%',
-                      justifyContent: 'center',
-                    }}
+                    style={{ width: '100%' }}
                   >
-                    <ExternalLink size={14} />
                     Open in editor
-                  </button>
+                  </Button>
                 </div>
               </div>
             ) : previewItem.linkedResourceType === 'spreadsheet' && linkedTableData ? (
@@ -2101,26 +1984,15 @@ export function DrivePage() {
                   );
                 })()}
                 <div style={{ padding: '12px 16px', borderTop: '1px solid var(--color-border-secondary)' }}>
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={<ExternalLink size={14} />}
                     onClick={() => navigate(`/tables/${previewItem.linkedResourceId}`)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      padding: '6px 14px',
-                      border: '1px solid var(--color-border-primary)',
-                      borderRadius: 'var(--radius-md)',
-                      background: 'var(--color-surface-primary)',
-                      color: 'var(--color-text-primary)',
-                      fontSize: 13,
-                      cursor: 'pointer',
-                      width: '100%',
-                      justifyContent: 'center',
-                    }}
+                    style={{ width: '100%' }}
                   >
-                    <ExternalLink size={14} />
                     Open in editor
-                  </button>
+                  </Button>
                 </div>
               </div>
             ) : previewItem.linkedResourceType && previewItem.linkedResourceId ? (
@@ -2170,19 +2042,16 @@ export function DrivePage() {
             )}
             {previewItem.type === 'file' && (
               <div style={{ borderTop: '1px solid var(--color-border-secondary)', paddingTop: 8 }}>
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<History size={13} />}
                   onClick={() => setVersionHistoryOpen(!versionHistoryOpen)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 6, width: '100%',
-                    padding: '4px 0', border: 'none', background: 'transparent',
-                    color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-xs)',
-                    fontFamily: 'var(--font-family)', cursor: 'pointer',
-                  }}
+                  style={{ width: '100%', justifyContent: 'flex-start', padding: '4px 0', height: 'auto' }}
                 >
-                  <History size={13} />
                   Version history
                   <ChevronDown size={12} style={{ marginLeft: 'auto', transform: versionHistoryOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
-                </button>
+                </Button>
                 {versionHistoryOpen && versionsData && (
                   <div className="drive-version-list">
                     {versionsData.versions.length === 0 ? (
@@ -2197,17 +2066,17 @@ export function DrivePage() {
                             </div>
                           </div>
                           <div style={{ display: 'flex', gap: 4 }}>
-                            <button
+                            <IconButton
+                              icon={<RotateCcw size={12} />}
+                              label="Restore this version"
+                              size={20}
+                              tooltip={false}
                               onClick={() => {
                                 restoreVersion.mutate({ itemId: previewItem.id, versionId: v.id }, {
                                   onSuccess: () => addToast({ type: 'success', message: 'Version restored' }),
                                 });
                               }}
-                              title="Restore this version"
-                              style={{ padding: 2, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--color-text-tertiary)' }}
-                            >
-                              <RotateCcw size={12} />
-                            </button>
+                            />
                             <a
                               href={`/api/v1/drive/${previewItem.id}/versions/${v.id}/download${getTokenParam()}`}
                               title="Download this version"
@@ -2357,40 +2226,20 @@ export function DrivePage() {
             }}
           />
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-            <button
-              onClick={() => setNewFolderOpen(false)}
-              style={{
-                height: 34,
-                padding: '0 16px',
-                background: 'transparent',
-                border: '1px solid var(--color-border-primary)',
-                borderRadius: 'var(--radius-md)',
-                color: 'var(--color-text-secondary)',
-                fontSize: 'var(--font-size-md)',
-                fontFamily: 'var(--font-family)',
-                cursor: 'pointer',
-              }}
-            >
+            <Button variant="secondary" onClick={() => setNewFolderOpen(false)}>
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               onClick={handleCreateFolder}
               disabled={!newFolderName.trim()}
               style={{
-                height: 34,
-                padding: '0 16px',
-                background: newFolderName.trim() ? 'var(--color-accent-primary)' : 'var(--color-bg-tertiary)',
-                border: 'none',
-                borderRadius: 'var(--radius-md)',
-                color: newFolderName.trim() ? '#fff' : 'var(--color-text-tertiary)',
-                fontSize: 'var(--font-size-md)',
-                fontWeight: 500,
-                fontFamily: 'var(--font-family)',
+                opacity: newFolderName.trim() ? 1 : 0.5,
                 cursor: newFolderName.trim() ? 'pointer' : 'not-allowed',
               }}
             >
               Create
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>
@@ -2447,39 +2296,12 @@ export function DrivePage() {
           ))}
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16, borderTop: '1px solid var(--color-border-secondary)', paddingTop: 16 }}>
-            <button
-              onClick={() => setMoveModalOpen(false)}
-              style={{
-                height: 34,
-                padding: '0 16px',
-                background: 'transparent',
-                border: '1px solid var(--color-border-primary)',
-                borderRadius: 'var(--radius-md)',
-                color: 'var(--color-text-secondary)',
-                fontSize: 'var(--font-size-md)',
-                fontFamily: 'var(--font-family)',
-                cursor: 'pointer',
-              }}
-            >
+            <Button variant="secondary" onClick={() => setMoveModalOpen(false)}>
               Cancel
-            </button>
-            <button
-              onClick={handleMoveSubmit}
-              style={{
-                height: 34,
-                padding: '0 16px',
-                background: 'var(--color-accent-primary)',
-                border: 'none',
-                borderRadius: 'var(--radius-md)',
-                color: '#fff',
-                fontSize: 'var(--font-size-md)',
-                fontWeight: 500,
-                fontFamily: 'var(--font-family)',
-                cursor: 'pointer',
-              }}
-            >
+            </Button>
+            <Button variant="primary" onClick={handleMoveSubmit}>
               Move here
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>
@@ -2534,39 +2356,12 @@ export function DrivePage() {
             </button>
           ))}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16, borderTop: '1px solid var(--color-border-secondary)', paddingTop: 16 }}>
-            <button
-              onClick={() => setBatchMoveOpen(false)}
-              style={{
-                height: 34,
-                padding: '0 16px',
-                background: 'transparent',
-                border: '1px solid var(--color-border-primary)',
-                borderRadius: 'var(--radius-md)',
-                color: 'var(--color-text-secondary)',
-                fontSize: 'var(--font-size-md)',
-                fontFamily: 'var(--font-family)',
-                cursor: 'pointer',
-              }}
-            >
+            <Button variant="secondary" onClick={() => setBatchMoveOpen(false)}>
               Cancel
-            </button>
-            <button
-              onClick={handleBulkMoveSubmit}
-              style={{
-                height: 34,
-                padding: '0 16px',
-                background: 'var(--color-accent-primary)',
-                border: 'none',
-                borderRadius: 'var(--radius-md)',
-                color: '#fff',
-                fontSize: 'var(--font-size-md)',
-                fontWeight: 500,
-                fontFamily: 'var(--font-family)',
-                cursor: 'pointer',
-              }}
-            >
+            </Button>
+            <Button variant="primary" onClick={handleBulkMoveSubmit}>
               Move here
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>
@@ -2612,40 +2407,20 @@ export function DrivePage() {
             ))}
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-            <button
-              onClick={() => setTagModalItem(null)}
-              style={{
-                height: 34,
-                padding: '0 16px',
-                background: 'transparent',
-                border: '1px solid var(--color-border-primary)',
-                borderRadius: 'var(--radius-md)',
-                color: 'var(--color-text-secondary)',
-                fontSize: 'var(--font-size-md)',
-                fontFamily: 'var(--font-family)',
-                cursor: 'pointer',
-              }}
-            >
+            <Button variant="secondary" onClick={() => setTagModalItem(null)}>
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               onClick={handleTagSubmit}
               disabled={!tagLabel.trim()}
               style={{
-                height: 34,
-                padding: '0 16px',
-                background: tagLabel.trim() ? 'var(--color-accent-primary)' : 'var(--color-bg-tertiary)',
-                border: 'none',
-                borderRadius: 'var(--radius-md)',
-                color: tagLabel.trim() ? '#fff' : 'var(--color-text-tertiary)',
-                fontSize: 'var(--font-size-md)',
-                fontWeight: 500,
-                fontFamily: 'var(--font-family)',
+                opacity: tagLabel.trim() ? 1 : 0.5,
                 cursor: tagLabel.trim() ? 'pointer' : 'not-allowed',
               }}
             >
               Add
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>
@@ -2669,7 +2444,10 @@ export function DrivePage() {
               <option value="7">Expires in 7 days</option>
               <option value="30">Expires in 30 days</option>
             </select>
-            <button
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Link2 size={14} />}
               onClick={() => {
                 if (!shareModalItem) return;
                 const expiresAt = shareExpiry === 'never' ? undefined : new Date(Date.now() + parseInt(shareExpiry) * 86400000).toISOString();
@@ -2677,16 +2455,10 @@ export function DrivePage() {
                   onSuccess: () => addToast({ type: 'success', message: 'Share link created' }),
                 });
               }}
-              style={{
-                height: 34, padding: '0 16px', background: 'var(--color-accent-primary)',
-                border: 'none', borderRadius: 'var(--radius-md)', color: '#fff',
-                fontSize: 'var(--font-size-sm)', fontWeight: 500, fontFamily: 'var(--font-family)',
-                cursor: 'pointer', whiteSpace: 'nowrap',
-              }}
+              style={{ whiteSpace: 'nowrap' }}
             >
-              <Link2 size={14} style={{ marginRight: 4, verticalAlign: -2 }} />
               Create link
-            </button>
+            </Button>
           </div>
           {shareLinksData && shareLinksData.links.length > 0 && (
             <div className="drive-share-links-list">
@@ -2712,20 +2484,21 @@ export function DrivePage() {
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                      <button
+                      <IconButton
+                        icon={<Copy size={13} />}
+                        label="Copy link"
+                        size={22}
+                        tooltip={false}
                         onClick={() => { navigator.clipboard.writeText(shareUrl); addToast({ type: 'success', message: 'Link copied' }); }}
-                        title="Copy link"
-                        style={{ padding: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--color-text-tertiary)' }}
-                      >
-                        <Copy size={13} />
-                      </button>
-                      <button
+                      />
+                      <IconButton
+                        icon={<Trash2 size={13} />}
+                        label="Delete link"
+                        size={22}
+                        tooltip={false}
+                        destructive
                         onClick={() => deleteShareLink.mutate(link.id, { onSuccess: () => addToast({ type: 'success', message: 'Link deleted' }) })}
-                        title="Delete link"
-                        style={{ padding: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--color-error, #ef4444)' }}
-                      >
-                        <Trash2 size={13} />
-                      </button>
+                      />
                     </div>
                   </div>
                 );
@@ -2758,22 +2531,22 @@ export function DrivePage() {
       {hasSelection && (
         <div className="drive-bulk-bar">
           <span className="drive-bulk-count">{selectedIds.size} selected</span>
-          <button className="drive-bulk-btn" onClick={handleSelectAll} title="Select all">
-            <Check size={14} /> Select all
-          </button>
-          <button className="drive-bulk-btn" onClick={handleClearSelection} title="Clear">
-            <X size={14} /> Clear
-          </button>
+          <Button variant="ghost" size="sm" icon={<Check size={14} />} onClick={handleSelectAll}>
+            Select all
+          </Button>
+          <Button variant="ghost" size="sm" icon={<X size={14} />} onClick={handleClearSelection}>
+            Clear
+          </Button>
           <div style={{ width: 1, height: 20, background: 'var(--color-border-primary)' }} />
-          <button className="drive-bulk-btn" onClick={() => { setBatchMoveTargetId(null); setBatchMoveOpen(true); }} title="Move">
-            <FolderInput size={14} /> Move
-          </button>
-          <button className="drive-bulk-btn" onClick={handleBulkFavourite} title="Favourite">
-            <Star size={14} /> Favourite
-          </button>
-          <button className="drive-bulk-btn drive-bulk-btn-destructive" onClick={handleBulkDelete} title="Delete">
-            <Trash2 size={14} /> Delete
-          </button>
+          <Button variant="ghost" size="sm" icon={<FolderInput size={14} />} onClick={() => { setBatchMoveTargetId(null); setBatchMoveOpen(true); }}>
+            Move
+          </Button>
+          <Button variant="ghost" size="sm" icon={<Star size={14} />} onClick={handleBulkFavourite}>
+            Favourite
+          </Button>
+          <Button variant="danger" size="sm" icon={<Trash2 size={14} />} onClick={handleBulkDelete}>
+            Delete
+          </Button>
         </div>
       )}
 

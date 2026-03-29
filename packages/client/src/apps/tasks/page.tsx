@@ -26,6 +26,8 @@ import { KanbanBoard } from './components/kanban-board';
 import { useTasksSettingsStore } from './settings-store';
 import { useUIStore } from '../../stores/ui-store';
 import { SmartButtonBar } from '../../components/shared/SmartButtonBar';
+import { Button } from '../../components/ui/button';
+import { IconButton } from '../../components/ui/icon-button';
 import '../../styles/tasks.css';
 
 // ─── Navigation sections (Things 3 inspired) ────────────────────────
@@ -383,9 +385,14 @@ function HeadingRow({
       </button>
       <span className="task-heading-title">{task.title}</span>
       <span className="task-heading-count">{childCount}</span>
-      <button className="tasks-icon-btn task-heading-delete" onClick={onDelete} title="Delete section">
-        <X size={12} />
-      </button>
+      <IconButton
+        icon={<X size={12} />}
+        label="Delete section"
+        size={24}
+        destructive
+        className="task-heading-delete"
+        onClick={onDelete}
+      />
     </div>
   );
 }
@@ -487,10 +494,14 @@ function NewHeadingCreator({
 
   if (!isCreating) {
     return (
-      <button className="task-new-heading-btn" onClick={() => setIsCreating(true)}>
-        <Plus size={14} />
+      <Button
+        variant="ghost"
+        size="sm"
+        icon={<Plus size={14} />}
+        onClick={() => setIsCreating(true)}
+      >
         Add section
-      </button>
+      </Button>
     );
   }
 
@@ -533,12 +544,13 @@ function SubtaskSection({ taskId }: { taskId: string }) {
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
           Subtasks {subtasks.length > 0 && `(${completedCount}/${subtasks.length})`}
         </span>
-        <button
+        <IconButton
+          icon={<Plus size={14} />}
+          label="Add subtask"
+          size={24}
+          tooltip={false}
           onClick={() => setIsAdding(!isAdding)}
-          className="text-gray-400 hover:text-gray-600 cursor-pointer"
-        >
-          <Plus className="w-3.5 h-3.5" />
-        </button>
+        />
       </div>
 
       {/* Progress bar */}
@@ -568,12 +580,15 @@ function SubtaskSection({ taskId }: { taskId: string }) {
             <span className={`flex-1 text-sm ${subtask.isCompleted ? 'line-through text-gray-400' : 'text-gray-700'}`}>
               {subtask.title}
             </span>
-            <button
+            <IconButton
+              icon={<Trash2 size={12} />}
+              label="Delete subtask"
+              size={22}
+              destructive
+              tooltip={false}
               onClick={() => deleteSubtask.mutate({ subtaskId: subtask.id, taskId })}
-              className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 cursor-pointer transition-opacity"
-            >
-              <Trash2 className="w-3 h-3" />
-            </button>
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
+            />
           </div>
         ))}
       </div>
@@ -702,12 +717,19 @@ function TaskDetailPanel({
       <div className="task-detail-header">
         <span className="task-detail-header-label">Task detail</span>
         <div className="task-detail-header-actions">
-          <button className="tasks-icon-btn danger" onClick={handleDelete} title="Delete task">
-            <Trash2 size={14} />
-          </button>
-          <button className="tasks-icon-btn" onClick={onClose} title="Close">
-            <X size={14} />
-          </button>
+          <IconButton
+            icon={<Trash2 size={14} />}
+            label="Delete task"
+            size={28}
+            destructive
+            onClick={handleDelete}
+          />
+          <IconButton
+            icon={<X size={14} />}
+            label="Close"
+            size={28}
+            onClick={onClose}
+          />
         </div>
       </div>
 
@@ -812,15 +834,15 @@ function TaskDetailPanel({
               }}
             />
             {dueDate && (
-              <button
-                className="tasks-icon-btn"
+              <IconButton
+                icon={<X size={12} />}
+                label="Clear due date"
+                size={24}
                 onClick={() => {
                   setDueDate('');
                   updateTask.mutate({ id: task.id, dueDate: null });
                 }}
-              >
-                <X size={12} />
-              </button>
+              />
             )}
           </div>
 
@@ -847,7 +869,7 @@ function TaskDetailPanel({
               <span className="task-detail-label">Project</span>
               <span className="task-detail-project-info">
                 {project.icon ? (
-                  <span style={{ fontSize: 14 }}>{project.icon}</span>
+                  <span style={{ fontSize: 'var(--font-size-md)' }}>{project.icon}</span>
                 ) : (
                   <div className="task-detail-project-dot" style={{ background: project.color }} />
                 )}
@@ -1237,7 +1259,7 @@ export function TasksPage() {
       ghost.style.left = '-9999px';
       ghost.style.width = `${taskEl.offsetWidth}px`;
       ghost.style.background = 'var(--color-bg-elevated)';
-      ghost.style.borderRadius = '8px';
+      ghost.style.borderRadius = 'var(--radius-lg)';
       ghost.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
       ghost.style.opacity = '0.92';
       ghost.style.padding = '10px 16px';
@@ -1386,9 +1408,12 @@ export function TasksPage() {
         <div style={{ marginTop: 16, padding: '0 8px' }}>
           <div className="tasks-projects-header">
             <span className="tasks-projects-label">Projects</span>
-            <button className="tasks-projects-add-btn" onClick={handleNewProject} title="New project">
-              <Plus size={14} />
-            </button>
+            <IconButton
+              icon={<Plus size={14} />}
+              label="New project"
+              size={24}
+              onClick={handleNewProject}
+            />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -1407,25 +1432,28 @@ export function TasksPage() {
                     {proj.title}
                   </span>
                 </button>
-                <button
+                <IconButton
+                  icon={<MoreHorizontal size={14} />}
+                  label="Project options"
+                  size={24}
+                  tooltip={false}
                   className="tasks-project-more-btn"
                   onClick={e => {
                     e.stopPropagation();
                     setProjectMenuId(projectMenuId === proj.id ? null : proj.id);
                   }}
-                  title="Project options"
-                >
-                  <MoreHorizontal size={14} />
-                </button>
+                />
                 {projectMenuId === proj.id && (
                   <div className="tasks-project-popover" ref={projectMenuRef}>
-                    <button
-                      className="tasks-context-menu-item danger"
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      icon={<Trash2 size={13} />}
                       onClick={() => handleDeleteProject(proj.id)}
+                      style={{ width: '100%', justifyContent: 'flex-start' }}
                     >
-                      <Trash2 size={13} />
                       Delete project
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -1503,18 +1531,28 @@ export function TasksPage() {
                   onKeyDown={e => { if (e.key === 'Escape') { setShowSearch(false); setSearchQuery(''); } }}
                   placeholder="Search tasks..."
                 />
-                <button className="tasks-icon-btn" onClick={() => { setShowSearch(false); setSearchQuery(''); }}>
-                  <X size={12} />
-                </button>
+                <IconButton
+                  icon={<X size={12} />}
+                  label="Close search"
+                  size={24}
+                  tooltip={false}
+                  onClick={() => { setShowSearch(false); setSearchQuery(''); }}
+                />
               </div>
             ) : (
-              <button className="tasks-icon-btn" onClick={() => { setShowSearch(true); setTimeout(() => searchInputRef.current?.focus(), 50); }} title="Search (press /)">
-                <Search size={15} />
-              </button>
+              <IconButton
+                icon={<Search size={15} />}
+                label="Search (press /)"
+                size={28}
+                onClick={() => { setShowSearch(true); setTimeout(() => searchInputRef.current?.focus(), 50); }}
+              />
             )}
-            <button className="tasks-icon-btn" onClick={() => openSettings('tasks')} title="Tasks settings">
-              <Settings2 size={15} strokeWidth={1.8} />
-            </button>
+            <IconButton
+              icon={<Settings2 size={15} strokeWidth={1.8} />}
+              label="Tasks settings"
+              size={28}
+              onClick={() => openSettings('tasks')}
+            />
           </div>
         </div>
 
@@ -1709,13 +1747,14 @@ function EmptyState({
       <span className="task-empty-title">{cfg.title}</span>
       <span className="task-empty-desc">{cfg.desc}</span>
       {section === 'inbox' && (
-        <button
-          className="task-empty-seed-btn"
+        <Button
+          variant="primary"
+          size="sm"
           onClick={onSeed}
           disabled={seeding}
         >
           {seeding ? 'Loading...' : 'Load sample tasks'}
-        </button>
+        </Button>
       )}
     </div>
   );
