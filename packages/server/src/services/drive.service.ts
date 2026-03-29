@@ -660,7 +660,7 @@ export async function createLinkedDrawing(userId: string, accountId: string, par
 }
 
 export async function createLinkedSpreadsheet(userId: string, accountId: string, parentId?: string | null) {
-  const { createSpreadsheet } = await import('./table.service');
+  const { createSpreadsheet } = await import('../apps/tables/service');
   const spreadsheet = await createSpreadsheet(userId, accountId, { title: 'Untitled spreadsheet' });
 
   const now = new Date();

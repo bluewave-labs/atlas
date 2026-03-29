@@ -8,7 +8,7 @@ import {
   Group, Ungroup,
 } from 'lucide-react';
 import type { TableFieldType } from '@atlasmail/shared';
-import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from '../ui/context-menu';
+import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from '../../../components/ui/context-menu';
 
 const FIELD_TYPE_OPTIONS: { value: TableFieldType; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
   { value: 'text', label: 'Text', icon: Type },

@@ -1,7 +1,7 @@
 import { Table2, Settings, Languages } from 'lucide-react';
 import type { ClientAppManifest } from '../../config/app-manifest.client';
-import { TablesPage } from '../../pages/tables';
-import { TablesGeneralPanel, TablesRegionalPanel } from '../../components/tables/tables-settings-modal';
+import { TablesPage } from './page';
+import { TablesGeneralPanel, TablesRegionalPanel } from './components/tables-settings-modal';
 
 export const tablesManifest: ClientAppManifest = {
   id: 'tables',

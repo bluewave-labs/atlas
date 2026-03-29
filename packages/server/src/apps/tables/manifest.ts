@@ -1,4 +1,4 @@
-import tablesRouter from '../../routes/tables.routes';
+import tablesRouter from './routes';
 import type { ServerAppManifest } from '../../config/app-manifest.server';
 
 export const tablesServerManifest: ServerAppManifest = {

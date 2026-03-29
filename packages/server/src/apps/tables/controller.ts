@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import * as tableService from '../services/table.service';
-import { logger } from '../utils/logger';
+import * as tableService from './service';
+import { logger } from '../../utils/logger';
 
 // GET /api/tables
 export async function listSpreadsheets(req: Request, res: Response) {

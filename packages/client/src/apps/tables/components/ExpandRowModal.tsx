@@ -2,10 +2,10 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, Paperclip, FileIcon, ChevronUp, ChevronDown, Plus } from 'lucide-react';
-import { Modal } from '../ui/modal';
+import { Modal } from '../../../components/ui/modal';
 import type { TableColumn, TableRow, TableAttachment, TableFieldType } from '@atlasmail/shared';
-import { FIELD_TYPE_ICONS } from '../../lib/field-type-icons';
-import { api } from '../../lib/api-client';
+import { FIELD_TYPE_ICONS } from '../../../lib/field-type-icons';
+import { api } from '../../../lib/api-client';
 
 const FIELD_TYPES: { value: TableFieldType; label: string }[] = [
   { value: 'text', label: 'Text' },

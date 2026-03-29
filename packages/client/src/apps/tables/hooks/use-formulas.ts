@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import type { TableRow, TableColumn } from '@atlasmail/shared';
-import { evaluateFormula, buildColMap, isFormulaValue, colIndexToLetter } from '../lib/formula-engine';
+import { evaluateFormula, buildColMap, isFormulaValue, colIndexToLetter } from '../../../lib/formula-engine';
 
 interface UseFormulasOptions {
   rows: TableRow[];

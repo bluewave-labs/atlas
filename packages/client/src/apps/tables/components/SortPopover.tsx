@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { ArrowUpDown, Plus, X } from 'lucide-react';
 import type { TableColumn, TableViewConfig } from '@atlasmail/shared';
-import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
+import { Popover, PopoverTrigger, PopoverContent } from '../../../components/ui/popover';
 
 interface SortRule {
   columnId: string;

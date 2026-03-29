@@ -66,43 +66,43 @@ import {
   useDeleteTable,
   useRestoreTable,
   useAutoSaveTable,
-} from '../hooks/use-tables';
-import { ROUTES } from '../config/routes';
-import { AppSidebar } from '../components/layout/app-sidebar';
+} from './hooks';
+import { ROUTES } from '../../config/routes';
+import { AppSidebar } from '../../components/layout/app-sidebar';
 import type { TableColumn, TableRow, TableFieldType, TableViewConfig, TableAttachment, TableViewTab } from '@atlasmail/shared';
-import { api } from '../lib/api-client';
-import { TableCustomHeader } from '../components/tables/TableCustomHeader';
-import { useCellRangeSelection, isCellInRange } from '../hooks/use-cell-range-selection';
-import { ColumnHeaderMenu } from '../components/tables/ColumnHeaderMenu';
-import { TableHeaderDropdown, getTableIcon } from '../components/tables/TableHeaderDropdown';
-import { RowContextMenu } from '../components/tables/RowContextMenu';
-import { SortPopover } from '../components/tables/SortPopover';
-import { FilterPopover } from '../components/tables/FilterPopover';
-import { ExpandRowModal } from '../components/tables/ExpandRowModal';
-import { MultiSelectCellEditor } from '../components/tables/MultiSelectCellEditor';
-import { RichSelectCellEditor } from '../components/tables/RichSelectCellEditor';
-import { RowHeightPopover } from '../components/tables/RowHeightPopover';
-import { HideFieldsPopover } from '../components/tables/HideFieldsPopover';
-import { RowColorPopover } from '../components/tables/RowColorPopover';
-import { useTablesSettingsStore } from '../stores/tables-settings-store';
-import { useUIStore } from '../stores/ui-store';
-import { ConfirmDialog } from '../components/ui/confirm-dialog';
-import { useToastStore } from '../stores/toast-store';
-import { FindReplaceBar } from '../components/tables/FindReplaceBar';
-import { BatchEditOverlay } from '../components/tables/BatchEditOverlay';
-import { GroupHeaderRenderer } from '../components/tables/GroupHeaderRow';
-import { FormulaBar } from '../components/tables/FormulaBar';
-import { useFindReplace } from '../hooks/use-find-replace';
-import { useFillHandle } from '../hooks/use-fill-handle';
-import { useRowGrouping, isGroupHeaderRow } from '../hooks/use-row-grouping';
-import type { MaybeGroupedRow } from '../hooks/use-row-grouping';
-import { useFormulas } from '../hooks/use-formulas';
-import { isFormulaValue } from '../lib/formula-engine';
-import { getTagColor } from '../lib/tag-colors';
-import { FIELD_TYPE_ICONS } from '../lib/field-type-icons';
-import { GanttView } from '../components/tables/gantt-view';
-import '../styles/tables.css';
-import '../styles/docs.css'; // Re-use .tg-* template gallery styles
+import { api } from '../../lib/api-client';
+import { TableCustomHeader } from './components/TableCustomHeader';
+import { useCellRangeSelection, isCellInRange } from './hooks/use-cell-range-selection';
+import { ColumnHeaderMenu } from './components/ColumnHeaderMenu';
+import { TableHeaderDropdown, getTableIcon } from './components/TableHeaderDropdown';
+import { RowContextMenu } from './components/RowContextMenu';
+import { SortPopover } from './components/SortPopover';
+import { FilterPopover } from './components/FilterPopover';
+import { ExpandRowModal } from './components/ExpandRowModal';
+import { MultiSelectCellEditor } from './components/MultiSelectCellEditor';
+import { RichSelectCellEditor } from './components/RichSelectCellEditor';
+import { RowHeightPopover } from './components/RowHeightPopover';
+import { HideFieldsPopover } from './components/HideFieldsPopover';
+import { RowColorPopover } from './components/RowColorPopover';
+import { useTablesSettingsStore } from './settings-store';
+import { useUIStore } from '../../stores/ui-store';
+import { ConfirmDialog } from '../../components/ui/confirm-dialog';
+import { useToastStore } from '../../stores/toast-store';
+import { FindReplaceBar } from './components/FindReplaceBar';
+import { BatchEditOverlay } from './components/BatchEditOverlay';
+import { GroupHeaderRenderer } from './components/GroupHeaderRow';
+import { FormulaBar } from './components/FormulaBar';
+import { useFindReplace } from './hooks/use-find-replace';
+import { useFillHandle } from './hooks/use-fill-handle';
+import { useRowGrouping, isGroupHeaderRow } from './hooks/use-row-grouping';
+import type { MaybeGroupedRow } from './hooks/use-row-grouping';
+import { useFormulas } from './hooks/use-formulas';
+import { isFormulaValue } from '../../lib/formula-engine';
+import { getTagColor } from '../../lib/tag-colors';
+import { FIELD_TYPE_ICONS } from '../../lib/field-type-icons';
+import { GanttView } from './components/gantt-view';
+import '../../styles/tables.css';
+import '../../styles/docs.css'; // Re-use .tg-* template gallery styles
 
 // ─── AG Grid module registration ────────────────────────────────────
 
@@ -1130,7 +1130,7 @@ function buildColDefs(
       cellClassRules: {
         'cell-range-selected': (params: { context: Record<string, unknown>; colDef: { field?: string }; node: { rowIndex: number | null; rowPinned?: string | null } }) => {
           const { cellRangeRef, colIndexMapRef } = params.context as {
-            cellRangeRef?: { current: import('../hooks/use-cell-range-selection').CellRange | null };
+            cellRangeRef?: { current: import('./hooks/use-cell-range-selection').CellRange | null };
             colIndexMapRef?: { current: Map<string, number> };
           };
           if (!cellRangeRef?.current || !params.colDef.field) return false;

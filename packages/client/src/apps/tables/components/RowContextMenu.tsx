@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { ArrowUp, ArrowDown, Copy, Maximize2, Trash2 } from 'lucide-react';
-import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from '../ui/context-menu';
+import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from '../../../components/ui/context-menu';
 
 interface RowContextMenuProps {
   rowId: string;

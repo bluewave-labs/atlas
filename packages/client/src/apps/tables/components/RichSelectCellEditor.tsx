@@ -1,6 +1,6 @@
 import { forwardRef, useImperativeHandle, useState, useRef, useEffect, useCallback } from 'react';
 import type { ICellEditorParams } from 'ag-grid-community';
-import { getTagColor } from '../../lib/tag-colors';
+import { getTagColor } from '../../../lib/tag-colors';
 
 interface RichSelectCellEditorParams extends ICellEditorParams {
   options?: string[];
@@ -16,13 +16,16 @@ export const RichSelectCellEditor = forwardRef(
     const searchRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
     const committed = useRef(false);
+    // Use a ref so getValue() always returns the latest value,
+    // even if called before React re-renders after setSelected
+    const selectedRef = useRef(selected);
 
     const filteredOptions = options.filter((opt: string) =>
       opt.toLowerCase().includes(search.toLowerCase()),
     );
 
     useImperativeHandle(ref, () => ({
-      getValue: () => selected,
+      getValue: () => selectedRef.current,
       isPopup: () => true,
     }));
 
@@ -41,8 +44,8 @@ export const RichSelectCellEditor = forwardRef(
     const selectAndClose = useCallback((value: string) => {
       if (committed.current) return;
       committed.current = true;
+      selectedRef.current = value;
       setSelected(value);
-      // Defer stopEditing so AG Grid picks up the new value
       setTimeout(() => {
         props.api.stopEditing();
       }, 0);

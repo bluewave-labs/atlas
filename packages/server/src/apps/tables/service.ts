@@ -1,7 +1,7 @@
-import { db } from '../config/database';
-import { spreadsheets } from '../db/schema';
+import { db } from '../../config/database';
+import { spreadsheets } from '../../db/schema';
 import { eq, and, asc, sql } from 'drizzle-orm';
-import { logger } from '../utils/logger';
+import { logger } from '../../utils/logger';
 import type { CreateSpreadsheetInput, UpdateSpreadsheetInput } from '@atlasmail/shared';
 
 // ─── List all spreadsheets (flat list) ───────────────────────────────

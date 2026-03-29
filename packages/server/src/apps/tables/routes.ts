@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import * as tableController from '../controllers/table.controller';
-import { authMiddleware } from '../middleware/auth';
+import * as tableController from './controller';
+import { authMiddleware } from '../../middleware/auth';
 
 const router = Router();
 router.use(authMiddleware);

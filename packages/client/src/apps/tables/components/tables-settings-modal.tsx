@@ -4,13 +4,13 @@ import {
   type TablesDefaultView,
   type TablesDefaultSort,
   type DateFormat,
-} from '../../stores/tables-settings-store';
+} from '../settings-store';
 import {
   SettingsSection,
   SettingsRow,
   SettingsToggle,
   SettingsSelect,
-} from '../settings/settings-primitives';
+} from '../../../components/settings/settings-primitives';
 
 // ---------------------------------------------------------------------------
 // Options

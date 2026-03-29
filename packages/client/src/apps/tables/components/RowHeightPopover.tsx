@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Rows3, Check } from 'lucide-react';
 import type { TableViewConfig } from '@atlasmail/shared';
-import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
+import { Popover, PopoverTrigger, PopoverContent } from '../../../components/ui/popover';
 
 type RowHeightKey = 'short' | 'medium' | 'tall' | 'extraTall';
 
