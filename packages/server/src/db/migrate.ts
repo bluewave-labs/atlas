@@ -830,6 +830,92 @@ export async function runMigrations() {
       ALTER TABLE signing_tokens ADD COLUMN IF NOT EXISTS decline_reason TEXT;
     `);
 
+    // ─── CRM tables ─────────────────────────────────────────────────
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS crm_companies (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL,
+        user_id UUID NOT NULL,
+        name VARCHAR(500) NOT NULL,
+        domain VARCHAR(255),
+        industry VARCHAR(255),
+        size VARCHAR(50),
+        address TEXT,
+        phone VARCHAR(50),
+        tags JSONB NOT NULL DEFAULT '[]',
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS crm_contacts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL,
+        user_id UUID NOT NULL,
+        name VARCHAR(500) NOT NULL,
+        email VARCHAR(255),
+        phone VARCHAR(50),
+        company_id UUID REFERENCES crm_companies(id) ON DELETE SET NULL,
+        position VARCHAR(255),
+        source VARCHAR(100),
+        tags JSONB NOT NULL DEFAULT '[]',
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS crm_deal_stages (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        color VARCHAR(20) NOT NULL DEFAULT '#6b7280',
+        probability INTEGER NOT NULL DEFAULT 0,
+        sequence INTEGER NOT NULL DEFAULT 0,
+        is_default BOOLEAN NOT NULL DEFAULT FALSE
+      );
+
+      CREATE TABLE IF NOT EXISTS crm_deals (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL,
+        user_id UUID NOT NULL,
+        title VARCHAR(500) NOT NULL,
+        value REAL NOT NULL DEFAULT 0,
+        stage_id UUID NOT NULL REFERENCES crm_deal_stages(id),
+        contact_id UUID REFERENCES crm_contacts(id) ON DELETE SET NULL,
+        company_id UUID REFERENCES crm_companies(id) ON DELETE SET NULL,
+        assigned_user_id UUID,
+        probability INTEGER NOT NULL DEFAULT 0,
+        expected_close_date TIMESTAMPTZ,
+        won_at TIMESTAMPTZ,
+        lost_at TIMESTAMPTZ,
+        lost_reason TEXT,
+        tags JSONB NOT NULL DEFAULT '[]',
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS crm_activities (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL,
+        user_id UUID NOT NULL,
+        type VARCHAR(50) NOT NULL DEFAULT 'note',
+        body TEXT NOT NULL DEFAULT '',
+        deal_id UUID REFERENCES crm_deals(id) ON DELETE CASCADE,
+        contact_id UUID REFERENCES crm_contacts(id) ON DELETE CASCADE,
+        company_id UUID REFERENCES crm_companies(id) ON DELETE CASCADE,
+        scheduled_at TIMESTAMPTZ,
+        completed_at TIMESTAMPTZ,
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
     // ─── Indexes ────────────────────────────────────────────────────
 
     const indexes = [
@@ -942,6 +1028,22 @@ export async function runMigrations() {
       'CREATE INDEX IF NOT EXISTS idx_time_off_employee ON time_off_requests(employee_id, status)',
       'CREATE INDEX IF NOT EXISTS idx_time_off_status ON time_off_requests(user_id, status, is_archived)',
       'CREATE INDEX IF NOT EXISTS idx_time_off_approver ON time_off_requests(approver_id)',
+      // CRM Companies
+      'CREATE INDEX IF NOT EXISTS idx_crm_companies_account ON crm_companies(account_id)',
+      // CRM Contacts
+      'CREATE INDEX IF NOT EXISTS idx_crm_contacts_account ON crm_contacts(account_id)',
+      'CREATE INDEX IF NOT EXISTS idx_crm_contacts_company ON crm_contacts(company_id)',
+      // CRM Deal Stages
+      'CREATE INDEX IF NOT EXISTS idx_crm_stages_account ON crm_deal_stages(account_id)',
+      // CRM Deals
+      'CREATE INDEX IF NOT EXISTS idx_crm_deals_account ON crm_deals(account_id)',
+      'CREATE INDEX IF NOT EXISTS idx_crm_deals_stage ON crm_deals(stage_id)',
+      'CREATE INDEX IF NOT EXISTS idx_crm_deals_contact ON crm_deals(contact_id)',
+      'CREATE INDEX IF NOT EXISTS idx_crm_deals_company ON crm_deals(company_id)',
+      // CRM Activities
+      'CREATE INDEX IF NOT EXISTS idx_crm_activities_deal ON crm_activities(deal_id)',
+      'CREATE INDEX IF NOT EXISTS idx_crm_activities_contact ON crm_activities(contact_id)',
+      'CREATE INDEX IF NOT EXISTS idx_crm_activities_company ON crm_activities(company_id)',
     ];
 
     for (const idx of indexes) {

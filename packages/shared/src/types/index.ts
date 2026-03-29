@@ -11,3 +11,4 @@ export * from './app-manifest';
 export * from './custom-field';
 export * from './signature';
 export * from './hr';
+export * from './crm';

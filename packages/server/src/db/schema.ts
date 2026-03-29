@@ -896,3 +896,106 @@ export const timeOffRequests = pgTable('time_off_requests', {
   approverIdx: index('idx_time_off_approver').on(table.approverId),
 }));
 
+// ─── CRM: Companies ────────────────────────────────────────────────
+export const crmCompanies = pgTable('crm_companies', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull(),
+  userId: uuid('user_id').notNull(),
+  name: varchar('name', { length: 500 }).notNull(),
+  domain: varchar('domain', { length: 255 }),
+  industry: varchar('industry', { length: 255 }),
+  size: varchar('size', { length: 50 }),
+  address: text('address'),
+  phone: varchar('phone', { length: 50 }),
+  tags: jsonb('tags').$type<string[]>().notNull().default([]),
+  isArchived: boolean('is_archived').notNull().default(false),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  accountIdx: index('idx_crm_companies_account').on(table.accountId),
+}));
+
+// ─── CRM: Contacts ─────────────────────────────────────────────────
+export const crmContacts = pgTable('crm_contacts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull(),
+  userId: uuid('user_id').notNull(),
+  name: varchar('name', { length: 500 }).notNull(),
+  email: varchar('email', { length: 255 }),
+  phone: varchar('phone', { length: 50 }),
+  companyId: uuid('company_id').references(() => crmCompanies.id, { onDelete: 'set null' }),
+  position: varchar('position', { length: 255 }),
+  source: varchar('source', { length: 100 }),
+  tags: jsonb('tags').$type<string[]>().notNull().default([]),
+  isArchived: boolean('is_archived').notNull().default(false),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  accountIdx: index('idx_crm_contacts_account').on(table.accountId),
+  companyIdx: index('idx_crm_contacts_company').on(table.companyId),
+}));
+
+// ─── CRM: Deal Stages ──────────────────────────────────────────────
+export const crmDealStages = pgTable('crm_deal_stages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull(),
+  name: varchar('name', { length: 100 }).notNull(),
+  color: varchar('color', { length: 20 }).notNull().default('#6b7280'),
+  probability: integer('probability').notNull().default(0),
+  sequence: integer('sequence').notNull().default(0),
+  isDefault: boolean('is_default').notNull().default(false),
+}, (table) => ({
+  accountIdx: index('idx_crm_stages_account').on(table.accountId),
+}));
+
+// ─── CRM: Deals ────────────────────────────────────────────────────
+export const crmDeals = pgTable('crm_deals', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull(),
+  userId: uuid('user_id').notNull(),
+  title: varchar('title', { length: 500 }).notNull(),
+  value: real('value').notNull().default(0),
+  stageId: uuid('stage_id').notNull().references(() => crmDealStages.id),
+  contactId: uuid('contact_id').references(() => crmContacts.id, { onDelete: 'set null' }),
+  companyId: uuid('company_id').references(() => crmCompanies.id, { onDelete: 'set null' }),
+  assignedUserId: uuid('assigned_user_id'),
+  probability: integer('probability').notNull().default(0),
+  expectedCloseDate: timestamp('expected_close_date', { withTimezone: true }),
+  wonAt: timestamp('won_at', { withTimezone: true }),
+  lostAt: timestamp('lost_at', { withTimezone: true }),
+  lostReason: text('lost_reason'),
+  tags: jsonb('tags').$type<string[]>().notNull().default([]),
+  isArchived: boolean('is_archived').notNull().default(false),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  accountIdx: index('idx_crm_deals_account').on(table.accountId),
+  stageIdx: index('idx_crm_deals_stage').on(table.stageId),
+  contactIdx: index('idx_crm_deals_contact').on(table.contactId),
+  companyIdx: index('idx_crm_deals_company').on(table.companyId),
+}));
+
+// ─── CRM: Activities ───────────────────────────────────────────────
+export const crmActivities = pgTable('crm_activities', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull(),
+  userId: uuid('user_id').notNull(),
+  type: varchar('type', { length: 50 }).notNull().default('note'),
+  body: text('body').notNull().default(''),
+  dealId: uuid('deal_id').references(() => crmDeals.id, { onDelete: 'cascade' }),
+  contactId: uuid('contact_id').references(() => crmContacts.id, { onDelete: 'cascade' }),
+  companyId: uuid('company_id').references(() => crmCompanies.id, { onDelete: 'cascade' }),
+  scheduledAt: timestamp('scheduled_at', { withTimezone: true }),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+  isArchived: boolean('is_archived').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  dealIdx: index('idx_crm_activities_deal').on(table.dealId),
+  contactIdx: index('idx_crm_activities_contact').on(table.contactId),
+  companyIdx: index('idx_crm_activities_company').on(table.companyId),
+}));
+
