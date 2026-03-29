@@ -20,26 +20,27 @@ export function PdfViewer({ url, scale = 1.5, onPageCount, renderOverlay }: PdfV
   const [pages, setPages] = useState<PageInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map());
   const pdfDocRef = useRef<pdfjsLib.PDFDocumentProxy | null>(null);
-  const renderedPages = useRef<Set<number>>(new Set());
+  const hasRendered = useRef(false);
+  const urlRef = useRef(url);
 
-  // Load PDF document and extract page info
+  // Load PDF and render — only when URL changes
   useEffect(() => {
     let cancelled = false;
-    renderedPages.current.clear();
+    hasRendered.current = false;
+    urlRef.current = url;
 
-    async function loadPdf() {
+    async function loadAndRender() {
       setLoading(true);
       setError(null);
-      setPages([]);
 
       try {
         const loadingTask = pdfjsLib.getDocument(url);
         const pdfDoc = await loadingTask.promise;
-
         if (cancelled) return;
-        pdfDocRef.current = pdfDoc;
 
+        pdfDocRef.current = pdfDoc;
         const pageCount = pdfDoc.numPages;
         onPageCount?.(pageCount);
 
@@ -47,16 +48,19 @@ export function PdfViewer({ url, scale = 1.5, onPageCount, renderOverlay }: PdfV
         for (let i = 1; i <= pageCount; i++) {
           const page = await pdfDoc.getPage(i);
           const viewport = page.getViewport({ scale });
-          pageInfos.push({
-            pageNumber: i,
-            width: viewport.width,
-            height: viewport.height,
-          });
+          pageInfos.push({ pageNumber: i, width: viewport.width, height: viewport.height });
         }
 
         if (cancelled) return;
         setPages(pageInfos);
         setLoading(false);
+
+        // Wait for React to mount the canvases, then render
+        requestAnimationFrame(() => {
+          if (cancelled || hasRendered.current) return;
+          hasRendered.current = true;
+          renderPages(pdfDoc, pageCount, scale);
+        });
       } catch (err) {
         if (!cancelled) {
           console.error('PDF load error:', err);
@@ -66,7 +70,7 @@ export function PdfViewer({ url, scale = 1.5, onPageCount, renderOverlay }: PdfV
       }
     }
 
-    loadPdf();
+    loadAndRender();
 
     return () => {
       cancelled = true;
@@ -75,49 +79,30 @@ export function PdfViewer({ url, scale = 1.5, onPageCount, renderOverlay }: PdfV
         pdfDocRef.current = null;
       }
     };
-  }, [url, scale, onPageCount]);
+    // Only re-run when URL changes — NOT on scale/onPageCount changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url]);
 
-  // Store canvas refs stably
-  const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map());
-  const scaleRef = useRef(scale);
-  scaleRef.current = scale;
+  async function renderPages(doc: pdfjsLib.PDFDocumentProxy, pageCount: number, renderScale: number) {
+    for (let i = 1; i <= pageCount; i++) {
+      const canvas = canvasRefs.current.get(i);
+      if (!canvas) continue;
 
-  // Render pages after they're in the DOM
-  useEffect(() => {
-    if (pages.length === 0 || !pdfDocRef.current) return;
+      try {
+        const page = await doc.getPage(i);
+        const viewport = page.getViewport({ scale: renderScale });
+        const context = canvas.getContext('2d');
+        if (!context) continue;
 
-    let cancelled = false;
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
 
-    async function renderAllPages() {
-      const doc = pdfDocRef.current;
-      if (!doc) return;
-
-      for (const pageInfo of pages) {
-        if (cancelled) break;
-
-        const canvas = canvasRefs.current.get(pageInfo.pageNumber);
-        if (!canvas) continue;
-
-        try {
-          const page = await doc.getPage(pageInfo.pageNumber);
-          const viewport = page.getViewport({ scale: scaleRef.current });
-          const context = canvas.getContext('2d');
-          if (!context) continue;
-
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-
-          await page.render({ canvasContext: context, viewport, canvas } as any).promise;
-        } catch (err) {
-          if (!cancelled) console.error(`Failed to render page ${pageInfo.pageNumber}:`, err);
-        }
+        await page.render({ canvasContext: context, viewport, canvas } as any).promise;
+      } catch (err) {
+        console.error(`Failed to render page ${i}:`, err);
       }
     }
-
-    // Small delay to ensure canvases are in the DOM
-    const timer = setTimeout(renderAllPages, 50);
-    return () => { cancelled = true; clearTimeout(timer); };
-  }, [pages]);
+  }
 
   if (loading) {
     return (
