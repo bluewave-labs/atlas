@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   FileText,
   Clock,
@@ -32,6 +33,7 @@ import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
 import { ConfirmDialog } from '../../components/ui/confirm-dialog';
 import { IconButton } from '../../components/ui/icon-button';
+import { Tooltip } from '../../components/ui/tooltip';
 import { PdfViewer } from './components/pdf-viewer';
 import { FieldOverlay } from './components/field-overlay';
 import { SignatureModal } from './components/signature-modal';
@@ -73,6 +75,7 @@ const SIGNER_COLORS = ['#8b5cf6', '#3b82f6', '#ef4444', '#f59e0b', '#10b981'];
 // ─── Main page ──────────────────────────────────────────────────────
 
 export function SignPage() {
+  const { t } = useTranslation();
   const [view, setView] = useState<'list' | 'editor'>('list');
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
@@ -361,45 +364,45 @@ export function SignPage() {
       />
 
       {/* Sidebar */}
-      <AppSidebar storageKey="atlas_sign_sidebar" title="Sign">
+      <AppSidebar storageKey="atlas_sign_sidebar" title={t('sign.title')}>
         <SidebarSection>
           <SidebarItem
-            label="All documents"
+            label={t('sign.sidebar.allDocuments')}
             icon={<FileText size={15} />}
             isActive={filterStatus === 'all'}
             count={counts.all}
             onClick={() => { setFilterStatus('all'); if (view === 'editor') handleBackToList(); }}
           />
           <SidebarItem
-            label="Pending"
+            label={t('sign.sidebar.pending')}
             icon={<Clock size={15} />}
             isActive={filterStatus === 'pending'}
             count={counts.pending}
             onClick={() => { setFilterStatus('pending'); if (view === 'editor') handleBackToList(); }}
           />
           <SidebarItem
-            label="Signed"
+            label={t('sign.sidebar.signed')}
             icon={<CheckCircle size={15} />}
             isActive={filterStatus === 'signed'}
             count={counts.signed}
             onClick={() => { setFilterStatus('signed'); if (view === 'editor') handleBackToList(); }}
           />
           <SidebarItem
-            label="Draft"
+            label={t('sign.sidebar.draft')}
             icon={<FilePen size={15} />}
             isActive={filterStatus === 'draft'}
             count={counts.draft}
             onClick={() => { setFilterStatus('draft'); if (view === 'editor') handleBackToList(); }}
           />
           <SidebarItem
-            label="Expired"
+            label={t('sign.sidebar.expired')}
             icon={<AlertTriangle size={15} />}
             isActive={filterStatus === 'expired'}
             count={counts.expired}
             onClick={() => { setFilterStatus('expired'); if (view === 'editor') handleBackToList(); }}
           />
           <SidebarItem
-            label="Voided"
+            label={t('sign.sidebar.voided')}
             icon={<Ban size={15} />}
             isActive={filterStatus === 'voided'}
             count={counts.voided}
@@ -414,32 +417,32 @@ export function SignPage() {
           <>
             <div className="sign-list-header">
               <h2>
-                {filterStatus === 'all' ? 'All documents' : filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}
+                {filterStatus === 'all' ? t('sign.sidebar.allDocuments') : t(`sign.status.${filterStatus}`)}
               </h2>
               <Button variant="primary" size="sm" icon={<Upload size={14} />} onClick={handleUpload}>
-                Upload PDF
+                {t('sign.editor.uploadPdf')}
               </Button>
             </div>
             <div style={{ flex: 1, overflow: 'auto' }}>
               {docsLoading ? (
-                <div className="sign-empty">Loading documents...</div>
+                <div className="sign-empty">{t('sign.list.loading')}</div>
               ) : filteredDocs.length === 0 ? (
                 <div className="sign-empty">
                   <PenTool size={40} style={{ opacity: 0.3 }} />
-                  <div>No documents yet</div>
+                  <div>{t('sign.list.noDocuments')}</div>
                   <Button variant="secondary" size="sm" icon={<Upload size={14} />} onClick={handleUpload}>
-                    Upload your first PDF
+                    {t('sign.list.uploadFirst')}
                   </Button>
                 </div>
               ) : (
                 <table className="sign-doc-table">
                   <thead>
                     <tr>
-                      <th>Title</th>
-                      <th>Status</th>
-                      <th>Created</th>
-                      <th>Pages</th>
-                      <th style={{ width: 80 }}>Actions</th>
+                      <th>{t('sign.list.title')}</th>
+                      <th>{t('sign.list.status')}</th>
+                      <th>{t('sign.list.created')}</th>
+                      <th>{t('sign.list.pages')}</th>
+                      <th style={{ width: 80 }}>{t('sign.list.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -469,14 +472,14 @@ export function SignPage() {
                             {doc.status === 'signed' && (
                               <IconButton
                                 icon={<Download size={14} />}
-                                label="Download"
+                                label={t('sign.editor.downloadPdf')}
                                 size={26}
                                 onClick={() => handleDownload(doc.id)}
                               />
                             )}
                             <IconButton
                               icon={<Trash2 size={14} />}
-                              label="Delete"
+                              label={t('sign.editor.deleteDocument')}
                               size={26}
                               destructive
                               onClick={() => handleRequestDelete(doc.id)}
@@ -498,7 +501,7 @@ export function SignPage() {
             <div className="sign-toolbar">
               <div className="sign-toolbar-left">
                 <Button variant="ghost" size="sm" icon={<ArrowLeft size={14} />} onClick={handleBackToList}>
-                  Back
+                  {t('sign.editor.back')}
                 </Button>
                 {editingTitle ? (
                   <input
@@ -560,70 +563,21 @@ export function SignPage() {
                 </Badge>
               </div>
               <div className="sign-toolbar-right">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={<PenTool size={14} />}
-                  onClick={() => handleAddField('signature')}
-                >
-                  Signature
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={<Type size={14} />}
-                  onClick={() => handleAddField('initials')}
-                >
-                  Initials
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={<Calendar size={14} />}
-                  onClick={() => handleAddField('date')}
-                >
-                  Date
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={<AlignLeft size={14} />}
-                  onClick={() => handleAddField('text')}
-                >
-                  Text
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={<CheckSquare size={14} />}
-                  onClick={() => handleAddField('checkbox')}
-                >
-                  Checkbox
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={<ChevronDown size={14} />}
-                  onClick={() => handleAddField('dropdown')}
-                >
-                  Dropdown
-                </Button>
-                <div style={{ width: 1, height: 20, background: 'var(--color-border-primary)' }} />
                 <IconButton
                   icon={<Users size={14} />}
-                  label="Manage signers"
+                  label={t('sign.editor.manageSigners')}
                   size={28}
                   onClick={() => setSignersModalOpen(true)}
                 />
                 <IconButton
                   icon={<Download size={14} />}
-                  label="Download PDF"
+                  label={t('sign.editor.downloadPdf')}
                   size={28}
                   onClick={() => handleDownload(selectedDoc.id)}
                 />
                 <IconButton
                   icon={<Trash2 size={14} />}
-                  label="Delete document"
+                  label={t('sign.editor.deleteDocument')}
                   size={28}
                   destructive
                   onClick={() => handleRequestDelete(selectedDoc.id)}
@@ -631,7 +585,7 @@ export function SignPage() {
                 {selectedDoc.status === 'pending' && (
                   <IconButton
                     icon={<Ban size={14} />}
-                    label="Void document"
+                    label={t('sign.editor.voidDocument')}
                     size={28}
                     destructive
                     onClick={() => setVoidConfirmOpen(true)}
@@ -644,7 +598,7 @@ export function SignPage() {
                   icon={<Send size={14} />}
                   onClick={() => setSendModalOpen(true)}
                 >
-                  Send for signing
+                  {t('sign.editor.sendForSigning')}
                 </Button>
                 <Button
                   variant="primary"
@@ -660,7 +614,7 @@ export function SignPage() {
                     }
                   }}
                 >
-                  Sign now
+                  {t('sign.editor.signNow')}
                 </Button>
               </div>
             </div>
@@ -724,40 +678,77 @@ export function SignPage() {
                 />
               ) : (
                 <Chip onClick={() => setAddingTag(true)} color="#6b7280">
-                  + Add tag
+                  + {t('sign.editor.addTag')}
                 </Chip>
               )}
             </div>
 
             <SmartButtonBar appId="sign" recordId={selectedDoc.id} />
 
-            {/* PDF viewer + field overlay */}
-            <div className="sign-content">
-              {pdfUrl && (
-                <PdfViewer
-                  url={pdfUrl}
-                  scale={1.5}
-                  onPageCount={(count) => {
-                    if (selectedDoc.pageCount !== count) {
-                      updateDoc.mutate({ pageCount: count });
-                    }
-                  }}
-                  renderOverlay={(pageNumber, pageWidth, pageHeight) => (
-                    <FieldOverlay
-                      fields={fields ?? []}
-                      pageNumber={pageNumber}
-                      pageWidth={pageWidth}
-                      pageHeight={pageHeight}
-                      onFieldMove={handleFieldMove}
-                      onFieldResize={handleFieldResize}
-                      onFieldClick={handleFieldClick}
-                      onFieldDelete={handleFieldDelete}
-                      selectedFieldId={selectedFieldId}
-                      editable
-                    />
+            {/* Field toolbar (vertical) + PDF viewer */}
+            <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+              {/* Vertical field type toolbar */}
+              <div className="sign-field-toolbar">
+                <Tooltip content={t('sign.fields.signature')} side="right">
+                  <button className="sign-field-toolbar-btn" onClick={() => handleAddField('signature')}>
+                    <PenTool size={18} />
+                  </button>
+                </Tooltip>
+                <Tooltip content={t('sign.fields.initials')} side="right">
+                  <button className="sign-field-toolbar-btn" onClick={() => handleAddField('initials')}>
+                    <Type size={18} />
+                  </button>
+                </Tooltip>
+                <Tooltip content={t('sign.fields.date')} side="right">
+                  <button className="sign-field-toolbar-btn" onClick={() => handleAddField('date')}>
+                    <Calendar size={18} />
+                  </button>
+                </Tooltip>
+                <Tooltip content={t('sign.fields.text')} side="right">
+                  <button className="sign-field-toolbar-btn" onClick={() => handleAddField('text')}>
+                    <AlignLeft size={18} />
+                  </button>
+                </Tooltip>
+                <Tooltip content={t('sign.fields.checkbox')} side="right">
+                  <button className="sign-field-toolbar-btn" onClick={() => handleAddField('checkbox')}>
+                    <CheckSquare size={18} />
+                  </button>
+                </Tooltip>
+                <Tooltip content={t('sign.fields.dropdown')} side="right">
+                  <button className="sign-field-toolbar-btn" onClick={() => handleAddField('dropdown')}>
+                    <ChevronDown size={18} />
+                  </button>
+                </Tooltip>
+              </div>
+
+              {/* PDF viewer + field overlay */}
+              <div className="sign-content">
+                {pdfUrl && (
+                  <PdfViewer
+                    url={pdfUrl}
+                    scale={1.5}
+                    onPageCount={(count) => {
+                      if (selectedDoc.pageCount !== count) {
+                        updateDoc.mutate({ pageCount: count });
+                      }
+                    }}
+                    renderOverlay={(pageNumber, pageWidth, pageHeight) => (
+                      <FieldOverlay
+                        fields={fields ?? []}
+                        pageNumber={pageNumber}
+                        pageWidth={pageWidth}
+                        pageHeight={pageHeight}
+                        onFieldMove={handleFieldMove}
+                        onFieldResize={handleFieldResize}
+                        onFieldClick={handleFieldClick}
+                        onFieldDelete={handleFieldDelete}
+                        selectedFieldId={selectedFieldId}
+                        editable
+                      />
                   )}
                 />
               )}
+              </div>
             </div>
           </>
         )}
@@ -772,8 +763,8 @@ export function SignPage() {
       />
 
       {/* Send for signing modal (multi-signer) */}
-      <Modal open={sendModalOpen} onOpenChange={handleCloseSendModal} width={520} title="Send for signing">
-        <Modal.Header title="Send for signing" />
+      <Modal open={sendModalOpen} onOpenChange={handleCloseSendModal} width={520} title={t('sign.editor.sendForSigning')}>
+        <Modal.Header title={t('sign.editor.sendForSigning')} />
         <Modal.Body>
           {!generatedLink ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -791,7 +782,7 @@ export function SignPage() {
                 >
                   <div style={{ flex: 1 }}>
                     <Input
-                      label={idx === 0 ? 'Signer email' : undefined}
+                      label={idx === 0 ? t('sign.send.signerEmail') : undefined}
                       placeholder="name@example.com"
                       value={signer.email}
                       onChange={(e) => {
@@ -804,7 +795,7 @@ export function SignPage() {
                   </div>
                   <div style={{ flex: 1 }}>
                     <Input
-                      label={idx === 0 ? 'Name (optional)' : undefined}
+                      label={idx === 0 ? t('sign.send.signerName') : undefined}
                       placeholder="John Doe"
                       value={signer.name}
                       onChange={(e) => {
@@ -818,7 +809,7 @@ export function SignPage() {
                   {signers.length > 1 && (
                     <IconButton
                       icon={<X size={14} />}
-                      label="Remove signer"
+                      label={t('sign.send.removeSigner')}
                       size={28}
                       destructive
                       onClick={() => {
@@ -835,10 +826,10 @@ export function SignPage() {
                 onClick={() => setSigners([...signers, { email: '', name: '' }])}
                 style={{ alignSelf: 'flex-start' }}
               >
-                Add signer
+                {t('sign.send.addSigner')}
               </Button>
               <Input
-                label="Expires on"
+                label={t('sign.send.expiresOn')}
                 type="date"
                 value={expiryDate}
                 onChange={(e) => setExpiryDate(e.target.value)}
@@ -858,7 +849,7 @@ export function SignPage() {
                       marginBottom: 6,
                     }}
                   >
-                    Existing signing links
+                    {t('sign.send.existingLinks')}
                   </div>
                   {signingLinks.map((link) => (
                     <div
@@ -893,8 +884,8 @@ export function SignPage() {
                 }}
               >
                 {generatedLinks.length > 1
-                  ? 'Signing links generated. Share each link with the respective signer:'
-                  : 'Signing link generated. Share this link with the signer:'}
+                  ? t('sign.send.linksGenerated')
+                  : t('sign.send.linkGenerated')}
               </div>
               {generatedLinks.map((gl, idx) => (
                 <div key={idx}>
@@ -944,7 +935,7 @@ export function SignPage() {
                         setTimeout(() => setLinkCopied(false), 2000);
                       }}
                     >
-                      Copy
+                      {t('sign.send.copy')}
                     </Button>
                   </div>
                 </div>
@@ -954,7 +945,7 @@ export function SignPage() {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="ghost" onClick={() => handleCloseSendModal(false)}>
-            {generatedLink ? 'Done' : 'Cancel'}
+            {generatedLink ? t('sign.send.done') : t('sign.send.cancel')}
           </Button>
           {!generatedLink && (
             <Button
@@ -962,15 +953,15 @@ export function SignPage() {
               onClick={handleSendForSigning}
               disabled={!signers.some((s) => s.email.trim()) || createSigningLink.isPending}
             >
-              {createSigningLink.isPending ? 'Generating...' : `Generate ${signers.filter((s) => s.email.trim()).length > 1 ? 'links' : 'link'}`}
+              {createSigningLink.isPending ? t('sign.send.generating') : signers.filter((s) => s.email.trim()).length > 1 ? t('sign.send.generateLinks') : t('sign.send.generateLink')}
             </Button>
           )}
         </Modal.Footer>
       </Modal>
 
       {/* Signers management modal */}
-      <Modal open={signersModalOpen} onOpenChange={setSignersModalOpen} width={480} title="Manage signers">
-        <Modal.Header title="Manage signers" />
+      <Modal open={signersModalOpen} onOpenChange={setSignersModalOpen} width={480} title={t('sign.signers.manageSigners')}>
+        <Modal.Header title={t('sign.signers.manageSigners')} />
         <Modal.Body>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div
@@ -980,7 +971,7 @@ export function SignPage() {
                 marginBottom: 4,
               }}
             >
-              Assign fields to specific signers by selecting a signer below, then placing fields on the document. Each signer will receive their own signing link.
+              {t('sign.signers.assignFieldsDesc')}
             </div>
             {signingLinks && signingLinks.length > 0 ? (
               signingLinks.map((link, idx) => (
@@ -1017,14 +1008,14 @@ export function SignPage() {
               ))
             ) : (
               <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', padding: '12px 0' }}>
-                No signers yet. Use "Send for signing" to add signers first.
+                {t('sign.signers.noSignersYet')}
               </div>
             )}
           </div>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="ghost" onClick={() => setSignersModalOpen(false)}>
-            Close
+            {t('common.close')}
           </Button>
         </Modal.Footer>
       </Modal>
@@ -1033,9 +1024,9 @@ export function SignPage() {
       <ConfirmDialog
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
-        title="Delete document"
-        description="Are you sure you want to delete this document? This action cannot be undone."
-        confirmLabel="Delete"
+        title={t('sign.editor.deleteDocument')}
+        description={t('sign.editor.deleteConfirm')}
+        confirmLabel={t('common.delete')}
         destructive
         onConfirm={handleConfirmDelete}
       />
@@ -1044,9 +1035,9 @@ export function SignPage() {
       <ConfirmDialog
         open={voidConfirmOpen}
         onOpenChange={setVoidConfirmOpen}
-        title="Void document"
-        description="This will cancel all outstanding signing links. Signers will no longer be able to sign this document."
-        confirmLabel="Void document"
+        title={t('sign.editor.voidDocument')}
+        description={t('sign.editor.voidConfirm')}
+        confirmLabel={t('sign.editor.voidDocument')}
         destructive
         onConfirm={handleVoidDocument}
       />

@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle, AlertTriangle, PenTool, ChevronRight, Download, XCircle, ChevronDown } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Modal } from '../components/ui/modal';
@@ -13,6 +14,7 @@ import type { SignatureFieldType, SignatureField } from '@atlasmail/shared';
 import '../styles/sign.css';
 
 export function SignPublicPage() {
+  const { t } = useTranslation();
   const { token } = useParams<{ token: string }>();
   const { data, isLoading, error, refetch } = usePublicSignDoc(token);
 
@@ -173,7 +175,7 @@ export function SignPublicPage() {
       }
       setCompleted(true);
     } catch (err: any) {
-      const msg = err?.response?.data?.error || 'Failed to submit signature';
+      const msg = err?.response?.data?.error || t('sign.public.failedToSubmit');
       setSubmitError(msg);
     } finally {
       setSubmitting(false);
@@ -188,7 +190,7 @@ export function SignPublicPage() {
       setDeclined(true);
       setDeclineModalOpen(false);
     } catch (err: any) {
-      setSubmitError(err?.response?.data?.error || 'Failed to decline');
+      setSubmitError(err?.response?.data?.error || t('sign.public.failedToSubmit'));
     } finally {
       setDeclining(false);
     }
@@ -227,7 +229,7 @@ export function SignPublicPage() {
     return (
       <div className="sign-public-container">
         <div className="sign-public-content">
-          <div className="sign-empty">Loading document...</div>
+          <div className="sign-empty">{t('sign.public.loading')}</div>
         </div>
       </div>
     );
@@ -240,12 +242,12 @@ export function SignPublicPage() {
           <div className="sign-public-error">
             <AlertTriangle size={48} />
             <h2 style={{ margin: 0, fontSize: 'var(--font-size-xl)', fontFamily: 'var(--font-family)' }}>
-              {isExpired ? 'This signing link has expired' : 'Invalid signing link'}
+              {isExpired ? t('sign.public.linkExpired') : t('sign.public.invalidLink')}
             </h2>
             <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>
               {isExpired
-                ? 'Please contact the document owner for a new signing link.'
-                : 'The signing link you followed is not valid. Please check the URL and try again.'}
+                ? t('sign.public.linkExpiredDesc')
+                : t('sign.public.invalidLinkDesc')}
             </p>
           </div>
         </div>
@@ -261,10 +263,10 @@ export function SignPublicPage() {
           <div className="sign-public-error">
             <XCircle size={48} style={{ color: 'var(--color-error)' }} />
             <h2 style={{ margin: 0, fontSize: 'var(--font-size-xl)', fontFamily: 'var(--font-family)', color: 'var(--color-text-primary)' }}>
-              You have declined to sign this document
+              {t('sign.public.declined')}
             </h2>
             <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>
-              The document owner has been notified of your decision.
+              {t('sign.public.declinedDesc')}
             </p>
           </div>
         </div>
@@ -279,10 +281,10 @@ export function SignPublicPage() {
           <div className="sign-public-success">
             <CheckCircle size={48} style={{ color: 'var(--color-success)' }} />
             <h2 style={{ margin: 0, fontSize: 'var(--font-size-xl)', fontFamily: 'var(--font-family)', color: 'var(--color-text-primary)' }}>
-              Document signed successfully
+              {t('sign.public.signedSuccess')}
             </h2>
             <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>
-              Thank you for signing. The document owner has been notified.
+              {t('sign.public.signedSuccessDesc')}
             </p>
             <Button
               variant="secondary"
@@ -291,7 +293,7 @@ export function SignPublicPage() {
               onClick={handleDownloadPublic}
               style={{ marginTop: 16 }}
             >
-              Download PDF
+              {t('sign.public.downloadPdf')}
             </Button>
           </div>
         </div>
@@ -309,10 +311,10 @@ export function SignPublicPage() {
           <div className="sign-public-success">
             <CheckCircle size={48} style={{ color: 'var(--color-success)' }} />
             <h2 style={{ margin: 0, fontSize: 'var(--font-size-xl)', fontFamily: 'var(--font-family)', color: 'var(--color-text-primary)' }}>
-              Already signed
+              {t('sign.public.alreadySigned')}
             </h2>
             <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>
-              This document has already been signed with this link.
+              {t('sign.public.alreadySignedDesc')}
             </p>
             <Button
               variant="secondary"
@@ -321,7 +323,7 @@ export function SignPublicPage() {
               onClick={handleDownloadPublic}
               style={{ marginTop: 16 }}
             >
-              Download PDF
+              {t('sign.public.downloadPdf')}
             </Button>
           </div>
         </div>
@@ -337,10 +339,10 @@ export function SignPublicPage() {
           <div className="sign-public-error">
             <XCircle size={48} style={{ color: 'var(--color-error)' }} />
             <h2 style={{ margin: 0, fontSize: 'var(--font-size-xl)', fontFamily: 'var(--font-family)', color: 'var(--color-text-primary)' }}>
-              Signing declined
+              {t('sign.public.signingDeclined')}
             </h2>
             <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>
-              This signing request has been declined.
+              {t('sign.public.signingDeclinedDesc')}
             </p>
           </div>
         </div>
@@ -361,7 +363,7 @@ export function SignPublicPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {data.token.signerName && (
             <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>
-              Signing as {data.token.signerName}
+              {t('sign.public.signingAs', { name: data.token.signerName })}
             </span>
           )}
           <Button
@@ -370,7 +372,7 @@ export function SignPublicPage() {
             icon={<XCircle size={14} />}
             onClick={() => setDeclineModalOpen(true)}
           >
-            Decline
+            {t('sign.public.decline')}
           </Button>
           {!isGuided && !allFieldsSigned && (
             <Button
@@ -379,7 +381,7 @@ export function SignPublicPage() {
               icon={<PenTool size={14} />}
               onClick={handleStartGuided}
             >
-              Start signing
+              {t('sign.public.startSigning')}
             </Button>
           )}
           {isGuided && !allFieldsSigned && (
@@ -394,7 +396,7 @@ export function SignPublicPage() {
                   borderRadius: 'var(--radius-md)',
                 }}
               >
-                Field {signedCount + 1} of {totalRequiredFields}
+                {t('sign.public.fieldProgress', { current: signedCount + 1, total: totalRequiredFields })}
               </span>
               <Button
                 variant="secondary"
@@ -402,7 +404,7 @@ export function SignPublicPage() {
                 icon={<PenTool size={14} />}
                 onClick={handleGuidedFieldClick}
               >
-                Sign this field
+                {t('sign.public.signThisField')}
               </Button>
               {currentFieldIndex < sortedUnsignedFields.length - 1 && (
                 <Button
@@ -411,7 +413,7 @@ export function SignPublicPage() {
                   icon={<ChevronRight size={14} />}
                   onClick={handleNextField}
                 >
-                  Next
+                  {t('sign.public.next')}
                 </Button>
               )}
             </>
@@ -423,7 +425,7 @@ export function SignPublicPage() {
               onClick={handleCompleteSigning}
               disabled={submitting}
             >
-              {submitting ? 'Submitting...' : 'Complete signing'}
+              {submitting ? t('sign.public.submitting') : t('sign.public.completeSigning')}
             </Button>
           )}
           {(!allFieldsSigned && hasLocalSignatures && !isGuided) && (
@@ -433,7 +435,7 @@ export function SignPublicPage() {
               onClick={handleCompleteSigning}
               disabled={!hasLocalSignatures || submitting}
             >
-              {submitting ? 'Submitting...' : 'Complete signing'}
+              {submitting ? t('sign.public.submitting') : t('sign.public.completeSigning')}
             </Button>
           )}
         </div>
@@ -498,6 +500,7 @@ export function SignPublicPage() {
               pageHeight={pageHeight}
               onFieldClick={handleFieldClick}
               editable={false}
+              signable
               highlightFieldId={
                 isGuided && sortedUnsignedFields.length > 0
                   ? sortedUnsignedFields[Math.min(currentFieldIndex, sortedUnsignedFields.length - 1)]?.id
@@ -517,16 +520,16 @@ export function SignPublicPage() {
       />
 
       {/* Decline modal */}
-      <Modal open={declineModalOpen} onOpenChange={setDeclineModalOpen} width={420} title="Decline to sign">
-        <Modal.Header title="Decline to sign" />
+      <Modal open={declineModalOpen} onOpenChange={setDeclineModalOpen} width={420} title={t('sign.public.declineToSign')}>
+        <Modal.Header title={t('sign.public.declineToSign')} />
         <Modal.Body>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)' }}>
-              Are you sure you want to decline signing this document? The document owner will be notified.
+              {t('sign.public.declineConfirm')}
             </div>
             <Input
-              label="Reason (optional)"
-              placeholder="Enter your reason for declining..."
+              label={t('sign.public.reasonOptional')}
+              placeholder={t('sign.public.reasonPlaceholder')}
               value={declineReason}
               onChange={(e) => setDeclineReason(e.target.value)}
               size="md"
@@ -535,7 +538,7 @@ export function SignPublicPage() {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="ghost" onClick={() => setDeclineModalOpen(false)}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             variant="primary"
@@ -543,7 +546,7 @@ export function SignPublicPage() {
             disabled={declining}
             style={{ background: 'var(--color-error)' }}
           >
-            {declining ? 'Declining...' : 'Decline to sign'}
+            {declining ? t('sign.public.declining') : t('sign.public.declineToSign')}
           </Button>
         </Modal.Footer>
       </Modal>

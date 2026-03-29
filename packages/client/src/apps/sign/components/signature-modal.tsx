@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import SignatureCanvas from 'react-signature-canvas';
 import { Modal } from '../../../components/ui/modal';
 import { Button } from '../../../components/ui/button';
@@ -25,6 +26,7 @@ const FONTS = [
 // ─── Component ──────────────────────────────────────────────────────
 
 export function SignatureModal({ open, onOpenChange, onApply, fieldType }: SignatureModalProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabId>('draw');
   const [typedName, setTypedName] = useState('');
   const [selectedFont, setSelectedFont] = useState(0);
@@ -40,12 +42,12 @@ export function SignatureModal({ open, onOpenChange, onApply, fieldType }: Signa
   }, [open]);
 
   const labelMap: Record<SignatureFieldType, string> = {
-    signature: 'Add signature',
-    initials: 'Add initials',
-    date: 'Add date',
-    text: 'Add text',
-    checkbox: 'Toggle checkbox',
-    dropdown: 'Select option',
+    signature: t('sign.modal.addSignature'),
+    initials: t('sign.modal.addInitials'),
+    date: t('sign.modal.addDate'),
+    text: t('sign.modal.addText'),
+    checkbox: t('sign.modal.toggleCheckbox'),
+    dropdown: t('sign.modal.selectOption'),
   };
 
   const handleApplyDraw = useCallback(() => {
@@ -142,7 +144,7 @@ export function SignatureModal({ open, onOpenChange, onApply, fieldType }: Signa
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
               <Button variant="ghost" size="sm" onClick={handleClear}>
-                Clear
+                {t('sign.modal.clear')}
               </Button>
             </div>
           </div>
@@ -152,7 +154,7 @@ export function SignatureModal({ open, onOpenChange, onApply, fieldType }: Signa
         {activeTab === 'type' && (
           <div>
             <Input
-              placeholder="Type your name"
+              placeholder={t('sign.modal.typeYourName')}
               value={typedName}
               onChange={(e) => setTypedName(e.target.value)}
               size="md"
@@ -209,13 +211,13 @@ export function SignatureModal({ open, onOpenChange, onApply, fieldType }: Signa
       </Modal.Body>
       <Modal.Footer>
         <Button variant="ghost" onClick={() => onOpenChange(false)}>
-          Cancel
+          {t('sign.modal.cancel')}
         </Button>
         <Button
           variant="primary"
           onClick={activeTab === 'draw' ? handleApplyDraw : handleApplyType}
         >
-          Apply
+          {t('sign.modal.apply')}
         </Button>
       </Modal.Footer>
     </Modal>

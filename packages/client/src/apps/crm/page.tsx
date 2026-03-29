@@ -153,86 +153,102 @@ type ActiveView = 'dashboard' | 'pipeline' | 'deals' | 'contacts' | 'companies' 
 
 // ─── Column definitions for filtering ─────────────────────────────
 
-function getDealsFilterColumns(stages: CrmDealStage[]): FilterColumn[] {
+function getDealsFilterColumns(stages: CrmDealStage[], t: (key: string) => string): FilterColumn[] {
   return [
-    { key: 'title', label: 'Title', type: 'text' },
-    { key: 'companyName', label: 'Company', type: 'text' },
-    { key: 'contactName', label: 'Contact', type: 'text' },
-    { key: 'value', label: 'Value', type: 'number' },
-    { key: 'stageName', label: 'Stage', type: 'select', options: stages.map((s) => ({ value: s.name, label: s.name })) },
-    { key: 'expectedCloseDate', label: 'Close date', type: 'date' },
+    { key: 'title', label: t('crm.deals.title'), type: 'text' },
+    { key: 'companyName', label: t('crm.deals.company'), type: 'text' },
+    { key: 'contactName', label: t('crm.deals.contact'), type: 'text' },
+    { key: 'value', label: t('crm.deals.value'), type: 'number' },
+    { key: 'stageName', label: t('crm.deals.stage'), type: 'select', options: stages.map((s) => ({ value: s.name, label: s.name })) },
+    { key: 'expectedCloseDate', label: t('crm.deals.closeDate'), type: 'date' },
   ];
 }
 
-const CONTACTS_FILTER_COLUMNS: FilterColumn[] = [
-  { key: 'name', label: 'Name', type: 'text' },
-  { key: 'email', label: 'Email', type: 'text' },
-  { key: 'phone', label: 'Phone', type: 'text' },
-  { key: 'companyName', label: 'Company', type: 'text' },
-  { key: 'position', label: 'Position', type: 'text' },
-];
+function getContactsFilterColumns(t: (key: string) => string): FilterColumn[] {
+  return [
+    { key: 'name', label: t('crm.contacts.name'), type: 'text' },
+    { key: 'email', label: t('crm.contacts.email'), type: 'text' },
+    { key: 'phone', label: t('crm.contacts.phone'), type: 'text' },
+    { key: 'companyName', label: t('crm.deals.company'), type: 'text' },
+    { key: 'position', label: t('crm.contacts.position'), type: 'text' },
+  ];
+}
 
-const COMPANIES_FILTER_COLUMNS: FilterColumn[] = [
-  { key: 'name', label: 'Name', type: 'text' },
-  { key: 'domain', label: 'Domain', type: 'text' },
-  { key: 'industry', label: 'Industry', type: 'text' },
-  { key: 'size', label: 'Size', type: 'text' },
-];
+function getCompaniesFilterColumns(t: (key: string) => string): FilterColumn[] {
+  return [
+    { key: 'name', label: t('crm.companies.name'), type: 'text' },
+    { key: 'domain', label: t('crm.companies.domain'), type: 'text' },
+    { key: 'industry', label: t('crm.companies.industry'), type: 'text' },
+    { key: 'size', label: t('crm.companies.size'), type: 'text' },
+  ];
+}
 
-// CSV export column configs
-const DEALS_CSV_COLUMNS = [
-  { key: 'title', label: 'Title' },
-  { key: 'value', label: 'Value' },
-  { key: 'stageName', label: 'Stage' },
-  { key: 'companyName', label: 'Company' },
-  { key: 'contactName', label: 'Contact' },
-  { key: 'probability', label: 'Probability' },
-  { key: 'expectedCloseDate', label: 'Close date' },
-];
+// CSV export column configs (built with t)
+function getDealsCsvColumns(t: (key: string) => string) {
+  return [
+    { key: 'title', label: t('crm.deals.title') },
+    { key: 'value', label: t('crm.deals.value') },
+    { key: 'stageName', label: t('crm.deals.stage') },
+    { key: 'companyName', label: t('crm.deals.company') },
+    { key: 'contactName', label: t('crm.deals.contact') },
+    { key: 'probability', label: t('crm.deals.probability') },
+    { key: 'expectedCloseDate', label: t('crm.deals.closeDate') },
+  ];
+}
 
-const CONTACTS_CSV_COLUMNS = [
-  { key: 'name', label: 'Name' },
-  { key: 'email', label: 'Email' },
-  { key: 'phone', label: 'Phone' },
-  { key: 'companyName', label: 'Company' },
-  { key: 'position', label: 'Position' },
-  { key: 'source', label: 'Source' },
-];
+function getContactsCsvColumns(t: (key: string) => string) {
+  return [
+    { key: 'name', label: t('crm.contacts.name') },
+    { key: 'email', label: t('crm.contacts.email') },
+    { key: 'phone', label: t('crm.contacts.phone') },
+    { key: 'companyName', label: t('crm.deals.company') },
+    { key: 'position', label: t('crm.contacts.position') },
+    { key: 'source', label: t('crm.contacts.source') },
+  ];
+}
 
-const COMPANIES_CSV_COLUMNS = [
-  { key: 'name', label: 'Name' },
-  { key: 'domain', label: 'Domain' },
-  { key: 'industry', label: 'Industry' },
-  { key: 'size', label: 'Size' },
-  { key: 'address', label: 'Address' },
-  { key: 'phone', label: 'Phone' },
-];
+function getCompaniesCsvColumns(t: (key: string) => string) {
+  return [
+    { key: 'name', label: t('crm.companies.name') },
+    { key: 'domain', label: t('crm.companies.domain') },
+    { key: 'industry', label: t('crm.companies.industry') },
+    { key: 'size', label: t('crm.companies.size') },
+    { key: 'address', label: t('crm.companies.address') },
+    { key: 'phone', label: t('crm.contacts.phone') },
+  ];
+}
 
-// CSV import field configs
-const DEALS_IMPORT_FIELDS = [
-  { key: 'title', label: 'Title', required: true },
-  { key: 'value', label: 'Value' },
-  { key: 'stage', label: 'Stage' },
-  { key: 'probability', label: 'Probability' },
-  { key: 'expectedCloseDate', label: 'Close date' },
-];
+// CSV import field configs (built with t)
+function getDealsImportFields(t: (key: string) => string) {
+  return [
+    { key: 'title', label: t('crm.deals.title'), required: true },
+    { key: 'value', label: t('crm.deals.value') },
+    { key: 'stage', label: t('crm.deals.stage') },
+    { key: 'probability', label: t('crm.deals.probability') },
+    { key: 'expectedCloseDate', label: t('crm.deals.closeDate') },
+  ];
+}
 
-const CONTACTS_IMPORT_FIELDS = [
-  { key: 'name', label: 'Name', required: true },
-  { key: 'email', label: 'Email' },
-  { key: 'phone', label: 'Phone' },
-  { key: 'position', label: 'Position' },
-  { key: 'source', label: 'Source' },
-];
+function getContactsImportFields(t: (key: string) => string) {
+  return [
+    { key: 'name', label: t('crm.contacts.name'), required: true },
+    { key: 'email', label: t('crm.contacts.email') },
+    { key: 'phone', label: t('crm.contacts.phone') },
+    { key: 'position', label: t('crm.contacts.position') },
+    { key: 'source', label: t('crm.contacts.source') },
+  ];
+}
 
-const COMPANIES_IMPORT_FIELDS = [
-  { key: 'name', label: 'Name', required: true },
-  { key: 'domain', label: 'Domain' },
-  { key: 'industry', label: 'Industry' },
-  { key: 'size', label: 'Size' },
-  { key: 'address', label: 'Address' },
-  { key: 'phone', label: 'Phone' },
-];
+function getCompaniesImportFields(t: (key: string) => string) {
+  return [
+    { key: 'name', label: t('crm.companies.name'), required: true },
+    { key: 'domain', label: t('crm.companies.domain') },
+    { key: 'industry', label: t('crm.companies.industry') },
+    { key: 'size', label: t('crm.companies.size') },
+    { key: 'address', label: t('crm.companies.address') },
+    { key: 'phone', label: t('crm.contacts.phone') },
+  ];
+}
 
 // ─── Helpers ───────────────────────────────────────────────────────
 
@@ -254,12 +270,12 @@ function getActivityIcon(type: string) {
   }
 }
 
-function getActivityLabel(type: string): string {
+function getActivityLabel(type: string, t: (key: string) => string): string {
   switch (type) {
-    case 'call': return 'Call';
-    case 'email': return 'Email';
-    case 'meeting': return 'Meeting';
-    default: return 'Note';
+    case 'call': return t('crm.activities.call');
+    case 'email': return t('crm.activities.email');
+    case 'meeting': return t('crm.activities.meeting');
+    default: return t('crm.activities.note');
   }
 }
 
@@ -274,6 +290,7 @@ function CreateDealModal({
   contacts: CrmContact[];
   companies: CrmCompany[];
 }) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [value, setValue] = useState('');
   const [stageId, setStageId] = useState('');
@@ -307,49 +324,49 @@ function CreateDealModal({
   };
 
   return (
-    <Modal open={open} onOpenChange={(o) => !o && onClose()} width={480} title="New deal">
-      <Modal.Header title="New deal" subtitle="Create a new deal in the pipeline" />
+    <Modal open={open} onOpenChange={(o) => !o && onClose()} width={480} title={t('crm.deals.newDeal')}>
+      <Modal.Header title={t('crm.deals.newDeal')} subtitle={t('crm.deals.newDealSubtitle')} />
       <Modal.Body>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-          <Input label="Deal title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enterprise license" autoFocus />
+          <Input label={t('crm.deals.dealTitle')} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enterprise license" autoFocus />
           <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
-            <Input label="Value ($)" type="number" value={value} onChange={(e) => setValue(e.target.value)} placeholder="0" style={{ flex: 1 }} />
-            <Input label="Expected close" type="date" value={closeDate} onChange={(e) => setCloseDate(e.target.value)} style={{ flex: 1 }} />
+            <Input label={t('crm.deals.valueAmount')} type="number" value={value} onChange={(e) => setValue(e.target.value)} placeholder="0" style={{ flex: 1 }} />
+            <Input label={t('crm.deals.expectedClose')} type="date" value={closeDate} onChange={(e) => setCloseDate(e.target.value)} style={{ flex: 1 }} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
-            <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>Stage</label>
+            <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>{t('crm.deals.stage')}</label>
             <Select
               value={stageId}
               onChange={setStageId}
               options={stages.map((s) => ({ value: s.id, label: s.name }))}
-              placeholder="Select stage..."
+              placeholder={t('crm.deals.selectStage')}
             />
           </div>
           <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
-              <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>Contact</label>
+              <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>{t('crm.deals.contact')}</label>
               <Select
                 value={contactId}
                 onChange={setContactId}
-                options={[{ value: '', label: 'None' }, ...contacts.map((c) => ({ value: c.id, label: c.name }))]}
-                placeholder="Select contact..."
+                options={[{ value: '', label: t('crm.deals.noneAssigned') }, ...contacts.map((c) => ({ value: c.id, label: c.name }))]}
+                placeholder={t('crm.deals.selectContact')}
               />
             </div>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
-              <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>Company</label>
+              <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>{t('crm.deals.company')}</label>
               <Select
                 value={companyId}
                 onChange={setCompanyId}
-                options={[{ value: '', label: 'None' }, ...companies.map((c) => ({ value: c.id, label: c.name }))]}
-                placeholder="Select company..."
+                options={[{ value: '', label: t('crm.deals.noneAssigned') }, ...companies.map((c) => ({ value: c.id, label: c.name }))]}
+                placeholder={t('crm.deals.selectCompany')}
               />
             </div>
           </div>
         </div>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="ghost" onClick={onClose}>Cancel</Button>
-        <Button variant="primary" onClick={handleSubmit} disabled={!title.trim() || !stageId}>Create deal</Button>
+        <Button variant="ghost" onClick={onClose}>{t('crm.actions.cancel')}</Button>
+        <Button variant="primary" onClick={handleSubmit} disabled={!title.trim() || !stageId}>{t('crm.deals.createDeal')}</Button>
       </Modal.Footer>
     </Modal>
   );
@@ -364,6 +381,7 @@ function CreateContactModal({
   onClose: () => void;
   companies: CrmCompany[];
 }) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -387,28 +405,28 @@ function CreateContactModal({
   };
 
   return (
-    <Modal open={open} onOpenChange={(o) => !o && onClose()} width={440} title="New contact">
-      <Modal.Header title="New contact" subtitle="Add a new contact" />
+    <Modal open={open} onOpenChange={(o) => !o && onClose()} width={440} title={t('crm.contacts.newContact')}>
+      <Modal.Header title={t('crm.contacts.newContact')} subtitle={t('crm.contacts.newContactSubtitle')} />
       <Modal.Body>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-          <Input label="Full name" value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" autoFocus />
-          <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@company.com" />
-          <Input label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1-555-0100" />
+          <Input label={t('crm.contacts.fullName')} value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" autoFocus />
+          <Input label={t('crm.contacts.email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@company.com" />
+          <Input label={t('crm.contacts.phone')} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1-555-0100" />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
-            <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>Company</label>
+            <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>{t('crm.deals.company')}</label>
             <Select
               value={companyId}
               onChange={setCompanyId}
-              options={[{ value: '', label: 'None' }, ...companies.map((c) => ({ value: c.id, label: c.name }))]}
-              placeholder="Select company..."
+              options={[{ value: '', label: t('crm.deals.noneAssigned') }, ...companies.map((c) => ({ value: c.id, label: c.name }))]}
+              placeholder={t('crm.deals.selectCompany')}
             />
           </div>
-          <Input label="Position" value={position} onChange={(e) => setPosition(e.target.value)} placeholder="CTO" />
+          <Input label={t('crm.contacts.position')} value={position} onChange={(e) => setPosition(e.target.value)} placeholder="CTO" />
         </div>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="ghost" onClick={onClose}>Cancel</Button>
-        <Button variant="primary" onClick={handleSubmit} disabled={!name.trim()}>Add contact</Button>
+        <Button variant="ghost" onClick={onClose}>{t('crm.actions.cancel')}</Button>
+        <Button variant="primary" onClick={handleSubmit} disabled={!name.trim()}>{t('crm.contacts.addContact')}</Button>
       </Modal.Footer>
     </Modal>
   );
@@ -422,6 +440,7 @@ function CreateCompanyModal({
   open: boolean;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [domain, setDomain] = useState('');
   const [industry, setIndustry] = useState('');
@@ -447,21 +466,21 @@ function CreateCompanyModal({
   };
 
   return (
-    <Modal open={open} onOpenChange={(o) => !o && onClose()} width={440} title="New company">
-      <Modal.Header title="New company" subtitle="Add a new company" />
+    <Modal open={open} onOpenChange={(o) => !o && onClose()} width={440} title={t('crm.companies.newCompany')}>
+      <Modal.Header title={t('crm.companies.newCompany')} subtitle={t('crm.companies.newCompanySubtitle')} />
       <Modal.Body>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-          <Input label="Company name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Acme Corp" autoFocus />
-          <Input label="Domain" value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="acme.com" />
+          <Input label={t('crm.companies.companyName')} value={name} onChange={(e) => setName(e.target.value)} placeholder="Acme Corp" autoFocus />
+          <Input label={t('crm.companies.domain')} value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="acme.com" />
           <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
-            <Input label="Industry" value={industry} onChange={(e) => setIndustry(e.target.value)} placeholder="Technology" style={{ flex: 1 }} />
+            <Input label={t('crm.companies.industry')} value={industry} onChange={(e) => setIndustry(e.target.value)} placeholder="Technology" style={{ flex: 1 }} />
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
-              <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>Size</label>
+              <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>{t('crm.companies.size')}</label>
               <Select
                 value={size}
                 onChange={setSize}
                 options={[
-                  { value: '', label: 'Select...' },
+                  { value: '', label: t('crm.deals.selectStage') },
                   { value: '1-10', label: '1-10' },
                   { value: '11-50', label: '11-50' },
                   { value: '51-200', label: '51-200' },
@@ -472,13 +491,13 @@ function CreateCompanyModal({
               />
             </div>
           </div>
-          <Input label="Address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 Main St" />
-          <Input label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1-555-0100" />
+          <Input label={t('crm.companies.address')} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 Main St" />
+          <Input label={t('crm.contacts.phone')} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1-555-0100" />
         </div>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="ghost" onClick={onClose}>Cancel</Button>
-        <Button variant="primary" onClick={handleSubmit} disabled={!name.trim()}>Add company</Button>
+        <Button variant="ghost" onClick={onClose}>{t('crm.actions.cancel')}</Button>
+        <Button variant="primary" onClick={handleSubmit} disabled={!name.trim()}>{t('crm.companies.addCompany')}</Button>
       </Modal.Footer>
     </Modal>
   );
@@ -499,6 +518,7 @@ function LogActivityModal({
   contacts: CrmContact[];
   companies: CrmCompany[];
 }) {
+  const { t } = useTranslation();
   const [type, setType] = useState('note');
   const [body, setBody] = useState('');
   const [dealId, setDealId] = useState(defaultDealId || '');
@@ -528,42 +548,42 @@ function LogActivityModal({
   };
 
   return (
-    <Modal open={open} onOpenChange={(o) => !o && onClose()} width={480} title="Log activity">
-      <Modal.Header title="Log activity" subtitle="Record a call, meeting, email, or note" />
+    <Modal open={open} onOpenChange={(o) => !o && onClose()} width={480} title={t('crm.activities.logActivity')}>
+      <Modal.Header title={t('crm.activities.logActivity')} subtitle={t('crm.activities.logActivitySubtitle')} />
       <Modal.Body>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
-            <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>Type</label>
+            <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>{t('crm.activities.type')}</label>
             <Select
               value={type}
               onChange={setType}
               options={[
-                { value: 'note', label: 'Note' },
-                { value: 'call', label: 'Call' },
-                { value: 'email', label: 'Email' },
-                { value: 'meeting', label: 'Meeting' },
+                { value: 'note', label: t('crm.activities.note') },
+                { value: 'call', label: t('crm.activities.call') },
+                { value: 'email', label: t('crm.activities.email') },
+                { value: 'meeting', label: t('crm.activities.meeting') },
               ]}
             />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
-            <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>Details</label>
-            <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="What happened?" rows={3} autoFocus />
+            <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>{t('crm.activities.details')}</label>
+            <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder={t('crm.activities.whatHappened')} rows={3} autoFocus />
           </div>
           <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
-              <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>Deal</label>
-              <Select value={dealId} onChange={setDealId} options={[{ value: '', label: 'None' }, ...deals.map((d) => ({ value: d.id, label: d.title }))]} />
+              <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>{t('crm.sidebar.deals')}</label>
+              <Select value={dealId} onChange={setDealId} options={[{ value: '', label: t('crm.deals.noneAssigned') }, ...deals.map((d) => ({ value: d.id, label: d.title }))]} />
             </div>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
-              <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>Contact</label>
-              <Select value={contactId} onChange={setContactId} options={[{ value: '', label: 'None' }, ...contacts.map((c) => ({ value: c.id, label: c.name }))]} />
+              <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>{t('crm.deals.contact')}</label>
+              <Select value={contactId} onChange={setContactId} options={[{ value: '', label: t('crm.deals.noneAssigned') }, ...contacts.map((c) => ({ value: c.id, label: c.name }))]} />
             </div>
           </div>
         </div>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="ghost" onClick={onClose}>Cancel</Button>
-        <Button variant="primary" onClick={handleSubmit} disabled={!body.trim()}>Log activity</Button>
+        <Button variant="ghost" onClick={onClose}>{t('crm.actions.cancel')}</Button>
+        <Button variant="primary" onClick={handleSubmit} disabled={!body.trim()}>{t('crm.activities.logActivity')}</Button>
       </Modal.Footer>
     </Modal>
   );
@@ -578,6 +598,7 @@ function MarkLostModal({
   onClose: () => void;
   dealId: string;
 }) {
+  const { t } = useTranslation();
   const [reason, setReason] = useState('');
   const markLost = useMarkDealLost();
 
@@ -588,14 +609,14 @@ function MarkLostModal({
   };
 
   return (
-    <Modal open={open} onOpenChange={(o) => !o && onClose()} width={400} title="Mark as lost">
-      <Modal.Header title="Mark deal as lost" subtitle="Record why this deal was lost" />
+    <Modal open={open} onOpenChange={(o) => !o && onClose()} width={400} title={t('crm.deals.markAsLost')}>
+      <Modal.Header title={t('crm.deals.markDealAsLost')} subtitle={t('crm.deals.markDealAsLostSubtitle')} />
       <Modal.Body>
-        <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason for losing the deal..." rows={3} autoFocus />
+        <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t('crm.deals.lostReasonPlaceholder')} rows={3} autoFocus />
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="ghost" onClick={onClose}>Cancel</Button>
-        <Button variant="danger" onClick={handleSubmit}>Mark as lost</Button>
+        <Button variant="ghost" onClick={onClose}>{t('crm.actions.cancel')}</Button>
+        <Button variant="danger" onClick={handleSubmit}>{t('crm.deals.markAsLost')}</Button>
       </Modal.Footer>
     </Modal>
   );
@@ -604,10 +625,11 @@ function MarkLostModal({
 // ─── Activity Timeline ─────────────────────────────────────────────
 
 function ActivityTimeline({ activities }: { activities: CrmActivity[] }) {
+  const { t } = useTranslation();
   if (activities.length === 0) {
     return (
       <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', padding: 'var(--spacing-sm) 0' }}>
-        No activities yet
+        {t('crm.activities.noActivities')}
       </div>
     );
   }
@@ -622,7 +644,7 @@ function ActivityTimeline({ activities }: { activities: CrmActivity[] }) {
           <div className="crm-activity-body">
             <div className="crm-activity-text">{activity.body}</div>
             <div className="crm-activity-meta">
-              {getActivityLabel(activity.type)} &middot; {formatDate(activity.createdAt)}
+              {getActivityLabel(activity.type, t)} &middot; {formatDate(activity.createdAt)}
             </div>
           </div>
         </div>
@@ -642,6 +664,7 @@ function DealDetailPanel({
   onMarkWon: () => void;
   onMarkLost: () => void;
 }) {
+  const { t } = useTranslation();
   const [stageId, setStageId] = useState(deal.stageId);
   const updateDeal = useUpdateDeal();
   const deleteDeal = useDeleteDeal();
@@ -660,11 +683,11 @@ function DealDetailPanel({
         borderBottom: '1px solid var(--color-border-secondary)', flexShrink: 0,
       }}>
         <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-family)' }}>
-          Deal detail
+          {t('crm.deals.dealDetail')}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <IconButton icon={<Trash2 size={14} />} label="Delete deal" size={28} destructive onClick={() => { deleteDeal.mutate(deal.id); onClose(); }} />
-          <IconButton icon={<X size={14} />} label="Close" size={28} onClick={onClose} />
+          <IconButton icon={<Trash2 size={14} />} label={t('crm.deals.deleteDeal')} size={28} destructive onClick={() => { deleteDeal.mutate(deal.id); onClose(); }} />
+          <IconButton icon={<X size={14} />} label={t('common.close')} size={28} onClick={onClose} />
         </div>
       </div>
 
@@ -677,14 +700,14 @@ function DealDetailPanel({
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
           <div className="crm-detail-field">
-            <span className="crm-detail-field-label">Value</span>
+            <span className="crm-detail-field-label">{t('crm.deals.value')}</span>
             <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
               {formatCurrency(deal.value)}
             </div>
           </div>
 
           <div className="crm-detail-field">
-            <span className="crm-detail-field-label">Stage</span>
+            <span className="crm-detail-field-label">{t('crm.deals.stage')}</span>
             <Select
               value={stageId}
               onChange={(v) => {
@@ -702,7 +725,7 @@ function DealDetailPanel({
 
           {deal.companyName && (
             <div className="crm-detail-field">
-              <span className="crm-detail-field-label">Company</span>
+              <span className="crm-detail-field-label">{t('crm.deals.company')}</span>
               <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)', display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
                 <Building2 size={14} style={{ color: 'var(--color-text-tertiary)' }} />
                 {deal.companyName}
@@ -712,7 +735,7 @@ function DealDetailPanel({
 
           {deal.contactName && (
             <div className="crm-detail-field">
-              <span className="crm-detail-field-label">Contact</span>
+              <span className="crm-detail-field-label">{t('crm.deals.contact')}</span>
               <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)', display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
                 <Users size={14} style={{ color: 'var(--color-text-tertiary)' }} />
                 {deal.contactName}
@@ -721,7 +744,7 @@ function DealDetailPanel({
           )}
 
           <div className="crm-detail-field">
-            <span className="crm-detail-field-label">Probability</span>
+            <span className="crm-detail-field-label">{t('crm.deals.probability')}</span>
             <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
               {deal.probability}%
             </div>
@@ -729,7 +752,7 @@ function DealDetailPanel({
 
           {deal.expectedCloseDate && (
             <div className="crm-detail-field">
-              <span className="crm-detail-field-label">Expected close</span>
+              <span className="crm-detail-field-label">{t('crm.deals.expectedClose')}</span>
               <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
                 {formatDate(deal.expectedCloseDate)}
               </div>
@@ -737,11 +760,11 @@ function DealDetailPanel({
           )}
 
           {deal.wonAt && (
-            <Badge variant="success">Won on {formatDate(deal.wonAt)}</Badge>
+            <Badge variant="success">{t('crm.deals.wonOn')} {formatDate(deal.wonAt)}</Badge>
           )}
           {deal.lostAt && (
             <div>
-              <Badge variant="error">Lost on {formatDate(deal.lostAt)}</Badge>
+              <Badge variant="error">{t('crm.deals.lostOn')} {formatDate(deal.lostAt)}</Badge>
               {deal.lostReason && (
                 <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', marginTop: 'var(--spacing-xs)' }}>
                   {deal.lostReason}
@@ -753,10 +776,10 @@ function DealDetailPanel({
           {!deal.wonAt && !deal.lostAt && (
             <div className="crm-deal-action-buttons">
               <Button variant="primary" size="sm" icon={<Trophy size={14} />} onClick={onMarkWon}>
-                Won
+                {t('crm.deals.markWon')}
               </Button>
               <Button variant="danger" size="sm" icon={<XCircle size={14} />} onClick={onMarkLost}>
-                Lost
+                {t('crm.deals.markLost')}
               </Button>
             </div>
           )}
@@ -765,7 +788,7 @@ function DealDetailPanel({
         {/* Activity timeline */}
         <div style={{ marginTop: 'var(--spacing-sm)' }}>
           <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 'var(--spacing-sm)', fontFamily: 'var(--font-family)' }}>
-            Activity
+            {t('crm.sidebar.activities')}
           </div>
           <ActivityTimeline activities={activities} />
         </div>
@@ -783,6 +806,7 @@ function ContactDetailPanel({
   deals: CrmDeal[];
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const updateContact = useUpdateContact();
   const deleteContact = useDeleteContact();
   const { data: activitiesData } = useActivities({ contactId: contact.id });
@@ -797,11 +821,11 @@ function ContactDetailPanel({
         borderBottom: '1px solid var(--color-border-secondary)', flexShrink: 0,
       }}>
         <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-family)' }}>
-          Contact detail
+          {t('crm.contacts.contactDetail')}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <IconButton icon={<Trash2 size={14} />} label="Delete contact" size={28} destructive onClick={() => { deleteContact.mutate(contact.id); onClose(); }} />
-          <IconButton icon={<X size={14} />} label="Close" size={28} onClick={onClose} />
+          <IconButton icon={<Trash2 size={14} />} label={t('crm.contacts.deleteContact')} size={28} destructive onClick={() => { deleteContact.mutate(contact.id); onClose(); }} />
+          <IconButton icon={<X size={14} />} label={t('common.close')} size={28} onClick={onClose} />
         </div>
       </div>
 
@@ -820,7 +844,7 @@ function ContactDetailPanel({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
           {contact.email && (
             <div className="crm-detail-field">
-              <span className="crm-detail-field-label">Email</span>
+              <span className="crm-detail-field-label">{t('crm.contacts.email')}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
                 <Mail size={14} style={{ color: 'var(--color-text-tertiary)' }} />
                 {contact.email}
@@ -830,7 +854,7 @@ function ContactDetailPanel({
 
           {contact.phone && (
             <div className="crm-detail-field">
-              <span className="crm-detail-field-label">Phone</span>
+              <span className="crm-detail-field-label">{t('crm.contacts.phone')}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
                 <PhoneIcon size={14} style={{ color: 'var(--color-text-tertiary)' }} />
                 {contact.phone}
@@ -840,7 +864,7 @@ function ContactDetailPanel({
 
           {contact.companyName && (
             <div className="crm-detail-field">
-              <span className="crm-detail-field-label">Company</span>
+              <span className="crm-detail-field-label">{t('crm.deals.company')}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
                 <Building2 size={14} style={{ color: 'var(--color-text-tertiary)' }} />
                 {contact.companyName}
@@ -850,7 +874,7 @@ function ContactDetailPanel({
 
           {contact.source && (
             <div className="crm-detail-field">
-              <span className="crm-detail-field-label">Source</span>
+              <span className="crm-detail-field-label">{t('crm.contacts.source')}</span>
               <Badge variant="default">{contact.source}</Badge>
             </div>
           )}
@@ -860,7 +884,7 @@ function ContactDetailPanel({
         {contactDeals.length > 0 && (
           <div style={{ marginTop: 'var(--spacing-sm)' }}>
             <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 'var(--spacing-sm)', fontFamily: 'var(--font-family)' }}>
-              Deals
+              {t('crm.sidebar.deals')}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
               {contactDeals.map((deal) => (
@@ -880,7 +904,7 @@ function ContactDetailPanel({
         {/* Activity */}
         <div style={{ marginTop: 'var(--spacing-sm)' }}>
           <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 'var(--spacing-sm)', fontFamily: 'var(--font-family)' }}>
-            Activity
+            {t('crm.sidebar.activities')}
           </div>
           <ActivityTimeline activities={activities} />
         </div>
@@ -899,6 +923,7 @@ function CompanyDetailPanel({
   deals: CrmDeal[];
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const deleteCompany = useDeleteCompany();
   const { data: activitiesData } = useActivities({ companyId: company.id });
   const activities = activitiesData?.activities ?? [];
@@ -913,11 +938,11 @@ function CompanyDetailPanel({
         borderBottom: '1px solid var(--color-border-secondary)', flexShrink: 0,
       }}>
         <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-family)' }}>
-          Company detail
+          {t('crm.companies.companyDetail')}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <IconButton icon={<Trash2 size={14} />} label="Delete company" size={28} destructive onClick={() => { deleteCompany.mutate(company.id); onClose(); }} />
-          <IconButton icon={<X size={14} />} label="Close" size={28} onClick={onClose} />
+          <IconButton icon={<Trash2 size={14} />} label={t('crm.companies.deleteCompany')} size={28} destructive onClick={() => { deleteCompany.mutate(company.id); onClose(); }} />
+          <IconButton icon={<X size={14} />} label={t('common.close')} size={28} onClick={onClose} />
         </div>
       </div>
 
@@ -931,7 +956,7 @@ function CompanyDetailPanel({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
           {company.domain && (
             <div className="crm-detail-field">
-              <span className="crm-detail-field-label">Domain</span>
+              <span className="crm-detail-field-label">{t('crm.companies.domain')}</span>
               <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
                 {company.domain}
               </div>
@@ -940,23 +965,23 @@ function CompanyDetailPanel({
 
           {company.industry && (
             <div className="crm-detail-field">
-              <span className="crm-detail-field-label">Industry</span>
+              <span className="crm-detail-field-label">{t('crm.companies.industry')}</span>
               <Badge variant="default">{company.industry}</Badge>
             </div>
           )}
 
           {company.size && (
             <div className="crm-detail-field">
-              <span className="crm-detail-field-label">Size</span>
+              <span className="crm-detail-field-label">{t('crm.companies.size')}</span>
               <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
-                {company.size} employees
+                {company.size} {t('crm.companies.employees')}
               </div>
             </div>
           )}
 
           {company.address && (
             <div className="crm-detail-field">
-              <span className="crm-detail-field-label">Address</span>
+              <span className="crm-detail-field-label">{t('crm.companies.address')}</span>
               <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
                 {company.address}
               </div>
@@ -965,7 +990,7 @@ function CompanyDetailPanel({
 
           {company.phone && (
             <div className="crm-detail-field">
-              <span className="crm-detail-field-label">Phone</span>
+              <span className="crm-detail-field-label">{t('crm.contacts.phone')}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
                 <PhoneIcon size={14} style={{ color: 'var(--color-text-tertiary)' }} />
                 {company.phone}
@@ -978,7 +1003,7 @@ function CompanyDetailPanel({
         {companyContacts.length > 0 && (
           <div style={{ marginTop: 'var(--spacing-sm)' }}>
             <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 'var(--spacing-sm)', fontFamily: 'var(--font-family)' }}>
-              Contacts ({companyContacts.length})
+              {t('crm.sidebar.contacts')} ({companyContacts.length})
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
               {companyContacts.map((contact) => (
@@ -999,7 +1024,7 @@ function CompanyDetailPanel({
         {companyDeals.length > 0 && (
           <div style={{ marginTop: 'var(--spacing-sm)' }}>
             <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 'var(--spacing-sm)', fontFamily: 'var(--font-family)' }}>
-              Deals ({companyDeals.length})
+              {t('crm.sidebar.deals')} ({companyDeals.length})
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
               {companyDeals.map((deal) => (
@@ -1019,7 +1044,7 @@ function CompanyDetailPanel({
         {/* Activity */}
         <div style={{ marginTop: 'var(--spacing-sm)' }}>
           <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 'var(--spacing-sm)', fontFamily: 'var(--font-family)' }}>
-            Activity
+            {t('crm.sidebar.activities')}
           </div>
           <ActivityTimeline activities={activities} />
         </div>
@@ -1049,6 +1074,7 @@ function DealsListView({
   sort: SortState | null;
   onSortChange: (sort: SortState | null) => void;
 }) {
+  const { t } = useTranslation();
   const updateDeal = useUpdateDeal();
   const lastSelectedIndex = useRef<number | null>(null);
 
@@ -1157,8 +1183,8 @@ function DealsListView({
     return (
       <div className="crm-empty-state">
         <Briefcase size={48} className="crm-empty-state-icon" />
-        <div className="crm-empty-state-title">{searchQuery ? 'No matching deals' : 'No deals yet'}</div>
-        <div className="crm-empty-state-desc">{searchQuery ? 'Try a different search term.' : 'Create your first deal to get started.'}</div>
+        <div className="crm-empty-state-title">{searchQuery ? t('crm.empty.noMatchingDeals') : t('crm.empty.noDeals')}</div>
+        <div className="crm-empty-state-desc">{searchQuery ? t('crm.empty.tryDifferentSearch') : t('crm.empty.createFirstDeal')}</div>
       </div>
     );
   }
@@ -1175,12 +1201,12 @@ function DealsListView({
       <div style={{ flex: 1, overflow: 'auto' }}>
         <div style={hdrStyle}>
           <input type="checkbox" className={`crm-checkbox${!allChecked && someChecked ? ' indeterminate' : ''}`} checked={allChecked} onChange={handleHeaderCheckbox} />
-          <SortHeader label="Title" column="title" sort={sort} onSort={handleSort} style={{ width: 180, flexShrink: 0 }} />
-          <SortHeader label="Company" column="company" sort={sort} onSort={handleSort} style={{ width: 130, flexShrink: 0 }} />
-          <SortHeader label="Contact" column="contact" sort={sort} onSort={handleSort} style={{ width: 110, flexShrink: 0 }} />
-          <SortHeader label="Value" column="value" sort={sort} onSort={handleSort} style={{ width: 100, flexShrink: 0, textAlign: 'right' }} />
-          <SortHeader label="Stage" column="stage" sort={sort} onSort={handleSort} style={{ width: 100, flexShrink: 0 }} />
-          <SortHeader label="Close date" column="closeDate" sort={sort} onSort={handleSort} style={{ flex: 1 }} />
+          <SortHeader label={t('crm.deals.title')} column="title" sort={sort} onSort={handleSort} style={{ width: 180, flexShrink: 0 }} />
+          <SortHeader label={t('crm.deals.company')} column="company" sort={sort} onSort={handleSort} style={{ width: 130, flexShrink: 0 }} />
+          <SortHeader label={t('crm.deals.contact')} column="contact" sort={sort} onSort={handleSort} style={{ width: 110, flexShrink: 0 }} />
+          <SortHeader label={t('crm.deals.value')} column="value" sort={sort} onSort={handleSort} style={{ width: 100, flexShrink: 0, textAlign: 'right' }} />
+          <SortHeader label={t('crm.deals.stage')} column="stage" sort={sort} onSort={handleSort} style={{ width: 100, flexShrink: 0 }} />
+          <SortHeader label={t('crm.deals.closeDate')} column="closeDate" sort={sort} onSort={handleSort} style={{ flex: 1 }} />
         </div>
         {sorted.map((deal, idx) => {
           const isEd = (col: string) => editingCell?.rowId === deal.id && editingCell?.column === col;
@@ -1246,9 +1272,9 @@ function DealsListView({
         })}
       </div>
       <div className="crm-table-footer">
-        <span>{sorted.length} deal{sorted.length !== 1 ? 's' : ''}</span>
-        <span style={{ marginLeft: 'auto' }}>Total: {formatCurrency(totalValue)}</span>
-        <span style={{ color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-normal)' }}>Avg: {formatCurrency(Math.round(avgValue))}</span>
+        <span>{sorted.length} {sorted.length !== 1 ? t('crm.sidebar.deals').toLowerCase() : t('crm.deals.deal')}</span>
+        <span style={{ marginLeft: 'auto' }}>{t('crm.deals.total')}: {formatCurrency(totalValue)}</span>
+        <span style={{ color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-normal)' }}>{t('crm.deals.avg')}: {formatCurrency(Math.round(avgValue))}</span>
       </div>
     </div>
   );
@@ -1274,6 +1300,7 @@ function ContactsListView({
   sort: SortState | null;
   onSortChange: (sort: SortState | null) => void;
 }) {
+  const { t } = useTranslation();
   const updateContact = useUpdateContact();
   const lastSelectedIndex = useRef<number | null>(null);
 
@@ -1374,8 +1401,8 @@ function ContactsListView({
     return (
       <div className="crm-empty-state">
         <Users size={48} className="crm-empty-state-icon" />
-        <div className="crm-empty-state-title">{searchQuery ? 'No matching contacts' : 'No contacts yet'}</div>
-        <div className="crm-empty-state-desc">{searchQuery ? 'Try a different search term.' : 'Add your first contact to get started.'}</div>
+        <div className="crm-empty-state-title">{searchQuery ? t('crm.empty.noMatchingContacts') : t('crm.empty.noContacts')}</div>
+        <div className="crm-empty-state-desc">{searchQuery ? t('crm.empty.tryDifferentSearch') : t('crm.empty.addFirstContact')}</div>
       </div>
     );
   }
@@ -1392,11 +1419,11 @@ function ContactsListView({
       <div style={{ flex: 1, overflow: 'auto' }}>
         <div style={hdrStyle}>
           <input type="checkbox" className={`crm-checkbox${!allChecked && someChecked ? ' indeterminate' : ''}`} checked={allChecked} onChange={handleHeaderCheckbox} />
-          <SortHeader label="Name" column="name" sort={sort} onSort={handleSort} style={{ width: 160, flexShrink: 0 }} />
-          <SortHeader label="Email" column="email" sort={sort} onSort={handleSort} style={{ width: 170, flexShrink: 0 }} />
-          <SortHeader label="Phone" column="phone" sort={sort} onSort={handleSort} style={{ width: 120, flexShrink: 0 }} />
-          <SortHeader label="Company" column="company" sort={sort} onSort={handleSort} style={{ width: 130, flexShrink: 0 }} />
-          <SortHeader label="Position" column="position" sort={sort} onSort={handleSort} style={{ flex: 1 }} />
+          <SortHeader label={t('crm.contacts.name')} column="name" sort={sort} onSort={handleSort} style={{ width: 160, flexShrink: 0 }} />
+          <SortHeader label={t('crm.contacts.email')} column="email" sort={sort} onSort={handleSort} style={{ width: 170, flexShrink: 0 }} />
+          <SortHeader label={t('crm.contacts.phone')} column="phone" sort={sort} onSort={handleSort} style={{ width: 120, flexShrink: 0 }} />
+          <SortHeader label={t('crm.deals.company')} column="company" sort={sort} onSort={handleSort} style={{ width: 130, flexShrink: 0 }} />
+          <SortHeader label={t('crm.contacts.position')} column="position" sort={sort} onSort={handleSort} style={{ flex: 1 }} />
         </div>
         {sorted.map((contact, idx) => {
           const isEd = (col: string) => editingCell?.rowId === contact.id && editingCell?.column === col;
@@ -1475,6 +1502,7 @@ function CompaniesListView({
   sort: SortState | null;
   onSortChange: (sort: SortState | null) => void;
 }) {
+  const { t } = useTranslation();
   const updateCompany = useUpdateCompany();
   const lastSelectedIndex = useRef<number | null>(null);
 
@@ -1573,8 +1601,8 @@ function CompaniesListView({
     return (
       <div className="crm-empty-state">
         <Building2 size={48} className="crm-empty-state-icon" />
-        <div className="crm-empty-state-title">{searchQuery ? 'No matching companies' : 'No companies yet'}</div>
-        <div className="crm-empty-state-desc">{searchQuery ? 'Try a different search term.' : 'Add your first company to get started.'}</div>
+        <div className="crm-empty-state-title">{searchQuery ? t('crm.empty.noMatchingCompanies') : t('crm.empty.noCompanies')}</div>
+        <div className="crm-empty-state-desc">{searchQuery ? t('crm.empty.tryDifferentSearch') : t('crm.empty.addFirstCompany')}</div>
       </div>
     );
   }
@@ -1591,11 +1619,11 @@ function CompaniesListView({
       <div style={{ flex: 1, overflow: 'auto' }}>
         <div style={hdrStyle}>
           <input type="checkbox" className={`crm-checkbox${!allChecked && someChecked ? ' indeterminate' : ''}`} checked={allChecked} onChange={handleHeaderCheckbox} />
-          <SortHeader label="Name" column="name" sort={sort} onSort={handleSort} style={{ width: 160, flexShrink: 0 }} />
-          <SortHeader label="Domain" column="domain" sort={sort} onSort={handleSort} style={{ width: 150, flexShrink: 0 }} />
-          <SortHeader label="Industry" column="industry" sort={sort} onSort={handleSort} style={{ width: 120, flexShrink: 0 }} />
-          <SortHeader label="Size" column="size" sort={sort} onSort={handleSort} style={{ width: 80, flexShrink: 0 }} />
-          <span style={{ flex: 1 }}>Contacts / Deals</span>
+          <SortHeader label={t('crm.companies.name')} column="name" sort={sort} onSort={handleSort} style={{ width: 160, flexShrink: 0 }} />
+          <SortHeader label={t('crm.companies.domain')} column="domain" sort={sort} onSort={handleSort} style={{ width: 150, flexShrink: 0 }} />
+          <SortHeader label={t('crm.companies.industry')} column="industry" sort={sort} onSort={handleSort} style={{ width: 120, flexShrink: 0 }} />
+          <SortHeader label={t('crm.companies.size')} column="size" sort={sort} onSort={handleSort} style={{ width: 80, flexShrink: 0 }} />
+          <span style={{ flex: 1 }}>{t('crm.companies.contactsDeals')}</span>
         </div>
         {sorted.map((company, idx) => {
           const isEd = (col: string) => editingCell?.rowId === company.id && editingCell?.column === col;
@@ -1637,7 +1665,7 @@ function CompaniesListView({
                 {company.size || '-'}
               </span>
               <span style={{ flex: 1, fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums' }}>
-                {company.contactCount} contacts &middot; {company.dealCount} deals
+                {company.contactCount} {t('crm.sidebar.contacts').toLowerCase()} &middot; {company.dealCount} {t('crm.sidebar.deals').toLowerCase()}
               </span>
               {selectedId === company.id && <ChevronRight size={14} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />}
             </div>
@@ -1656,6 +1684,7 @@ function ActivitiesListView({
   activities: CrmActivity[];
   searchQuery: string;
 }) {
+  const { t } = useTranslation();
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return activities;
     const q = searchQuery.toLowerCase();
@@ -1669,8 +1698,8 @@ function ActivitiesListView({
     return (
       <div className="crm-empty-state">
         <Clock size={48} className="crm-empty-state-icon" />
-        <div className="crm-empty-state-title">{searchQuery ? 'No matching activities' : 'No activities yet'}</div>
-        <div className="crm-empty-state-desc">{searchQuery ? 'Try a different search term.' : 'Log your first activity to get started.'}</div>
+        <div className="crm-empty-state-title">{searchQuery ? t('crm.empty.noMatchingActivities') : t('crm.activities.noActivities')}</div>
+        <div className="crm-empty-state-desc">{searchQuery ? t('crm.empty.tryDifferentSearch') : t('crm.empty.logFirstActivity')}</div>
       </div>
     );
   }
@@ -1706,7 +1735,7 @@ function ActivitiesListView({
                 <div className="crm-activity-body">
                   <div className="crm-activity-text">{activity.body}</div>
                   <div className="crm-activity-meta">
-                    {getActivityLabel(activity.type)} &middot; {new Date(activity.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {getActivityLabel(activity.type, t)} &middot; {new Date(activity.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
               </div>
@@ -1823,7 +1852,9 @@ export function CrmPage() {
   }, [activeView]);
 
   // Filter column definitions (memoized)
-  const dealsFilterColumns = useMemo(() => getDealsFilterColumns(stages), [stages]);
+  const dealsFilterColumns = useMemo(() => getDealsFilterColumns(stages, t), [stages, t]);
+  const contactsFilterColumns = useMemo(() => getContactsFilterColumns(t), [t]);
+  const companiesFilterColumns = useMemo(() => getCompaniesFilterColumns(t), [t]);
 
   // Filtered data (applying advanced filters)
   const filteredDeals = useMemo(
@@ -1831,12 +1862,12 @@ export function CrmPage() {
     [deals, filters, dealsFilterColumns],
   );
   const filteredContacts = useMemo(
-    () => applyFilters(contacts as unknown as Record<string, unknown>[], filters, CONTACTS_FILTER_COLUMNS) as unknown as CrmContact[],
-    [contacts, filters],
+    () => applyFilters(contacts as unknown as Record<string, unknown>[], filters, contactsFilterColumns) as unknown as CrmContact[],
+    [contacts, filters, contactsFilterColumns],
   );
   const filteredCompanies = useMemo(
-    () => applyFilters(companies as unknown as Record<string, unknown>[], filters, COMPANIES_FILTER_COLUMNS) as unknown as CrmCompany[],
-    [companies, filters],
+    () => applyFilters(companies as unknown as Record<string, unknown>[], filters, companiesFilterColumns) as unknown as CrmCompany[],
+    [companies, filters, companiesFilterColumns],
   );
 
   // Apply saved view handler
@@ -1854,30 +1885,30 @@ export function CrmPage() {
     const now = new Date().toISOString().slice(0, 10);
     switch (activeView) {
       case 'deals':
-        exportToCsv(filteredDeals as unknown as Record<string, unknown>[], DEALS_CSV_COLUMNS, `crm-deals-${now}`);
+        exportToCsv(filteredDeals as unknown as Record<string, unknown>[], getDealsCsvColumns(t), `crm-deals-${now}`);
         break;
       case 'contacts':
-        exportToCsv(filteredContacts as unknown as Record<string, unknown>[], CONTACTS_CSV_COLUMNS, `crm-contacts-${now}`);
+        exportToCsv(filteredContacts as unknown as Record<string, unknown>[], getContactsCsvColumns(t), `crm-contacts-${now}`);
         break;
       case 'companies':
-        exportToCsv(filteredCompanies as unknown as Record<string, unknown>[], COMPANIES_CSV_COLUMNS, `crm-companies-${now}`);
+        exportToCsv(filteredCompanies as unknown as Record<string, unknown>[], getCompaniesCsvColumns(t), `crm-companies-${now}`);
         break;
     }
-  }, [activeView, filteredDeals, filteredContacts, filteredCompanies]);
+  }, [activeView, filteredDeals, filteredContacts, filteredCompanies, t]);
 
   // Import fields for current entity type
   const importEntityType = activeView === 'deals' ? 'deals' : activeView === 'contacts' ? 'contacts' : 'companies';
-  const importFields = activeView === 'deals' ? DEALS_IMPORT_FIELDS : activeView === 'contacts' ? CONTACTS_IMPORT_FIELDS : COMPANIES_IMPORT_FIELDS;
+  const importFields = activeView === 'deals' ? getDealsImportFields(t) : activeView === 'contacts' ? getContactsImportFields(t) : getCompaniesImportFields(t);
 
   // Current filter columns based on view
   const currentFilterColumns = useMemo(() => {
     switch (activeView) {
       case 'deals': return dealsFilterColumns;
-      case 'contacts': return CONTACTS_FILTER_COLUMNS;
-      case 'companies': return COMPANIES_FILTER_COLUMNS;
+      case 'contacts': return contactsFilterColumns;
+      case 'companies': return companiesFilterColumns;
       default: return [];
     }
-  }, [activeView, dealsFilterColumns]);
+  }, [activeView, dealsFilterColumns, contactsFilterColumns, companiesFilterColumns]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -1940,21 +1971,21 @@ export function CrmPage() {
   const addButtonLabel = useMemo(() => {
     switch (activeView) {
       case 'dashboard':
-        return 'New deal';
+        return t('crm.deals.newDeal');
       case 'pipeline':
       case 'deals':
-        return 'New deal';
+        return t('crm.deals.newDeal');
       case 'contacts':
-        return 'New contact';
+        return t('crm.contacts.newContact');
       case 'companies':
-        return 'New company';
+        return t('crm.companies.newCompany');
       case 'activities':
-        return 'Log activity';
+        return t('crm.activities.logActivity');
       case 'permissions':
       case 'automations':
         return '';
     }
-  }, [activeView]);
+  }, [activeView, t]);
 
   // Kanban handlers
   const handleMoveDeal = useCallback((dealId: string, newStageId: string) => {
@@ -2098,7 +2129,7 @@ export function CrmPage() {
             <div className="crm-content-header-actions">
               <IconButton
                 icon={<Search size={14} />}
-                label="Search"
+                label={t('crm.actions.search')}
                 size={28}
                 active={showSearch}
                 onClick={() => {
@@ -2126,14 +2157,14 @@ export function CrmPage() {
               ref={searchInputRef}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={`Search ${activeView}...`}
+              placeholder={t('crm.actions.search')}
               iconLeft={<Search size={14} />}
               size="sm"
               style={{ border: 'none', background: 'transparent' }}
             />
             <IconButton
               icon={<X size={14} />}
-              label="Close search"
+              label={t('common.close')}
               size={24}
               onClick={() => { setShowSearch(false); setSearchQuery(''); }}
             />
@@ -2157,10 +2188,10 @@ export function CrmPage() {
             />
             <div className="crm-toolbar-separator" />
             <Button variant="ghost" size="sm" icon={<Upload size={13} />} onClick={() => setShowImportModal(true)}>
-              Import
+              {t('crm.actions.import')}
             </Button>
             <Button variant="ghost" size="sm" icon={<Download size={13} />} onClick={handleExport}>
-              Export
+              {t('crm.actions.export')}
             </Button>
           </div>
         )}
@@ -2290,12 +2321,12 @@ export function CrmPage() {
       {/* Floating bulk action bar */}
       {selectedIds.size > 0 && (activeView === 'deals' || activeView === 'contacts' || activeView === 'companies') && (
         <div className="crm-bulk-bar">
-          <span className="crm-bulk-bar-count">{selectedIds.size} selected</span>
+          <span className="crm-bulk-bar-count">{t('common.selected', { count: selectedIds.size })}</span>
           {activeView === 'deals' && (
             <Select
               value={bulkStageId || ''}
               onChange={(v) => { if (v) handleBulkStageChange(v); }}
-              options={[{ value: '', label: 'Change stage...' }, ...stages.map((s) => ({ value: s.id, label: s.name }))]}
+              options={[{ value: '', label: t('crm.deals.changeStage') }, ...stages.map((s) => ({ value: s.id, label: s.name }))]}
               size="sm"
               width={150}
             />
@@ -2304,10 +2335,10 @@ export function CrmPage() {
             (activeView === 'contacts' && canAccess(myRole, 'contacts', 'delete')) ||
             (activeView === 'companies' && canAccess(myRole, 'companies', 'delete'))) && (
             <Button variant="danger" size="sm" icon={<Trash2 size={14} />} onClick={() => setShowBulkDeleteConfirm(true)}>
-              Delete
+              {t('crm.actions.delete')}
             </Button>
           )}
-          <IconButton icon={<X size={14} />} label="Clear selection" size={24} onClick={() => setSelectedIds(new Set())} />
+          <IconButton icon={<X size={14} />} label={t('crm.deals.clearSelection')} size={24} onClick={() => setSelectedIds(new Set())} />
         </div>
       )}
 
@@ -2315,9 +2346,9 @@ export function CrmPage() {
       <ConfirmDialog
         open={showBulkDeleteConfirm}
         onOpenChange={setShowBulkDeleteConfirm}
-        title={`Delete ${selectedIds.size} ${activeView === 'deals' ? 'deal' : activeView === 'contacts' ? 'contact' : 'company'}${selectedIds.size !== 1 ? (activeView === 'companies' ? 'ies' : 's') : activeView === 'companies' ? 'y' : ''}`}
-        description={`This will permanently delete the selected ${activeView}. This action cannot be undone.`}
-        confirmLabel="Delete"
+        title={t('crm.bulk.deleteTitle', { count: selectedIds.size })}
+        description={t('crm.bulk.deleteDescription')}
+        confirmLabel={t('crm.actions.delete')}
         onConfirm={handleBulkDelete}
         destructive
       />
