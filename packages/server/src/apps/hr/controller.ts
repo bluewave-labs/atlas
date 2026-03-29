@@ -47,8 +47,17 @@ export async function createEmployee(req: Request, res: Response) {
     const accountId = req.auth!.accountId;
     const { name, email, role, departmentId, startDate, phone, avatarUrl, status, linkedUserId, tags } = req.body;
 
+    if (!name?.trim()) {
+      res.status(400).json({ success: false, error: 'Name is required' });
+      return;
+    }
+    if (!email?.trim()) {
+      res.status(400).json({ success: false, error: 'Email is required' });
+      return;
+    }
+
     const employee = await hrService.createEmployee(userId, accountId, {
-      name, email, role, departmentId, startDate, phone, avatarUrl, status, linkedUserId, tags,
+      name: name.trim(), email: email.trim(), role, departmentId, startDate, phone, avatarUrl, status, linkedUserId, tags,
     });
 
     res.json({ success: true, data: employee });

@@ -2,11 +2,7 @@ import { db } from '../../config/database';
 import { employees, departments, timeOffRequests } from '../../db/schema';
 import { eq, and, asc, desc, sql } from 'drizzle-orm';
 import { logger } from '../../utils/logger';
-// Types imported inline to avoid cross-worktree resolution issues.
-// Once merged to main, replace with: import type { ... } from '@atlasmail/shared';
-type EmployeeStatus = 'active' | 'on-leave' | 'terminated';
-type TimeOffType = 'vacation' | 'sick' | 'personal';
-type TimeOffStatus = 'pending' | 'approved' | 'rejected';
+// TODO: Replace with `import type { ... } from '@atlasmail/shared'` after merging to main
 
 interface CreateEmployeeInput {
   name: string;
@@ -16,22 +12,12 @@ interface CreateEmployeeInput {
   startDate?: string | null;
   phone?: string | null;
   avatarUrl?: string | null;
-  status?: EmployeeStatus;
+  status?: string;
   linkedUserId?: string | null;
   tags?: string[];
 }
 
-interface UpdateEmployeeInput {
-  name?: string;
-  email?: string;
-  role?: string;
-  departmentId?: string | null;
-  startDate?: string | null;
-  phone?: string | null;
-  avatarUrl?: string | null;
-  status?: EmployeeStatus;
-  linkedUserId?: string | null;
-  tags?: string[];
+interface UpdateEmployeeInput extends Partial<CreateEmployeeInput> {
   sortOrder?: number;
   isArchived?: boolean;
 }
@@ -43,31 +29,22 @@ interface CreateDepartmentInput {
   description?: string | null;
 }
 
-interface UpdateDepartmentInput {
-  name?: string;
-  headEmployeeId?: string | null;
-  color?: string;
-  description?: string | null;
+interface UpdateDepartmentInput extends Partial<CreateDepartmentInput> {
   sortOrder?: number;
   isArchived?: boolean;
 }
 
 interface CreateTimeOffRequestInput {
   employeeId: string;
-  type: TimeOffType;
+  type: string;
   startDate: string;
   endDate: string;
   approverId?: string | null;
   notes?: string | null;
 }
 
-interface UpdateTimeOffRequestInput {
-  type?: TimeOffType;
-  startDate?: string;
-  endDate?: string;
-  status?: TimeOffStatus;
-  approverId?: string | null;
-  notes?: string | null;
+interface UpdateTimeOffRequestInput extends Partial<Omit<CreateTimeOffRequestInput, 'employeeId'>> {
+  status?: string;
   sortOrder?: number;
   isArchived?: boolean;
 }
@@ -479,6 +456,11 @@ export async function deleteTimeOffRequest(userId: string, accountId: string, id
 // ─── Seed Sample Data ───────────────────────────────────────────────
 
 export async function seedSampleData(userId: string, accountId: string) {
+  // Idempotency guard — skip if data already exists
+  const existing = await db.select({ id: employees.id }).from(employees)
+    .where(eq(employees.userId, userId)).limit(1);
+  if (existing.length > 0) return { skipped: true };
+
   // Create 3 departments
   const engineering = await createDepartment(userId, accountId, { name: 'Engineering', color: '#3b82f6' });
   const marketing = await createDepartment(userId, accountId, { name: 'Marketing', color: '#f59e0b' });
