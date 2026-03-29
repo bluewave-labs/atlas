@@ -825,6 +825,11 @@ export async function runMigrations() {
       );
     `);
 
+    // Add decline_reason column to signing_tokens (idempotent)
+    await client.query(`
+      ALTER TABLE signing_tokens ADD COLUMN IF NOT EXISTS decline_reason TEXT;
+    `);
+
     // ─── Indexes ────────────────────────────────────────────────────
 
     const indexes = [

@@ -14,12 +14,20 @@ import {
   ArrowLeft,
   Link2,
   Copy,
+  Trash2,
+  Download,
+  Ban,
+  Plus,
+  X,
+  Users,
 } from 'lucide-react';
 import { AppSidebar, SidebarSection, SidebarItem } from '../../components/layout/app-sidebar';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
+import { ConfirmDialog } from '../../components/ui/confirm-dialog';
+import { IconButton } from '../../components/ui/icon-button';
 import { PdfViewer } from './components/pdf-viewer';
 import { FieldOverlay } from './components/field-overlay';
 import { SignatureModal } from './components/signature-modal';
@@ -35,6 +43,7 @@ import {
   useDeleteField,
   useCreateSigningLink,
   useSigningLinks,
+  useVoidDocument,
 } from './hooks';
 import { config } from '../../config/env';
 import type { SignatureDocument, SignatureFieldType, SignatureField } from '@atlasmail/shared';
@@ -44,14 +53,17 @@ import '../../styles/sign.css';
 
 // ─── Status helpers ─────────────────────────────────────────────────
 
-type FilterStatus = 'all' | 'pending' | 'signed' | 'draft' | 'expired';
+type FilterStatus = 'all' | 'pending' | 'signed' | 'draft' | 'expired' | 'voided';
 
 const STATUS_BADGE_MAP: Record<string, 'default' | 'primary' | 'success' | 'warning' | 'error'> = {
   draft: 'default',
   pending: 'warning',
   signed: 'success',
   expired: 'error',
+  voided: 'error',
 };
+
+const SIGNER_COLORS = ['#8b5cf6', '#3b82f6', '#ef4444', '#f59e0b', '#10b981'];
 
 // ─── Main page ──────────────────────────────────────────────────────
 
@@ -68,6 +80,14 @@ export function SignPage() {
   const [signerName, setSignerName] = useState('');
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [voidConfirmOpen, setVoidConfirmOpen] = useState(false);
+  // Multiple signers
+  const [signers, setSigners] = useState<{ email: string; name: string }[]>([{ email: '', name: '' }]);
+  const [generatedLinks, setGeneratedLinks] = useState<{ email: string; link: string }[]>([]);
+  const [activeSigner, setActiveSigner] = useState<string | undefined>();
+  const [signersModalOpen, setSignersModalOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -85,6 +105,7 @@ export function SignPage() {
   const updateField = useUpdateField(selectedDocId ?? undefined);
   const deleteField = useDeleteField(selectedDocId ?? undefined);
   const createSigningLink = useCreateSigningLink(selectedDocId ?? undefined);
+  const voidDoc = useVoidDocument(selectedDocId ?? undefined);
 
   // ─── Handlers ───────────────────────────────────────────────────
 
@@ -124,15 +145,39 @@ export function SignPage() {
     setSelectedFieldId(undefined);
   }, []);
 
-  const handleDeleteDoc = useCallback(
-    async (id: string) => {
-      await deleteDoc.mutateAsync(id);
-      if (selectedDocId === id) {
-        handleBackToList();
-      }
+  const handleRequestDelete = useCallback((id: string) => {
+    setDeleteTargetId(id);
+    setDeleteConfirmOpen(true);
+  }, []);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteTargetId) return;
+    await deleteDoc.mutateAsync(deleteTargetId);
+    if (selectedDocId === deleteTargetId) {
+      handleBackToList();
+    }
+    setDeleteTargetId(null);
+  }, [deleteDoc, deleteTargetId, selectedDocId, handleBackToList]);
+
+  const handleDownload = useCallback(
+    (docId: string) => {
+      const authToken = localStorage.getItem('atlasmail_token');
+      const tokenParam = authToken ? `?token=${encodeURIComponent(authToken)}` : '';
+      const url = `${config.apiUrl}/sign/${docId}/download${tokenParam}`;
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = '';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     },
-    [deleteDoc, selectedDocId, handleBackToList],
+    [],
   );
+
+  const handleVoidDocument = useCallback(async () => {
+    if (!selectedDocId) return;
+    await voidDoc.mutateAsync();
+  }, [selectedDocId, voidDoc]);
 
   const handleAddField = useCallback(
     async (type: SignatureFieldType) => {
@@ -204,23 +249,36 @@ export function SignPage() {
     [sigFieldId, updateField],
   );
 
-  // Send for signing
+  // Send for signing (multi-signer)
   const handleSendForSigning = useCallback(async () => {
-    if (!signerEmail.trim()) return;
+    const validSigners = signers.filter((s) => s.email.trim());
+    if (validSigners.length === 0) return;
     try {
-      const token = await createSigningLink.mutateAsync({
-        email: signerEmail.trim(),
-        name: signerName.trim() || undefined,
-      });
-      const link = `${window.location.origin}/sign/${token.token}`;
-      setGeneratedLink(link);
+      const links: { email: string; link: string }[] = [];
+      for (const signer of validSigners) {
+        const tokenResult = await createSigningLink.mutateAsync({
+          email: signer.email.trim(),
+          name: signer.name.trim() || undefined,
+        });
+        links.push({
+          email: signer.email.trim(),
+          link: `${window.location.origin}/sign/${tokenResult.token}`,
+        });
+      }
+      setGeneratedLinks(links);
+      // Also set single link for backward compat display
+      if (links.length === 1) {
+        setGeneratedLink(links[0].link);
+      } else {
+        setGeneratedLink('__multi__');
+      }
       setLinkCopied(false);
       // Mark document as pending
       await updateDoc.mutateAsync({ status: 'pending' });
     } catch {
       // Handled by RQ
     }
-  }, [signerEmail, signerName, createSigningLink, updateDoc]);
+  }, [signers, createSigningLink, updateDoc]);
 
   const handleCopyLink = useCallback(() => {
     if (!generatedLink) return;
@@ -235,7 +293,9 @@ export function SignPage() {
       setSignerEmail('');
       setSignerName('');
       setGeneratedLink(null);
+      setGeneratedLinks([]);
       setLinkCopied(false);
+      setSigners([{ email: '', name: '' }]);
     }
   }, []);
 
@@ -254,6 +314,7 @@ export function SignPage() {
     signed: documents?.filter((d) => d.status === 'signed').length ?? 0,
     draft: documents?.filter((d) => d.status === 'draft').length ?? 0,
     expired: documents?.filter((d) => d.status === 'expired').length ?? 0,
+    voided: documents?.filter((d) => d.status === 'voided').length ?? 0,
   }), [documents]);
 
   // PDF url for the selected document (include auth token for pdfjs-dist)
@@ -312,6 +373,13 @@ export function SignPage() {
             count={counts.expired}
             onClick={() => { setFilterStatus('expired'); if (view === 'editor') handleBackToList(); }}
           />
+          <SidebarItem
+            label="Voided"
+            icon={<Ban size={15} />}
+            isActive={filterStatus === 'voided'}
+            count={counts.voided}
+            onClick={() => { setFilterStatus('voided'); if (view === 'editor') handleBackToList(); }}
+          />
         </SidebarSection>
       </AppSidebar>
 
@@ -346,6 +414,7 @@ export function SignPage() {
                       <th>Status</th>
                       <th>Created</th>
                       <th>Pages</th>
+                      <th style={{ width: 80 }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -361,6 +430,25 @@ export function SignPage() {
                           {format(new Date(doc.createdAt), 'MMM d, yyyy')}
                         </td>
                         <td style={{ color: 'var(--color-text-secondary)' }}>{doc.pageCount}</td>
+                        <td onClick={(e) => e.stopPropagation()}>
+                          <div style={{ display: 'flex', gap: 2 }}>
+                            {doc.status === 'signed' && (
+                              <IconButton
+                                icon={<Download size={14} />}
+                                label="Download"
+                                size={26}
+                                onClick={() => handleDownload(doc.id)}
+                              />
+                            )}
+                            <IconButton
+                              icon={<Trash2 size={14} />}
+                              label="Delete"
+                              size={26}
+                              destructive
+                              onClick={() => handleRequestDelete(doc.id)}
+                            />
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -427,6 +515,35 @@ export function SignPage() {
                 >
                   Text
                 </Button>
+                <div style={{ width: 1, height: 20, background: 'var(--color-border-primary)' }} />
+                <IconButton
+                  icon={<Users size={14} />}
+                  label="Manage signers"
+                  size={28}
+                  onClick={() => setSignersModalOpen(true)}
+                />
+                <IconButton
+                  icon={<Download size={14} />}
+                  label="Download PDF"
+                  size={28}
+                  onClick={() => handleDownload(selectedDoc.id)}
+                />
+                <IconButton
+                  icon={<Trash2 size={14} />}
+                  label="Delete document"
+                  size={28}
+                  destructive
+                  onClick={() => handleRequestDelete(selectedDoc.id)}
+                />
+                {selectedDoc.status === 'pending' && (
+                  <IconButton
+                    icon={<Ban size={14} />}
+                    label="Void document"
+                    size={28}
+                    destructive
+                    onClick={() => setVoidConfirmOpen(true)}
+                  />
+                )}
                 <div style={{ width: 1, height: 20, background: 'var(--color-border-primary)' }} />
                 <Button
                   variant="secondary"
@@ -497,26 +614,72 @@ export function SignPage() {
         fieldType={sigFieldType}
       />
 
-      {/* Send for signing modal */}
-      <Modal open={sendModalOpen} onOpenChange={handleCloseSendModal} width={480} title="Send for signing">
+      {/* Send for signing modal (multi-signer) */}
+      <Modal open={sendModalOpen} onOpenChange={handleCloseSendModal} width={520} title="Send for signing">
         <Modal.Header title="Send for signing" />
         <Modal.Body>
           {!generatedLink ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <Input
-                label="Signer email"
-                placeholder="name@example.com"
-                value={signerEmail}
-                onChange={(e) => setSignerEmail(e.target.value)}
-                size="md"
-              />
-              <Input
-                label="Signer name (optional)"
-                placeholder="John Doe"
-                value={signerName}
-                onChange={(e) => setSignerName(e.target.value)}
-                size="md"
-              />
+              {signers.map((signer, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    display: 'flex',
+                    gap: 8,
+                    alignItems: 'flex-end',
+                    padding: '8px 0',
+                    borderLeft: `3px solid ${SIGNER_COLORS[idx % SIGNER_COLORS.length]}`,
+                    paddingLeft: 12,
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <Input
+                      label={idx === 0 ? 'Signer email' : undefined}
+                      placeholder="name@example.com"
+                      value={signer.email}
+                      onChange={(e) => {
+                        const updated = [...signers];
+                        updated[idx] = { ...updated[idx], email: e.target.value };
+                        setSigners(updated);
+                      }}
+                      size="md"
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <Input
+                      label={idx === 0 ? 'Name (optional)' : undefined}
+                      placeholder="John Doe"
+                      value={signer.name}
+                      onChange={(e) => {
+                        const updated = [...signers];
+                        updated[idx] = { ...updated[idx], name: e.target.value };
+                        setSigners(updated);
+                      }}
+                      size="md"
+                    />
+                  </div>
+                  {signers.length > 1 && (
+                    <IconButton
+                      icon={<X size={14} />}
+                      label="Remove signer"
+                      size={28}
+                      destructive
+                      onClick={() => {
+                        setSigners(signers.filter((_, i) => i !== idx));
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={<Plus size={14} />}
+                onClick={() => setSigners([...signers, { email: '', name: '' }])}
+                style={{ alignSelf: 'flex-start' }}
+              >
+                Add signer
+              </Button>
               {/* Existing links */}
               {signingLinks && signingLinks.length > 0 && (
                 <div style={{ marginTop: 8 }}>
@@ -547,7 +710,7 @@ export function SignPage() {
                       <span style={{ color: 'var(--color-text-primary)' }}>
                         {link.signerEmail}
                       </span>
-                      <Badge variant={link.status === 'signed' ? 'success' : link.status === 'expired' ? 'error' : 'warning'}>
+                      <Badge variant={link.status === 'signed' ? 'success' : link.status === 'expired' || link.status === 'declined' ? 'error' : 'warning'}>
                         {link.status}
                       </Badge>
                     </div>
@@ -564,41 +727,63 @@ export function SignPage() {
                   marginBottom: 4,
                 }}
               >
-                Signing link generated. Share this link with the signer:
+                {generatedLinks.length > 1
+                  ? 'Signing links generated. Share each link with the respective signer:'
+                  : 'Signing link generated. Share this link with the signer:'}
               </div>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '8px 12px',
-                  background: 'var(--color-bg-tertiary)',
-                  border: '1px solid var(--color-border-primary)',
-                  borderRadius: 'var(--radius-md)',
-                }}
-              >
-                <Link2 size={14} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
-                <span
-                  style={{
-                    flex: 1,
-                    fontSize: 'var(--font-size-sm)',
-                    color: 'var(--color-text-primary)',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {generatedLink}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={<Copy size={13} />}
-                  onClick={handleCopyLink}
-                >
-                  {linkCopied ? 'Copied' : 'Copy'}
-                </Button>
-              </div>
+              {generatedLinks.map((gl, idx) => (
+                <div key={idx}>
+                  {generatedLinks.length > 1 && (
+                    <div
+                      style={{
+                        fontSize: 'var(--font-size-xs)',
+                        color: SIGNER_COLORS[idx % SIGNER_COLORS.length],
+                        fontWeight: 600,
+                        marginBottom: 4,
+                      }}
+                    >
+                      {gl.email}
+                    </div>
+                  )}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '8px 12px',
+                      background: 'var(--color-bg-tertiary)',
+                      border: '1px solid var(--color-border-primary)',
+                      borderRadius: 'var(--radius-md)',
+                    }}
+                  >
+                    <Link2 size={14} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
+                    <span
+                      style={{
+                        flex: 1,
+                        fontSize: 'var(--font-size-sm)',
+                        color: 'var(--color-text-primary)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {gl.link}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={<Copy size={13} />}
+                      onClick={() => {
+                        navigator.clipboard.writeText(gl.link);
+                        setLinkCopied(true);
+                        setTimeout(() => setLinkCopied(false), 2000);
+                      }}
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </Modal.Body>
@@ -610,13 +795,96 @@ export function SignPage() {
             <Button
               variant="primary"
               onClick={handleSendForSigning}
-              disabled={!signerEmail.trim() || createSigningLink.isPending}
+              disabled={!signers.some((s) => s.email.trim()) || createSigningLink.isPending}
             >
-              {createSigningLink.isPending ? 'Generating...' : 'Generate link'}
+              {createSigningLink.isPending ? 'Generating...' : `Generate ${signers.filter((s) => s.email.trim()).length > 1 ? 'links' : 'link'}`}
             </Button>
           )}
         </Modal.Footer>
       </Modal>
+
+      {/* Signers management modal */}
+      <Modal open={signersModalOpen} onOpenChange={setSignersModalOpen} width={480} title="Manage signers">
+        <Modal.Header title="Manage signers" />
+        <Modal.Body>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div
+              style={{
+                fontSize: 'var(--font-size-sm)',
+                color: 'var(--color-text-secondary)',
+                marginBottom: 4,
+              }}
+            >
+              Assign fields to specific signers by selecting a signer below, then placing fields on the document. Each signer will receive their own signing link.
+            </div>
+            {signingLinks && signingLinks.length > 0 ? (
+              signingLinks.map((link, idx) => (
+                <div
+                  key={link.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '8px 12px',
+                    borderRadius: 'var(--radius-md)',
+                    border: `1px solid ${activeSigner === link.signerEmail ? SIGNER_COLORS[idx % SIGNER_COLORS.length] : 'var(--color-border-primary)'}`,
+                    background: activeSigner === link.signerEmail ? `${SIGNER_COLORS[idx % SIGNER_COLORS.length]}10` : 'transparent',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setActiveSigner(activeSigner === link.signerEmail ? undefined : link.signerEmail)}
+                >
+                  <div
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      background: SIGNER_COLORS[idx % SIGNER_COLORS.length],
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span style={{ flex: 1, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)' }}>
+                    {link.signerName || link.signerEmail}
+                  </span>
+                  <Badge variant={link.status === 'signed' ? 'success' : link.status === 'expired' || link.status === 'declined' ? 'error' : 'warning'}>
+                    {link.status}
+                  </Badge>
+                </div>
+              ))
+            ) : (
+              <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', padding: '12px 0' }}>
+                No signers yet. Use "Send for signing" to add signers first.
+              </div>
+            )}
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="ghost" onClick={() => setSignersModalOpen(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Delete confirmation dialog */}
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete document"
+        description="Are you sure you want to delete this document? This action cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleConfirmDelete}
+      />
+
+      {/* Void confirmation dialog */}
+      <ConfirmDialog
+        open={voidConfirmOpen}
+        onOpenChange={setVoidConfirmOpen}
+        title="Void document"
+        description="This will cancel all outstanding signing links. Signers will no longer be able to sign this document."
+        confirmLabel="Void document"
+        destructive
+        onConfirm={handleVoidDocument}
+      />
     </div>
   );
 }

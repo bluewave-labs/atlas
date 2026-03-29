@@ -23,6 +23,7 @@ interface FieldOverlayProps {
   onFieldClick?: (id: string) => void;
   onFieldDelete?: (id: string) => void;
   selectedFieldId?: string;
+  highlightFieldId?: string;
   editable?: boolean;
 }
 
@@ -38,6 +39,7 @@ export function FieldOverlay({
   onFieldClick,
   onFieldDelete,
   selectedFieldId,
+  highlightFieldId,
   editable = false,
 }: FieldOverlayProps) {
   const pageFields = fields.filter((f) => f.pageNumber === pageNumber);
@@ -51,6 +53,7 @@ export function FieldOverlay({
           pageWidth={pageWidth}
           pageHeight={pageHeight}
           isSelected={selectedFieldId === field.id}
+          isHighlighted={highlightFieldId === field.id}
           editable={editable}
           onMove={onFieldMove}
           onResize={onFieldResize}
@@ -69,6 +72,7 @@ interface FieldBoxProps {
   pageWidth: number;
   pageHeight: number;
   isSelected: boolean;
+  isHighlighted?: boolean;
   editable: boolean;
   onMove?: (id: string, x: number, y: number) => void;
   onResize?: (id: string, w: number, h: number) => void;
@@ -81,6 +85,7 @@ function FieldBox({
   pageWidth,
   pageHeight,
   isSelected,
+  isHighlighted = false,
   editable,
   onMove,
   onResize,
@@ -180,6 +185,7 @@ function FieldBox({
     <div
       ref={boxRef}
       className="sign-field"
+      data-field-id={field.id}
       onMouseDown={editable ? handleMouseDown : undefined}
       onClick={(e) => {
         e.stopPropagation();
@@ -191,8 +197,8 @@ function FieldBox({
         top,
         width,
         height,
-        border: `2px ${isSelected ? 'solid' : 'dashed'} ${colors.border}`,
-        background: colors.bg,
+        border: `2px ${isSelected || isHighlighted ? 'solid' : 'dashed'} ${colors.border}`,
+        background: isHighlighted ? `${colors.border}20` : colors.bg,
         borderRadius: 'var(--radius-sm)',
         cursor: editable ? 'move' : 'pointer',
         pointerEvents: 'auto',
@@ -202,7 +208,9 @@ function FieldBox({
         justifyContent: 'center',
         overflow: 'hidden',
         boxSizing: 'border-box',
-        transition: 'border-color 0.15s',
+        transition: 'border-color 0.15s, background 0.15s, box-shadow 0.15s',
+        boxShadow: isHighlighted ? `0 0 0 3px ${colors.border}40, 0 0 12px ${colors.border}30` : 'none',
+        animation: isHighlighted ? 'sign-field-pulse 1.5s ease-in-out infinite' : 'none',
       }}
     >
       {/* Field content: signature image or label */}

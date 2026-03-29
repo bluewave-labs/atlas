@@ -170,6 +170,62 @@ export async function viewPDF(req: Request, res: Response) {
   }
 }
 
+// GET /api/sign/:id/download
+export async function downloadPDF(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const documentId = req.params.id as string;
+
+    const doc = await signService.getDocument(userId, documentId);
+    if (!doc || !doc.storagePath) {
+      res.status(404).json({ success: false, error: 'Document not found' });
+      return;
+    }
+
+    const filePath = path.join(UPLOADS_DIR, doc.storagePath);
+    if (!existsSync(filePath)) {
+      res.status(404).json({ success: false, error: 'PDF file not found on disk' });
+      return;
+    }
+
+    const stat = statSync(filePath);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Length', stat.size);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(doc.fileName)}"`);
+
+    createReadStream(filePath).pipe(res);
+  } catch (error) {
+    logger.error({ error }, 'Failed to download PDF');
+    res.status(500).json({ success: false, error: 'Failed to download PDF' });
+  }
+}
+
+// POST /api/sign/:id/void
+export async function voidDocument(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const documentId = req.params.id as string;
+
+    const doc = await signService.getDocument(userId, documentId);
+    if (!doc) {
+      res.status(404).json({ success: false, error: 'Document not found' });
+      return;
+    }
+
+    if (doc.status !== 'pending') {
+      res.status(400).json({ success: false, error: 'Only pending documents can be voided' });
+      return;
+    }
+
+    const updated = await signService.voidDocument(userId, documentId);
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    logger.error({ error }, 'Failed to void document');
+    res.status(500).json({ success: false, error: 'Failed to void document' });
+  }
+}
+
 // ─── Field CRUD ─────────────────────────────────────────────────────
 
 // GET /api/sign/:id/fields
@@ -396,6 +452,38 @@ export async function signByToken(req: Request, res: Response) {
   } catch (error) {
     logger.error({ error }, 'Failed to sign by token');
     res.status(500).json({ success: false, error: 'Failed to sign by token' });
+  }
+}
+
+// POST /api/sign/public/:token/decline
+export async function declineByToken(req: Request, res: Response) {
+  try {
+    const token = req.params.token as string;
+    const { reason } = req.body;
+
+    const result = await signService.getSigningToken(token);
+
+    if (!result || !result.document) {
+      res.status(404).json({ success: false, error: 'Invalid or expired token' });
+      return;
+    }
+
+    if (new Date(result.token.expiresAt) < new Date()) {
+      res.status(410).json({ success: false, error: 'Token has expired' });
+      return;
+    }
+
+    if (result.token.status !== 'pending') {
+      res.status(409).json({ success: false, error: 'Token has already been used or declined' });
+      return;
+    }
+
+    await signService.declineSigningToken(result.token.id, reason || null);
+
+    res.json({ success: true, data: null });
+  } catch (error) {
+    logger.error({ error }, 'Failed to decline signing');
+    res.status(500).json({ success: false, error: 'Failed to decline signing' });
   }
 }
 

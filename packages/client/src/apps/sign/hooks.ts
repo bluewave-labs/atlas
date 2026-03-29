@@ -159,6 +159,21 @@ export function useCreateSigningLink(docId: string | undefined) {
   });
 }
 
+export function useVoidDocument(docId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post(`/sign/${docId}/void`);
+      return data.data as SignatureDocument;
+    },
+    onSuccess: (doc) => {
+      queryClient.setQueryData(queryKeys.sign.detail(doc.id), doc);
+      queryClient.invalidateQueries({ queryKey: queryKeys.sign.all });
+    },
+  });
+}
+
 // ─── Public (no auth) ────────────────────────────────────────────────
 
 export function usePublicSignDoc(token: string | undefined) {
@@ -200,4 +215,14 @@ export async function submitPublicSign(
     signatureData,
   });
   return data.data as { field: SignatureField; documentComplete: boolean };
+}
+
+export async function submitPublicDecline(
+  token: string,
+  reason: string,
+) {
+  const { data } = await axios.post(`${config.apiUrl}/sign/public/${token}/decline`, {
+    reason,
+  });
+  return data.data;
 }

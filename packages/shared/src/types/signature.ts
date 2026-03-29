@@ -1,8 +1,8 @@
 // ─── Digital Signature Types ────────────────────────────────────────
 
-export type SignatureDocStatus = 'draft' | 'pending' | 'signed' | 'expired';
+export type SignatureDocStatus = 'draft' | 'pending' | 'signed' | 'expired' | 'voided';
 export type SignatureFieldType = 'signature' | 'initials' | 'date' | 'text';
-export type SigningTokenStatus = 'pending' | 'signed' | 'expired';
+export type SigningTokenStatus = 'pending' | 'signed' | 'expired' | 'declined';
 
 export interface SignatureDocument {
   id: string;
@@ -49,6 +49,7 @@ export interface SigningToken {
   token: string;
   status: SigningTokenStatus;
   signedAt: string | null;
+  declineReason: string | null;
   expiresAt: string;
   createdAt: string;
   updatedAt: string;

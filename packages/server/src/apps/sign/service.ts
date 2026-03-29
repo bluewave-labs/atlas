@@ -301,6 +301,44 @@ export async function completeSigningToken(tokenId: string) {
   logger.info({ tokenId }, 'Signing token marked as signed');
 }
 
+export async function declineSigningToken(tokenId: string, reason: string | null) {
+  const now = new Date();
+  await db
+    .update(signingTokens)
+    .set({ status: 'declined', declineReason: reason, updatedAt: now })
+    .where(eq(signingTokens.id, tokenId));
+  logger.info({ tokenId, reason }, 'Signing token declined');
+}
+
+export async function voidDocument(userId: string, documentId: string) {
+  const now = new Date();
+
+  // Mark document as voided
+  await db
+    .update(signatureDocuments)
+    .set({ status: 'voided', updatedAt: now })
+    .where(
+      and(
+        eq(signatureDocuments.id, documentId),
+        eq(signatureDocuments.userId, userId),
+      ),
+    );
+
+  // Expire all pending signing tokens
+  await db
+    .update(signingTokens)
+    .set({ status: 'expired', updatedAt: now })
+    .where(
+      and(
+        eq(signingTokens.documentId, documentId),
+        eq(signingTokens.status, 'pending'),
+      ),
+    );
+
+  logger.info({ userId, documentId }, 'Signature document voided');
+  return getDocument(userId, documentId);
+}
+
 export async function checkDocumentComplete(documentId: string) {
   // Get all required fields for this document
   const fields = await db

@@ -25,6 +25,7 @@ const router = Router();
 // ─── Public routes (no auth) — defined BEFORE authMiddleware ────────
 router.get('/public/:token', signController.getByToken);
 router.post('/public/:token/sign', signController.signByToken);
+router.post('/public/:token/decline', signController.declineByToken);
 router.get('/public/:token/view', signController.viewPDFByToken);
 
 // ─── Auth middleware for all routes below ────────────────────────────
@@ -38,6 +39,8 @@ router.get('/:id', signController.getDocument);
 router.put('/:id', signController.updateDocument);
 router.delete('/:id', signController.deleteDocument);
 router.get('/:id/view', signController.viewPDF);
+router.get('/:id/download', signController.downloadPDF);
+router.post('/:id/void', signController.voidDocument);
 
 // ─── Fields ─────────────────────────────────────────────────────────
 router.get('/:id/fields', signController.listFields);

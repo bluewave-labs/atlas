@@ -819,6 +819,7 @@ export const signingTokens = pgTable('signing_tokens', {
   token: varchar('token', { length: 255 }).unique().notNull(),
   status: varchar('status', { length: 50 }).notNull().default('pending'),
   signedAt: timestamp('signed_at', { withTimezone: true }),
+  declineReason: text('decline_reason'),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
