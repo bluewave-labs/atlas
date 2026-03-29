@@ -4,11 +4,13 @@ import { drawManifest } from './draw/manifest';
 import { tasksManifest } from './tasks/manifest';
 import { tablesManifest } from './tables/manifest';
 import { driveManifest } from './drive/manifest';
+import { signManifest } from './sign/manifest';
 
 appRegistry.register(docsManifest);
 appRegistry.register(drawManifest);
 appRegistry.register(tasksManifest);
 appRegistry.register(tablesManifest);
 appRegistry.register(driveManifest);
+appRegistry.register(signManifest);
 
 export { appRegistry };

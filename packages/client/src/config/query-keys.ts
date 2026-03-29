@@ -68,4 +68,11 @@ export const queryKeys = {
     tenants: ['admin', 'tenants'] as const,
     tenant: (id: string) => ['admin', 'tenant', id] as const,
   },
+  sign: {
+    all: ['sign'] as const,
+    list: ['sign', 'list'] as const,
+    detail: (id: string) => ['sign', 'detail', id] as const,
+    fields: (docId: string) => ['sign', 'fields', docId] as const,
+    tokens: (docId: string) => ['sign', 'tokens', docId] as const,
+  },
 };
