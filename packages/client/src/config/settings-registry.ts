@@ -9,11 +9,9 @@ import {
   LayoutGrid,
 } from 'lucide-react';
 
-import {
-  MailGeneralPanel,
-  MailAppearancePanel,
-  MailAboutPanel,
-} from '../components/settings/settings-modal';
+import { GeneralPanel } from '../components/settings/general-panel';
+import { AppearancePanel } from '../components/settings/appearance-panel';
+import { AboutPanel } from '../components/settings/about-panel';
 
 import {
   HomeBackgroundPanel,
@@ -49,11 +47,11 @@ export const globalSettingsCategory: SettingsCategory = {
   icon: Globe,
   color: '#6b7280',
   panels: [
-    { id: 'general', label: 'General', icon: Settings, component: MailGeneralPanel },
-    { id: 'appearance', label: 'Appearance', icon: Palette, component: MailAppearancePanel },
+    { id: 'general', label: 'General', icon: Settings, component: GeneralPanel },
+    { id: 'appearance', label: 'Appearance', icon: Palette, component: AppearancePanel },
     { id: 'home-background', label: 'Home background', icon: Image, component: HomeBackgroundPanel },
     { id: 'home-widgets', label: 'Widgets', icon: LayoutGrid, component: HomeWidgetsPanel },
-    { id: 'about', label: 'About', icon: Info, component: MailAboutPanel },
+    { id: 'about', label: 'About', icon: Info, component: AboutPanel },
   ],
 };
 
