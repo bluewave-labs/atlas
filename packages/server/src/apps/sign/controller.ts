@@ -188,13 +188,15 @@ export async function downloadPDF(req: Request, res: Response) {
       return;
     }
 
-    const stat = statSync(filePath);
+    // Generate flattened PDF with signatures embedded
+    const signedPdfBuffer = await signService.generateSignedPDF(documentId, doc.storagePath);
+    const signedFileName = doc.fileName.replace(/\.pdf$/i, '') + '_signed.pdf';
 
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Length', stat.size);
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(doc.fileName)}"`);
+    res.setHeader('Content-Length', signedPdfBuffer.length);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(signedFileName)}"`);
 
-    createReadStream(filePath).pipe(res);
+    res.end(signedPdfBuffer);
   } catch (error) {
     logger.error({ error }, 'Failed to download PDF');
     res.status(500).json({ success: false, error: 'Failed to download PDF' });

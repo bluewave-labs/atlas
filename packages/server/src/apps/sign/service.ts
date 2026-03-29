@@ -3,6 +3,11 @@ import { signatureDocuments, signatureFields, signingTokens } from '../../db/sch
 import { eq, and, asc, desc, sql } from 'drizzle-orm';
 import { logger } from '../../utils/logger';
 import crypto from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { PDFDocument } from 'pdf-lib';
+
+const UPLOADS_DIR = path.join(__dirname, '../../../uploads');
 
 // ─── Documents ──────────────────────────────────────────────────────
 
@@ -365,4 +370,59 @@ export async function checkDocumentComplete(documentId: string) {
   }
 
   return false;
+}
+
+// ─── PDF Flattening (embed signatures into PDF) ────────────────────
+
+export async function generateSignedPDF(documentId: string, storagePath: string): Promise<Buffer> {
+  const filePath = path.join(UPLOADS_DIR, storagePath);
+  const originalBytes = await readFile(filePath);
+  const pdfDoc = await PDFDocument.load(originalBytes);
+  const pages = pdfDoc.getPages();
+
+  // Get all signed fields
+  const fields = await db
+    .select()
+    .from(signatureFields)
+    .where(eq(signatureFields.documentId, documentId));
+
+  for (const field of fields) {
+    if (!field.signatureData) continue;
+
+    const pageIndex = field.pageNumber - 1;
+    if (pageIndex < 0 || pageIndex >= pages.length) continue;
+
+    const page = pages[pageIndex];
+    const { width: pageWidth, height: pageHeight } = page.getSize();
+
+    // Convert percentage positions to PDF points
+    const x = (field.x / 100) * pageWidth;
+    const w = (field.width / 100) * pageWidth;
+    const h = (field.height / 100) * pageHeight;
+    // PDF coordinate system has origin at bottom-left, so flip y
+    const y = pageHeight - (field.y / 100) * pageHeight - h;
+
+    if (field.type === 'checkbox') {
+      // For checkboxes, draw a checkmark text
+      if (field.signatureData === 'checked') {
+        page.drawText('✓', { x: x + w * 0.25, y: y + h * 0.15, size: Math.min(w, h) * 0.7 });
+      }
+    } else if (field.type === 'date' || field.type === 'text' || field.type === 'dropdown') {
+      // For text-based fields, draw the text
+      page.drawText(field.signatureData, { x: x + 4, y: y + h * 0.3, size: Math.min(h * 0.5, 14) });
+    } else {
+      // For signature/initials, embed the image
+      try {
+        const base64Data = field.signatureData.replace(/^data:image\/\w+;base64,/, '');
+        const imageBytes = Buffer.from(base64Data, 'base64');
+        const pngImage = await pdfDoc.embedPng(imageBytes);
+        page.drawImage(pngImage, { x, y, width: w, height: h });
+      } catch (err) {
+        logger.warn({ err, fieldId: field.id }, 'Failed to embed signature image — skipping');
+      }
+    }
+  }
+
+  const signedBytes = await pdfDoc.save();
+  return Buffer.from(signedBytes);
 }
