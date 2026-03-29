@@ -12,10 +12,6 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
 import { useTaskCounts } from '../hooks/use-tasks';
-import { useDocumentList } from '../hooks/use-documents';
-import { useDrawingList } from '../hooks/use-drawings';
-import { useTableList } from '../hooks/use-tables';
-import { useDriveStorage } from '../hooks/use-drive';
 import { ROUTES } from '../config/routes';
 import { useUIStore } from '../stores/ui-store';
 import { WidgetGrid } from '../components/home/widgets/widget-grid';
@@ -555,10 +551,6 @@ export function HomePage() {
   const isSuperAdmin = useAuthStore((s) => s.isSuperAdmin);
   const logout = useAuthStore((s) => s.logout);
   const { data: taskCounts } = useTaskCounts({ enabled: isAuthenticated });
-  const { data: docListData } = useDocumentList(false, { enabled: isAuthenticated });
-  const { data: drawingListData } = useDrawingList(false, { enabled: isAuthenticated });
-  const { data: tableListData } = useTableList(false, { enabled: isAuthenticated });
-  const { data: driveStorageData } = useDriveStorage();
   const parallax = useMouseParallax(15);
 
   // User settings for home background + recent items
@@ -606,10 +598,6 @@ export function HomePage() {
   const hour = now.getHours();
   const greetingKey = getGreetingKey(hour);
   const pendingTaskCount = taskCounts?.total ?? 0;
-  const docCount = docListData?.documents?.length ?? 0;
-  const drawingCount = drawingListData?.drawings?.length ?? 0;
-  const tableCount = tableListData?.spreadsheets?.length ?? 0;
-  const driveFileCount = driveStorageData?.fileCount ?? 0;
   const timeTint = getTimeTint(hour);
 
 
@@ -932,35 +920,30 @@ export function HomePage() {
             icon={CheckSquare}
             label={t('nav.tasks')}
             color="#6366f1"
-            badge={pendingTaskCount > 0 ? t('home.pendingTasks', { count: pendingTaskCount }) : undefined}
             onClick={() => navigate(ROUTES.TASKS)}
           />
           <AppCard
             icon={FileText}
             label={t('nav.write')}
             color="#c4856c"
-            badge={docCount > 0 ? t('home.documents', { count: docCount }) : undefined}
             onClick={() => navigate(ROUTES.DOCS)}
           />
           <AppCard
             icon={Pencil}
             label={t('nav.draw')}
             color="#e06c9f"
-            badge={drawingCount > 0 ? t('home.drawings', { count: drawingCount }) : undefined}
             onClick={() => navigate(ROUTES.DRAW)}
           />
           <AppCard
             icon={Table2}
             label={t('nav.tables')}
             color="#2d8a6e"
-            badge={tableCount > 0 ? t('home.tables', { count: tableCount }) : undefined}
             onClick={() => navigate(ROUTES.TABLES)}
           />
           <AppCard
             icon={HardDrive}
             label="Drive"
             color="#64748b"
-            badge={driveFileCount > 0 ? t('home.files', { count: driveFileCount }) : undefined}
             onClick={() => navigate(ROUTES.DRIVE)}
           />
         </div>
