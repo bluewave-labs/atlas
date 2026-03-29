@@ -3,6 +3,8 @@ import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { api } from '../lib/api-client';
 import { useAuthStore } from '../stores/auth-store';
 import { ROUTES } from '../config/routes';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
 import type { Account } from '@atlasmail/shared';
 
 export function LoginPage() {
@@ -16,7 +18,6 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [checkingSetup, setCheckingSetup] = useState(true);
 
-  // Redirect to setup page if Atlas hasn't been set up yet
   useEffect(() => {
     api.get('/auth/setup-status')
       .then(({ data }) => {
@@ -70,8 +71,8 @@ export function LoginPage() {
           maxWidth: 400,
           padding: 32,
           background: 'var(--color-bg-secondary)',
-          border: '1px solid #d0d5dd',
-          borderRadius: 8,
+          border: '1px solid var(--color-border-primary)',
+          borderRadius: 'var(--radius-lg)',
         }}
       >
         <h1
@@ -87,7 +88,7 @@ export function LoginPage() {
         </h1>
         <p
           style={{
-            fontSize: 14,
+            fontSize: 'var(--font-size-sm)',
             textAlign: 'center',
             marginBottom: 24,
             color: 'var(--color-text-secondary)',
@@ -101,110 +102,53 @@ export function LoginPage() {
             style={{
               padding: '8px 12px',
               marginBottom: 16,
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
-              borderRadius: 4,
-              color: '#dc2626',
-              fontSize: 13,
+              background: 'color-mix(in srgb, var(--color-error) 8%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--color-error) 30%, transparent)',
+              borderRadius: 'var(--radius-md)',
+              color: 'var(--color-error)',
+              fontSize: 'var(--font-size-sm)',
             }}
           >
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 16 }}>
-            <label
-              style={{
-                display: 'block',
-                fontSize: 13,
-                fontWeight: 500,
-                marginBottom: 6,
-                color: 'var(--color-text-primary)',
-              }}
-            >
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@company.com"
-              required
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                border: '1px solid #d0d5dd',
-                borderRadius: 4,
-                fontSize: 14,
-                outline: 'none',
-                background: 'var(--color-bg-primary)',
-                color: 'var(--color-text-primary)',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <Input
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@company.com"
+            required
+          />
+          <Input
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
+            required
+          />
 
-          <div style={{ marginBottom: 8 }}>
-            <label
-              style={{
-                display: 'block',
-                fontSize: 13,
-                fontWeight: 500,
-                marginBottom: 6,
-                color: 'var(--color-text-primary)',
-              }}
-            >
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                border: '1px solid #d0d5dd',
-                borderRadius: 4,
-                fontSize: 14,
-                outline: 'none',
-                background: 'var(--color-bg-primary)',
-                color: 'var(--color-text-primary)',
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
-
-          <div style={{ textAlign: 'right', marginBottom: 16, marginTop: 6 }}>
+          <div style={{ textAlign: 'right', marginTop: -8 }}>
             <Link
               to={ROUTES.FORGOT_PASSWORD}
-              style={{ fontSize: 13, color: '#13715B', textDecoration: 'none' }}
+              style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-accent-primary)', textDecoration: 'none' }}
             >
               Forgot password?
             </Link>
           </div>
 
-          <button
+          <Button
             type="submit"
+            variant="primary"
+            size="lg"
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '8px 16px',
-              height: 34,
-              background: '#13715B',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 4,
-              fontSize: 14,
-              fontWeight: 500,
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1,
-            }}
+            style={{ width: '100%' }}
           >
             {loading ? 'Signing in...' : 'Sign in'}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api-client';
 import { useAuthStore } from '../stores/auth-store';
 import { ROUTES } from '../config/routes';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
 import type { Account } from '@atlasmail/shared';
 
 export function SetupPage() {
@@ -38,26 +40,6 @@ export function SetupPage() {
     }
   }
 
-  const inputStyle = {
-    width: '100%',
-    padding: '8px 12px',
-    border: '1px solid #d0d5dd',
-    borderRadius: 4,
-    fontSize: 14,
-    outline: 'none',
-    background: 'var(--color-bg-primary)',
-    color: 'var(--color-text-primary)',
-    boxSizing: 'border-box' as const,
-  };
-
-  const labelStyle = {
-    display: 'block',
-    fontSize: 13,
-    fontWeight: 500,
-    marginBottom: 6,
-    color: 'var(--color-text-primary)',
-  };
-
   return (
     <div
       style={{
@@ -75,8 +57,8 @@ export function SetupPage() {
           maxWidth: 440,
           padding: 32,
           background: 'var(--color-bg-secondary)',
-          border: '1px solid #d0d5dd',
-          borderRadius: 8,
+          border: '1px solid var(--color-border-primary)',
+          borderRadius: 'var(--radius-lg)',
         }}
       >
         <h1
@@ -92,7 +74,7 @@ export function SetupPage() {
         </h1>
         <p
           style={{
-            fontSize: 14,
+            fontSize: 'var(--font-size-sm)',
             textAlign: 'center',
             marginBottom: 24,
             color: 'var(--color-text-secondary)',
@@ -106,95 +88,70 @@ export function SetupPage() {
             style={{
               padding: '8px 12px',
               marginBottom: 16,
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
-              borderRadius: 4,
-              color: '#dc2626',
-              fontSize: 13,
+              background: 'color-mix(in srgb, var(--color-error) 8%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--color-error) 30%, transparent)',
+              borderRadius: 'var(--radius-md)',
+              color: 'var(--color-error)',
+              fontSize: 'var(--font-size-sm)',
             }}
           >
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 16 }}>
-            <label style={labelStyle}>Organization name</label>
-            <input
-              type="text"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              placeholder="Acme Corp"
-              required
-              style={inputStyle}
-            />
-          </div>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <Input
+            label="Organization name"
+            type="text"
+            value={companyName}
+            onChange={(e) => setCompanyName(e.target.value)}
+            placeholder="Acme Corp"
+            required
+          />
 
           <div
             style={{
               width: '100%',
               height: 1,
-              background: '#d0d5dd',
-              margin: '20px 0',
+              background: 'var(--color-border-primary)',
+              margin: '4px 0',
             }}
           />
 
-          <div style={{ marginBottom: 16 }}>
-            <label style={labelStyle}>Admin name</label>
-            <input
-              type="text"
-              value={adminName}
-              onChange={(e) => setAdminName(e.target.value)}
-              placeholder="John Doe"
-              required
-              style={inputStyle}
-            />
-          </div>
+          <Input
+            label="Admin name"
+            type="text"
+            value={adminName}
+            onChange={(e) => setAdminName(e.target.value)}
+            placeholder="John Doe"
+            required
+          />
+          <Input
+            label="Admin email"
+            type="email"
+            value={adminEmail}
+            onChange={(e) => setAdminEmail(e.target.value)}
+            placeholder="admin@company.com"
+            required
+          />
+          <Input
+            label="Password"
+            type="password"
+            value={adminPassword}
+            onChange={(e) => setAdminPassword(e.target.value)}
+            placeholder="Minimum 8 characters"
+            required
+          />
 
-          <div style={{ marginBottom: 16 }}>
-            <label style={labelStyle}>Admin email</label>
-            <input
-              type="email"
-              value={adminEmail}
-              onChange={(e) => setAdminEmail(e.target.value)}
-              placeholder="admin@company.com"
-              required
-              style={inputStyle}
-            />
-          </div>
-
-          <div style={{ marginBottom: 24 }}>
-            <label style={labelStyle}>Password</label>
-            <input
-              type="password"
-              value={adminPassword}
-              onChange={(e) => setAdminPassword(e.target.value)}
-              placeholder="Minimum 8 characters"
-              required
-              minLength={8}
-              style={inputStyle}
-            />
-          </div>
-
-          <button
+          <Button
             type="submit"
+            variant="primary"
+            size="lg"
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '8px 16px',
-              height: 38,
-              background: '#13715B',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 4,
-              fontSize: 14,
-              fontWeight: 500,
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1,
-            }}
+            style={{ width: '100%', marginTop: 8 }}
           >
             {loading ? 'Setting up...' : 'Complete setup'}
-          </button>
+          </Button>
         </form>
       </div>
     </div>
