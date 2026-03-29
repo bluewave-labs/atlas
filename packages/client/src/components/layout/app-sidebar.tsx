@@ -1,0 +1,292 @@
+import { useState, useCallback, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import { ResizeHandle } from '../ui/resize-handle';
+import { ROUTES } from '../../config/routes';
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const DEFAULT_WIDTH = 260;
+const MIN_WIDTH = 200;
+const MAX_WIDTH = 400;
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function readStoredWidth(key: string): number {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) return clamp(Number(raw), MIN_WIDTH, MAX_WIDTH);
+  } catch { /* ignore */ }
+  return DEFAULT_WIDTH;
+}
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface AppSidebarProps {
+  /** localStorage key for persisting width, e.g. 'atlas_docs_sidebar' */
+  storageKey: string;
+
+  /** App title shown in the header */
+  title: string;
+
+  /** Optional header action (e.g., "New document" button) */
+  headerAction?: ReactNode;
+
+  /** Optional search bar below the header */
+  search?: ReactNode;
+
+  /** Main sidebar content (sections, trees, lists) */
+  children: ReactNode;
+
+  /** Optional footer content */
+  footer?: ReactNode;
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+export function AppSidebar({
+  storageKey,
+  title,
+  headerAction,
+  search,
+  children,
+  footer,
+}: AppSidebarProps) {
+  const navigate = useNavigate();
+  const isDesktop = !!('atlasDesktop' in window);
+
+  const [width, setWidth] = useState(() => readStoredWidth(storageKey));
+
+  const handleResize = useCallback(
+    (delta: number) => {
+      setWidth((w) => clamp(w + delta, MIN_WIDTH, MAX_WIDTH));
+    },
+    [],
+  );
+
+  const handleResizeEnd = useCallback(() => {
+    setWidth((w) => {
+      localStorage.setItem(storageKey, String(Math.round(w)));
+      return w;
+    });
+  }, [storageKey]);
+
+  return (
+    <div
+      style={{
+        width,
+        minWidth: MIN_WIDTH,
+        maxWidth: MAX_WIDTH,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'row',
+        flexShrink: 0,
+      }}
+    >
+      {/* Sidebar content */}
+      <div
+        style={{
+          flex: 1,
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          background: 'var(--color-bg-secondary)',
+          overflow: 'hidden',
+          fontFamily: 'var(--font-family)',
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            padding: '12px 16px 8px',
+            paddingTop: isDesktop ? 46 : 12,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            flexShrink: 0,
+          }}
+        >
+          <button
+            onClick={() => navigate(ROUTES.HOME)}
+            title="Home"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 28,
+              height: 28,
+              borderRadius: 'var(--radius-sm)',
+              border: 'none',
+              background: 'transparent',
+              color: 'var(--color-text-tertiary)',
+              cursor: 'pointer',
+              flexShrink: 0,
+              transition: 'background 0.15s, color 0.15s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--color-surface-hover)';
+              e.currentTarget.style.color = 'var(--color-text-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = 'var(--color-text-tertiary)';
+            }}
+          >
+            <ArrowLeft size={14} />
+          </button>
+          <span
+            style={{
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 'var(--font-weight-semibold)',
+              color: 'var(--color-text-primary)',
+              flex: 1,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {title}
+          </span>
+          {headerAction}
+        </div>
+
+        {/* Search */}
+        {search && (
+          <div style={{ padding: '4px 12px 8px', flexShrink: 0 }}>
+            {search}
+          </div>
+        )}
+
+        {/* Scrollable content */}
+        <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+          <div style={{ padding: '4px 8px 12px' }}>
+            {children}
+          </div>
+        </div>
+
+        {/* Footer */}
+        {footer && (
+          <div
+            style={{
+              borderTop: '1px solid var(--color-border-primary)',
+              padding: '8px 12px',
+              flexShrink: 0,
+            }}
+          >
+            {footer}
+          </div>
+        )}
+      </div>
+
+      {/* Resize handle */}
+      <ResizeHandle
+        orientation="vertical"
+        onResize={handleResize}
+        onResizeEnd={handleResizeEnd}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Shared sub-components for sidebar content
+// ---------------------------------------------------------------------------
+
+export interface SidebarSectionProps {
+  title?: string;
+  children: ReactNode;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
+}
+
+export function SidebarSection({ title, children }: SidebarSectionProps) {
+  return (
+    <div style={{ marginBottom: 8 }}>
+      {title && (
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 'var(--font-weight-semibold)',
+            color: 'var(--color-text-tertiary)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            padding: '8px 8px 4px',
+          }}
+        >
+          {title}
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}
+
+export interface SidebarItemProps {
+  label: string;
+  icon?: ReactNode;
+  isActive?: boolean;
+  count?: number;
+  onClick?: () => void;
+  style?: React.CSSProperties;
+}
+
+export function SidebarItem({ label, icon, isActive, count, onClick, style }: SidebarItemProps) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        width: '100%',
+        height: 32,
+        padding: '0 8px',
+        borderRadius: 'var(--radius-sm)',
+        border: 'none',
+        background: isActive ? 'var(--color-surface-selected)' : 'transparent',
+        color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+        fontSize: 'var(--font-size-sm)',
+        fontFamily: 'var(--font-family)',
+        cursor: 'pointer',
+        textAlign: 'left',
+        transition: 'background 0.1s, color 0.1s',
+        ...style,
+      }}
+      onMouseEnter={(e) => {
+        if (!isActive) e.currentTarget.style.background = 'var(--color-surface-hover)';
+      }}
+      onMouseLeave={(e) => {
+        if (!isActive) e.currentTarget.style.background = 'transparent';
+      }}
+    >
+      {icon && (
+        <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center', opacity: 0.7 }}>
+          {icon}
+        </span>
+      )}
+      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {label}
+      </span>
+      {count !== undefined && (
+        <span
+          style={{
+            fontSize: 11,
+            color: 'var(--color-text-tertiary)',
+            fontVariantNumeric: 'tabular-nums',
+            flexShrink: 0,
+          }}
+        >
+          {count}
+        </span>
+      )}
+    </button>
+  );
+}
