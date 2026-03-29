@@ -22,6 +22,14 @@ export async function createTenant(input: CreateTenantInput, ownerId: string) {
     role: 'owner',
   });
 
+  // Seed default apps for the new tenant
+  try {
+    const { seedDefaultApps } = await import('./tenant-app.service');
+    await seedDefaultApps(tenant.id, ownerId);
+  } catch (err) {
+    logger.warn({ err, tenantId: tenant.id }, 'Failed to seed default apps — apps can be enabled manually');
+  }
+
   logger.info({ tenantId: tenant.id, slug: input.slug }, 'Tenant created');
   return tenant;
 }

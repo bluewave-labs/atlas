@@ -17,4 +17,9 @@ router.delete('/tenants/:id/users/:userId', ctrl.removeTenantUser);
 router.put('/tenants/:id/users/:userId/role', ctrl.updateTenantUserRole);
 router.post('/tenants/:id/invitations', ctrl.inviteTenantUser);
 
+// ─── Tenant Apps ────────────────────────────────────────────────────
+router.get('/tenants/:id/apps', ctrl.listTenantApps);
+router.post('/tenants/:id/apps/:appId/enable', ctrl.enableTenantApp);
+router.post('/tenants/:id/apps/:appId/disable', ctrl.disableTenantApp);
+
 export default router;

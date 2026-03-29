@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { z } from 'zod';
 import * as tenantService from '../services/platform/tenant.service';
 import * as tenantUserService from '../services/platform/tenant-user.service';
+import * as tenantAppService from '../services/platform/tenant-app.service';
 import { logger } from '../utils/logger';
 import { validatePasswordStrength } from '../utils/password';
 import type { TenantMemberRole } from '@atlasmail/shared';
@@ -226,5 +227,62 @@ export async function inviteTenantUser(req: Request, res: Response) {
     }
     logger.error({ err }, 'Failed to invite user');
     res.status(500).json({ success: false, error: 'Failed to invite user' });
+  }
+}
+
+// ─── Tenant Apps ────────────────────────────────────────────────────
+
+export async function listTenantApps(req: Request, res: Response) {
+  try {
+    const tenantId = param(req, 'id');
+    const membership = await tenantService.getTenantMembership(tenantId, req.auth!.userId);
+    if (!membership) {
+      res.status(403).json({ success: false, error: 'Not a member of this tenant' });
+      return;
+    }
+
+    const apps = await tenantAppService.listTenantApps(tenantId);
+    res.json({ success: true, data: { apps } });
+  } catch (err) {
+    logger.error({ err }, 'Failed to list tenant apps');
+    res.status(500).json({ success: false, error: 'Failed to list tenant apps' });
+  }
+}
+
+export async function enableTenantApp(req: Request, res: Response) {
+  try {
+    const tenantId = param(req, 'id');
+    const appId = param(req, 'appId');
+
+    const membership = await tenantService.getTenantMembership(tenantId, req.auth!.userId);
+    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+      res.status(403).json({ success: false, error: 'Only owners and admins can manage apps' });
+      return;
+    }
+
+    const app = await tenantAppService.enableApp(tenantId, appId, req.auth!.userId);
+    res.json({ success: true, data: app });
+  } catch (err: any) {
+    logger.error({ err }, 'Failed to enable app');
+    res.status(400).json({ success: false, error: err?.message || 'Failed to enable app' });
+  }
+}
+
+export async function disableTenantApp(req: Request, res: Response) {
+  try {
+    const tenantId = param(req, 'id');
+    const appId = param(req, 'appId');
+
+    const membership = await tenantService.getTenantMembership(tenantId, req.auth!.userId);
+    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+      res.status(403).json({ success: false, error: 'Only owners and admins can manage apps' });
+      return;
+    }
+
+    await tenantAppService.disableApp(tenantId, appId);
+    res.json({ success: true, data: { message: 'App disabled' } });
+  } catch (err: any) {
+    logger.error({ err }, 'Failed to disable app');
+    res.status(400).json({ success: false, error: err?.message || 'Failed to disable app' });
   }
 }

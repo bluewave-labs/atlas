@@ -705,3 +705,20 @@ export const tenantInvitations = pgTable('tenant_invitations', {
   tokenIdx: uniqueIndex('idx_tenant_invitations_token').on(table.token),
 }));
 
+// ─── Platform: Tenant Apps ─────────────────────────────────────────
+
+export const tenantApps = pgTable('tenant_apps', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  appId: varchar('app_id', { length: 100 }).notNull(),
+  isEnabled: boolean('is_enabled').notNull().default(true),
+  enabledAt: timestamp('enabled_at', { withTimezone: true }).defaultNow().notNull(),
+  enabledBy: uuid('enabled_by').notNull(),
+  config: jsonb('config').$type<Record<string, unknown>>().notNull().default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  tenantAppIdx: uniqueIndex('idx_tenant_apps_unique').on(table.tenantId, table.appId),
+  tenantIdx: index('idx_tenant_apps_tenant').on(table.tenantId),
+}));
+

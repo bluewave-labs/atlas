@@ -578,6 +578,19 @@ export async function runMigrations() {
         UNIQUE(tenant_id, email)
       );
 
+      CREATE TABLE IF NOT EXISTS tenant_apps (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        app_id VARCHAR(100) NOT NULL,
+        is_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+        enabled_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        enabled_by UUID NOT NULL,
+        config JSONB NOT NULL DEFAULT '{}',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(tenant_id, app_id)
+      );
+
       CREATE TABLE IF NOT EXISTS app_catalog (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         manifest_id VARCHAR(255) UNIQUE NOT NULL,
