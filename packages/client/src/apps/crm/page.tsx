@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Briefcase, Users, Building2, Clock, Plus, Search, Settings2, X,
   ChevronRight, Trash2, Phone as PhoneIcon, Mail,
-  Trophy, XCircle, LayoutGrid, List, ArrowUp, ArrowDown,
+  Trophy, XCircle, LayoutGrid, List,
   PhoneCall, CalendarDays, StickyNote,
   Download, Upload, BarChart3, Zap, Shield,
   UserPlus, TrendingUp, Merge,

@@ -2,21 +2,13 @@ import { type ReactNode, type CSSProperties } from 'react';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 
 export interface ColumnHeaderProps {
-  /** Column label text */
   label: string;
-  /** Optional Lucide icon to show before the label */
   icon?: ReactNode;
-  /** Whether this column is sortable */
   sortable?: boolean;
-  /** Current sort column key (for highlighting active sort) */
   sortColumn?: string | null;
-  /** This column's sort key */
   columnKey?: string;
-  /** Current sort direction */
   sortDirection?: 'asc' | 'desc';
-  /** Called when the header is clicked for sorting */
   onSort?: (columnKey: string) => void;
-  /** Additional style */
   style?: CSSProperties;
 }
 
@@ -39,7 +31,17 @@ export function ColumnHeader({
 
   return (
     <span
+      role={sortable ? 'button' : undefined}
+      tabIndex={sortable ? 0 : undefined}
+      aria-sort={isActive ? (sortDirection === 'asc' ? 'ascending' : 'descending') : undefined}
+      aria-label={sortable ? `Sort by ${label}` : undefined}
       onClick={sortable ? handleClick : undefined}
+      onKeyDown={sortable ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleClick();
+        }
+      } : undefined}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -52,6 +54,7 @@ export function ColumnHeader({
         userSelect: 'none',
         whiteSpace: 'nowrap',
         transition: 'color 0.15s',
+        outline: 'none',
         ...style,
       }}
       onMouseEnter={(e) => {

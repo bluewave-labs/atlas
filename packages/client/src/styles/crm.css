@@ -303,25 +303,6 @@
 
 /* ─── Sortable column header ─────────────────────────────────── */
 
-.crm-sort-header {
-  cursor: pointer;
-  user-select: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  transition: color 0.1s;
-}
-
-.crm-sort-header:hover {
-  color: var(--color-text-secondary);
-}
-
-.crm-sort-indicator {
-  font-size: 10px;
-  line-height: 1;
-  color: var(--color-accent-primary);
-}
-
 /* ─── Inline cell editing ────────────────────────────────────── */
 
 .crm-cell-editing {
