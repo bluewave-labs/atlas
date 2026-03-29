@@ -91,41 +91,42 @@
 /* ── macOS-style dock ── */
 
 .dock-item {
-  width: 60px;
+  width: 68px;
   height: 60px;
   position: relative;
-  margin: 0 4px;
+  padding: 0 4px;
+  box-sizing: border-box;
   transition: width 100ms cubic-bezier(0.25, 1, 0.5, 1),
               height 100ms cubic-bezier(0.25, 1, 0.5, 1),
               margin-top 100ms cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .dock-item:hover {
-  width: 80px;
+  width: 88px;
   height: 80px;
   margin-top: -20px;
 }
 
 .dock-item:hover + .dock-item {
-  width: calc(72px + var(--dock-offset-right, 0px));
+  width: calc(80px + var(--dock-offset-right, 0px));
   height: calc(72px + var(--dock-offset-right, 0px));
   margin-top: calc(-12px + var(--dock-offset-right, 0px) * -1);
 }
 
 .dock-item:hover + .dock-item + .dock-item {
-  width: calc(64px + var(--dock-offset-right, 0px));
+  width: calc(72px + var(--dock-offset-right, 0px));
   height: calc(64px + var(--dock-offset-right, 0px));
   margin-top: calc(-4px + var(--dock-offset-right, 0px) * -1);
 }
 
 .dock-item:has(+ .dock-item:hover) {
-  width: calc(72px + var(--dock-offset-left, 0px));
+  width: calc(80px + var(--dock-offset-left, 0px));
   height: calc(72px + var(--dock-offset-left, 0px));
   margin-top: calc(-12px + var(--dock-offset-left, 0px) * -1);
 }
 
 .dock-item:has(+ .dock-item + .dock-item:hover) {
-  width: calc(64px + var(--dock-offset-left, 0px));
+  width: calc(72px + var(--dock-offset-left, 0px));
   height: calc(64px + var(--dock-offset-left, 0px));
   margin-top: calc(-4px + var(--dock-offset-left, 0px) * -1);
 }
