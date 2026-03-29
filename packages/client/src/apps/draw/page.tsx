@@ -21,6 +21,8 @@ import {
   ArrowDownAZ,
 } from 'lucide-react';
 import { AppSidebar } from '../../components/layout/app-sidebar';
+import { Button } from '../../components/ui/button';
+import { IconButton } from '../../components/ui/icon-button';
 import { useTranslation } from 'react-i18next';
 import {
   useDrawingList,
@@ -73,34 +75,20 @@ function SidebarButton({
   tooltip?: string;
   disabled?: boolean;
 }) {
-  const [hovered, setHovered] = useState(false);
-
   return (
-    <button
+    <IconButton
+      icon={icon}
+      label={tooltip || ''}
+      tooltip={!!tooltip}
+      tooltipSide="bottom"
+      size={26}
       onClick={onClick}
-      title={tooltip}
       disabled={disabled}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: 26,
-        height: 26,
-        padding: 0,
-        background: hovered ? 'var(--color-surface-hover)' : 'transparent',
-        border: 'none',
-        borderRadius: 'var(--radius-sm)',
-        color: 'var(--color-text-secondary)',
-        cursor: disabled ? 'default' : 'pointer',
         opacity: disabled ? 0.5 : 1,
-        transition: 'background 0.15s ease',
-        flexShrink: 0,
+        cursor: disabled ? 'default' : 'pointer',
       }}
-    >
-      {icon}
-    </button>
+    />
   );
 }
 
@@ -200,7 +188,7 @@ function DrawingListItem({
           </div>
           <div
             style={{
-              fontSize: 11,
+              fontSize: 'var(--font-size-xs)',
               color: 'var(--color-text-tertiary)',
               marginTop: 1,
             }}
@@ -314,7 +302,7 @@ function SortDropdown({
                 border: 'none',
                 borderRadius: 'var(--radius-sm)',
                 color: opt.value === value ? 'var(--color-accent-primary)' : 'var(--color-text-primary)',
-                fontSize: 12,
+                fontSize: 'var(--font-size-sm)',
                 fontFamily: 'var(--font-family)',
                 fontWeight: opt.value === value ? 600 : 400,
                 cursor: 'pointer',
@@ -403,7 +391,7 @@ function TemplatePicker({
           <h2
             style={{
               margin: 0,
-              fontSize: 16,
+              fontSize: 'var(--font-size-lg)',
               fontWeight: 600,
               color: 'var(--color-text-primary)',
             }}
@@ -473,7 +461,7 @@ function TemplatePicker({
               />
               <span
                 style={{
-                  fontSize: 13,
+                  fontSize: 'var(--font-size-sm)',
                   fontWeight: 500,
                   color: 'var(--color-text-primary)',
                   textAlign: 'center',
@@ -483,7 +471,7 @@ function TemplatePicker({
               </span>
               <span
                 style={{
-                  fontSize: 11,
+                  fontSize: 'var(--font-size-xs)',
                   color: 'var(--color-text-tertiary)',
                   textAlign: 'center',
                   lineHeight: 1.3,
@@ -610,7 +598,7 @@ function DrawSidebar({
               border: 'none',
               outline: 'none',
               background: 'transparent',
-              fontSize: 12,
+              fontSize: 'var(--font-size-sm)',
               fontFamily: 'var(--font-family)',
               color: 'var(--color-text-primary)',
               padding: 0,
@@ -652,7 +640,7 @@ function DrawSidebar({
       >
         <span
           style={{
-            fontSize: 11,
+            fontSize: 'var(--font-size-xs)',
             fontWeight: 600,
             color: 'var(--color-text-tertiary)',
             textTransform: 'uppercase',
@@ -673,7 +661,7 @@ function DrawSidebar({
             padding: '24px 12px',
             textAlign: 'center',
             color: 'var(--color-text-tertiary)',
-            fontSize: 12,
+            fontSize: 'var(--font-size-sm)',
           }}
         >
           {t('common.loading')}
@@ -686,7 +674,7 @@ function DrawSidebar({
                 padding: '24px 12px',
                 textAlign: 'center',
                 color: 'var(--color-text-tertiary)',
-                fontSize: 12,
+                fontSize: 'var(--font-size-sm)',
               }}
             >
               {t('docs.noResults', { query: searchQuery })}
@@ -697,7 +685,7 @@ function DrawSidebar({
                 padding: '24px 12px',
                 textAlign: 'center',
                 color: 'var(--color-text-tertiary)',
-                fontSize: 12,
+                fontSize: 'var(--font-size-sm)',
               }}
             >
               {t('draw.noDrawings')}
@@ -723,7 +711,7 @@ function DrawSidebar({
               padding: '24px 12px',
               textAlign: 'center',
               color: 'var(--color-text-tertiary)',
-              fontSize: 12,
+              fontSize: 'var(--font-size-sm)',
             }}
           >
             {t('draw.trashEmpty')}
@@ -778,7 +766,7 @@ function QuickLink({
         border: 'none',
         borderRadius: 'var(--radius-sm)',
         color: active || hovered ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-        fontSize: 12,
+        fontSize: 'var(--font-size-sm)',
         fontWeight: active ? 600 : 400,
         fontFamily: 'var(--font-family)',
         cursor: 'pointer',
@@ -791,11 +779,11 @@ function QuickLink({
       {badge !== undefined && badge > 0 && (
         <span
           style={{
-            fontSize: 10,
+            fontSize: 'var(--font-size-xs)',
             color: 'var(--color-text-tertiary)',
             background: 'var(--color-bg-tertiary)',
             padding: '1px 5px',
-            borderRadius: 8,
+            borderRadius: 'var(--radius-lg)',
             fontWeight: 500,
           }}
         >
@@ -810,7 +798,6 @@ function QuickLink({
 
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   const { t } = useTranslation();
-  const [hovered, setHovered] = useState(false);
 
   return (
     <div
@@ -826,35 +813,20 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
       }}
     >
       <Pencil size={48} strokeWidth={1} style={{ opacity: 0.3 }} />
-      <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--color-text-secondary)' }}>
+      <div style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500, color: 'var(--color-text-secondary)' }}>
         {t('draw.createFirst')}
       </div>
-      <div style={{ fontSize: 13, maxWidth: 280, textAlign: 'center', lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'var(--font-size-sm)', maxWidth: 280, textAlign: 'center', lineHeight: 1.5 }}>
         {t('draw.createFirstDesc')}
       </div>
-      <button
+      <Button
+        variant="primary"
+        size="md"
+        icon={<Plus size={15} />}
         onClick={onCreate}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          padding: '8px 16px',
-          background: hovered ? 'var(--color-accent-primary)' : 'var(--color-accent-subtle)',
-          color: hovered ? '#fff' : 'var(--color-accent-primary)',
-          border: '1px solid color-mix(in srgb, var(--color-accent-primary) 20%, transparent)',
-          borderRadius: 'var(--radius-md)',
-          fontSize: 13,
-          fontWeight: 500,
-          fontFamily: 'var(--font-family)',
-          cursor: 'pointer',
-          transition: 'all 0.15s ease',
-        }}
       >
-        <Plus size={15} />
         {t('draw.newDrawing')}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -949,30 +921,16 @@ function ExportMenu({
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
+        icon={<Download size={13} />}
         onClick={() => setOpen(!open)}
         title={t('draw.export')}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 4,
-          padding: '4px 8px',
-          background: 'transparent',
-          border: 'none',
-          borderRadius: 'var(--radius-sm)',
-          color: 'var(--color-text-secondary)',
-          fontSize: 12,
-          fontFamily: 'var(--font-family)',
-          cursor: 'pointer',
-          transition: 'background 0.15s ease',
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-surface-hover)')}
-        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
       >
-        <Download size={13} />
-        <span>{t('draw.export')}</span>
+        {t('draw.export')}
         <ChevronDown size={11} />
-      </button>
+      </Button>
 
       {open && (
         <div
@@ -1004,7 +962,7 @@ function ExportMenu({
                 border: 'none',
                 borderRadius: 'var(--radius-sm)',
                 color: 'var(--color-text-primary)',
-                fontSize: 12,
+                fontSize: 'var(--font-size-sm)',
                 fontFamily: 'var(--font-family)',
                 cursor: 'pointer',
                 transition: 'background 0.12s ease',
@@ -1089,7 +1047,7 @@ function EditableTitle({
             border: 'none',
             outline: 'none',
             background: 'transparent',
-            fontSize: 14,
+            fontSize: 'var(--font-size-md)',
             fontWeight: 600,
             fontFamily: 'var(--font-family)',
             color: 'var(--color-text-primary)',
@@ -1101,7 +1059,7 @@ function EditableTitle({
           onClick={() => setEditing(true)}
           style={{
             flex: 1,
-            fontSize: 14,
+            fontSize: 'var(--font-size-md)',
             fontWeight: 600,
             color: 'var(--color-text-primary)',
             cursor: 'text',
@@ -1116,7 +1074,7 @@ function EditableTitle({
       {isSaving && (
         <span
           style={{
-            fontSize: 11,
+            fontSize: 'var(--font-size-xs)',
             color: 'var(--color-text-tertiary)',
             flexShrink: 0,
           }}
@@ -1479,7 +1437,7 @@ export function DrawPage() {
               justifyContent: 'center',
               color: 'var(--color-text-tertiary)',
               fontFamily: 'var(--font-family)',
-              fontSize: 14,
+              fontSize: 'var(--font-size-md)',
             }}
           >
             {t('common.loading')}
@@ -1502,7 +1460,7 @@ export function DrawPage() {
               justifyContent: 'center',
               color: 'var(--color-text-tertiary)',
               fontFamily: 'var(--font-family)',
-              fontSize: 14,
+              fontSize: 'var(--font-size-md)',
             }}
           >
             {t('draw.noDrawings')}
