@@ -190,6 +190,7 @@ export function GeneralPanel() {
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Your name"
               onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
+              size="sm"
               style={{ width: 220 }}
             />
             <SaveButton onClick={handleSaveName} saved={saved} />

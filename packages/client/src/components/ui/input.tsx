@@ -1,14 +1,22 @@
 import { forwardRef, type InputHTMLAttributes, type ReactNode } from 'react';
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
   label?: string;
   error?: string;
   iconLeft?: ReactNode;
+  size?: 'sm' | 'md' | 'lg';
 }
 
+const sizeStyles: Record<NonNullable<InputProps['size']>, { height: string; fontSize: string }> = {
+  sm: { height: '28px', fontSize: 'var(--font-size-sm)' },
+  md: { height: '34px', fontSize: 'var(--font-size-md)' },
+  lg: { height: '40px', fontSize: 'var(--font-size-md)' },
+};
+
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, iconLeft, style, id, ...props }, ref) => {
+  ({ label, error, iconLeft, size = 'md', style, id, ...props }, ref) => {
     const inputId = id || (label ? `input-${label.toLowerCase().replace(/\s+/g, '-')}` : undefined);
+    const { height, fontSize } = sizeStyles[size];
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)', width: '100%' }}>
@@ -46,13 +54,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             style={{
               width: '100%',
-              height: '34px',
+              height,
               padding: iconLeft ? '0 var(--spacing-sm) 0 calc(var(--spacing-sm) * 3 + 16px)' : '0 var(--spacing-sm)',
               background: 'var(--color-bg-tertiary)',
               border: `1px solid ${error ? 'var(--color-error)' : 'var(--color-border-primary)'}`,
               borderRadius: 'var(--radius-md)',
               color: 'var(--color-text-primary)',
-              fontSize: 'var(--font-size-md)',
+              fontSize,
               fontFamily: 'var(--font-family)',
               outline: 'none',
               transition: 'border-color var(--transition-normal)',
