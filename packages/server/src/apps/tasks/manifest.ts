@@ -1,4 +1,4 @@
-import tasksRouter from '../../routes/tasks.routes';
+import tasksRouter from './routes';
 import type { ServerAppManifest } from '../../config/app-manifest.server';
 
 export const tasksServerManifest: ServerAppManifest = {

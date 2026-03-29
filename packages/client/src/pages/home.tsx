@@ -11,7 +11,7 @@ import {
   Building2, Shield,
 } from 'lucide-react';
 import { useAuthStore } from '../stores/auth-store';
-import { useTaskCounts } from '../hooks/use-tasks';
+import { useTaskCounts } from '../apps/tasks/hooks';
 import { ROUTES } from '../config/routes';
 import { useUIStore } from '../stores/ui-store';
 import { WidgetGrid } from '../components/home/widgets/widget-grid';

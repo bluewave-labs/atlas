@@ -6,14 +6,14 @@ import {
   type TaskCompletedBehavior,
   type TaskSortOrder,
   type TaskViewMode,
-} from '../../stores/tasks-settings-store';
+} from '../settings-store';
 import {
   SettingsSection,
   SettingsRow,
   SettingsToggle,
   SettingsSelect,
-} from '../settings/settings-primitives';
-import { Modal, ModalSidebarNavButton } from '../ui/modal';
+} from '../../../components/settings/settings-primitives';
+import { Modal, ModalSidebarNavButton } from '../../../components/ui/modal';
 import type { CSSProperties } from 'react';
 
 // ---------------------------------------------------------------------------

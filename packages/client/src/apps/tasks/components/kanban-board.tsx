@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Task, TaskProject, TaskWhen } from '@atlasmail/shared';
-import { useUpdateTask, useReorderTasks } from '../../hooks/use-tasks';
+import { useUpdateTask, useReorderTasks } from '../hooks';
 
 // ─── Column definitions ──────────────────────────────────────────────
 

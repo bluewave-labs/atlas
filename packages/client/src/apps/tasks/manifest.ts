@@ -1,7 +1,7 @@
 import { CheckSquare, Settings, Eye, Zap } from 'lucide-react';
 import type { ClientAppManifest } from '../../config/app-manifest.client';
-import { TasksPage } from '../../pages/tasks';
-import { TasksGeneralPanel, TasksAppearancePanel, TasksBehaviorPanel } from '../../components/tasks/tasks-settings-modal';
+import { TasksPage } from './page';
+import { TasksGeneralPanel, TasksAppearancePanel, TasksBehaviorPanel } from './components/tasks-settings-modal';
 
 export const tasksManifest: ClientAppManifest = {
   id: 'tasks',

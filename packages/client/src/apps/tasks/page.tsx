@@ -14,19 +14,19 @@ import {
   useReorderTasks,
   useSubtasks, useCreateSubtask, useUpdateSubtask, useDeleteSubtask,
   useTaskActivities,
-} from '../hooks/use-tasks';
-import { TaskNotesEditor } from '../components/tasks/task-notes-editor';
-import { queryKeys } from '../config/query-keys';
-import { api } from '../lib/api-client';
+} from './hooks';
+import { TaskNotesEditor } from './components/task-notes-editor';
+import { queryKeys } from '../../config/query-keys';
+import { api } from '../../lib/api-client';
 import type { Task, TaskProject, TaskWhen, RecurrenceRule } from '@atlasmail/shared';
-import { AppSidebar } from '../components/layout/app-sidebar';
-import { EmojiPicker } from '../components/shared/emoji-picker';
-import { TasksSettingsModal } from '../components/tasks/tasks-settings-modal';
-import { KanbanBoard } from '../components/tasks/kanban-board';
-import { useTasksSettingsStore } from '../stores/tasks-settings-store';
-import { useUIStore } from '../stores/ui-store';
-import { SmartButtonBar } from '../components/shared/SmartButtonBar';
-import '../styles/tasks.css';
+import { AppSidebar } from '../../components/layout/app-sidebar';
+import { EmojiPicker } from '../../components/shared/emoji-picker';
+import { TasksSettingsModal } from './components/tasks-settings-modal';
+import { KanbanBoard } from './components/kanban-board';
+import { useTasksSettingsStore } from './settings-store';
+import { useUIStore } from '../../stores/ui-store';
+import { SmartButtonBar } from '../../components/shared/SmartButtonBar';
+import '../../styles/tasks.css';
 
 // ─── Navigation sections (Things 3 inspired) ────────────────────────
 

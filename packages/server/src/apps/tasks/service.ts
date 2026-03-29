@@ -1,7 +1,7 @@
-import { db } from '../config/database';
-import { tasks, taskProjects, subtasks, taskActivities, taskTemplates } from '../db/schema';
+import { db } from '../../config/database';
+import { tasks, taskProjects, subtasks, taskActivities, taskTemplates } from '../../db/schema';
 import { eq, and, asc, desc, sql, isNull } from 'drizzle-orm';
-import { logger } from '../utils/logger';
+import { logger } from '../../utils/logger';
 import type {
   CreateTaskInput, UpdateTaskInput,
   CreateProjectInput, UpdateProjectInput,

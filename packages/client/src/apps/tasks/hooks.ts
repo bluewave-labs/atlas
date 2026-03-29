@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../lib/api-client';
-import { queryKeys } from '../config/query-keys';
+import { api } from '../../lib/api-client';
+import { queryKeys } from '../../config/query-keys';
 import type {
   Task, TaskProject,
   CreateTaskInput, UpdateTaskInput,

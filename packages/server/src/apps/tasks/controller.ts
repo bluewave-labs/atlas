@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import * as taskService from '../services/task.service';
-import { logger } from '../utils/logger';
+import * as taskService from './service';
+import { logger } from '../../utils/logger';
 
 // ─── Tasks ──────────────────────────────────────────────────────────
 
