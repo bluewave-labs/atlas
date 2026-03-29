@@ -1,4 +1,4 @@
-import { useState, useCallback, type ReactNode } from 'react';
+import { useState, useCallback, useRef, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { ResizeHandle } from '../ui/resize-handle';
@@ -64,19 +64,21 @@ export function AppSidebar({
   const isDesktop = !!('atlasDesktop' in window);
 
   const [width, setWidth] = useState(() => readStoredWidth(storageKey));
+  const widthRef = useRef(width);
 
   const handleResize = useCallback(
     (delta: number) => {
-      setWidth((w) => clamp(w + delta, MIN_WIDTH, MAX_WIDTH));
+      setWidth((w) => {
+        const next = clamp(w + delta, MIN_WIDTH, MAX_WIDTH);
+        widthRef.current = next;
+        return next;
+      });
     },
     [],
   );
 
   const handleResizeEnd = useCallback(() => {
-    setWidth((w) => {
-      localStorage.setItem(storageKey, String(Math.round(w)));
-      return w;
-    });
+    localStorage.setItem(storageKey, String(Math.round(widthRef.current)));
   }, [storageKey]);
 
   return (
@@ -203,8 +205,6 @@ export function AppSidebar({
 export interface SidebarSectionProps {
   title?: string;
   children: ReactNode;
-  collapsible?: boolean;
-  defaultOpen?: boolean;
 }
 
 export function SidebarSection({ title, children }: SidebarSectionProps) {
