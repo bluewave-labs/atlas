@@ -827,3 +827,71 @@ export const signingTokens = pgTable('signing_tokens', {
   documentIdx: index('idx_signing_tokens_document').on(table.documentId),
 }));
 
+// ─── HR: Departments ──────────────────────────────────────────────
+
+export const departments = pgTable('departments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull().default('Untitled department'),
+  headEmployeeId: uuid('head_employee_id'),
+  color: text('color').notNull().default('#5a7fa0'),
+  description: text('description'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  isArchived: boolean('is_archived').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  userIdx: index('idx_departments_user').on(table.userId, table.isArchived),
+  accountIdx: index('idx_departments_account').on(table.accountId, table.isArchived),
+}));
+
+// ─── HR: Employees ────────────────────────────────────────────────
+
+export const employees = pgTable('employees', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  linkedUserId: uuid('linked_user_id').references(() => users.id, { onDelete: 'set null' }),
+  name: text('name').notNull().default(''),
+  email: text('email').notNull().default(''),
+  role: text('role').notNull().default(''),
+  departmentId: uuid('department_id').references(() => departments.id, { onDelete: 'set null' }),
+  startDate: text('start_date'),
+  phone: text('phone'),
+  avatarUrl: text('avatar_url'),
+  status: text('status').notNull().default('active'),
+  tags: jsonb('tags').$type<string[]>().notNull().default([]),
+  sortOrder: integer('sort_order').notNull().default(0),
+  isArchived: boolean('is_archived').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  userStatusIdx: index('idx_employees_user_status').on(table.userId, table.status, table.isArchived),
+  departmentIdx: index('idx_employees_department').on(table.departmentId, table.sortOrder),
+  accountIdx: index('idx_employees_account').on(table.accountId, table.isArchived),
+}));
+
+// ─── HR: Time-Off Requests ────────────────────────────────────────
+
+export const timeOffRequests = pgTable('time_off_requests', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  employeeId: uuid('employee_id').notNull().references(() => employees.id, { onDelete: 'cascade' }),
+  type: text('type').notNull().default('vacation'),
+  startDate: text('start_date').notNull(),
+  endDate: text('end_date').notNull(),
+  status: text('status').notNull().default('pending'),
+  approverId: uuid('approver_id').references(() => employees.id, { onDelete: 'set null' }),
+  notes: text('notes'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  isArchived: boolean('is_archived').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  employeeIdx: index('idx_time_off_employee').on(table.employeeId, table.status),
+  statusIdx: index('idx_time_off_status').on(table.userId, table.status, table.isArchived),
+  approverIdx: index('idx_time_off_approver').on(table.approverId),
+}));
+

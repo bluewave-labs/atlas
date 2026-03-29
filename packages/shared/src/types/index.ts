@@ -10,3 +10,4 @@ export * from './platform';
 export * from './app-manifest';
 export * from './custom-field';
 export * from './signature';
+export * from './hr';

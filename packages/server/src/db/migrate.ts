@@ -622,6 +622,57 @@ export async function runMigrations() {
         UNIQUE(source_app_id, source_record_id, target_app_id, target_record_id, link_type)
       );
 
+      CREATE TABLE IF NOT EXISTS departments (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        name TEXT NOT NULL DEFAULT 'Untitled department',
+        head_employee_id UUID,
+        color TEXT NOT NULL DEFAULT '#5a7fa0',
+        description TEXT,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS employees (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        linked_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+        name TEXT NOT NULL DEFAULT '',
+        email TEXT NOT NULL DEFAULT '',
+        role TEXT NOT NULL DEFAULT '',
+        department_id UUID REFERENCES departments(id) ON DELETE SET NULL,
+        start_date TEXT,
+        phone TEXT,
+        avatar_url TEXT,
+        status TEXT NOT NULL DEFAULT 'active',
+        tags JSONB NOT NULL DEFAULT '[]',
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS time_off_requests (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+        type TEXT NOT NULL DEFAULT 'vacation',
+        start_date TEXT NOT NULL,
+        end_date TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        approver_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+        notes TEXT,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
       CREATE TABLE IF NOT EXISTS app_catalog (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         manifest_id VARCHAR(255) UNIQUE NOT NULL,
@@ -875,6 +926,17 @@ export async function runMigrations() {
       // Signing tokens
       'CREATE UNIQUE INDEX IF NOT EXISTS idx_signing_tokens_token ON signing_tokens(token)',
       'CREATE INDEX IF NOT EXISTS idx_signing_tokens_document ON signing_tokens(document_id)',
+      // Departments
+      'CREATE INDEX IF NOT EXISTS idx_departments_user ON departments(user_id, is_archived)',
+      'CREATE INDEX IF NOT EXISTS idx_departments_account ON departments(account_id, is_archived)',
+      // Employees
+      'CREATE INDEX IF NOT EXISTS idx_employees_user_status ON employees(user_id, status, is_archived)',
+      'CREATE INDEX IF NOT EXISTS idx_employees_department ON employees(department_id, sort_order)',
+      'CREATE INDEX IF NOT EXISTS idx_employees_account ON employees(account_id, is_archived)',
+      // Time-off requests
+      'CREATE INDEX IF NOT EXISTS idx_time_off_employee ON time_off_requests(employee_id, status)',
+      'CREATE INDEX IF NOT EXISTS idx_time_off_status ON time_off_requests(user_id, status, is_archived)',
+      'CREATE INDEX IF NOT EXISTS idx_time_off_approver ON time_off_requests(approver_id)',
     ];
 
     for (const idx of indexes) {

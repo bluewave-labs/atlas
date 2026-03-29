@@ -37,6 +37,22 @@ export const queryKeys = {
     activities: (taskId: string) => ['tasks', 'activities', taskId] as const,
     templates: ['tasks', 'templates'] as const,
   },
+  hr: {
+    all: ['hr'] as const,
+    employees: {
+      list: (filters?: string) => ['hr', 'employees', 'list', filters] as const,
+      detail: (id: string) => ['hr', 'employees', 'detail', id] as const,
+      counts: ['hr', 'employees', 'counts'] as const,
+    },
+    departments: {
+      list: ['hr', 'departments', 'list'] as const,
+      detail: (id: string) => ['hr', 'departments', 'detail', id] as const,
+    },
+    timeOff: {
+      list: (filters?: string) => ['hr', 'timeOff', 'list', filters] as const,
+      detail: (id: string) => ['hr', 'timeOff', 'detail', id] as const,
+    },
+  },
   tables: {
     all: ['tables'] as const,
     list: ['tables', 'list'] as const,
