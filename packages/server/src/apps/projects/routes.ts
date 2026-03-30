@@ -15,6 +15,9 @@ router.use(authMiddleware);
 // Widget (lightweight summary for home dashboard)
 router.get('/widget', projectsController.getWidgetData);
 
+// Dashboard (rich data for in-app dashboard view)
+router.get('/dashboard', projectsController.getDashboardData);
+
 // Clients
 router.get('/clients/list', projectsController.listClients);
 router.post('/clients', projectsController.createClient);

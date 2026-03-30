@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Trash2, Download } from 'lucide-react';
+import { Plus, Trash2, Download, Eye, Edit } from 'lucide-react';
 import {
   useClients, useCreateInvoice, useUpdateInvoice, usePopulateFromTimeEntries,
+  useProjectSettings,
   type Invoice, type ProjectClient,
 } from '../hooks';
 import { Button } from '../../../components/ui/button';
@@ -11,7 +12,7 @@ import { Select } from '../../../components/ui/select';
 import { Textarea } from '../../../components/ui/textarea';
 import { Modal } from '../../../components/ui/modal';
 import { IconButton } from '../../../components/ui/icon-button';
-import { formatCurrency } from '../../../lib/format';
+import { formatCurrency, formatDate } from '../../../lib/format';
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -34,6 +35,8 @@ export function InvoiceBuilder({ open, onClose, invoice }: InvoiceBuilderProps) 
   const { t } = useTranslation();
   const { data: clientsData } = useClients();
   const clients = clientsData?.clients ?? [];
+  const { data: settings } = useProjectSettings();
+  const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
 
   const createInvoice = useCreateInvoice();
   const updateInvoice = useUpdateInvoice();
@@ -85,6 +88,7 @@ export function InvoiceBuilder({ open, onClose, invoice }: InvoiceBuilderProps) 
       setDiscountPercent(0);
       setNotes('');
     }
+    setActiveTab('edit');
   }, [invoice, open]);
 
   // Calculations

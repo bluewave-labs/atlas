@@ -1636,7 +1636,29 @@
       "activeProjects": "Active projects",
       "inProgress": "In progress",
       "outstandingInvoices": "Outstanding invoices",
-      "overdue": "Overdue"
+      "overdue": "Overdue",
+      "budgetAmount": "Budget amount",
+      "budgetHours": "Budget hours",
+      "copied": "Copied",
+      "copyLink": "Copy link",
+      "fri": "Fri",
+      "hoursThisWeekChart": "Hours this week",
+      "invoiceSummary": "Invoice summary",
+      "logTime": "Log time",
+      "mon": "Mon",
+      "noDescription": "No description",
+      "quickTimeLog": "Quick time log",
+      "recentActivity": "Recent activity",
+      "recentInvoices": "Recent invoices",
+      "recentTimeEntries": "Recent time entries",
+      "revenueOverview": "Revenue overview",
+      "sat": "Sat",
+      "sun": "Sun",
+      "thu": "Thu",
+      "totalBilled": "Total billed",
+      "tue": "Tue",
+      "wed": "Wed",
+      "whatDidYouWorkOn": "What did you work on?"
     },
     "projects": {
       "name": "Name",
@@ -1744,7 +1766,8 @@
       "revenueByClient": "Revenue by client",
       "cost": "Cost",
       "margin": "Margin",
-      "billable": "Billable"
+      "billable": "Billable",
+      "revenueVsCost": "Revenue vs cost"
     },
     "settings": {
       "invoiceSettings": "Invoice settings",

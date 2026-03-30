@@ -151,6 +151,8 @@ function RevenueReportTab() {
   const [endDate, setEndDate] = useState(getDefaultEndDate);
 
   const { data } = useRevenueReport({ startDate, endDate });
+  const byClient = data?.byClient ?? [];
+  const maxClientVal = useMemo(() => Math.max(...byClient.map(c => Math.max(c.invoiced, c.outstanding)), 1), [byClient]);
 
   return (
     <div style={{ padding: 'var(--spacing-lg)', overflow: 'auto', flex: 1 }}>
@@ -181,6 +183,46 @@ function RevenueReportTab() {
         </div>
       </div>
 
+      {/* Stacked bar chart: Invoiced vs Outstanding per client */}
+      {byClient.length > 0 && (
+        <div className="projects-dashboard-card" style={{ marginBottom: 'var(--spacing-lg)' }}>
+          <h3 className="projects-dashboard-card-title">{t('projects.reports.revenueByClient')}</h3>
+          <div className="projects-bar-chart">
+            {byClient.map((row) => (
+              <div key={row.clientId} className="projects-bar-row">
+                <span className="projects-bar-label">{row.clientName}</span>
+                <div className="projects-bar-track" style={{ position: 'relative' }}>
+                  <div
+                    className="projects-bar"
+                    style={{ width: `${Math.max((row.invoiced / maxClientVal) * 100, 2)}%`, backgroundColor: '#3b82f6', position: 'relative', zIndex: 1 }}
+                  />
+                  {row.outstanding > 0 && (
+                    <div
+                      style={{
+                        position: 'absolute', top: 0, left: `${(row.invoiced / maxClientVal) * 100}%`,
+                        width: `${Math.max((row.outstanding / maxClientVal) * 100, 2)}%`,
+                        height: '100%', backgroundColor: '#f59e0b', borderRadius: '0 4px 4px 0',
+                      }}
+                    />
+                  )}
+                </div>
+                <span className="projects-bar-value">{formatCurrency(row.invoiced)}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 'var(--spacing-lg)', padding: 'var(--spacing-sm) var(--spacing-md) 0', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#3b82f6' }} />
+              {t('projects.reports.invoiced')}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#f59e0b' }} />
+              {t('projects.reports.outstanding')}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* By client table */}
       <div className="projects-dashboard-card">
         <h3 className="projects-dashboard-card-title">{t('projects.reports.revenueByClient')}</h3>
@@ -190,7 +232,7 @@ function RevenueReportTab() {
             <ColumnHeader label={t('projects.reports.invoiced')} style={{ width: 120, textAlign: 'right' }} />
             <ColumnHeader label={t('projects.reports.outstanding')} style={{ width: 120, textAlign: 'right' }} />
           </div>
-          {(data?.byClient ?? []).map((row) => (
+          {byClient.map((row) => (
             <div key={row.clientId} style={{ display: 'flex', padding: 'var(--spacing-sm) var(--spacing-md)', borderBottom: '1px solid var(--color-border-secondary)' }}>
               <span style={{ flex: 1, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
                 {row.clientName}
@@ -215,9 +257,53 @@ function ProfitabilityReportTab() {
   const { t } = useTranslation();
   const { data } = useProfitabilityReport();
   const projects = data?.projects ?? [];
+  const maxVal = useMemo(() => Math.max(...projects.map(p => Math.max(p.revenue, p.cost)), 1), [projects]);
 
   return (
     <div style={{ padding: 'var(--spacing-lg)', overflow: 'auto', flex: 1 }}>
+      {/* Revenue vs Cost chart */}
+      {projects.length > 0 && (
+        <div className="projects-dashboard-card" style={{ marginBottom: 'var(--spacing-lg)' }}>
+          <h3 className="projects-dashboard-card-title">{t('projects.reports.revenueVsCost')}</h3>
+          <div className="projects-bar-chart">
+            {projects.map((row) => (
+              <div key={row.projectId} className="projects-bar-row">
+                <span className="projects-bar-label">{row.projectName}</span>
+                <div className="projects-bar-track" style={{ position: 'relative' }}>
+                  <div
+                    className="projects-bar"
+                    style={{ width: `${Math.max((row.revenue / maxVal) * 100, 2)}%`, backgroundColor: '#10b981' }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute', top: 0, left: 0,
+                      width: `${Math.max((row.cost / maxVal) * 100, 2)}%`,
+                      height: '100%', backgroundColor: '#ef4444', opacity: 0.4, borderRadius: 4,
+                    }}
+                  />
+                </div>
+                <span className="projects-bar-value">
+                  <Badge variant={row.margin >= 0 ? 'success' : 'error'}>
+                    {formatNumber(row.margin, 0)}%
+                  </Badge>
+                </span>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 'var(--spacing-lg)', padding: 'var(--spacing-sm) var(--spacing-md) 0', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#10b981' }} />
+              {t('projects.reports.revenue')}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: '#ef4444', opacity: 0.6 }} />
+              {t('projects.reports.cost')}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Table breakdown */}
       <div className="projects-dashboard-card">
         <h3 className="projects-dashboard-card-title">{t('projects.reports.profitability')}</h3>
         <div style={{ display: 'flex', flexDirection: 'column' }}>

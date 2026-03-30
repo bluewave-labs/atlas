@@ -1,11 +1,11 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { formatDate, formatCurrency, formatNumber } from '../../lib/format';
+import { formatDate, formatRelativeDate, formatCurrency, formatNumber } from '../../lib/format';
 import {
   LayoutDashboard, Clock, FolderKanban, Users, FileText, BarChart3, Settings2,
-  Plus, Search, X, ChevronRight, Trash2,
-  DollarSign, Calendar, Mail, Phone, MapPin, Hash, Percent,
+  Plus, Search, X, ChevronRight, Trash2, Copy, ExternalLink,
+  DollarSign, Calendar, Mail, Phone, MapPin, Hash, Percent, Activity,
 } from 'lucide-react';
 import {
   useDashboard,
@@ -14,6 +14,7 @@ import {
   useInvoices, useCreateInvoice, useUpdateInvoice, useDeleteInvoice,
   useSendInvoice, useMarkInvoicePaid, useWaiveInvoice, useDuplicateInvoice,
   useProjectSettings, useUpdateProjectSettings,
+  useTimeEntries, useCreateTimeEntry,
   type Project, type ProjectClient, type Invoice,
   getInvoiceStatusVariant,
 } from './hooks';
@@ -85,13 +86,210 @@ function KpiCard({ icon, label, value, subtitle, iconColor }: {
 
 // ─── Dashboard View ───────────────────────────────────────────────
 
+function DashboardRevenueChart({ invoiced, paid, outstanding }: { invoiced: number; paid: number; outstanding: number }) {
+  const { t } = useTranslation();
+  const maxVal = Math.max(invoiced, paid, outstanding, 1);
+  const bars = [
+    { label: t('projects.reports.invoiced'), value: invoiced, color: '#3b82f6' },
+    { label: t('projects.status.paid'), value: paid, color: '#10b981' },
+    { label: t('projects.reports.outstanding'), value: outstanding, color: '#f59e0b' },
+  ];
+
+  return (
+    <div className="projects-dashboard-card">
+      <h3 className="projects-dashboard-card-title">{t('projects.dashboard.revenueOverview')}</h3>
+      <div className="projects-bar-chart">
+        {bars.map((bar) => (
+          <div key={bar.label} className="projects-bar-row">
+            <span className="projects-bar-label">{bar.label}</span>
+            <div className="projects-bar-track">
+              <div
+                className="projects-bar"
+                style={{ width: `${Math.max((bar.value / maxVal) * 100, 2)}%`, backgroundColor: bar.color }}
+              />
+            </div>
+            <span className="projects-bar-value">{formatCurrency(bar.value)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DashboardHoursChart({ hoursByDay }: { hoursByDay: Array<{ date: string; hours: number }> }) {
+  const { t } = useTranslation();
+  const maxHours = Math.max(...hoursByDay.map(d => d.hours), 1);
+  const dayLabels = [
+    t('projects.dashboard.mon'), t('projects.dashboard.tue'), t('projects.dashboard.wed'),
+    t('projects.dashboard.thu'), t('projects.dashboard.fri'), t('projects.dashboard.sat'), t('projects.dashboard.sun'),
+  ];
+
+  return (
+    <div className="projects-dashboard-card">
+      <h3 className="projects-dashboard-card-title">{t('projects.dashboard.hoursThisWeekChart')}</h3>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--spacing-sm)', height: 120, padding: 'var(--spacing-md) var(--spacing-sm) 0' }}>
+        {hoursByDay.map((day, i) => (
+          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
+            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums' }}>
+              {day.hours > 0 ? formatNumber(day.hours, 1) : ''}
+            </span>
+            <div style={{
+              width: '100%', maxWidth: 32, borderRadius: 'var(--radius-sm)',
+              height: `${Math.max((day.hours / maxHours) * 80, day.hours > 0 ? 4 : 2)}px`,
+              backgroundColor: day.hours > 0 ? 'var(--color-accent-primary)' : 'var(--color-bg-tertiary)',
+              transition: 'height 0.3s ease',
+            }} />
+            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
+              {dayLabels[i]}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DashboardRecentActivity({ recentTimeEntries, recentInvoiceActions }: {
+  recentTimeEntries: Array<{ id: string; projectName: string; projectColor: string; hours: number; date: string; description: string | null; createdAt: string }>;
+  recentInvoiceActions: Array<{ id: string; invoiceNumber: string; clientName: string | null; status: string; amount: number; updatedAt: string }>;
+}) {
+  const { t } = useTranslation();
+
+  const combined = [
+    ...recentTimeEntries.map(e => ({
+      key: `time-${e.id}`,
+      type: 'time' as const,
+      date: e.createdAt,
+      ...e,
+    })),
+    ...recentInvoiceActions.map(i => ({
+      key: `inv-${i.id}`,
+      type: 'invoice' as const,
+      date: i.updatedAt,
+      ...i,
+    })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 8);
+
+  return (
+    <div className="projects-dashboard-card">
+      <h3 className="projects-dashboard-card-title">{t('projects.dashboard.recentActivity')}</h3>
+      {combined.length === 0 ? (
+        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', padding: 'var(--spacing-md)' }}>
+          {t('projects.reports.noData')}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {combined.map((item) => (
+            <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', padding: 'var(--spacing-sm) var(--spacing-md)', borderBottom: '1px solid var(--color-border-secondary)' }}>
+              <div style={{ width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-bg-tertiary)', flexShrink: 0 }}>
+                {item.type === 'time' ? <Clock size={12} style={{ color: '#f59e0b' }} /> : <FileText size={12} style={{ color: '#3b82f6' }} />}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {item.type === 'time'
+                    ? `${formatNumber((item as typeof recentTimeEntries[0] & { type: 'time' }).hours, 1)}h - ${(item as typeof recentTimeEntries[0] & { type: 'time' }).projectName}`
+                    : `${(item as typeof recentInvoiceActions[0] & { type: 'invoice' }).invoiceNumber} - ${formatCurrency((item as typeof recentInvoiceActions[0] & { type: 'invoice' }).amount)}`
+                  }
+                </div>
+                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
+                  {item.type === 'time'
+                    ? (item as typeof recentTimeEntries[0] & { type: 'time' }).description || formatDate((item as typeof recentTimeEntries[0] & { type: 'time' }).date)
+                    : `${(item as typeof recentInvoiceActions[0] & { type: 'invoice' }).clientName || ''} - ${t(`projects.status.${(item as typeof recentInvoiceActions[0] & { type: 'invoice' }).status}`)}`
+                  }
+                </div>
+              </div>
+              <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', flexShrink: 0 }}>
+                {formatRelativeDate(item.date)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function QuickTimeLog({ projects }: { projects: Project[] }) {
+  const { t } = useTranslation();
+  const createTimeEntry = useCreateTimeEntry();
+  const [projectId, setProjectId] = useState('');
+  const [hours, setHours] = useState('');
+  const [description, setDescription] = useState('');
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  const handleSubmit = () => {
+    if (!projectId || !hours) return;
+    createTimeEntry.mutate({
+      projectId,
+      date: todayStr,
+      hours: parseFloat(hours) || 0,
+      description: description.trim() || null,
+      isBillable: true,
+    }, {
+      onSuccess: () => { setHours(''); setDescription(''); },
+    });
+  };
+
+  return (
+    <div className="projects-dashboard-card">
+      <h3 className="projects-dashboard-card-title">{t('projects.dashboard.quickTimeLog')}</h3>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--spacing-sm)', padding: '0 var(--spacing-sm) var(--spacing-sm)' }}>
+        <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+          <label style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
+            {t('projects.timeTracking.project')}
+          </label>
+          <Select
+            value={projectId}
+            onChange={setProjectId}
+            options={[
+              { value: '', label: t('projects.timeTracking.selectProject') },
+              ...projects.map(p => ({ value: p.id, label: p.name })),
+            ]}
+            size="sm"
+          />
+        </div>
+        <Input
+          label={t('projects.reports.hours')}
+          type="number"
+          step="0.25"
+          value={hours}
+          onChange={(e) => setHours(e.target.value)}
+          placeholder="0"
+          size="sm"
+          style={{ width: 70 }}
+        />
+        <Input
+          label={t('projects.invoices.description')}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder={t('projects.dashboard.whatDidYouWorkOn')}
+          size="sm"
+          style={{ flex: 3 }}
+        />
+        <Button
+          variant="primary"
+          size="sm"
+          icon={<Plus size={13} />}
+          onClick={handleSubmit}
+          disabled={!projectId || !hours || createTimeEntry.isPending}
+        >
+          {t('projects.dashboard.logTime')}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function DashboardView() {
   const { t } = useTranslation();
   const { data } = useDashboard();
+  const { data: projectsData } = useProjects();
+  const projects = projectsData?.projects ?? [];
 
   return (
     <div style={{ overflow: 'auto', flex: 1, padding: 'var(--spacing-lg)' }}>
-      <div style={{ display: 'flex', gap: 'var(--spacing-md)', flexWrap: 'wrap' }}>
+      {/* KPI Cards */}
+      <div style={{ display: 'flex', gap: 'var(--spacing-md)', flexWrap: 'wrap', marginBottom: 'var(--spacing-lg)' }}>
         <KpiCard
           icon={<Clock size={18} />}
           label={t('projects.dashboard.hoursThisWeek')}
@@ -121,6 +319,31 @@ function DashboardView() {
           iconColor="var(--color-error)"
         />
       </div>
+
+      {/* Charts row */}
+      <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)' }}>
+        <div style={{ flex: 1 }}>
+          <DashboardRevenueChart
+            invoiced={data?.revenue?.invoiced ?? 0}
+            paid={data?.revenue?.paid ?? 0}
+            outstanding={data?.revenue?.outstanding ?? 0}
+          />
+        </div>
+        <div style={{ flex: 1 }}>
+          <DashboardHoursChart hoursByDay={data?.hoursByDay ?? []} />
+        </div>
+      </div>
+
+      {/* Quick time log */}
+      <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+        <QuickTimeLog projects={projects} />
+      </div>
+
+      {/* Recent activity */}
+      <DashboardRecentActivity
+        recentTimeEntries={data?.recentTimeEntries ?? []}
+        recentInvoiceActions={data?.recentInvoiceActions ?? []}
+      />
     </div>
   );
 }
@@ -384,6 +607,13 @@ function ProjectDetailPanel({ project, onClose }: { project: Project; onClose: (
   const { t } = useTranslation();
   const deleteProject = useDeleteProject();
   const updateProject = useUpdateProject();
+  const { data: timeData } = useTimeEntries({ projectId: project.id });
+  const recentEntries = (timeData?.entries ?? []).slice(0, 5);
+  const { data: invoicesData } = useInvoices({ clientId: project.clientId ?? undefined });
+  const clientInvoices = (invoicesData?.invoices ?? []).slice(0, 5);
+
+  const hoursPct = project.budgetHours ? Math.min((project.totalHours / project.budgetHours) * 100, 100) : 0;
+  const amountPct = project.budgetAmount ? Math.min((project.totalAmount / project.budgetAmount) * 100, 100) : 0;
 
   return (
     <div className="projects-detail-panel">
@@ -404,6 +634,20 @@ function ProjectDetailPanel({ project, onClose }: { project: Project; onClose: (
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
+          {/* Status + client */}
+          <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center' }}>
+            <Badge variant={project.status === 'active' ? 'success' : project.status === 'paused' ? 'warning' : project.status === 'completed' ? 'primary' : 'default'}>
+              {t(`projects.status.${project.status}`)}
+            </Badge>
+            {project.clientName && (
+              <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
+                <Users size={13} style={{ color: 'var(--color-text-tertiary)' }} />
+                {project.clientName}
+              </span>
+            )}
+          </div>
+
+          {/* Status selector */}
           <div className="projects-detail-field">
             <span className="projects-detail-field-label">{t('projects.projects.status')}</span>
             <Select
@@ -419,35 +663,28 @@ function ProjectDetailPanel({ project, onClose }: { project: Project; onClose: (
             />
           </div>
 
-          {project.clientName && (
-            <div className="projects-detail-field">
-              <span className="projects-detail-field-label">{t('projects.invoices.client')}</span>
-              <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)', display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
-                <Users size={14} style={{ color: 'var(--color-text-tertiary)' }} />
-                {project.clientName}
-              </div>
-            </div>
-          )}
-
+          {/* Budget section - hours */}
           <div className="projects-detail-field">
-            <span className="projects-detail-field-label">{t('projects.projects.hourlyRate')}</span>
-            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
-              {formatCurrency(project.hourlyRate)}/h
-            </div>
-          </div>
-
-          <div className="projects-detail-field">
-            <span className="projects-detail-field-label">{t('projects.reports.hours')}</span>
-            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
+            <span className="projects-detail-field-label">{t('projects.dashboard.budgetHours')}</span>
+            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums' }}>
               {formatNumber(project.totalHours, 1)}h{project.budgetHours ? ` / ${formatNumber(project.budgetHours, 0)}h` : ''}
             </div>
+            {project.budgetHours && (
+              <div style={{ height: 6, background: 'var(--color-bg-tertiary)', borderRadius: 3, overflow: 'hidden', marginTop: 'var(--spacing-xs)' }}>
+                <div style={{ height: '100%', width: `${hoursPct}%`, background: hoursPct > 90 ? 'var(--color-error)' : hoursPct > 70 ? 'var(--color-warning)' : 'var(--color-success)', borderRadius: 3, transition: 'width 0.3s' }} />
+              </div>
+            )}
           </div>
 
+          {/* Budget section - amount */}
           {project.budgetAmount != null && (
             <div className="projects-detail-field">
-              <span className="projects-detail-field-label">{t('projects.projects.budget')}</span>
-              <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
+              <span className="projects-detail-field-label">{t('projects.dashboard.budgetAmount')}</span>
+              <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums' }}>
                 {formatCurrency(project.totalAmount)} / {formatCurrency(project.budgetAmount)}
+              </div>
+              <div style={{ height: 6, background: 'var(--color-bg-tertiary)', borderRadius: 3, overflow: 'hidden', marginTop: 'var(--spacing-xs)' }}>
+                <div style={{ height: '100%', width: `${amountPct}%`, background: amountPct > 90 ? 'var(--color-error)' : amountPct > 70 ? 'var(--color-warning)' : 'var(--color-success)', borderRadius: 3, transition: 'width 0.3s' }} />
               </div>
             </div>
           )}
@@ -467,6 +704,58 @@ function ProjectDetailPanel({ project, onClose }: { project: Project; onClose: (
               {project.isBillable ? t('projects.common.yes') : t('projects.common.no')}
             </Badge>
           </div>
+
+          {/* Recent time entries */}
+          <div className="projects-detail-field">
+            <span className="projects-detail-field-label">{t('projects.dashboard.recentTimeEntries')}</span>
+            {recentEntries.length === 0 ? (
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
+                {t('projects.reports.noData')}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 'var(--spacing-xs)' }}>
+                {recentEntries.map((entry) => (
+                  <div key={entry.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid var(--color-border-secondary)' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {entry.description || t('projects.dashboard.noDescription')}
+                      </div>
+                      <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
+                        {formatDate(entry.date)}
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums', flexShrink: 0, marginLeft: 'var(--spacing-sm)' }}>
+                      {formatNumber(entry.hours, 1)}h
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Linked invoices */}
+          {project.clientId && clientInvoices.length > 0 && (
+            <div className="projects-detail-field">
+              <span className="projects-detail-field-label">{t('projects.sidebar.invoices')}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 'var(--spacing-xs)' }}>
+                {clientInvoices.map((inv) => (
+                  <div key={inv.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid var(--color-border-secondary)' }}>
+                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
+                      {inv.invoiceNumber}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+                      <span style={{ fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums', color: 'var(--color-text-primary)' }}>
+                        {formatCurrency(inv.total)}
+                      </span>
+                      <Badge variant={getInvoiceStatusVariant(inv.status)}>
+                        {t(`projects.status.${inv.status}`)}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -501,6 +790,7 @@ function ClientsListView({ clients, searchQuery, onSelect, selectedId, onAdd }: 
         case 'name': aVal = a.name.toLowerCase(); bVal = b.name.toLowerCase(); break;
         case 'email': aVal = (a.email || '').toLowerCase(); bVal = (b.email || '').toLowerCase(); break;
         case 'projects': aVal = a.projectCount; bVal = b.projectCount; break;
+        case 'billed': aVal = a.totalBilled; bVal = b.totalBilled; break;
         case 'outstanding': aVal = a.outstandingAmount; bVal = b.outstandingAmount; break;
       }
       if (aVal < bVal) return sort.direction === 'asc' ? -1 : 1;
@@ -556,9 +846,10 @@ function ClientsListView({ clients, searchQuery, onSelect, selectedId, onAdd }: 
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <div style={{ flex: 1, overflow: 'auto' }}>
         <div style={hdrStyle}>
-          <ColumnHeader label={t('projects.clients.name')} icon={<Users size={12} />} sortable columnKey="name" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 200, flexShrink: 0 }} />
-          <ColumnHeader label={t('projects.clients.email')} icon={<Mail size={12} />} sortable columnKey="email" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 200, flexShrink: 0 }} />
-          <ColumnHeader label={t('projects.sidebar.projects')} icon={<FolderKanban size={12} />} sortable columnKey="projects" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 80, flexShrink: 0, textAlign: 'right' }} />
+          <ColumnHeader label={t('projects.clients.name')} icon={<Users size={12} />} sortable columnKey="name" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 180, flexShrink: 0 }} />
+          <ColumnHeader label={t('projects.clients.email')} icon={<Mail size={12} />} sortable columnKey="email" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 180, flexShrink: 0 }} />
+          <ColumnHeader label={t('projects.sidebar.projects')} icon={<FolderKanban size={12} />} sortable columnKey="projects" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 70, flexShrink: 0, textAlign: 'right' }} />
+          <ColumnHeader label={t('projects.dashboard.totalBilled')} icon={<DollarSign size={12} />} sortable columnKey="billed" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 110, flexShrink: 0, textAlign: 'right' }} />
           <ColumnHeader label={t('projects.reports.outstanding')} icon={<DollarSign size={12} />} sortable columnKey="outstanding" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ flex: 1, textAlign: 'right' }} />
         </div>
         {sorted.map((client) => (
@@ -567,14 +858,17 @@ function ClientsListView({ clients, searchQuery, onSelect, selectedId, onAdd }: 
             className={`projects-row${selectedId === client.id ? ' selected' : ''}`}
             onClick={() => onSelect(client.id)}
           >
-            <span style={{ width: 200, flexShrink: 0, fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ width: 180, flexShrink: 0, fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {client.name}
             </span>
-            <span style={{ width: 200, flexShrink: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ width: 180, flexShrink: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {client.email || '-'}
             </span>
-            <span style={{ width: 80, flexShrink: 0, textAlign: 'right', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums', color: 'var(--color-text-primary)' }}>
+            <span style={{ width: 70, flexShrink: 0, textAlign: 'right', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums', color: 'var(--color-text-primary)' }}>
               {client.projectCount}
+            </span>
+            <span style={{ width: 110, flexShrink: 0, textAlign: 'right', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums', color: 'var(--color-text-tertiary)' }}>
+              {formatCurrency(client.totalBilled)}
             </span>
             <span style={{ flex: 1, textAlign: 'right', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums', color: client.outstandingAmount > 0 ? 'var(--color-warning)' : 'var(--color-text-tertiary)' }}>
               {formatCurrency(client.outstandingAmount)}
@@ -598,6 +892,27 @@ function ClientsListView({ clients, searchQuery, onSelect, selectedId, onAdd }: 
 function ClientDetailPanel({ client, onClose }: { client: ProjectClient; onClose: () => void }) {
   const { t } = useTranslation();
   const deleteClient = useDeleteClient();
+  const { data: projectsData } = useProjects({ clientId: client.id });
+  const clientProjects = projectsData?.projects ?? [];
+  const { data: invoicesData } = useInvoices({ clientId: client.id });
+  const clientInvoices = (invoicesData?.invoices ?? []).slice(0, 5);
+  const [copied, setCopied] = useState(false);
+
+  const portalUrl = client.portalToken
+    ? `${window.location.origin}/projects/portal/${client.portalToken}`
+    : null;
+
+  const handleCopyPortalLink = () => {
+    if (portalUrl) {
+      navigator.clipboard.writeText(portalUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  // Compute invoice summary
+  const totalBilled = clientInvoices.reduce((sum, inv) => sum + inv.total, 0);
+  const overdueAmount = clientInvoices.filter(inv => inv.status === 'overdue').reduce((sum, inv) => sum + inv.total, 0);
 
   return (
     <div className="projects-detail-panel">
@@ -616,6 +931,7 @@ function ClientDetailPanel({ client, onClose }: { client: ProjectClient; onClose
           {client.name}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
+          {/* Contact info */}
           {client.email && (
             <div className="projects-detail-field">
               <span className="projects-detail-field-label">{t('projects.clients.email')}</span>
@@ -643,18 +959,89 @@ function ClientDetailPanel({ client, onClose }: { client: ProjectClient; onClose
               </div>
             </div>
           )}
+
+          {/* Portal link */}
+          {portalUrl && (
+            <div className="projects-detail-field">
+              <span className="projects-detail-field-label">{t('projects.portal.clientPortal')}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
+                <div style={{ flex: 1, fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', background: 'var(--color-bg-tertiary)', padding: '4px 8px', borderRadius: 'var(--radius-sm)' }}>
+                  {portalUrl}
+                </div>
+                <IconButton
+                  icon={copied ? <ExternalLink size={13} /> : <Copy size={13} />}
+                  label={copied ? t('projects.dashboard.copied') : t('projects.dashboard.copyLink')}
+                  size={24}
+                  onClick={handleCopyPortalLink}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Invoice summary */}
           <div className="projects-detail-field">
-            <span className="projects-detail-field-label">{t('projects.sidebar.projects')}</span>
-            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
-              {client.projectCount}
+            <span className="projects-detail-field-label">{t('projects.dashboard.invoiceSummary')}</span>
+            <div style={{ display: 'flex', gap: 'var(--spacing-lg)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)' }}>
+              <div>
+                <div style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}>{t('projects.dashboard.totalBilled')}</div>
+                <div style={{ fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', fontVariantNumeric: 'tabular-nums' } as React.CSSProperties}>{formatCurrency(client.totalBilled)}</div>
+              </div>
+              <div>
+                <div style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}>{t('projects.reports.outstanding')}</div>
+                <div style={{ fontWeight: 'var(--font-weight-semibold)', color: client.outstandingAmount > 0 ? 'var(--color-warning)' : 'var(--color-text-primary)', fontVariantNumeric: 'tabular-nums' } as React.CSSProperties}>{formatCurrency(client.outstandingAmount)}</div>
+              </div>
+              {overdueAmount > 0 && (
+                <div>
+                  <div style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}>{t('projects.dashboard.overdue')}</div>
+                  <div style={{ fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-error)', fontVariantNumeric: 'tabular-nums' } as React.CSSProperties}>{formatCurrency(overdueAmount)}</div>
+                </div>
+              )}
             </div>
           </div>
-          <div className="projects-detail-field">
-            <span className="projects-detail-field-label">{t('projects.reports.outstanding')}</span>
-            <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: client.outstandingAmount > 0 ? 'var(--color-warning)' : 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
-              {formatCurrency(client.outstandingAmount)}
+
+          {/* Projects */}
+          {clientProjects.length > 0 && (
+            <div className="projects-detail-field">
+              <span className="projects-detail-field-label">{t('projects.sidebar.projects')} ({clientProjects.length})</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 'var(--spacing-xs)' }}>
+                {clientProjects.map((proj) => (
+                  <div key={proj.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid var(--color-border-secondary)' }}>
+                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)', display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
+                      <StatusDot color={proj.color} size={6} />
+                      {proj.name}
+                    </span>
+                    <Badge variant={proj.status === 'active' ? 'success' : proj.status === 'paused' ? 'warning' : proj.status === 'completed' ? 'primary' : 'default'}>
+                      {t(`projects.status.${proj.status}`)}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Recent invoices */}
+          {clientInvoices.length > 0 && (
+            <div className="projects-detail-field">
+              <span className="projects-detail-field-label">{t('projects.dashboard.recentInvoices')}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 'var(--spacing-xs)' }}>
+                {clientInvoices.map((inv) => (
+                  <div key={inv.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid var(--color-border-secondary)' }}>
+                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
+                      {inv.invoiceNumber}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+                      <span style={{ fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums', color: 'var(--color-text-primary)' }}>
+                        {formatCurrency(inv.total)}
+                      </span>
+                      <Badge variant={getInvoiceStatusVariant(inv.status)}>
+                        {t(`projects.status.${inv.status}`)}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -692,6 +1079,7 @@ function InvoicesListView({ invoices, searchQuery, onSelect, selectedId, onAdd }
         case 'number': aVal = a.invoiceNumber; bVal = b.invoiceNumber; break;
         case 'client': aVal = (a.clientName || '').toLowerCase(); bVal = (b.clientName || '').toLowerCase(); break;
         case 'amount': aVal = a.total; bVal = b.total; break;
+        case 'items': aVal = a.lineItemCount ?? a.lineItems?.length ?? 0; bVal = b.lineItemCount ?? b.lineItems?.length ?? 0; break;
         case 'status': aVal = a.status; bVal = b.status; break;
         case 'date': aVal = a.issueDate; bVal = b.issueDate; break;
       }
@@ -752,7 +1140,8 @@ function InvoicesListView({ invoices, searchQuery, onSelect, selectedId, onAdd }
         <div style={hdrStyle}>
           <ColumnHeader label={t('projects.invoices.number')} icon={<Hash size={12} />} sortable columnKey="number" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 120, flexShrink: 0 }} />
           <ColumnHeader label={t('projects.invoices.client')} icon={<Users size={12} />} sortable columnKey="client" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 160, flexShrink: 0 }} />
-          <ColumnHeader label={t('projects.invoices.amount')} icon={<DollarSign size={12} />} sortable columnKey="amount" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 120, flexShrink: 0, textAlign: 'right' }} />
+          <ColumnHeader label={t('projects.invoices.amount')} icon={<DollarSign size={12} />} sortable columnKey="amount" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 110, flexShrink: 0, textAlign: 'right' }} />
+          <ColumnHeader label={t('projects.invoices.lineItems')} icon={<Hash size={12} />} sortable columnKey="items" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 60, flexShrink: 0, textAlign: 'right' }} />
           <ColumnHeader label={t('projects.projects.status')} sortable columnKey="status" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 100, flexShrink: 0 }} />
           <ColumnHeader label={t('projects.invoices.issueDate')} icon={<Calendar size={12} />} sortable columnKey="date" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ flex: 1 }} />
         </div>
@@ -768,8 +1157,11 @@ function InvoicesListView({ invoices, searchQuery, onSelect, selectedId, onAdd }
             <span style={{ width: 160, flexShrink: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {invoice.clientName || '-'}
             </span>
-            <span style={{ width: 120, flexShrink: 0, textAlign: 'right', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums', color: 'var(--color-text-primary)' }}>
+            <span style={{ width: 110, flexShrink: 0, textAlign: 'right', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums', color: 'var(--color-text-primary)' }}>
               {formatCurrency(invoice.total)}
+            </span>
+            <span style={{ width: 60, flexShrink: 0, textAlign: 'right', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums', color: 'var(--color-text-tertiary)' }}>
+              {invoice.lineItemCount ?? invoice.lineItems?.length ?? 0}
             </span>
             <span style={{ width: 100, flexShrink: 0 }}>
               <Badge variant={getInvoiceStatusVariant(invoice.status)}>

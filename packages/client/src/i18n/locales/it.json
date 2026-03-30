@@ -1634,7 +1634,29 @@
       "hoursThisWeek": "Ore questa settimana",
       "activeProjects": "Progetti attivi",
       "pendingInvoices": "Fatture in sospeso",
-      "overdueInvoices": "Fatture scadute"
+      "overdueInvoices": "Fatture scadute",
+      "budgetAmount": "Importo budget",
+      "budgetHours": "Ore budget",
+      "copied": "Copiato",
+      "copyLink": "Copia link",
+      "fri": "Ven",
+      "hoursThisWeekChart": "Ore questa settimana",
+      "invoiceSummary": "Riepilogo fatture",
+      "logTime": "Registra tempo",
+      "mon": "Lun",
+      "noDescription": "Nessuna descrizione",
+      "quickTimeLog": "Registrazione rapida",
+      "recentActivity": "Attività recente",
+      "recentInvoices": "Fatture recenti",
+      "recentTimeEntries": "Ultime registrazioni",
+      "revenueOverview": "Panoramica ricavi",
+      "sat": "Sab",
+      "sun": "Dom",
+      "thu": "Gio",
+      "totalBilled": "Totale fatturato",
+      "tue": "Mar",
+      "wed": "Mer",
+      "whatDidYouWorkOn": "Su cosa hai lavorato?"
     },
     "projects": {
       "name": "Nome",
@@ -1752,7 +1774,8 @@
       "cost": "Costo",
       "margin": "Margine",
       "capacity": "Capacità",
-      "utilizationRate": "Tasso di utilizzo"
+      "utilizationRate": "Tasso di utilizzo",
+      "revenueVsCost": "Ricavi vs costi"
     },
     "portal": {
       "title": "Portale clienti",

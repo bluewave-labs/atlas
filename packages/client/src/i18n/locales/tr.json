@@ -1636,7 +1636,29 @@
       "activeProjects": "Aktif projeler",
       "inProgress": "Devam eden",
       "outstandingInvoices": "Bekleyen faturalar",
-      "overdue": "Gecikmi\u015f"
+      "overdue": "Gecikmiş",
+      "budgetAmount": "Bütçe tutarı",
+      "budgetHours": "Bütçe saatleri",
+      "copied": "Kopyalandı",
+      "copyLink": "Linki kopyala",
+      "fri": "Cum",
+      "hoursThisWeekChart": "Bu haftaki saatler",
+      "invoiceSummary": "Fatura özeti",
+      "logTime": "Süre gir",
+      "mon": "Pzt",
+      "noDescription": "Açıklama yok",
+      "quickTimeLog": "Hızlı süre girişi",
+      "recentActivity": "Son aktiviteler",
+      "recentInvoices": "Son faturalar",
+      "recentTimeEntries": "Son süre kayıtları",
+      "revenueOverview": "Gelir özeti",
+      "sat": "Cmt",
+      "sun": "Paz",
+      "thu": "Per",
+      "totalBilled": "Toplam faturalanan",
+      "tue": "Sal",
+      "wed": "Çar",
+      "whatDidYouWorkOn": "Ne üzerinde çalıştınız?"
     },
     "projects": {
       "name": "Ad",
@@ -1744,7 +1766,8 @@
       "revenueByClient": "Musteriye gore gelir",
       "cost": "Maliyet",
       "margin": "Marj",
-      "billable": "Faturalanabilir"
+      "billable": "Faturalanabilir",
+      "revenueVsCost": "Gelir ve maliyet"
     },
     "settings": {
       "invoiceSettings": "Fatura ayarlari",

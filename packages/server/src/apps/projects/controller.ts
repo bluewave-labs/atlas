@@ -16,6 +16,18 @@ export async function getWidgetData(req: Request, res: Response) {
   }
 }
 
+export async function getDashboardData(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const accountId = req.auth!.accountId;
+    const data = await projectService.getDashboardData(userId, accountId);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to get Projects dashboard data');
+    res.status(500).json({ success: false, error: 'Failed to get dashboard data' });
+  }
+}
+
 // ─── Clients ────────────────────────────────────────────────────────
 
 export async function listClients(req: Request, res: Response) {
@@ -488,11 +500,12 @@ export async function listInvoices(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
     const accountId = req.auth!.accountId;
-    const { clientId, status, includeArchived } = req.query;
+    const { clientId, status, search, includeArchived } = req.query;
 
     const invoices = await projectService.listInvoices(userId, accountId, {
       clientId: clientId as string | undefined,
       status: status as string | undefined,
+      search: search as string | undefined,
       includeArchived: includeArchived === 'true',
     });
 

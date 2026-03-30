@@ -14,6 +14,7 @@ export interface ProjectClient {
   isArchived: boolean;
   sortOrder: number;
   projectCount: number;
+  totalBilled: number;
   outstandingAmount: number;
   createdAt: string;
   updatedAt: string;
@@ -71,6 +72,7 @@ export interface Invoice {
   issueDate: string;
   dueDate: string;
   lineItems: InvoiceLineItem[];
+  lineItemCount?: number;
   subtotal: number;
   taxPercent: number;
   taxAmount: number;
@@ -90,6 +92,38 @@ export interface ProjectsDashboard {
   overdueInvoices: number;
   totalOutstandingAmount: number;
   totalOverdueAmount: number;
+}
+
+export interface EnhancedDashboard {
+  hoursThisWeek: number;
+  activeProjects: number;
+  outstandingInvoices: number;
+  totalOutstandingAmount: number;
+  overdueInvoices: number;
+  totalOverdueAmount: number;
+  revenue: {
+    invoiced: number;
+    paid: number;
+    outstanding: number;
+  };
+  hoursByDay: Array<{ date: string; hours: number }>;
+  recentTimeEntries: Array<{
+    id: string;
+    projectName: string;
+    projectColor: string;
+    hours: number;
+    date: string;
+    description: string | null;
+    createdAt: string;
+  }>;
+  recentInvoiceActions: Array<{
+    id: string;
+    invoiceNumber: string;
+    clientName: string | null;
+    status: string;
+    amount: number;
+    updatedAt: string;
+  }>;
 }
 
 export interface ProjectSettings {
@@ -162,8 +196,8 @@ export function useDashboard() {
   return useQuery({
     queryKey: queryKeys.projects.dashboard,
     queryFn: async () => {
-      const { data } = await api.get('/projects/widget');
-      return data.data as ProjectsDashboard;
+      const { data } = await api.get('/projects/dashboard');
+      return data.data as EnhancedDashboard;
     },
     staleTime: 15_000,
   });
