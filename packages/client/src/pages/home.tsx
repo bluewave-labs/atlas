@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback, type MouseEvent as ReactMouseEvent } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, type MouseEvent as ReactMouseEvent, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -595,8 +595,8 @@ export function HomePage() {
             WebkitBackdropFilter: 'blur(8px)',
             transition: 'background 0.2s, color 0.2s',
             fontFamily: 'var(--font-family)',
-            fontSize: 13,
-            fontWeight: 500,
+            fontSize: 'var(--font-size-sm)',
+            fontWeight: 'var(--font-weight-medium)' as CSSProperties['fontWeight'],
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'rgba(255,255,255,0.22)';
@@ -789,7 +789,7 @@ export function HomePage() {
 
           {/* Date (no weather) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 10 }}>
-            <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 20, fontWeight: 500, letterSpacing: '0.01em' }}>
+            <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 20, fontWeight: 'var(--font-weight-medium)' as CSSProperties['fontWeight'], letterSpacing: '0.01em' }}>
               {formatDate(now)}
             </span>
           </div>
@@ -799,7 +799,7 @@ export function HomePage() {
             style={{
               color: '#fff',
               fontSize: 48,
-              fontWeight: 600,
+              fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'],
               margin: '32px 0 0',
               textShadow: '0 2px 30px rgba(0,0,0,0.25)',
               lineHeight: 1.15,
@@ -815,7 +815,7 @@ export function HomePage() {
                 color: 'rgba(255,255,255,0.7)',
                 fontSize: 18,
                 margin: '6px 0 0',
-                fontWeight: 400,
+                fontWeight: 'var(--font-weight-normal)' as CSSProperties['fontWeight'],
                 textShadow: '0 1px 8px rgba(0,0,0,0.2)',
               }}
             >
@@ -849,7 +849,7 @@ export function HomePage() {
                   minWidth: 160,
                 }}
               >
-                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'], textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
                   {t('home.today')}
                 </span>
                 <button
@@ -861,7 +861,7 @@ export function HomePage() {
                   }}
                 >
                   <CheckSquare size={15} color="rgba(255,255,255,0.6)" />
-                  <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 15, fontWeight: 500 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-medium)' as CSSProperties['fontWeight'] }}>
                     {t('home.pendingTasksFull', { count: pendingTaskCount })}
                   </span>
                   <ArrowRight size={13} color="rgba(255,255,255,0.3)" />
@@ -873,7 +873,7 @@ export function HomePage() {
           {/* Recent items */}
           {recentItems.length > 0 && (
             <div style={{ marginBottom: 16, maxWidth: 780, width: '100%', padding: '0 16px' }}>
-              <h3 style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Recent</h3>
+              <h3 style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-medium)' as CSSProperties['fontWeight'], color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Recent</h3>
               <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8 }}>
                 {recentItems.slice(0, 10).map((item) => {
                   const typeIconMap: Record<string, React.ReactNode> = {
@@ -908,7 +908,7 @@ export function HomePage() {
                     >
                       {typeIconMap[item.type] || <FileText size={16} color="rgba(255,255,255,0.7)" />}
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.9)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</div>
+                        <div style={{ fontSize: 'var(--font-size-sm)', color: 'rgba(255,255,255,0.9)', fontWeight: 'var(--font-weight-medium)' as CSSProperties['fontWeight'], overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</div>
                         <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>{item.type}</div>
                       </div>
                     </button>

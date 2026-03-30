@@ -62,7 +62,7 @@ export function Select({
             borderRadius: 'var(--radius-md)',
             color: selected?.color ?? 'var(--color-text-primary)',
             fontSize: isSm ? 'var(--font-size-xs)' : 'var(--font-size-md)',
-            fontWeight: isSm ? 'var(--font-weight-medium)' : 'var(--font-weight-normal)',
+            fontWeight: isSm ? 'var(--font-weight-medium)' : 'var(--font-weight-medium)',
             fontFamily: 'var(--font-family)',
             cursor: disabled ? 'not-allowed' : 'pointer',
             outline: 'none',

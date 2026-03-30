@@ -39,7 +39,7 @@ export function Kbd({ shortcut, variant = 'default' }: KbdProps) {
           border: '1px solid var(--color-border-primary)',
           borderRadius: 'var(--radius-sm)',
           fontFamily: 'var(--font-mono)',
-          fontSize: '10px',
+          fontSize: 'var(--font-size-xs)',
           color: 'var(--color-text-tertiary)',
         }
       : undefined;

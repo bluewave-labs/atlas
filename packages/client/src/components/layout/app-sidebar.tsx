@@ -213,7 +213,7 @@ export function SidebarSection({ title, children }: SidebarSectionProps) {
       {title && (
         <div
           style={{
-            fontSize: 11,
+            fontSize: 'var(--font-size-xs)',
             fontWeight: 'var(--font-weight-semibold)',
             color: 'var(--color-text-tertiary)',
             textTransform: 'uppercase',
@@ -279,7 +279,7 @@ export function SidebarItem({ label, icon, iconColor, isActive, count, onClick, 
       {count !== undefined && (
         <span
           style={{
-            fontSize: 11,
+            fontSize: 'var(--font-size-xs)',
             color: 'var(--color-text-tertiary)',
             fontVariantNumeric: 'tabular-nums',
             flexShrink: 0,

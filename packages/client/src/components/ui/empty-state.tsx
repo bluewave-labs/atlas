@@ -407,7 +407,7 @@ export function EmptyState({ type, title, description }: EmptyStateProps) {
               border: '1px solid var(--color-border-primary)',
               borderRadius: 'var(--radius-sm)',
               fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
+              fontSize: 'var(--font-size-xs)',
               lineHeight: 1,
               padding: '2px 5px',
               color: 'var(--color-text-secondary)',

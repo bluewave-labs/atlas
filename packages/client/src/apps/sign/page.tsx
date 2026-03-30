@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useRef, useMemo, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   FileText,
@@ -25,6 +25,7 @@ import {
   ChevronDown,
   Pencil,
   Tag,
+  Search,
 } from 'lucide-react';
 import { ColumnHeader } from '../../components/ui/column-header';
 import { AppSidebar, SidebarSection, SidebarItem } from '../../components/layout/app-sidebar';
@@ -54,7 +55,7 @@ import {
 } from './hooks';
 import { config } from '../../config/env';
 import type { SignatureDocument, SignatureFieldType, SignatureField } from '@atlasmail/shared';
-import { format } from 'date-fns';
+import { formatDate } from '../../lib/format';
 import { SmartButtonBar } from '../../components/shared/SmartButtonBar';
 import { Chip } from '../../components/ui/chip';
 import '../../styles/sign.css';
@@ -80,6 +81,9 @@ export function SignPage() {
   const [view, setView] = useState<'list' | 'editor'>('list');
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortField, setSortField] = useState<'title' | 'status' | 'updatedAt' | 'createdAt'>('createdAt');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [selectedFieldId, setSelectedFieldId] = useState<string | undefined>();
   const [sigModalOpen, setSigModalOpen] = useState(false);
   const [sigFieldType, setSigFieldType] = useState<SignatureFieldType>('signature');
@@ -370,6 +374,7 @@ export function SignPage() {
           <SidebarItem
             label={t('sign.sidebar.allDocuments')}
             icon={<FileText size={15} />}
+            iconColor="#8b5cf6"
             isActive={filterStatus === 'all'}
             count={counts.all}
             onClick={() => { setFilterStatus('all'); if (view === 'editor') handleBackToList(); }}
@@ -377,6 +382,7 @@ export function SignPage() {
           <SidebarItem
             label={t('sign.sidebar.pending')}
             icon={<Clock size={15} />}
+            iconColor="#f59e0b"
             isActive={filterStatus === 'pending'}
             count={counts.pending}
             onClick={() => { setFilterStatus('pending'); if (view === 'editor') handleBackToList(); }}
@@ -384,6 +390,7 @@ export function SignPage() {
           <SidebarItem
             label={t('sign.sidebar.signed')}
             icon={<CheckCircle size={15} />}
+            iconColor="#10b981"
             isActive={filterStatus === 'signed'}
             count={counts.signed}
             onClick={() => { setFilterStatus('signed'); if (view === 'editor') handleBackToList(); }}
@@ -391,6 +398,7 @@ export function SignPage() {
           <SidebarItem
             label={t('sign.sidebar.draft')}
             icon={<FilePen size={15} />}
+            iconColor="#64748b"
             isActive={filterStatus === 'draft'}
             count={counts.draft}
             onClick={() => { setFilterStatus('draft'); if (view === 'editor') handleBackToList(); }}
@@ -398,6 +406,7 @@ export function SignPage() {
           <SidebarItem
             label={t('sign.sidebar.expired')}
             icon={<AlertTriangle size={15} />}
+            iconColor="#ef4444"
             isActive={filterStatus === 'expired'}
             count={counts.expired}
             onClick={() => { setFilterStatus('expired'); if (view === 'editor') handleBackToList(); }}
@@ -405,6 +414,7 @@ export function SignPage() {
           <SidebarItem
             label={t('sign.sidebar.voided')}
             icon={<Ban size={15} />}
+            iconColor="#ef4444"
             isActive={filterStatus === 'voided'}
             count={counts.voided}
             onClick={() => { setFilterStatus('voided'); if (view === 'editor') handleBackToList(); }}
@@ -449,7 +459,7 @@ export function SignPage() {
                   <tbody>
                     {filteredDocs.map((doc) => (
                       <tr key={doc.id} onClick={() => handleOpenDoc(doc)}>
-                        <td style={{ fontWeight: 500 }}>
+                        <td style={{ fontWeight: 'var(--font-weight-medium)' as CSSProperties['fontWeight'] }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             <span>{doc.title}</span>
                             {(doc.tags ?? []).map((tag) => (
@@ -465,7 +475,7 @@ export function SignPage() {
                           </Badge>
                         </td>
                         <td style={{ color: 'var(--color-text-secondary)' }}>
-                          {format(new Date(doc.createdAt), 'MMM d, yyyy')}
+                          {formatDate(doc.createdAt)}
                         </td>
                         <td style={{ color: 'var(--color-text-secondary)' }}>{doc.pageCount}</td>
                         <td onClick={(e) => e.stopPropagation()}>
@@ -528,7 +538,7 @@ export function SignPage() {
                     }}
                     style={{
                       fontSize: 'var(--font-size-sm)',
-                      fontWeight: 600,
+                      fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'],
                       color: 'var(--color-text-primary)',
                       fontFamily: 'var(--font-family)',
                       border: '1px solid var(--color-border-primary)',
@@ -546,7 +556,7 @@ export function SignPage() {
                       alignItems: 'center',
                       gap: 4,
                       fontSize: 'var(--font-size-sm)',
-                      fontWeight: 600,
+                      fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'],
                       color: 'var(--color-text-primary)',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -843,7 +853,7 @@ export function SignPage() {
                   <div
                     style={{
                       fontSize: 'var(--font-size-xs)',
-                      fontWeight: 600,
+                      fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'],
                       color: 'var(--color-text-tertiary)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.05em',
@@ -895,7 +905,7 @@ export function SignPage() {
                       style={{
                         fontSize: 'var(--font-size-xs)',
                         color: SIGNER_COLORS[idx % SIGNER_COLORS.length],
-                        fontWeight: 600,
+                        fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'],
                         marginBottom: 4,
                       }}
                     >

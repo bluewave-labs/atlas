@@ -46,7 +46,7 @@ const sizeStyles: Record<NonNullable<ButtonProps['size']>, CSSProperties> = {
   lg: {
     height: '40px',
     padding: '0 var(--spacing-lg)',
-    fontSize: 'var(--font-size-md)',
+    fontSize: 'var(--font-size-lg)',
     gap: 'var(--spacing-sm)',
   },
 };

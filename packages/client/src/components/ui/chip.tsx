@@ -66,7 +66,7 @@ export function Chip({
     borderRadius: CHIP_RADIUS,
     fontSize: 'var(--font-size-xs)',
     fontFamily: 'var(--font-family)',
-    fontWeight: active ? 500 : 400,
+    fontWeight: (active ? 'var(--font-weight-medium)' : 'var(--font-weight-normal)') as CSSProperties['fontWeight'],
     color: textColor,
     whiteSpace: 'nowrap',
     flexShrink: 0,

@@ -65,15 +65,20 @@ export function WidgetGrid() {
             border: '1px solid rgba(255,255,255,0.12)',
             borderRadius: 12,
             overflow: 'hidden',
-            transition: 'background 0.2s, border-color 0.2s',
+            boxShadow: 'var(--shadow-card)',
+            transition: 'background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'rgba(255,255,255,0.14)';
             e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+            e.currentTarget.style.boxShadow = 'var(--shadow-card-hover)';
+            e.currentTarget.style.transform = 'translateY(-1px)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
             e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
+            e.currentTarget.style.boxShadow = 'var(--shadow-card)';
+            e.currentTarget.style.transform = 'translateY(0)';
           }}
         >
           <widget.component width={WIDGET_W} height={WIDGET_H} />
