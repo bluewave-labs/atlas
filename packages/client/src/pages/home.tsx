@@ -812,12 +812,13 @@ export function HomePage() {
           <h1
             style={{
               color: '#fff',
-              fontSize: 48,
+              fontSize: 'clamp(24px, 5vw, 48px)',
               fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'],
               margin: '32px 0 0',
               textShadow: '0 2px 30px rgba(0,0,0,0.25)',
               lineHeight: 1.15,
               letterSpacing: '-0.5px',
+              whiteSpace: 'nowrap',
             }}
           >
             {firstName ? `${t(greetingKey)}, ${firstName}` : t(greetingKey)}

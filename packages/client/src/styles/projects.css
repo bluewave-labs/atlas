@@ -202,31 +202,16 @@
 
 .projects-dashboard-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
 }
 
 .projects-dashboard-charts-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
-}
-
-@media (max-width: 1024px) {
-  .projects-dashboard-kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 600px) {
-  .projects-dashboard-kpi-grid {
-    grid-template-columns: 1fr;
-  }
-  .projects-dashboard-charts-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* ─── Dashboard card ──────────────────────────────────────────── */
