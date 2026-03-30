@@ -267,6 +267,8 @@ export function useSettingsSync() {
   const hydrateFromServer = useSettingsStore((s) => s._hydrateFromServer);
   const hydrated = useSettingsStore((s) => s._hydrated);
 
+  const hasToken = !!localStorage.getItem('atlasmail_token');
+
   const { data: serverSettings } = useQuery({
     queryKey: queryKeys.settings.all,
     queryFn: async () => {
@@ -274,6 +276,7 @@ export function useSettingsSync() {
       return data.data as Record<string, unknown> | null;
     },
     staleTime: 60_000,
+    enabled: hasToken,
   });
 
   useEffect(() => {
