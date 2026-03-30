@@ -29,10 +29,13 @@ import {
 } from 'lucide-react';
 import { ColumnHeader } from '../../components/ui/column-header';
 import { AppSidebar, SidebarSection, SidebarItem } from '../../components/layout/app-sidebar';
+import { ContentArea } from '../../components/ui/content-area';
+import { ListToolbar } from '../../components/ui/list-toolbar';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
+import { StatusDot } from '../../components/ui/status-dot';
 import { ConfirmDialog } from '../../components/ui/confirm-dialog';
 import { IconButton } from '../../components/ui/icon-button';
 import { Tooltip } from '../../components/ui/tooltip';
@@ -464,27 +467,28 @@ export function SignPage() {
       </AppSidebar>
 
       {/* Main content */}
-      <div className="sign-main">
+      <ContentArea
+        title={filterStatus === 'all' ? t('sign.sidebar.allDocuments') : t(`sign.status.${filterStatus}`)}
+        actions={
+          view === 'list' ? (
+            <Button variant="primary" size="sm" icon={<Upload size={14} />} onClick={handleUpload}>
+              {t('sign.editor.uploadPdf')}
+            </Button>
+          ) : undefined
+        }
+      >
         {view === 'list' && (
           <>
-            <div className="sign-list-header">
-              <h2>
-                {filterStatus === 'all' ? t('sign.sidebar.allDocuments') : t(`sign.status.${filterStatus}`)}
-              </h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={t('sign.list.search', 'Search documents...')}
-                  iconLeft={<Search size={14} />}
-                  size="sm"
-                  style={{ width: 220 }}
-                />
-                <Button variant="primary" size="sm" icon={<Upload size={14} />} onClick={handleUpload}>
-                  {t('sign.editor.uploadPdf')}
-                </Button>
-              </div>
-            </div>
+            <ListToolbar>
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('sign.list.search', 'Search documents...')}
+                iconLeft={<Search size={14} />}
+                size="sm"
+                style={{ width: 220 }}
+              />
+            </ListToolbar>
             <div style={{ flex: 1, overflow: 'auto' }}>
               {docsLoading ? (
                 <div className="sign-empty">{t('sign.list.loading')}</div>
@@ -820,7 +824,7 @@ export function SignPage() {
             </div>
           </>
         )}
-      </div>
+      </ContentArea>
 
       {/* Signature modal */}
       <SignatureModal
@@ -1057,15 +1061,7 @@ export function SignPage() {
                   }}
                   onClick={() => setActiveSigner(activeSigner === link.signerEmail ? undefined : link.signerEmail)}
                 >
-                  <div
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: '50%',
-                      background: SIGNER_COLORS[idx % SIGNER_COLORS.length],
-                      flexShrink: 0,
-                    }}
-                  />
+                  <StatusDot color={SIGNER_COLORS[idx % SIGNER_COLORS.length]} size={10} />
                   <span style={{ flex: 1, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)' }}>
                     {link.signerName || link.signerEmail}
                   </span>

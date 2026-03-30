@@ -21,6 +21,8 @@ import { queryKeys } from '../../config/query-keys';
 import { api } from '../../lib/api-client';
 import type { Task, TaskProject, TaskWhen, RecurrenceRule } from '@atlasmail/shared';
 import { AppSidebar } from '../../components/layout/app-sidebar';
+import { ContentArea } from '../../components/ui/content-area';
+import { ListToolbar } from '../../components/ui/list-toolbar';
 import { EmojiPicker } from '../../components/shared/emoji-picker';
 import { TasksSettingsModal } from './components/tasks-settings-modal';
 import { KanbanBoard } from './components/kanban-board';
@@ -1487,19 +1489,13 @@ export function TasksPage() {
       </AppSidebar>
 
       {/* ─── Main content ─── */}
-      <div className="tasks-main">
-        {/* Toolbar */}
-        <div className="tasks-toolbar" style={{ paddingTop: isDesktop ? 46 : 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {sectionTitle && (
-              <>
-                <h2 className="tasks-toolbar-title">{sectionTitle}</h2>
-                {displayTasks.length > 0 && (
-                  <span className="tasks-toolbar-count">{displayTasks.length}</span>
-                )}
-              </>
+      <ContentArea
+        title={sectionTitle ?? 'Tasks'}
+        actions={
+          <>
+            {displayTasks.length > 0 && (
+              <span className="tasks-toolbar-count">{displayTasks.length}</span>
             )}
-
             {canShowBoard && (
               <div className="tasks-view-toggle">
                 <button
@@ -1518,9 +1514,6 @@ export function TasksPage() {
                 </button>
               </div>
             )}
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {showSearch ? (
               <div className="tasks-search-bar">
                 <Search size={13} color="var(--color-text-tertiary)" />
@@ -1554,8 +1547,9 @@ export function TasksPage() {
               size={28}
               onClick={() => openSettings('tasks')}
             />
-          </div>
-        </div>
+          </>
+        }
+      >
 
         {/* Task list + detail */}
         <div className="tasks-content">
@@ -1709,7 +1703,7 @@ export function TasksPage() {
             </>
           )}
         </div>
-      </div>
+      </ContentArea>
 
     </div>
   );

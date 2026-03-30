@@ -1,7 +1,5 @@
-import { type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
-import { IconButton } from './icon-button';
+import { type ReactNode, type CSSProperties } from 'react';
+import { ChevronRight } from 'lucide-react';
 
 interface BreadcrumbItem {
   label: string;
@@ -20,8 +18,6 @@ interface ContentAreaProps {
 }
 
 export function ContentArea({ title, breadcrumbs, actions, children }: ContentAreaProps) {
-  const navigate = useNavigate();
-
   return (
     <div
       style={{
@@ -40,15 +36,9 @@ export function ContentArea({ title, breadcrumbs, actions, children }: ContentAr
           padding: 'var(--spacing-sm) var(--spacing-lg)',
           borderBottom: '1px solid var(--color-border-secondary)',
           flexShrink: 0,
-          height: 48,
+          height: 44,
         }}
       >
-        <IconButton
-          icon={<ArrowLeft size={16} />}
-          label="Home"
-          size={28}
-          onClick={() => navigate('/')}
-        />
         {breadcrumbs ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', minWidth: 0 }}>
             {breadcrumbs.map((item, index) => {
@@ -65,7 +55,7 @@ export function ContentArea({ title, breadcrumbs, actions, children }: ContentAr
                     <span
                       style={{
                         fontSize: 'var(--font-size-sm)',
-                        fontWeight: 'var(--font-weight-medium)',
+                        fontWeight: 'var(--font-weight-medium)' as CSSProperties['fontWeight'],
                         color: 'var(--color-text-primary)',
                         fontFamily: 'var(--font-family)',
                         overflow: 'hidden',
@@ -101,8 +91,8 @@ export function ContentArea({ title, breadcrumbs, actions, children }: ContentAr
         ) : (
           <span
             style={{
-              fontSize: 'var(--font-size-md)',
-              fontWeight: 'var(--font-weight-medium)',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 'var(--font-weight-medium)' as CSSProperties['fontWeight'],
               color: 'var(--color-text-primary)',
               fontFamily: 'var(--font-family)',
             }}
