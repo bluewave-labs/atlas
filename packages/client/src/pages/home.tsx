@@ -357,6 +357,126 @@ function formatTime(date: Date): string {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+// ─── Stylish Flip Clock ──────────────────────────────────────────────
+
+function ClockDigit({ digit, prevDigit }: { digit: string; prevDigit: string }) {
+  const changed = digit !== prevDigit;
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 'clamp(36px, 6vw, 56px)',
+        height: 'clamp(52px, 9vw, 80px)',
+        background: 'rgba(0,0,0,0.25)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderRadius: 'clamp(6px, 1vw, 10px)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        fontSize: 'clamp(32px, 5.5vw, 52px)',
+        fontWeight: 200,
+        fontFamily: "'Inter', -apple-system, sans-serif",
+        color: '#fff',
+        fontVariantNumeric: 'tabular-nums',
+        textShadow: '0 0 20px rgba(255,255,255,0.15)',
+        position: 'relative',
+        overflow: 'hidden',
+        transition: 'transform 80ms ease',
+        transform: changed ? 'scaleY(0.97)' : 'scaleY(1)',
+      }}
+    >
+      {/* Top highlight line */}
+      <span style={{
+        position: 'absolute', top: 0, left: '10%', right: '10%', height: 1,
+        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
+      }} />
+      {/* Center divider line */}
+      <span style={{
+        position: 'absolute', top: '50%', left: 0, right: 0, height: 1,
+        background: 'rgba(0,0,0,0.2)',
+      }} />
+      {digit}
+    </span>
+  );
+}
+
+function ClockSeparator() {
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 'clamp(6px, 1vw, 10px)',
+        padding: '0 clamp(2px, 0.5vw, 6px)',
+        height: 'clamp(52px, 9vw, 80px)',
+      }}
+    >
+      <span style={{
+        width: 'clamp(4px, 0.6vw, 6px)',
+        height: 'clamp(4px, 0.6vw, 6px)',
+        borderRadius: '50%',
+        background: 'rgba(255,255,255,0.6)',
+        boxShadow: '0 0 8px rgba(255,255,255,0.3)',
+        animation: 'clockPulse 2s ease-in-out infinite',
+      }} />
+      <span style={{
+        width: 'clamp(4px, 0.6vw, 6px)',
+        height: 'clamp(4px, 0.6vw, 6px)',
+        borderRadius: '50%',
+        background: 'rgba(255,255,255,0.6)',
+        boxShadow: '0 0 8px rgba(255,255,255,0.3)',
+        animation: 'clockPulse 2s ease-in-out infinite',
+      }} />
+    </span>
+  );
+}
+
+function StylishClock({ time }: { time: Date }) {
+  const timeStr = formatTime(time);
+  const prevTimeRef = useRef(timeStr);
+  const prevTime = prevTimeRef.current;
+
+  useEffect(() => {
+    prevTimeRef.current = timeStr;
+  }, [timeStr]);
+
+  // Split into individual characters (digits + separator)
+  const chars = timeStr.split('');
+  const prevChars = prevTime.split('');
+
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 'clamp(3px, 0.5vw, 6px)' }}>
+      {chars.map((ch, i) => {
+        if (ch === ':') return <ClockSeparator key={`sep-${i}`} />;
+        if (ch === ' ') return null; // skip space before AM/PM
+        // AM/PM label
+        if (ch.match(/[AaPp]/)) {
+          const ampm = timeStr.slice(i).trim();
+          if (i > 0 && timeStr[i - 1].match(/[AaPp]/)) return null; // skip second char
+          return (
+            <span key={`ampm-${i}`} style={{
+              fontSize: 'clamp(11px, 1.5vw, 16px)',
+              color: 'rgba(255,255,255,0.4)',
+              fontWeight: 400,
+              fontFamily: 'var(--font-family)',
+              marginLeft: 'clamp(4px, 0.5vw, 8px)',
+              alignSelf: 'flex-end',
+              paddingBottom: 'clamp(4px, 0.8vw, 10px)',
+            }}>
+              {ampm}
+            </span>
+          );
+        }
+        if (ch === 'M' || ch === 'm') return null; // handled above
+        return <ClockDigit key={`d-${i}`} digit={ch} prevDigit={prevChars[i] || ch} />;
+      })}
+    </div>
+  );
+}
+
 function formatDate(date: Date): string {
   return date.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' });
 }
@@ -817,19 +937,8 @@ export function HomePage() {
             width: '100%',
           }}
         >
-          {/* Clock — responsive */}
-          <span
-            style={{
-              color: '#fff',
-              fontSize: 'clamp(48px, 8vw, 72px)',
-              fontWeight: 300,
-              lineHeight: 1,
-              letterSpacing: '-1.5px',
-              textShadow: '0 2px 20px rgba(0,0,0,0.2)',
-            }}
-          >
-            {formatTime(now)}
-          </span>
+          {/* Clock — stylish flip digits */}
+          <StylishClock time={now} />
 
           {/* Date */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 10 }}>

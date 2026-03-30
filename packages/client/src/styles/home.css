@@ -1,3 +1,9 @@
+/* ── Clock pulse animation ── */
+@keyframes clockPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
 /* ── Home page background effects ── */
 
 /* Ken Burns: slow drift zoom + pan across 60s */
