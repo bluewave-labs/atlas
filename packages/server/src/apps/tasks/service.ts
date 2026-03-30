@@ -1,6 +1,6 @@
 import { db } from '../../config/database';
 import { tasks, taskProjects, subtasks, taskActivities, taskTemplates } from '../../db/schema';
-import { eq, and, asc, desc, sql, isNull } from 'drizzle-orm';
+import { eq, and, asc, desc, sql, isNull, gte, lte } from 'drizzle-orm';
 import { logger } from '../../utils/logger';
 import type {
   CreateTaskInput, UpdateTaskInput,
@@ -525,4 +525,66 @@ export async function createTaskFromTemplate(userId: string, accountId: string, 
   }
 
   return task;
+}
+
+// ─── Widget summary (lightweight) ──────────────────────────────────
+
+export async function getWidgetData(userId: string) {
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+  // Due today
+  const [dueTodayAgg] = await db
+    .select({ count: sql<number>`COUNT(*)`.as('count') })
+    .from(tasks)
+    .where(and(
+      eq(tasks.userId, userId),
+      eq(tasks.isArchived, false),
+      eq(tasks.status, 'todo'),
+      eq(tasks.dueDate, today),
+    ));
+
+  // Overdue (due before today, still todo)
+  const [overdueAgg] = await db
+    .select({ count: sql<number>`COUNT(*)`.as('count') })
+    .from(tasks)
+    .where(and(
+      eq(tasks.userId, userId),
+      eq(tasks.isArchived, false),
+      eq(tasks.status, 'todo'),
+      sql`${tasks.dueDate} IS NOT NULL`,
+      sql`${tasks.dueDate} < ${today}`,
+    ));
+
+  // Completed this week (Mon-Sun)
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + mondayOffset);
+
+  const [completedAgg] = await db
+    .select({ count: sql<number>`COUNT(*)`.as('count') })
+    .from(tasks)
+    .where(and(
+      eq(tasks.userId, userId),
+      eq(tasks.isArchived, false),
+      eq(tasks.status, 'completed'),
+      gte(tasks.completedAt, weekStart),
+    ));
+
+  // Total active
+  const [totalAgg] = await db
+    .select({ count: sql<number>`COUNT(*)`.as('count') })
+    .from(tasks)
+    .where(and(
+      eq(tasks.userId, userId),
+      eq(tasks.isArchived, false),
+      eq(tasks.status, 'todo'),
+    ));
+
+  return {
+    dueToday: Number(dueTodayAgg?.count ?? 0),
+    overdue: Number(overdueAgg?.count ?? 0),
+    completedThisWeek: Number(completedAgg?.count ?? 0),
+    total: Number(totalAgg?.count ?? 0),
+  };
 }

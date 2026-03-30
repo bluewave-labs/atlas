@@ -454,3 +454,11 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* ─── Fix date/time picker icons in dark mode ────────────────────── */
+
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}

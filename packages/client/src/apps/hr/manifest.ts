@@ -2,6 +2,7 @@ import { Users, Settings, Eye } from 'lucide-react';
 import type { ClientAppManifest } from '../../config/app-manifest.client';
 import { HrPage } from './page';
 import { HrGeneralPanel, HrAppearancePanel } from './components/hr-settings-modal';
+import { TeamWidget } from './widgets/team-widget';
 
 export const hrManifest: ClientAppManifest = {
   id: 'hr',
@@ -18,6 +19,18 @@ export const hrManifest: ClientAppManifest = {
   sidebarOrder: 20,
   routes: [
     { path: '/hr', component: HrPage },
+  ],
+  widgets: [
+    {
+      id: 'team',
+      name: 'Team',
+      description: 'Employee headcount and department overview',
+      iconName: 'Users',
+      icon: Users,
+      defaultSize: 'sm',
+      defaultEnabled: true,
+      component: TeamWidget,
+    },
   ],
   settingsCategory: {
     id: 'hr',

@@ -504,8 +504,8 @@ export function HomePage() {
     if (!dock) return;
     const mouseX = e.clientX;
     const BASE = 60;
-    const MAX = 80;
-    const RANGE = 150; // px distance for full falloff
+    const MAX = 76;
+    const RANGE = 200; // px distance for full falloff
     const items = dock.querySelectorAll<HTMLElement>('.dock-item');
     items.forEach((item) => {
       const rect = item.getBoundingClientRect();

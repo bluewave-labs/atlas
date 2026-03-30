@@ -311,6 +311,25 @@ export async function getStorageUsage(userId: string) {
   return { totalBytes: result?.total ?? 0, fileCount: result?.fileCount ?? 0 };
 }
 
+// ─── Widget summary (lightweight) ──────────────────────────────────
+
+export async function getWidgetData(userId: string) {
+  const [result] = await db
+    .select({
+      fileCount: sql<number>`COUNT(*) FILTER (WHERE ${driveItems.type} = 'file')`.as('file_count'),
+      folderCount: sql<number>`COUNT(*) FILTER (WHERE ${driveItems.type} = 'folder')`.as('folder_count'),
+      storageUsed: sql<number>`COALESCE(SUM(CASE WHEN ${driveItems.type} = 'file' THEN ${driveItems.size} ELSE 0 END), 0)`.as('storage_used'),
+    })
+    .from(driveItems)
+    .where(and(eq(driveItems.userId, userId), eq(driveItems.isArchived, false)));
+
+  return {
+    fileCount: Number(result?.fileCount ?? 0),
+    folderCount: Number(result?.folderCount ?? 0),
+    storageUsed: Number(result?.storageUsed ?? 0),
+  };
+}
+
 // ─── Seed sample folder on first visit ───────────────────────────────
 
 export async function seedSampleFolder(_userId: string, _accountId: string) {

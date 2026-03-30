@@ -1069,6 +1069,132 @@ export async function runMigrations() {
       );
     `);
 
+    // ─── Projects tables ────────────────────────────────────────────
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS project_clients (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL,
+        user_id UUID NOT NULL,
+        name VARCHAR(500) NOT NULL,
+        email VARCHAR(255),
+        phone VARCHAR(50),
+        address TEXT,
+        city VARCHAR(255),
+        state VARCHAR(255),
+        country VARCHAR(255),
+        postal_code VARCHAR(20),
+        currency VARCHAR(10) NOT NULL DEFAULT 'USD',
+        logo TEXT,
+        portal_token UUID DEFAULT gen_random_uuid(),
+        notes TEXT,
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS project_projects (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL,
+        user_id UUID NOT NULL,
+        client_id UUID REFERENCES project_clients(id) ON DELETE SET NULL,
+        name VARCHAR(500) NOT NULL,
+        description TEXT,
+        billable BOOLEAN NOT NULL DEFAULT TRUE,
+        status VARCHAR(50) NOT NULL DEFAULT 'active',
+        estimated_hours REAL,
+        estimated_amount REAL,
+        start_date TIMESTAMPTZ,
+        end_date TIMESTAMPTZ,
+        color VARCHAR(20),
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS project_members (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL,
+        project_id UUID NOT NULL REFERENCES project_projects(id) ON DELETE CASCADE,
+        hourly_rate REAL,
+        role VARCHAR(50) NOT NULL DEFAULT 'member',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS project_time_entries (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL,
+        user_id UUID NOT NULL,
+        project_id UUID NOT NULL REFERENCES project_projects(id) ON DELETE CASCADE,
+        duration_minutes INTEGER NOT NULL DEFAULT 0,
+        work_date VARCHAR(10) NOT NULL,
+        start_time VARCHAR(5),
+        end_time VARCHAR(5),
+        billable BOOLEAN NOT NULL DEFAULT TRUE,
+        billed BOOLEAN NOT NULL DEFAULT FALSE,
+        locked BOOLEAN NOT NULL DEFAULT FALSE,
+        invoice_line_item_id UUID,
+        notes TEXT,
+        task_description VARCHAR(500),
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS project_invoices (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL,
+        user_id UUID NOT NULL,
+        client_id UUID NOT NULL REFERENCES project_clients(id) ON DELETE CASCADE,
+        invoice_number VARCHAR(50) NOT NULL,
+        status VARCHAR(50) NOT NULL DEFAULT 'draft',
+        amount REAL NOT NULL DEFAULT 0,
+        tax REAL NOT NULL DEFAULT 0,
+        tax_amount REAL NOT NULL DEFAULT 0,
+        discount REAL NOT NULL DEFAULT 0,
+        discount_amount REAL NOT NULL DEFAULT 0,
+        currency VARCHAR(10) NOT NULL DEFAULT 'USD',
+        issue_date TIMESTAMPTZ,
+        due_date TIMESTAMPTZ,
+        notes TEXT,
+        sent_at TIMESTAMPTZ,
+        viewed_at TIMESTAMPTZ,
+        paid_at TIMESTAMPTZ,
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS project_invoice_line_items (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        invoice_id UUID NOT NULL REFERENCES project_invoices(id) ON DELETE CASCADE,
+        time_entry_id UUID REFERENCES project_time_entries(id) ON DELETE SET NULL,
+        description VARCHAR(500) NOT NULL DEFAULT '',
+        quantity REAL NOT NULL DEFAULT 1,
+        unit_price REAL NOT NULL DEFAULT 0,
+        amount REAL NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS project_settings (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL,
+        invoice_prefix VARCHAR(20) NOT NULL DEFAULT 'INV',
+        default_hourly_rate REAL NOT NULL DEFAULT 0,
+        company_name VARCHAR(500),
+        company_address TEXT,
+        company_logo TEXT,
+        next_invoice_number INTEGER NOT NULL DEFAULT 1,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
     // ─── HR: New leave/attendance/lifecycle tables ─────────────────
 
     await client.query(`
@@ -1358,6 +1484,31 @@ export async function runMigrations() {
       'CREATE INDEX IF NOT EXISTS idx_crm_notes_deal ON crm_notes(deal_id)',
       'CREATE INDEX IF NOT EXISTS idx_crm_notes_contact ON crm_notes(contact_id)',
       'CREATE INDEX IF NOT EXISTS idx_crm_notes_company ON crm_notes(company_id)',
+      // Project Clients
+      'CREATE INDEX IF NOT EXISTS idx_project_clients_account ON project_clients(account_id)',
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_project_clients_portal_token ON project_clients(portal_token)',
+      // Project Projects
+      'CREATE INDEX IF NOT EXISTS idx_project_projects_account ON project_projects(account_id)',
+      'CREATE INDEX IF NOT EXISTS idx_project_projects_client ON project_projects(client_id)',
+      'CREATE INDEX IF NOT EXISTS idx_project_projects_status ON project_projects(status)',
+      // Project Members
+      'CREATE INDEX IF NOT EXISTS idx_project_members_project ON project_members(project_id)',
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_project_members_user_project ON project_members(user_id, project_id)',
+      // Project Time Entries
+      'CREATE INDEX IF NOT EXISTS idx_project_time_entries_account ON project_time_entries(account_id)',
+      'CREATE INDEX IF NOT EXISTS idx_project_time_entries_project ON project_time_entries(project_id)',
+      'CREATE INDEX IF NOT EXISTS idx_project_time_entries_user_date ON project_time_entries(user_id, work_date)',
+      'CREATE INDEX IF NOT EXISTS idx_project_time_entries_billed ON project_time_entries(billed, billable)',
+      // Project Invoices
+      'CREATE INDEX IF NOT EXISTS idx_project_invoices_account ON project_invoices(account_id)',
+      'CREATE INDEX IF NOT EXISTS idx_project_invoices_client ON project_invoices(client_id)',
+      'CREATE INDEX IF NOT EXISTS idx_project_invoices_status ON project_invoices(status)',
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_project_invoices_number ON project_invoices(account_id, invoice_number)',
+      // Project Invoice Line Items
+      'CREATE INDEX IF NOT EXISTS idx_project_line_items_invoice ON project_invoice_line_items(invoice_id)',
+      'CREATE INDEX IF NOT EXISTS idx_project_line_items_time_entry ON project_invoice_line_items(time_entry_id)',
+      // Project Settings
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_project_settings_account ON project_settings(account_id)',
       // CRM Email/Calendar GIN indexes for JSONB containment queries
       'CREATE INDEX IF NOT EXISTS idx_emails_from ON emails(from_address)',
       // HR Leave Types

@@ -90,7 +90,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         }}
         onMouseLeave={(e) => {
           const target = e.currentTarget;
-          Object.assign(target.style, variantStyles[variant]);
+          Object.assign(target.style, variantStyles[variant], style);
         }}
         {...props}
       >

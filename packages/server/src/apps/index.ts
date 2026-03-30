@@ -1,6 +1,7 @@
 import { serverAppRegistry } from '../config/app-registry.server';
 import { crmServerManifest } from './crm/manifest';
 import { hrServerManifest } from './hr/manifest';
+import { projectsServerManifest } from './projects/manifest';
 import { signServerManifest } from './sign/manifest';
 import { driveServerManifest } from './drive/manifest';
 import { tablesServerManifest } from './tables/manifest';
@@ -11,6 +12,7 @@ import { systemServerManifest } from './system/manifest';
 
 serverAppRegistry.register(crmServerManifest);
 serverAppRegistry.register(hrServerManifest);
+serverAppRegistry.register(projectsServerManifest);
 serverAppRegistry.register(signServerManifest);
 serverAppRegistry.register(driveServerManifest);
 serverAppRegistry.register(tablesServerManifest);

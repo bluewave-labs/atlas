@@ -100,9 +100,9 @@
   position: relative;
   padding: 0 2px;
   box-sizing: border-box;
-  transition: width 120ms cubic-bezier(0.25, 1, 0.5, 1),
-              height 120ms cubic-bezier(0.25, 1, 0.5, 1),
-              margin-top 120ms cubic-bezier(0.25, 1, 0.5, 1);
+  transition: width 200ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              height 200ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              margin-top 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .dock-tooltip {

@@ -2284,3 +2284,52 @@ export async function getDashboardCharts(userId: string, accountId: string, reco
 
   return { winLossByMonth, revenueTrend, salesCycleLength, conversionFunnel, dealsBySource };
 }
+
+// ─── Widget summary (lightweight) ──────────────────────────────────
+
+export async function getWidgetData(userId: string, accountId: string) {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  // Active pipeline value + deal count
+  const [pipelineAgg] = await db
+    .select({
+      totalValue: sql<number>`COALESCE(SUM(${crmDeals.value}), 0)`.as('total_value'),
+      dealCount: sql<number>`COUNT(*)`.as('deal_count'),
+    })
+    .from(crmDeals)
+    .where(and(
+      eq(crmDeals.accountId, accountId),
+      eq(crmDeals.isArchived, false),
+      sql`${crmDeals.wonAt} IS NULL AND ${crmDeals.lostAt} IS NULL`,
+    ));
+
+  // Won this month
+  const [wonAgg] = await db
+    .select({ count: sql<number>`COUNT(*)`.as('count') })
+    .from(crmDeals)
+    .where(and(
+      eq(crmDeals.accountId, accountId),
+      eq(crmDeals.isArchived, false),
+      sql`${crmDeals.wonAt} IS NOT NULL`,
+      gte(crmDeals.wonAt, monthStart),
+    ));
+
+  // Lost this month
+  const [lostAgg] = await db
+    .select({ count: sql<number>`COUNT(*)`.as('count') })
+    .from(crmDeals)
+    .where(and(
+      eq(crmDeals.accountId, accountId),
+      eq(crmDeals.isArchived, false),
+      sql`${crmDeals.lostAt} IS NOT NULL`,
+      gte(crmDeals.lostAt, monthStart),
+    ));
+
+  return {
+    totalValue: Number(pipelineAgg?.totalValue ?? 0),
+    dealCount: Number(pipelineAgg?.dealCount ?? 0),
+    wonThisMonth: Number(wonAgg?.count ?? 0),
+    lostThisMonth: Number(lostAgg?.count ?? 0),
+  };
+}

@@ -3,6 +3,19 @@ import * as taskService from './service';
 import { logger } from '../../utils/logger';
 import { emitAppEvent } from '../../services/event.service';
 
+// ─── Widget ─────────────────────────────────────────────────────────
+
+export async function getWidgetData(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const data = await taskService.getWidgetData(userId);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to get tasks widget data');
+    res.status(500).json({ success: false, error: 'Failed to get tasks widget data' });
+  }
+}
+
 // ─── Tasks ──────────────────────────────────────────────────────────
 
 export async function listTasks(req: Request, res: Response) {

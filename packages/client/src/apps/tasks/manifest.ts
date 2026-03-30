@@ -2,6 +2,7 @@ import { CheckSquare, Settings, Eye, Zap } from 'lucide-react';
 import type { ClientAppManifest } from '../../config/app-manifest.client';
 import { TasksPage } from './page';
 import { TasksGeneralPanel, TasksAppearancePanel, TasksBehaviorPanel } from './components/tasks-settings-modal';
+import { TasksWidget } from './widgets/tasks-widget';
 
 export const tasksManifest: ClientAppManifest = {
   id: 'tasks',
@@ -19,6 +20,19 @@ export const tasksManifest: ClientAppManifest = {
 
   routes: [
     { path: '/tasks', component: TasksPage },
+  ],
+
+  widgets: [
+    {
+      id: 'tasks-summary',
+      name: 'Tasks',
+      description: 'Tasks due today and overdue count',
+      iconName: 'CheckSquare',
+      icon: CheckSquare,
+      defaultSize: 'sm',
+      defaultEnabled: true,
+      component: TasksWidget,
+    },
   ],
 
   settingsCategory: {

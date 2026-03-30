@@ -462,3 +462,31 @@ export async function generateSignedPDF(documentId: string, storagePath: string)
   const signedBytes = await pdfDoc.save();
   return Buffer.from(signedBytes);
 }
+
+// ─── Widget summary (lightweight) ──────────────────────────────────
+
+export async function getWidgetData(userId: string, accountId: string) {
+  const rows = await db
+    .select({ status: signatureDocuments.status, count: sql<number>`COUNT(*)`.as('count') })
+    .from(signatureDocuments)
+    .where(and(
+      eq(signatureDocuments.accountId, accountId),
+      eq(signatureDocuments.isArchived, false),
+    ))
+    .groupBy(signatureDocuments.status);
+
+  let pending = 0;
+  let signed = 0;
+  let draft = 0;
+  let total = 0;
+
+  for (const row of rows) {
+    const c = Number(row.count);
+    total += c;
+    if (row.status === 'draft') draft += c;
+    else if (row.status === 'completed' || row.status === 'signed') signed += c;
+    else if (row.status === 'sent' || row.status === 'pending') pending += c;
+  }
+
+  return { pending, signed, draft, total };
+}

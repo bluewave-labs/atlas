@@ -43,6 +43,18 @@ export async function searchGlobal(query: string, accountId: string): Promise<Gl
     (SELECT id::text AS record_id, name AS title, 'crm' AS app_id, 'CRM' AS app_name
      FROM crm_companies WHERE account_id = ${accountId} AND is_archived = false AND name ILIKE ${term}
      ORDER BY updated_at DESC LIMIT 5)
+    UNION ALL
+    (SELECT id::text AS record_id, name AS title, 'projects' AS app_id, 'Projects' AS app_name
+     FROM project_clients WHERE account_id = ${accountId} AND is_archived = false AND name ILIKE ${term}
+     ORDER BY updated_at DESC LIMIT 5)
+    UNION ALL
+    (SELECT id::text AS record_id, name AS title, 'projects' AS app_id, 'Projects' AS app_name
+     FROM project_projects WHERE account_id = ${accountId} AND is_archived = false AND name ILIKE ${term}
+     ORDER BY updated_at DESC LIMIT 5)
+    UNION ALL
+    (SELECT id::text AS record_id, invoice_number AS title, 'projects' AS app_id, 'Projects' AS app_name
+     FROM project_invoices WHERE account_id = ${accountId} AND is_archived = false AND invoice_number ILIKE ${term}
+     ORDER BY created_at DESC LIMIT 5)
     LIMIT 25
   `);
 

@@ -5,6 +5,9 @@ import { authMiddleware } from '../../middleware/auth';
 const router = Router();
 router.use(authMiddleware);
 
+// Widget (lightweight summary for home dashboard)
+router.get('/widget', taskController.getWidgetData);
+
 // Templates (must be before /:id to avoid route conflicts)
 router.get('/templates/list', taskController.listTemplates);
 router.post('/templates', taskController.createTemplate);

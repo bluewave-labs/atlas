@@ -1,6 +1,7 @@
 import { appRegistry } from '../config/app-registry';
 import { crmManifest } from './crm/manifest';
 import { hrManifest } from './hr/manifest';
+import { projectsManifest } from './projects/manifest';
 import { signManifest } from './sign/manifest';
 import { driveManifest } from './drive/manifest';
 import { tablesManifest } from './tables/manifest';
@@ -11,6 +12,7 @@ import { systemManifest } from './system/manifest';
 
 appRegistry.register(crmManifest);
 appRegistry.register(hrManifest);
+appRegistry.register(projectsManifest);
 appRegistry.register(signManifest);
 appRegistry.register(driveManifest);
 appRegistry.register(tablesManifest);

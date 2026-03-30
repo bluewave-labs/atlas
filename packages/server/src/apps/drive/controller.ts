@@ -8,6 +8,18 @@ import archiver from 'archiver';
 
 const UPLOADS_DIR = path.join(__dirname, '../../../uploads');
 
+// GET /api/drive/widget
+export async function getWidgetData(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const data = await driveService.getWidgetData(userId);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to get drive widget data');
+    res.status(500).json({ success: false, error: 'Failed to get drive widget data' });
+  }
+}
+
 // GET /api/drive
 export async function listItems(req: Request, res: Response) {
   try {

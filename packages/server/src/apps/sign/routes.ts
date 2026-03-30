@@ -31,6 +31,9 @@ router.get('/public/:token/view', signController.viewPDFByToken);
 // ─── Auth middleware for all routes below ────────────────────────────
 router.use(authMiddleware);
 
+// ─── Widget (lightweight summary for home dashboard) ────────────────
+router.get('/widget', signController.getWidgetData);
+
 // ─── Documents ──────────────────────────────────────────────────────
 router.get('/', signController.listDocuments);
 router.post('/', signController.createDocument);

@@ -7,6 +7,20 @@ import { existsSync, createReadStream, statSync } from 'node:fs';
 
 const UPLOADS_DIR = path.join(__dirname, '../../../uploads');
 
+// ─── Widget ─────────────────────────────────────────────────────────
+
+export async function getWidgetData(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const accountId = req.auth!.accountId;
+    const data = await signService.getWidgetData(userId, accountId);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to get sign widget data');
+    res.status(500).json({ success: false, error: 'Failed to get sign widget data' });
+  }
+}
+
 // ─── Document CRUD ──────────────────────────────────────────────────
 
 // GET /api/sign

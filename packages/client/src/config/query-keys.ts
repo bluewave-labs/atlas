@@ -29,6 +29,7 @@ export const queryKeys = {
   },
   tasks: {
     all: ['tasks'] as const,
+    widget: ['tasks', 'widget'] as const,
     list: (filters?: string) => ['tasks', 'list', filters] as const,
     detail: (id: string) => ['tasks', 'detail', id] as const,
     counts: ['tasks', 'counts'] as const,
@@ -39,6 +40,7 @@ export const queryKeys = {
   },
   hr: {
     all: ['hr'] as const,
+    widget: ['hr', 'widget'] as const,
     employees: {
       list: (filters?: string) => ['hr', 'employees', 'list', filters] as const,
       detail: (id: string) => ['hr', 'employees', 'detail', id] as const,
@@ -85,6 +87,7 @@ export const queryKeys = {
   },
   drive: {
     all: ['drive'] as const,
+    widget: ['drive', 'widget'] as const,
     items: (parentId?: string | null) => ['drive', 'items', parentId ?? 'root'] as const,
     detail: (id: string) => ['drive', 'detail', id] as const,
     breadcrumbs: (id: string) => ['drive', 'breadcrumbs', id] as const,
@@ -106,6 +109,7 @@ export const queryKeys = {
   },
   sign: {
     all: ['sign'] as const,
+    widget: ['sign', 'widget'] as const,
     list: ['sign', 'list'] as const,
     detail: (id: string) => ['sign', 'detail', id] as const,
     fields: (docId: string) => ['sign', 'fields', docId] as const,
@@ -113,6 +117,7 @@ export const queryKeys = {
   },
   crm: {
     all: ['crm'] as const,
+    widget: ['crm', 'widget'] as const,
     contacts: {
       all: ['crm', 'contacts'] as const,
       detail: (id: string) => ['crm', 'contacts', id] as const,
@@ -178,5 +183,34 @@ export const queryKeys = {
   activityFeed: {
     all: ['activity-feed'] as const,
     list: (before?: string) => ['activity-feed', 'list', before] as const,
+  },
+  projects: {
+    all: ['projects'] as const,
+    widget: ['projects', 'widget'] as const,
+    clients: {
+      all: ['projects', 'clients'] as const,
+      detail: (id: string) => ['projects', 'clients', id] as const,
+    },
+    projects: {
+      all: ['projects', 'projects'] as const,
+      detail: (id: string) => ['projects', 'projects', id] as const,
+    },
+    timeEntries: {
+      weekly: (weekStart: string) => ['projects', 'time-entries', 'weekly', weekStart] as const,
+      list: (filters?: string) => ['projects', 'time-entries', 'list', filters] as const,
+    },
+    invoices: {
+      all: ['projects', 'invoices'] as const,
+      detail: (id: string) => ['projects', 'invoices', id] as const,
+    },
+    reports: {
+      time: (filters?: string) => ['projects', 'reports', 'time', filters] as const,
+      revenue: (filters?: string) => ['projects', 'reports', 'revenue', filters] as const,
+      profitability: ['projects', 'reports', 'profitability'] as const,
+      utilization: (filters?: string) => ['projects', 'reports', 'utilization', filters] as const,
+    },
+    settings: ['projects', 'settings'] as const,
+    portal: (token: string) => ['projects', 'portal', token] as const,
+    dashboard: ['projects', 'dashboard'] as const,
   },
 };

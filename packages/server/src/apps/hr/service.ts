@@ -3,7 +3,7 @@ import {
   employees, departments, timeOffRequests, leaveBalances, onboardingTasks, onboardingTemplates, employeeDocuments,
   hrLeaveTypes, hrLeavePolicies, hrLeavePolicyAssignments,
   hrHolidayCalendars, hrHolidays,
-  hrLifecycleEvents,
+  hrLifecycleEvents, hrLeaveApplications,
 } from '../../db/schema';
 import { eq, and, asc, desc, sql, gte, lte } from 'drizzle-orm';
 import { logger } from '../../utils/logger';
@@ -1311,6 +1311,48 @@ export async function deleteLifecycleEvent(accountId: string, id: string) {
     .set({ isArchived: true, updatedAt: now })
     .where(and(eq(hrLifecycleEvents.id, id), eq(hrLifecycleEvents.accountId, accountId))).returning();
   return updated || null;
+}
+
+// ─── Widget summary (lightweight) ──────────────────────────────────
+
+export async function getWidgetData(userId: string, accountId: string) {
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+  // Employee count (active, non-archived)
+  const [empAgg] = await db
+    .select({ count: sql<number>`COUNT(*)`.as('count') })
+    .from(employees)
+    .where(and(
+      eq(employees.accountId, accountId),
+      eq(employees.isArchived, false),
+      eq(employees.status, 'active'),
+    ));
+
+  // Department count
+  const [deptAgg] = await db
+    .select({ count: sql<number>`COUNT(*)`.as('count') })
+    .from(departments)
+    .where(and(
+      eq(departments.accountId, accountId),
+      eq(departments.isArchived, false),
+    ));
+
+  // On leave today (approved leave applications where today falls within start-end)
+  const [leaveAgg] = await db
+    .select({ count: sql<number>`COUNT(*)`.as('count') })
+    .from(hrLeaveApplications)
+    .where(and(
+      eq(hrLeaveApplications.accountId, accountId),
+      eq(hrLeaveApplications.status, 'approved'),
+      lte(hrLeaveApplications.startDate, today),
+      gte(hrLeaveApplications.endDate, today),
+    ));
+
+  return {
+    employeeCount: Number(empAgg?.count ?? 0),
+    departmentCount: Number(deptAgg?.count ?? 0),
+    onLeaveToday: Number(leaveAgg?.count ?? 0),
+  };
 }
 
 // ─── Seed Sample Data ───────────────────────────────────────────────

@@ -1701,8 +1701,9 @@ export function DrivePage() {
                 size="sm"
                 onClick={() => setTypeDropdownOpen(!typeDropdownOpen)}
                 style={{
+                  minWidth: 90,
                   background: typeFilter !== 'all' ? 'color-mix(in srgb, var(--color-accent-primary) 8%, var(--color-bg-primary))' : undefined,
-                  color: typeFilter !== 'all' ? 'var(--color-accent-primary)' : undefined,
+                  color: typeFilter !== 'all' ? 'var(--color-accent-primary)' : 'var(--color-text-primary)',
                 }}
               >
                 {TYPE_FILTER_OPTIONS.find((o) => o.value === typeFilter)?.label || 'Type'}
@@ -1731,8 +1732,9 @@ export function DrivePage() {
                 size="sm"
                 onClick={() => setModifiedDropdownOpen(!modifiedDropdownOpen)}
                 style={{
+                  minWidth: 90,
                   background: modifiedFilter !== 'any' ? 'color-mix(in srgb, var(--color-accent-primary) 8%, var(--color-bg-primary))' : undefined,
-                  color: modifiedFilter !== 'any' ? 'var(--color-accent-primary)' : undefined,
+                  color: modifiedFilter !== 'any' ? 'var(--color-accent-primary)' : 'var(--color-text-primary)',
                 }}
               >
                 {getModifiedFilterOptions().find((o) => o.value === modifiedFilter)?.label || 'Modified'}

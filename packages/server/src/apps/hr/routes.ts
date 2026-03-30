@@ -23,6 +23,9 @@ const upload = multer({
   limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB
 });
 
+// Widget (lightweight summary for home dashboard)
+router.get('/widget', hrController.getWidgetData);
+
 // Dashboard
 router.get('/dashboard', hrController.getDashboard);
 

@@ -2,6 +2,7 @@ import { Briefcase, Settings } from 'lucide-react';
 import type { ClientAppManifest } from '../../config/app-manifest.client';
 import { CrmPage } from './page';
 import { CrmStagesPanel, CrmGeneralPanel, CrmIntegrationsPanel } from './components/crm-settings-modal';
+import { PipelineWidget } from './widgets/pipeline-widget';
 
 export const crmManifest: ClientAppManifest = {
   id: 'crm',
@@ -17,6 +18,18 @@ export const crmManifest: ClientAppManifest = {
   version: '1.0.0',
   sidebarOrder: 10,
   routes: [{ path: '/crm', component: CrmPage }],
+  widgets: [
+    {
+      id: 'pipeline',
+      name: 'Pipeline',
+      description: 'CRM pipeline value and deal count',
+      iconName: 'Briefcase',
+      icon: Briefcase,
+      defaultSize: 'sm',
+      defaultEnabled: true,
+      component: PipelineWidget,
+    },
+  ],
   settingsCategory: {
     id: 'crm',
     label: 'CRM',

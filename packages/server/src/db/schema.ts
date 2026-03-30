@@ -1346,3 +1346,157 @@ export const crmNotes = pgTable('crm_notes', {
   companyIdx: index('idx_crm_notes_company').on(table.companyId),
 }));
 
+// ─── Projects: Clients ────────────────────────────────────────────
+export const projectClients = pgTable('project_clients', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull(),
+  userId: uuid('user_id').notNull(),
+  name: varchar('name', { length: 500 }).notNull(),
+  email: varchar('email', { length: 255 }),
+  phone: varchar('phone', { length: 50 }),
+  address: text('address'),
+  city: varchar('city', { length: 255 }),
+  state: varchar('state', { length: 255 }),
+  country: varchar('country', { length: 255 }),
+  postalCode: varchar('postal_code', { length: 20 }),
+  currency: varchar('currency', { length: 10 }).notNull().default('USD'),
+  logo: text('logo'),
+  portalToken: uuid('portal_token').defaultRandom(),
+  notes: text('notes'),
+  isArchived: boolean('is_archived').notNull().default(false),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  accountIdx: index('idx_project_clients_account').on(table.accountId),
+  portalTokenIdx: uniqueIndex('idx_project_clients_portal_token').on(table.portalToken),
+}));
+
+// ─── Projects: Projects ───────────────────────────────────────────
+export const projectProjects = pgTable('project_projects', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull(),
+  userId: uuid('user_id').notNull(),
+  clientId: uuid('client_id').references(() => projectClients.id, { onDelete: 'set null' }),
+  name: varchar('name', { length: 500 }).notNull(),
+  description: text('description'),
+  billable: boolean('billable').notNull().default(true),
+  status: varchar('status', { length: 50 }).notNull().default('active'),
+  estimatedHours: real('estimated_hours'),
+  estimatedAmount: real('estimated_amount'),
+  startDate: timestamp('start_date', { withTimezone: true }),
+  endDate: timestamp('end_date', { withTimezone: true }),
+  color: varchar('color', { length: 20 }),
+  isArchived: boolean('is_archived').notNull().default(false),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  accountIdx: index('idx_project_projects_account').on(table.accountId),
+  clientIdx: index('idx_project_projects_client').on(table.clientId),
+  statusIdx: index('idx_project_projects_status').on(table.status),
+}));
+
+// ─── Projects: Members ────────────────────────────────────────────
+export const projectMembers = pgTable('project_members', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull(),
+  projectId: uuid('project_id').notNull().references(() => projectProjects.id, { onDelete: 'cascade' }),
+  hourlyRate: real('hourly_rate'),
+  role: varchar('role', { length: 50 }).notNull().default('member'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  projectIdx: index('idx_project_members_project').on(table.projectId),
+  userProjectIdx: uniqueIndex('idx_project_members_user_project').on(table.userId, table.projectId),
+}));
+
+// ─── Projects: Time Entries ───────────────────────────────────────
+export const projectTimeEntries = pgTable('project_time_entries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull(),
+  userId: uuid('user_id').notNull(),
+  projectId: uuid('project_id').notNull().references(() => projectProjects.id, { onDelete: 'cascade' }),
+  durationMinutes: integer('duration_minutes').notNull().default(0),
+  workDate: varchar('work_date', { length: 10 }).notNull(),
+  startTime: varchar('start_time', { length: 5 }),
+  endTime: varchar('end_time', { length: 5 }),
+  billable: boolean('billable').notNull().default(true),
+  billed: boolean('billed').notNull().default(false),
+  locked: boolean('locked').notNull().default(false),
+  invoiceLineItemId: uuid('invoice_line_item_id'),
+  notes: text('notes'),
+  taskDescription: varchar('task_description', { length: 500 }),
+  isArchived: boolean('is_archived').notNull().default(false),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  accountIdx: index('idx_project_time_entries_account').on(table.accountId),
+  projectIdx: index('idx_project_time_entries_project').on(table.projectId),
+  userDateIdx: index('idx_project_time_entries_user_date').on(table.userId, table.workDate),
+  billedIdx: index('idx_project_time_entries_billed').on(table.billed, table.billable),
+}));
+
+// ─── Projects: Invoices ───────────────────────────────────────────
+export const projectInvoices = pgTable('project_invoices', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull(),
+  userId: uuid('user_id').notNull(),
+  clientId: uuid('client_id').notNull().references(() => projectClients.id, { onDelete: 'cascade' }),
+  invoiceNumber: varchar('invoice_number', { length: 50 }).notNull(),
+  status: varchar('status', { length: 50 }).notNull().default('draft'),
+  amount: real('amount').notNull().default(0),
+  tax: real('tax').notNull().default(0),
+  taxAmount: real('tax_amount').notNull().default(0),
+  discount: real('discount').notNull().default(0),
+  discountAmount: real('discount_amount').notNull().default(0),
+  currency: varchar('currency', { length: 10 }).notNull().default('USD'),
+  issueDate: timestamp('issue_date', { withTimezone: true }),
+  dueDate: timestamp('due_date', { withTimezone: true }),
+  notes: text('notes'),
+  sentAt: timestamp('sent_at', { withTimezone: true }),
+  viewedAt: timestamp('viewed_at', { withTimezone: true }),
+  paidAt: timestamp('paid_at', { withTimezone: true }),
+  isArchived: boolean('is_archived').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  accountIdx: index('idx_project_invoices_account').on(table.accountId),
+  clientIdx: index('idx_project_invoices_client').on(table.clientId),
+  statusIdx: index('idx_project_invoices_status').on(table.status),
+  invoiceNumberIdx: uniqueIndex('idx_project_invoices_number').on(table.accountId, table.invoiceNumber),
+}));
+
+// ─── Projects: Invoice Line Items ─────────────────────────────────
+export const projectInvoiceLineItems = pgTable('project_invoice_line_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  invoiceId: uuid('invoice_id').notNull().references(() => projectInvoices.id, { onDelete: 'cascade' }),
+  timeEntryId: uuid('time_entry_id').references(() => projectTimeEntries.id, { onDelete: 'set null' }),
+  description: varchar('description', { length: 500 }).notNull().default(''),
+  quantity: real('quantity').notNull().default(1),
+  unitPrice: real('unit_price').notNull().default(0),
+  amount: real('amount').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  invoiceIdx: index('idx_project_line_items_invoice').on(table.invoiceId),
+  timeEntryIdx: index('idx_project_line_items_time_entry').on(table.timeEntryId),
+}));
+
+// ─── Projects: Settings ───────────────────────────────────────────
+export const projectSettings = pgTable('project_settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull(),
+  invoicePrefix: varchar('invoice_prefix', { length: 20 }).notNull().default('INV'),
+  defaultHourlyRate: real('default_hourly_rate').notNull().default(0),
+  companyName: varchar('company_name', { length: 500 }),
+  companyAddress: text('company_address'),
+  companyLogo: text('company_logo'),
+  nextInvoiceNumber: integer('next_invoice_number').notNull().default(1),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  accountIdx: uniqueIndex('idx_project_settings_account').on(table.accountId),
+}));
+

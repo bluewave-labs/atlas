@@ -5,6 +5,9 @@ import { authMiddleware } from '../../middleware/auth';
 const router = Router();
 router.use(authMiddleware);
 
+// Widget (lightweight summary for home dashboard)
+router.get('/widget', crmController.getWidgetData);
+
 // Dashboard
 router.get('/dashboard', crmController.getDashboard);
 

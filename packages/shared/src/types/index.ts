@@ -12,3 +12,4 @@ export * from './custom-field';
 export * from './signature';
 export * from './hr';
 export * from './crm';
+export * from './projects';

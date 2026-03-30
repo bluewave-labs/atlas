@@ -5,6 +5,20 @@ import * as attendanceService from './attendance.service';
 import { logger } from '../../utils/logger';
 import { emitAppEvent } from '../../services/event.service';
 
+// ─── Widget ─────────────────────────────────────────────────────────
+
+export async function getWidgetData(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const accountId = req.auth!.accountId;
+    const data = await hrService.getWidgetData(userId, accountId);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to get HR widget data');
+    res.status(500).json({ success: false, error: 'Failed to get HR widget data' });
+  }
+}
+
 // ─── Employees ──────────────────────────────────────────────────────
 
 export async function listEmployees(req: Request, res: Response) {

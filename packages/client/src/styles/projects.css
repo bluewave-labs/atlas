@@ -1,0 +1,534 @@
+/* ─── Projects App Styles ─────────────────────────────────────── */
+
+/* ─── Table rows ──────────────────────────────────────────────── */
+
+.projects-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: 10px var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border-secondary);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.projects-row:hover {
+  background: var(--color-surface-hover);
+}
+
+.projects-row.selected {
+  background: var(--color-surface-selected);
+}
+
+.projects-row.focused {
+  box-shadow: inset 2px 0 0 var(--color-accent-primary);
+}
+
+/* ─── Detail panel ────────────────────────────────────────────── */
+
+.projects-detail-panel {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: var(--color-bg-primary);
+  height: 100%;
+}
+
+.projects-detail-body {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  flex: 1;
+  overflow-y: auto;
+}
+
+.projects-detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.projects-detail-field-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: var(--font-family);
+}
+
+/* ─── Empty state ─────────────────────────────────────────────── */
+
+.projects-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3xl);
+  gap: var(--spacing-md);
+  color: var(--color-text-tertiary);
+  text-align: center;
+  flex: 1;
+}
+
+.projects-empty-state-icon {
+  opacity: 0.3;
+}
+
+.projects-empty-state-title {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  font-family: var(--font-family);
+}
+
+.projects-empty-state-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-family);
+  max-width: 300px;
+}
+
+/* ─── Search bar ──────────────────────────────────────────────── */
+
+.projects-search-bar {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border-secondary);
+  flex-shrink: 0;
+}
+
+/* ─── Table footer ────────────────────────────────────────────── */
+
+.projects-table-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-top: 1px solid var(--color-border-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-family);
+  flex-shrink: 0;
+}
+
+/* ─── Add row ─────────────────────────────────────────────────── */
+
+.projects-add-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.projects-add-row:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+/* ─── Checkbox ────────────────────────────────────────────────── */
+
+.projects-checkbox {
+  accent-color: var(--color-accent-primary);
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* ─── KPI cards ──────────────────────────────────────────────── */
+
+.projects-kpi-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-lg);
+  flex: 1;
+  min-width: 160px;
+}
+
+.projects-kpi-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  flex-shrink: 0;
+}
+
+.projects-kpi-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.projects-kpi-card-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-family);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.projects-kpi-card-value {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-variant-numeric: tabular-nums;
+}
+
+.projects-kpi-card-subtitle {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-family);
+}
+
+/* ─── Dashboard card ──────────────────────────────────────────── */
+
+.projects-dashboard-card {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+}
+
+.projects-dashboard-card-title {
+  margin: 0 0 var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+}
+
+/* ─── Time tracker ────────────────────────────────────────────── */
+
+.projects-time-grid {
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  flex: 1;
+}
+
+.projects-time-header {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border-secondary);
+  flex-shrink: 0;
+}
+
+.projects-time-header-cell {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: var(--font-family);
+  padding: var(--spacing-sm) var(--spacing-sm);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.projects-time-row {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border-secondary);
+}
+
+.projects-time-row:hover {
+  background: var(--color-surface-hover);
+}
+
+.projects-time-cell {
+  padding: var(--spacing-xs) var(--spacing-xs);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.projects-time-cell input {
+  width: 48px;
+  text-align: center;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  padding: var(--spacing-xs);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.projects-time-cell input:focus {
+  border-color: var(--color-accent-primary);
+}
+
+.projects-time-project-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projects-time-total {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  padding: var(--spacing-sm) var(--spacing-sm);
+}
+
+/* ─── Running timer ───────────────────────────────────────────── */
+
+.projects-timer {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+}
+
+.projects-timer-display {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  min-width: 72px;
+}
+
+/* ─── Bar chart ───────────────────────────────────────────────── */
+
+.projects-bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.projects-bar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.projects-bar-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-family: var(--font-family);
+  width: 120px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projects-bar-track {
+  flex: 1;
+  height: 20px;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.projects-bar {
+  height: 100%;
+  border-radius: var(--radius-sm);
+  transition: width 0.3s ease;
+}
+
+.projects-bar-value {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  font-family: var(--font-family);
+  font-variant-numeric: tabular-nums;
+  width: 60px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ─── Invoice builder ─────────────────────────────────────────── */
+
+.projects-invoice-line-items {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.projects-invoice-line-items th {
+  text-align: left;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: var(--font-family);
+  padding: var(--spacing-sm) var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border-secondary);
+}
+
+.projects-invoice-line-items td {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border-secondary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  color: var(--color-text-primary);
+}
+
+.projects-invoice-line-items td:last-child {
+  text-align: right;
+}
+
+.projects-invoice-totals {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  align-items: flex-end;
+  padding-top: var(--spacing-md);
+}
+
+.projects-invoice-totals-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xl);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+}
+
+.projects-invoice-totals-label {
+  color: var(--color-text-tertiary);
+  width: 100px;
+  text-align: right;
+}
+
+.projects-invoice-totals-value {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  width: 100px;
+  text-align: right;
+}
+
+.projects-invoice-totals-total {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+/* ─── Report tabs ─────────────────────────────────────────────── */
+
+.projects-report-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 0 var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border-secondary);
+  flex-shrink: 0;
+}
+
+.projects-report-tab {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-tertiary);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-family: var(--font-family);
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.projects-report-tab:hover {
+  color: var(--color-text-primary);
+}
+
+.projects-report-tab.active {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-accent-primary);
+  border-bottom-color: var(--color-accent-primary);
+}
+
+/* ─── Calendar ────────────────────────────────────────────────── */
+
+.projects-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: var(--color-border-secondary);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.projects-calendar-header {
+  background: var(--color-bg-secondary);
+  padding: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-tertiary);
+  text-align: center;
+  font-family: var(--font-family);
+  text-transform: uppercase;
+}
+
+.projects-calendar-day {
+  background: var(--color-bg-primary);
+  padding: var(--spacing-xs);
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.projects-calendar-day.other-month {
+  opacity: 0.4;
+}
+
+.projects-calendar-day-number {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  font-family: var(--font-family);
+  padding: 2px 4px;
+}
+
+.projects-calendar-day-hours {
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-family);
+  padding: 0 4px;
+}
+
+.projects-calendar-bar {
+  height: 4px;
+  border-radius: 2px;
+  margin: 0 2px;
+}

@@ -27,7 +27,15 @@ type ImportStatus = 'idle' | 'mapping' | 'importing' | 'done';
 
 // ─── CSV parsing ────────────────────────────────────────────────────
 
+function detectDelimiter(text: string): ',' | '\t' {
+  const firstLine = text.split(/\r?\n/)[0] || '';
+  const tabs = (firstLine.match(/\t/g) || []).length;
+  const commas = (firstLine.match(/,/g) || []).length;
+  return tabs > commas ? '\t' : ',';
+}
+
 function parseCSV(text: string): { headers: string[]; rows: string[][] } {
+  const delimiter = detectDelimiter(text);
   const lines = text.split(/\r?\n/).filter((line) => line.trim());
   if (lines.length === 0) return { headers: [], rows: [] };
 
@@ -45,7 +53,7 @@ function parseCSV(text: string): { headers: string[]; rows: string[][] } {
         } else {
           inQuotes = !inQuotes;
         }
-      } else if (char === ',' && !inQuotes) {
+      } else if (char === delimiter && !inQuotes) {
         result.push(current.trim());
         current = '';
       } else {
@@ -69,22 +77,84 @@ export function exportToCsv<T extends Record<string, unknown>>(
   columns: { key: string; label: string }[],
   filename: string,
 ) {
-  const header = columns.map((c) => `"${c.label.replace(/"/g, '""')}"`).join(',');
-  const rows = data.map((row) =>
-    columns.map((col) => {
-      const val = row[col.key];
-      if (val == null) return '';
-      const str = String(val);
+  const escapeField = (val: unknown): string => {
+    if (val == null) return '';
+    const str = String(val);
+    // Always quote fields that contain commas, quotes, or newlines
+    if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
       return `"${str.replace(/"/g, '""')}"`;
-    }).join(','),
+    }
+    return str;
+  };
+
+  const header = columns.map((c) => escapeField(c.label)).join(',');
+  const rows = data.map((row) =>
+    columns.map((col) => escapeField(row[col.key])).join(','),
   );
 
-  const csvContent = [header, ...rows].join('\n');
+  // BOM prefix for proper Unicode handling in Excel
+  const bom = '\uFEFF';
+  const csvContent = bom + [header, ...rows].join('\r\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
   link.download = `${filename}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+// ─── TSV Export utility ────────────────────────────────────────────
+
+export function exportToTsv<T extends Record<string, unknown>>(
+  data: T[],
+  columns: { key: string; label: string }[],
+  filename: string,
+) {
+  const header = columns.map((c) => c.label.replace(/\t/g, ' ')).join('\t');
+  const rows = data.map((row) =>
+    columns.map((col) => {
+      const val = row[col.key];
+      if (val == null) return '';
+      return String(val).replace(/\t/g, ' ').replace(/\n/g, ' ');
+    }).join('\t'),
+  );
+
+  const tsvContent = [header, ...rows].join('\n');
+  const blob = new Blob([tsvContent], { type: 'text/tab-separated-values;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${filename}.tsv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+// ─── JSON Export utility ──────────────────────────────────────────
+
+export function exportToJson<T extends Record<string, unknown>>(
+  data: T[],
+  columns: { key: string; label: string }[],
+  filename: string,
+) {
+  const mapped = data.map((row) => {
+    const obj: Record<string, unknown> = {};
+    for (const col of columns) {
+      obj[col.label] = row[col.key] ?? null;
+    }
+    return obj;
+  });
+
+  const jsonContent = JSON.stringify(mapped, null, 2);
+  const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${filename}.json`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -222,7 +292,7 @@ export function CsvImportModal({ open, onClose, entityType, fields }: CsvImportM
       <Modal.Header
         title={`Import ${entityLabel}`}
         subtitle={
-          status === 'idle' ? 'Upload a CSV file to import records' :
+          status === 'idle' ? 'Upload a CSV or TSV file to import records' :
           status === 'mapping' ? `Map CSV columns to ${entityLabel} fields` :
           status === 'importing' ? `Importing ${entityLabel}...` :
           'Import complete'
@@ -246,19 +316,19 @@ export function CsvImportModal({ open, onClose, entityType, fields }: CsvImportM
                 fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-medium)',
                 color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)',
               }}>
-                Click to upload CSV
+                Click to upload file
               </div>
               <div style={{
                 fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)',
                 fontFamily: 'var(--font-family)', marginTop: 'var(--spacing-xs)',
               }}>
-                .csv files only
+                .csv, .tsv, or .txt files
               </div>
             </div>
             <input
               ref={fileInputRef}
               type="file"
-              accept=".csv"
+              accept=".csv,.tsv,.txt"
               onChange={handleFileChange}
               style={{ display: 'none' }}
             />

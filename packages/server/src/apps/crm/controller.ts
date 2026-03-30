@@ -13,6 +13,20 @@ import { logger } from '../../utils/logger';
 import { emitAppEvent, getTenantMemberUserIds } from '../../services/event.service';
 import type { CrmRole, CrmRecordAccess } from '@atlasmail/shared';
 
+// ─── Widget ─────────────────────────────────────────────────────────
+
+export async function getWidgetData(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const accountId = req.auth!.accountId;
+    const data = await crmService.getWidgetData(userId, accountId);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to get CRM widget data');
+    res.status(500).json({ success: false, error: 'Failed to get CRM widget data' });
+  }
+}
+
 // ─── Companies ──────────────────────────────────────────────────────
 
 export async function listCompanies(req: Request, res: Response) {

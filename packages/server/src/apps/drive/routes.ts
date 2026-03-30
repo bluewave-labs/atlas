@@ -22,6 +22,7 @@ const upload = multer({
 const router = Router();
 router.use(authMiddleware);
 
+router.get('/widget', driveController.getWidgetData);
 router.get('/', driveController.listItems);
 router.post('/folder', driveController.createFolder);
 router.post('/upload', upload.array('files', 20), driveController.uploadFiles);
