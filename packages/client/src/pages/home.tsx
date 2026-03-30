@@ -711,12 +711,14 @@ export function HomePage() {
         )}
       </div>
 
-      {/* Dark overlay + vignette */}
+      {/* Dark overlay — stronger in dark theme for readability */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.4) 100%)',
+          background: document.documentElement.getAttribute('data-theme') === 'dark'
+            ? 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.65) 100%)'
+            : 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.4) 100%)',
           zIndex: 1,
         }}
       />
@@ -958,12 +960,12 @@ export function HomePage() {
                     width: '100%',
                     height: '100%',
                     borderRadius: 14,
-                    background: app.color,
+                    background: `linear-gradient(135deg, ${app.color} 0%, color-mix(in srgb, ${app.color} 70%, #000) 100%)`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
-                    boxShadow: `0 4px 12px ${app.color}55`,
+                    boxShadow: `0 4px 14px ${app.color}44, 0 2px 6px rgba(0,0,0,0.15)`,
                   }}
                 >
                   <Icon size={28} color="#fff" strokeWidth={1.7} />
