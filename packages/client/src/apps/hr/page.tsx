@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Users, Building2, CalendarDays, Plus, Search, Settings2, X,
@@ -2451,9 +2452,14 @@ export function HrPage() {
   const isDesktop = !!('atlasDesktop' in window);
   const { openSettings } = useUIStore();
 
-  // Navigation state
-  const [activeNav, setActiveNav] = useState<NavSection>('dashboard');
+  // Navigation state (URL-driven)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeNav = (searchParams.get('view') || 'dashboard') as NavSection;
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+  const setActiveNav = useCallback((nav: NavSection) => {
+    setSearchParams({ view: nav });
+    setSelectedEmployeeId(null);
+  }, [setSearchParams]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
