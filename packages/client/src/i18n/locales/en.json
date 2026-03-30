@@ -7,6 +7,8 @@
     "delete": "Delete",
     "remove": "Remove",
     "close": "Close",
+    "previous": "Previous",
+    "next": "Next",
     "apply": "Apply",
     "send": "Send",
     "sending": "Sending...",
@@ -1116,7 +1118,14 @@
       "orgChart": "Org chart",
       "timeOff": "Time off",
       "allDepartments": "All departments",
-      "settings": "Settings"
+      "settings": "Settings",
+      "attendance": "Attendance",
+      "leaveSection": "Leave",
+      "myLeave": "My leave",
+      "teamCalendar": "Team calendar",
+      "leaveTypes": "Leave types",
+      "holidays": "Holidays",
+      "policies": "Policies"
     },
     "status": {
       "active": "Active",
@@ -1134,6 +1143,7 @@
       "rejected": "Rejected"
     },
     "fields": {
+      "name": "Name",
       "fullName": "Full name",
       "email": "Email",
       "phone": "Phone",
@@ -1221,7 +1231,8 @@
     "tabs": {
       "details": "Details",
       "onboarding": "Onboarding",
-      "documents": "Documents"
+      "documents": "Documents",
+      "timeline": "Timeline"
     },
     "sections": {
       "personal": "Personal",
@@ -1305,6 +1316,76 @@
       "h2Desc": "Organize your team into departments with managers",
       "h3Title": "Time off tracking",
       "h3Desc": "Manage leave requests and track balances"
+    },
+    "leaveTypes": {
+      "empty": "No leave types configured yet.",
+      "add": "Add leave type",
+      "slug": "Slug",
+      "daysPerYear": "Days per year",
+      "maxCarry": "Max carry forward",
+      "paid": "Paid",
+      "unpaid": "Unpaid",
+      "inactive": "Inactive",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "carry": "Carry"
+    },
+    "policies": {
+      "empty": "No leave policies configured yet.",
+      "add": "Add policy",
+      "default": "Default"
+    },
+    "holidays": {
+      "empty": "No holidays in this calendar.",
+      "add": "Add holiday",
+      "calendar": "Holiday calendar",
+      "createCalendar": "Create calendar",
+      "name": "Holiday name",
+      "date": "Date",
+      "typePublic": "Public holiday",
+      "typeCompany": "Company holiday",
+      "typeOptional": "Optional holiday"
+    },
+    "myLeave": {
+      "empty": "No leave applications yet.",
+      "requestLeave": "Request leave",
+      "selectType": "Select leave type...",
+      "reason": "Reason",
+      "submit": "Submit request",
+      "cancel": "Cancel leave"
+    },
+    "teamCalendar": {
+      "noLeaves": "No approved leaves for this month."
+    },
+    "leaveAppStatus": {
+      "draft": "Draft",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "attendance": {
+      "present": "Present",
+      "absent": "Absent",
+      "halfDay": "Half day",
+      "remote": "Remote",
+      "onLeave": "On leave",
+      "markAllPresent": "Mark all present"
+    },
+    "lifecycle": {
+      "title": "Timeline",
+      "addEvent": "Add event",
+      "empty": "No lifecycle events recorded.",
+      "hired": "Hired",
+      "promoted": "Promoted",
+      "transferred": "Transferred",
+      "resigned": "Resigned",
+      "terminated": "Terminated",
+      "salaryChange": "Salary change",
+      "roleChange": "Role change",
+      "other": "Other event",
+      "salarychange": "Salary change",
+      "rolechange": "Role change"
     }
   },
   "sign": {

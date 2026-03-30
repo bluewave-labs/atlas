@@ -111,6 +111,11 @@ export const hrServerManifest: ServerAppManifest = {
   version: '1.0.0',
   router: hrRouter,
   routePrefix: '/hr',
-  tables: ['employees', 'departments', 'time_off_requests', 'leave_balances', 'onboarding_tasks', 'onboarding_templates', 'employee_documents'],
+  tables: [
+    'employees', 'departments', 'time_off_requests', 'leave_balances', 'onboarding_tasks', 'onboarding_templates', 'employee_documents',
+    'hr_leave_types', 'hr_leave_policies', 'hr_leave_policy_assignments',
+    'hr_holiday_calendars', 'hr_holidays', 'hr_leave_applications',
+    'hr_attendance', 'hr_lifecycle_events',
+  ],
   objects,
 };

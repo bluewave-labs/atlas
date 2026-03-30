@@ -1,5 +1,7 @@
 import type { Request, Response } from 'express';
 import * as hrService from './service';
+import * as leaveService from './leave.service';
+import * as attendanceService from './attendance.service';
 import { logger } from '../../utils/logger';
 
 // ─── Employees ──────────────────────────────────────────────────────
@@ -551,6 +553,525 @@ export async function downloadEmployeeDocument(req: Request, res: Response) {
   } catch (error) {
     logger.error({ error }, 'Failed to download employee document');
     res.status(500).json({ success: false, error: 'Failed to download employee document' });
+  }
+}
+
+// ─── Leave Types ──────────────────────────────────────────────────
+
+export async function listLeaveTypes(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const includeInactive = req.query.includeInactive === 'true';
+    const data = await hrService.listLeaveTypes(accountId, includeInactive);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to list leave types');
+    res.status(500).json({ success: false, error: 'Failed to list leave types' });
+  }
+}
+
+export async function createLeaveType(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const { name, slug, color, defaultDaysPerYear, maxCarryForward, requiresApproval, isPaid } = req.body;
+    if (!name?.trim() || !slug?.trim()) {
+      res.status(400).json({ success: false, error: 'Name and slug are required' });
+      return;
+    }
+    const data = await hrService.createLeaveType(accountId, {
+      name: name.trim(), slug: slug.trim(), color, defaultDaysPerYear, maxCarryForward, requiresApproval, isPaid,
+    });
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to create leave type');
+    res.status(500).json({ success: false, error: 'Failed to create leave type' });
+  }
+}
+
+export async function updateLeaveType(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const id = req.params.id as string;
+    const data = await hrService.updateLeaveType(accountId, id, req.body);
+    if (!data) { res.status(404).json({ success: false, error: 'Leave type not found' }); return; }
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to update leave type');
+    res.status(500).json({ success: false, error: 'Failed to update leave type' });
+  }
+}
+
+export async function deleteLeaveType(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    await hrService.deleteLeaveType(accountId, req.params.id as string);
+    res.json({ success: true, data: null });
+  } catch (error) {
+    logger.error({ error }, 'Failed to delete leave type');
+    res.status(500).json({ success: false, error: 'Failed to delete leave type' });
+  }
+}
+
+// ─── Leave Policies ───────────────────────────────────────────────
+
+export async function listLeavePolicies(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const data = await hrService.listLeavePolicies(accountId);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to list leave policies');
+    res.status(500).json({ success: false, error: 'Failed to list leave policies' });
+  }
+}
+
+export async function createLeavePolicy(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const { name, description, isDefault, allocations } = req.body;
+    if (!name?.trim()) { res.status(400).json({ success: false, error: 'Name is required' }); return; }
+    const data = await hrService.createLeavePolicy(accountId, {
+      name: name.trim(), description, isDefault, allocations: allocations || [],
+    });
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to create leave policy');
+    res.status(500).json({ success: false, error: 'Failed to create leave policy' });
+  }
+}
+
+export async function updateLeavePolicy(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const data = await hrService.updateLeavePolicy(accountId, req.params.id as string, req.body);
+    if (!data) { res.status(404).json({ success: false, error: 'Leave policy not found' }); return; }
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to update leave policy');
+    res.status(500).json({ success: false, error: 'Failed to update leave policy' });
+  }
+}
+
+export async function deleteLeavePolicy(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    await hrService.deleteLeavePolicy(accountId, req.params.id as string);
+    res.json({ success: true, data: null });
+  } catch (error) {
+    logger.error({ error }, 'Failed to delete leave policy');
+    res.status(500).json({ success: false, error: 'Failed to delete leave policy' });
+  }
+}
+
+export async function assignPolicyToEmployee(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const employeeId = req.params.id as string;
+    const { policyId, effectiveFrom } = req.body;
+    if (!policyId) { res.status(400).json({ success: false, error: 'policyId is required' }); return; }
+    const data = await hrService.assignPolicy(accountId, employeeId, policyId, effectiveFrom);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to assign policy');
+    res.status(500).json({ success: false, error: 'Failed to assign policy' });
+  }
+}
+
+export async function getEmployeePolicy(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const data = await hrService.getEmployeePolicy(accountId, req.params.id as string);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to get employee policy');
+    res.status(500).json({ success: false, error: 'Failed to get employee policy' });
+  }
+}
+
+// ─── Holiday Calendars ────────────────────────────────────────────
+
+export async function listHolidayCalendars(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const data = await hrService.listHolidayCalendars(accountId);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to list holiday calendars');
+    res.status(500).json({ success: false, error: 'Failed to list holiday calendars' });
+  }
+}
+
+export async function createHolidayCalendar(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const { name, year, description, isDefault } = req.body;
+    if (!name?.trim() || !year) { res.status(400).json({ success: false, error: 'Name and year are required' }); return; }
+    const data = await hrService.createHolidayCalendar(accountId, { name: name.trim(), year, description, isDefault });
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to create holiday calendar');
+    res.status(500).json({ success: false, error: 'Failed to create holiday calendar' });
+  }
+}
+
+export async function updateHolidayCalendar(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const data = await hrService.updateHolidayCalendar(accountId, req.params.id as string, req.body);
+    if (!data) { res.status(404).json({ success: false, error: 'Holiday calendar not found' }); return; }
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to update holiday calendar');
+    res.status(500).json({ success: false, error: 'Failed to update holiday calendar' });
+  }
+}
+
+export async function deleteHolidayCalendar(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    await hrService.deleteHolidayCalendar(accountId, req.params.id as string);
+    res.json({ success: true, data: null });
+  } catch (error) {
+    logger.error({ error }, 'Failed to delete holiday calendar');
+    res.status(500).json({ success: false, error: 'Failed to delete holiday calendar' });
+  }
+}
+
+export async function listHolidays(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const data = await hrService.listHolidays(accountId, req.params.id as string);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to list holidays');
+    res.status(500).json({ success: false, error: 'Failed to list holidays' });
+  }
+}
+
+export async function createHoliday(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const { calendarId, name, date, description, type, isRecurring } = req.body;
+    if (!calendarId || !name?.trim() || !date) {
+      res.status(400).json({ success: false, error: 'calendarId, name, and date are required' });
+      return;
+    }
+    const data = await hrService.createHoliday(accountId, { calendarId, name: name.trim(), date, description, type, isRecurring });
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to create holiday');
+    res.status(500).json({ success: false, error: 'Failed to create holiday' });
+  }
+}
+
+export async function updateHoliday(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const data = await hrService.updateHoliday(accountId, req.params.id as string, req.body);
+    if (!data) { res.status(404).json({ success: false, error: 'Holiday not found' }); return; }
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to update holiday');
+    res.status(500).json({ success: false, error: 'Failed to update holiday' });
+  }
+}
+
+export async function deleteHoliday(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    await hrService.deleteHoliday(accountId, req.params.id as string);
+    res.json({ success: true, data: null });
+  } catch (error) {
+    logger.error({ error }, 'Failed to delete holiday');
+    res.status(500).json({ success: false, error: 'Failed to delete holiday' });
+  }
+}
+
+export async function getWorkingDays(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const { start, end, calendarId } = req.query;
+    if (!start || !end) { res.status(400).json({ success: false, error: 'start and end are required' }); return; }
+    const days = await hrService.calculateWorkingDays(accountId, start as string, end as string, calendarId as string | undefined);
+    res.json({ success: true, data: { workingDays: days } });
+  } catch (error) {
+    logger.error({ error }, 'Failed to calculate working days');
+    res.status(500).json({ success: false, error: 'Failed to calculate working days' });
+  }
+}
+
+// ─── Leave Applications ───────────────────────────────────────────
+
+export async function listLeaveApplications(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const { employeeId, status, startDate, endDate } = req.query;
+    const data = await leaveService.listLeaveApplications(accountId, {
+      employeeId: employeeId as string | undefined,
+      status: status as string | undefined,
+      startDate: startDate as string | undefined,
+      endDate: endDate as string | undefined,
+    });
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to list leave applications');
+    res.status(500).json({ success: false, error: 'Failed to list leave applications' });
+  }
+}
+
+export async function createLeaveApplication(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const { employeeId, leaveTypeId, startDate, endDate, halfDay, halfDayDate, reason } = req.body;
+    if (!employeeId || !leaveTypeId || !startDate || !endDate) {
+      res.status(400).json({ success: false, error: 'employeeId, leaveTypeId, startDate, endDate are required' });
+      return;
+    }
+    const data = await leaveService.createLeaveApplication(accountId, {
+      employeeId, leaveTypeId, startDate, endDate, halfDay, halfDayDate, reason,
+    });
+    res.json({ success: true, data });
+  } catch (error: any) {
+    logger.error({ error }, 'Failed to create leave application');
+    res.status(400).json({ success: false, error: error.message || 'Failed to create leave application' });
+  }
+}
+
+export async function updateLeaveApplication(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const data = await leaveService.updateLeaveApplication(accountId, req.params.id as string, req.body);
+    if (!data) { res.status(404).json({ success: false, error: 'Leave application not found or not in draft' }); return; }
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to update leave application');
+    res.status(500).json({ success: false, error: 'Failed to update leave application' });
+  }
+}
+
+export async function submitLeaveApplication(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const data = await leaveService.submitLeaveApplication(accountId, req.params.id as string);
+    if (!data) { res.status(400).json({ success: false, error: 'Cannot submit this application' }); return; }
+    res.json({ success: true, data });
+  } catch (error: any) {
+    logger.error({ error }, 'Failed to submit leave application');
+    res.status(400).json({ success: false, error: error.message || 'Failed to submit leave application' });
+  }
+}
+
+export async function approveLeaveApplication(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const userId = req.auth!.userId;
+    const { comment } = req.body;
+    const data = await leaveService.approveLeaveApplication(accountId, req.params.id as string, userId, comment);
+    if (!data) { res.status(400).json({ success: false, error: 'Cannot approve this application' }); return; }
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to approve leave application');
+    res.status(500).json({ success: false, error: 'Failed to approve leave application' });
+  }
+}
+
+export async function rejectLeaveApplication(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const userId = req.auth!.userId;
+    const { comment } = req.body;
+    const data = await leaveService.rejectLeaveApplication(accountId, req.params.id as string, userId, comment);
+    if (!data) { res.status(400).json({ success: false, error: 'Cannot reject this application' }); return; }
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to reject leave application');
+    res.status(500).json({ success: false, error: 'Failed to reject leave application' });
+  }
+}
+
+export async function cancelLeaveApplication(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const data = await leaveService.cancelLeaveApplication(accountId, req.params.id as string);
+    if (!data) { res.status(400).json({ success: false, error: 'Cannot cancel this application' }); return; }
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to cancel leave application');
+    res.status(500).json({ success: false, error: 'Failed to cancel leave application' });
+  }
+}
+
+export async function getPendingApprovals(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const userId = req.auth!.userId;
+    const data = await leaveService.getPendingApprovals(accountId, userId);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to get pending approvals');
+    res.status(500).json({ success: false, error: 'Failed to get pending approvals' });
+  }
+}
+
+export async function getLeaveCalendar(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const month = (req.query.month as string) || new Date().toISOString().slice(0, 7);
+    const data = await leaveService.getLeaveCalendar(accountId, month);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to get leave calendar');
+    res.status(500).json({ success: false, error: 'Failed to get leave calendar' });
+  }
+}
+
+// ─── Attendance ───────────────────────────────────────────────────
+
+export async function listAttendance(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const { employeeId, date, startDate, endDate, status } = req.query;
+    const data = await attendanceService.listAttendance(accountId, {
+      employeeId: employeeId as string | undefined,
+      date: date as string | undefined,
+      startDate: startDate as string | undefined,
+      endDate: endDate as string | undefined,
+      status: status as string | undefined,
+    });
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to list attendance');
+    res.status(500).json({ success: false, error: 'Failed to list attendance' });
+  }
+}
+
+export async function markAttendance(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const userId = req.auth!.userId;
+    const { employeeId, date, status, checkInTime, checkOutTime, notes } = req.body;
+    if (!employeeId || !date || !status) {
+      res.status(400).json({ success: false, error: 'employeeId, date, and status are required' });
+      return;
+    }
+    const data = await attendanceService.markAttendance(accountId, {
+      employeeId, date, status, checkInTime, checkOutTime, notes, markedBy: userId,
+    });
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to mark attendance');
+    res.status(500).json({ success: false, error: 'Failed to mark attendance' });
+  }
+}
+
+export async function bulkMarkAttendance(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const userId = req.auth!.userId;
+    const { employeeIds, date, status } = req.body;
+    if (!employeeIds?.length || !date || !status) {
+      res.status(400).json({ success: false, error: 'employeeIds, date, and status are required' });
+      return;
+    }
+    const data = await attendanceService.bulkMarkAttendance(accountId, {
+      employeeIds, date, status, markedBy: userId,
+    });
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to bulk mark attendance');
+    res.status(500).json({ success: false, error: 'Failed to bulk mark attendance' });
+  }
+}
+
+export async function updateAttendanceRecord(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const data = await attendanceService.updateAttendance(accountId, req.params.id as string, req.body);
+    if (!data) { res.status(404).json({ success: false, error: 'Attendance record not found' }); return; }
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to update attendance');
+    res.status(500).json({ success: false, error: 'Failed to update attendance' });
+  }
+}
+
+export async function getAttendanceToday(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const data = await attendanceService.getTodaySummary(accountId);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to get today attendance');
+    res.status(500).json({ success: false, error: 'Failed to get today attendance' });
+  }
+}
+
+export async function getAttendanceReport(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const month = (req.query.month as string) || new Date().toISOString().slice(0, 7);
+    const data = await attendanceService.getMonthlyReport(accountId, month);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to get attendance report');
+    res.status(500).json({ success: false, error: 'Failed to get attendance report' });
+  }
+}
+
+export async function getEmployeeAttendance(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const month = (req.query.month as string) || undefined;
+    const data = await attendanceService.getEmployeeAttendance(accountId, req.params.id as string, month);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to get employee attendance');
+    res.status(500).json({ success: false, error: 'Failed to get employee attendance' });
+  }
+}
+
+// ─── Lifecycle Events ─────────────────────────────────────────────
+
+export async function getLifecycleTimeline(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const data = await hrService.getLifecycleTimeline(accountId, req.params.id as string);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to get lifecycle timeline');
+    res.status(500).json({ success: false, error: 'Failed to get lifecycle timeline' });
+  }
+}
+
+export async function createLifecycleEventHandler(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const userId = req.auth!.userId;
+    const employeeId = req.params.id as string;
+    const { eventType, eventDate, effectiveDate, fromValue, toValue, fromDepartmentId, toDepartmentId, notes } = req.body;
+    if (!eventType || !eventDate) {
+      res.status(400).json({ success: false, error: 'eventType and eventDate are required' });
+      return;
+    }
+    const data = await hrService.createLifecycleEvent(accountId, {
+      employeeId, eventType, eventDate, effectiveDate, fromValue, toValue,
+      fromDepartmentId, toDepartmentId, notes, createdBy: userId,
+    });
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to create lifecycle event');
+    res.status(500).json({ success: false, error: 'Failed to create lifecycle event' });
+  }
+}
+
+export async function deleteLifecycleEvent(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    await hrService.deleteLifecycleEvent(accountId, req.params.id as string);
+    res.json({ success: true, data: null });
+  } catch (error) {
+    logger.error({ error }, 'Failed to delete lifecycle event');
+    res.status(500).json({ success: false, error: 'Failed to delete lifecycle event' });
   }
 }
 

@@ -26,6 +26,57 @@ const upload = multer({
 // Dashboard
 router.get('/dashboard', hrController.getDashboard);
 
+// Leave Types (before /:id to avoid route conflicts)
+router.get('/leave-types', hrController.listLeaveTypes);
+router.post('/leave-types', hrController.createLeaveType);
+router.patch('/leave-types/:id', hrController.updateLeaveType);
+router.delete('/leave-types/:id', hrController.deleteLeaveType);
+
+// Leave Policies (before /:id)
+router.get('/leave-policies', hrController.listLeavePolicies);
+router.post('/leave-policies', hrController.createLeavePolicy);
+router.patch('/leave-policies/:id', hrController.updateLeavePolicy);
+router.delete('/leave-policies/:id', hrController.deleteLeavePolicy);
+
+// Holiday Calendars (before /:id)
+router.get('/holiday-calendars', hrController.listHolidayCalendars);
+router.post('/holiday-calendars', hrController.createHolidayCalendar);
+router.patch('/holiday-calendars/:id', hrController.updateHolidayCalendar);
+router.delete('/holiday-calendars/:id', hrController.deleteHolidayCalendar);
+router.get('/holiday-calendars/:id/holidays', hrController.listHolidays);
+
+// Holidays (before /:id)
+router.post('/holidays', hrController.createHoliday);
+router.patch('/holidays/:id', hrController.updateHoliday);
+router.delete('/holidays/:id', hrController.deleteHoliday);
+
+// Working days calculator
+router.get('/working-days', hrController.getWorkingDays);
+
+// Leave Applications (before /:id)
+router.get('/leave-applications', hrController.listLeaveApplications);
+router.post('/leave-applications', hrController.createLeaveApplication);
+router.get('/leave-applications/pending', hrController.getPendingApprovals);
+router.patch('/leave-applications/:id', hrController.updateLeaveApplication);
+router.post('/leave-applications/:id/submit', hrController.submitLeaveApplication);
+router.post('/leave-applications/:id/approve', hrController.approveLeaveApplication);
+router.post('/leave-applications/:id/reject', hrController.rejectLeaveApplication);
+router.post('/leave-applications/:id/cancel', hrController.cancelLeaveApplication);
+
+// Leave Calendar
+router.get('/leave-calendar', hrController.getLeaveCalendar);
+
+// Attendance (before /:id)
+router.get('/attendance', hrController.listAttendance);
+router.post('/attendance', hrController.markAttendance);
+router.post('/attendance/bulk', hrController.bulkMarkAttendance);
+router.get('/attendance/today', hrController.getAttendanceToday);
+router.get('/attendance/report', hrController.getAttendanceReport);
+router.patch('/attendance/:id', hrController.updateAttendanceRecord);
+
+// Lifecycle events (before /:id)
+router.delete('/lifecycle/:id', hrController.deleteLifecycleEvent);
+
 // Departments (before /:id to avoid route conflicts)
 router.get('/departments/list', hrController.listDepartments);
 router.post('/departments', hrController.createDepartment);
@@ -65,6 +116,17 @@ router.delete('/:id', hrController.deleteEmployee);
 // Employee leave balances
 router.get('/:id/leave-balances', hrController.getLeaveBalances);
 router.post('/:id/leave-balances', hrController.allocateLeave);
+
+// Employee policy assignment
+router.post('/:id/assign-policy', hrController.assignPolicyToEmployee);
+router.get('/:id/policy', hrController.getEmployeePolicy);
+
+// Employee lifecycle
+router.get('/:id/lifecycle', hrController.getLifecycleTimeline);
+router.post('/:id/lifecycle', hrController.createLifecycleEventHandler);
+
+// Employee attendance
+router.get('/:id/attendance', hrController.getEmployeeAttendance);
 
 // Employee onboarding
 router.get('/:id/onboarding', hrController.listOnboardingTasks);

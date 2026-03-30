@@ -899,6 +899,7 @@ export const leaveBalances = pgTable('leave_balances', {
   allocated: integer('allocated').notNull().default(0),
   used: integer('used').notNull().default(0),
   carried: integer('carried').notNull().default(0),
+  leaveTypeId: uuid('leave_type_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
@@ -983,6 +984,169 @@ export const timeOffRequests = pgTable('time_off_requests', {
   employeeIdx: index('idx_time_off_employee').on(table.employeeId, table.status),
   statusIdx: index('idx_time_off_status').on(table.userId, table.status, table.isArchived),
   approverIdx: index('idx_time_off_approver').on(table.approverId),
+}));
+
+// ─── HR: Leave Types ────────────────────────────────────────────────
+
+export const hrLeaveTypes = pgTable('hr_leave_types', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  slug: varchar('slug', { length: 100 }).notNull(),
+  color: varchar('color', { length: 20 }).notNull().default('#3b82f6'),
+  defaultDaysPerYear: integer('default_days_per_year').notNull().default(0),
+  maxCarryForward: integer('max_carry_forward').notNull().default(0),
+  requiresApproval: boolean('requires_approval').notNull().default(true),
+  isPaid: boolean('is_paid').notNull().default(true),
+  isActive: boolean('is_active').notNull().default(true),
+  sortOrder: integer('sort_order').notNull().default(0),
+  isArchived: boolean('is_archived').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  accountSlugIdx: uniqueIndex('idx_hr_leave_types_account_slug').on(table.accountId, table.slug),
+  accountActiveIdx: index('idx_hr_leave_types_account_active').on(table.accountId, table.isActive),
+}));
+
+// ─── HR: Leave Policies ─────────────────────────────────────────────
+
+export const hrLeavePolicies = pgTable('hr_leave_policies', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  isDefault: boolean('is_default').notNull().default(false),
+  allocations: jsonb('allocations').$type<Array<{ leaveTypeId: string; daysPerYear: number }>>().notNull().default([]),
+  isArchived: boolean('is_archived').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  accountIdx: index('idx_hr_leave_policies_account').on(table.accountId),
+}));
+
+// ─── HR: Leave Policy Assignments ───────────────────────────────────
+
+export const hrLeavePolicyAssignments = pgTable('hr_leave_policy_assignments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  employeeId: uuid('employee_id').notNull().references(() => employees.id, { onDelete: 'cascade' }),
+  policyId: uuid('policy_id').notNull().references(() => hrLeavePolicies.id, { onDelete: 'cascade' }),
+  effectiveFrom: text('effective_from'),
+  isArchived: boolean('is_archived').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  employeeIdx: index('idx_hr_policy_assignments_employee').on(table.employeeId),
+  accountIdx: index('idx_hr_policy_assignments_account').on(table.accountId),
+}));
+
+// ─── HR: Holiday Calendars ──────────────────────────────────────────
+
+export const hrHolidayCalendars = pgTable('hr_holiday_calendars', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  year: integer('year').notNull(),
+  description: text('description'),
+  isDefault: boolean('is_default').notNull().default(false),
+  isArchived: boolean('is_archived').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  accountIdx: index('idx_hr_holiday_calendars_account').on(table.accountId),
+}));
+
+// ─── HR: Holidays ───────────────────────────────────────────────────
+
+export const hrHolidays = pgTable('hr_holidays', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  calendarId: uuid('calendar_id').notNull().references(() => hrHolidayCalendars.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  date: text('date').notNull(),
+  description: text('description'),
+  type: varchar('type', { length: 50 }).notNull().default('public'),
+  isRecurring: boolean('is_recurring').notNull().default(false),
+  isArchived: boolean('is_archived').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  calendarIdx: index('idx_hr_holidays_calendar').on(table.calendarId),
+  accountDateIdx: index('idx_hr_holidays_account_date').on(table.accountId, table.date),
+}));
+
+// ─── HR: Leave Applications ─────────────────────────────────────────
+
+export const hrLeaveApplications = pgTable('hr_leave_applications', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  employeeId: uuid('employee_id').notNull().references(() => employees.id, { onDelete: 'cascade' }),
+  leaveTypeId: uuid('leave_type_id').notNull().references(() => hrLeaveTypes.id),
+  startDate: text('start_date').notNull(),
+  endDate: text('end_date').notNull(),
+  halfDay: boolean('half_day').notNull().default(false),
+  halfDayDate: text('half_day_date'),
+  totalDays: real('total_days').notNull().default(0),
+  reason: text('reason'),
+  status: varchar('status', { length: 50 }).notNull().default('draft'),
+  approverId: uuid('approver_id').references(() => employees.id, { onDelete: 'set null' }),
+  approverComment: text('approver_comment'),
+  approvedAt: timestamp('approved_at', { withTimezone: true }),
+  rejectedAt: timestamp('rejected_at', { withTimezone: true }),
+  balanceBefore: real('balance_before'),
+  isArchived: boolean('is_archived').notNull().default(false),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  employeeStatusIdx: index('idx_hr_leave_apps_employee_status').on(table.employeeId, table.status),
+  approverStatusIdx: index('idx_hr_leave_apps_approver_status').on(table.approverId, table.status),
+  accountStatusIdx: index('idx_hr_leave_apps_account_status').on(table.accountId, table.status),
+}));
+
+// ─── HR: Attendance ─────────────────────────────────────────────────
+
+export const hrAttendance = pgTable('hr_attendance', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  employeeId: uuid('employee_id').notNull().references(() => employees.id, { onDelete: 'cascade' }),
+  date: text('date').notNull(),
+  status: varchar('status', { length: 50 }).notNull().default('present'),
+  checkInTime: text('check_in_time'),
+  checkOutTime: text('check_out_time'),
+  workingHours: real('working_hours'),
+  notes: text('notes'),
+  markedBy: uuid('marked_by'),
+  isArchived: boolean('is_archived').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  employeeDateIdx: uniqueIndex('idx_hr_attendance_employee_date').on(table.employeeId, table.date),
+  accountDateIdx: index('idx_hr_attendance_account_date').on(table.accountId, table.date),
+  employeeStatusIdx: index('idx_hr_attendance_employee_status').on(table.employeeId, table.status),
+}));
+
+// ─── HR: Lifecycle Events ───────────────────────────────────────────
+
+export const hrLifecycleEvents = pgTable('hr_lifecycle_events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  employeeId: uuid('employee_id').notNull().references(() => employees.id, { onDelete: 'cascade' }),
+  eventType: varchar('event_type', { length: 50 }).notNull(),
+  eventDate: text('event_date').notNull(),
+  effectiveDate: text('effective_date'),
+  fromValue: text('from_value'),
+  toValue: text('to_value'),
+  fromDepartmentId: uuid('from_department_id'),
+  toDepartmentId: uuid('to_department_id'),
+  notes: text('notes'),
+  createdBy: uuid('created_by'),
+  isArchived: boolean('is_archived').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  employeeDateIdx: index('idx_hr_lifecycle_employee_date').on(table.employeeId, table.eventDate),
+  accountIdx: index('idx_hr_lifecycle_account').on(table.accountId),
 }));
 
 // ─── CRM: Companies ────────────────────────────────────────────────

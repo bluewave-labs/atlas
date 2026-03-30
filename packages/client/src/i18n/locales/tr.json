@@ -1066,7 +1066,7 @@
   },
   "hr": {
     "title": "IK",
-    "sidebar": { "dashboard": "Pano", "allEmployees": "Tum calisanlar", "departments": "Tum departmanlar", "departmentsTitle": "Departmanlar", "department": "Departman", "orgChart": "Org semasi", "timeOff": "Izin", "allDepartments": "Tum departmanlar", "settings": "Ayarlar" },
+    "sidebar": { "dashboard": "Pano", "allEmployees": "Tum calisanlar", "departments": "Tum departmanlar", "departmentsTitle": "Departmanlar", "department": "Departman", "orgChart": "Org semasi", "timeOff": "Izin", "allDepartments": "Tum departmanlar", "settings": "Ayarlar", "attendance": "Devam", "leaveSection": "Izin", "myLeave": "Izinlerim", "teamCalendar": "Takim takvimi", "leaveTypes": "Izin turleri", "holidays": "Tatiller", "policies": "Politikalar" },
     "status": { "active": "Aktif", "onLeave": "Izinli", "terminated": "Ayrilmis" },
     "leaveType": { "vacation": "Tatil", "sick": "Hastalik", "personal": "Kisisel" },
     "timeOffStatus": { "pending": "Beklemede", "approved": "Onaylandi", "rejected": "Reddedildi" },
@@ -1077,7 +1077,7 @@
     "columns": { "name": "Ad", "email": "E-posta", "role": "Rol", "department": "Departman", "status": "Durum", "started": "Baslangic", "employee": "Calisan", "type": "Tur", "dates": "Tarihler", "notes": "Notlar", "actions": "Islemler" },
     "actions": { "addEmployee": "Calisan ekle", "addEmployeeSubtitle": "Yeni bir calisan kaydi olusturun", "deleteEmployee": "Calisani sil", "editDepartment": "Departmani duzenle", "deleteDepartment": "Departmani sil", "addDepartment": "Departman ekle", "addDepartmentSubtitle": "Yeni bir departman olusturun", "requestTimeOff": "Izin talep et", "requestTimeOffSubtitle": "Izin talebi gonderin", "submitRequest": "Talebi gonder", "approve": "Onayla", "reject": "Reddet", "search": "Ara", "searchPlaceholder": "Calisanlari ara..." },
     "detail": { "title": "Calisan detayi" },
-    "tabs": { "details": "Detaylar", "onboarding": "Ise alisma", "documents": "Belgeler" },
+    "tabs": { "details": "Detaylar", "onboarding": "Ise alisma", "documents": "Belgeler", "timeline": "Zaman cizelgesi" },
     "sections": { "personal": "Kisisel", "employment": "Istihdam", "compensation": "Ucret", "timeOffRequests": "Izin talepleri" },
     "employees": { "noMatch": "Eslesen calisan yok", "noMatchDesc": "Farkli bir arama terimi deneyin.", "empty": "Henuz calisan yok", "emptyDesc": "Baslamak icin ilk calisaninizi ekleyin." },
     "departments": { "empty": "Henuz departman yok", "emptyDesc": "Ekibinizi organize etmek icin departman olusturun.", "noHead": "Bas atanmadi", "member": "uye", "members": "uye" },
@@ -1096,7 +1096,15 @@
       "h2Desc": "Ekibinizi yöneticilerle departmanlara ayırın",
       "h3Title": "İzin takibi",
       "h3Desc": "İzin taleplerini yönetin ve bakiyeleri takip edin"
-    }
+    },
+    "leaveTypes": { "empty": "Henuz izin turu yapilandirilmadi.", "add": "Izin turu ekle", "slug": "Kisaltma", "daysPerYear": "Yillik gun", "maxCarry": "Maks devir", "paid": "Ucretli", "unpaid": "Ucretsiz", "inactive": "Inaktif", "deactivate": "Devre disi birak", "activate": "Etkinlestir", "carry": "Devir" },
+    "policies": { "empty": "Henuz izin politikasi yapilandirilmadi.", "add": "Politika ekle", "default": "Varsayilan" },
+    "holidays": { "empty": "Bu takvimde tatil yok.", "add": "Tatil ekle", "calendar": "Tatil takvimi", "createCalendar": "Takvim olustur", "name": "Tatil adi", "date": "Tarih", "typePublic": "Resmi tatil", "typeCompany": "Sirket tatili", "typeOptional": "Istege bagli tatil" },
+    "myLeave": { "empty": "Henuz izin basvurusu yok.", "requestLeave": "Izin talep et", "selectType": "Izin turu secin...", "reason": "Sebep", "submit": "Talebi gonder", "cancel": "Izni iptal et" },
+    "teamCalendar": { "noLeaves": "Bu ay icin onaylanmis izin yok." },
+    "leaveAppStatus": { "draft": "Taslak", "pending": "Beklemede", "approved": "Onaylandi", "rejected": "Reddedildi", "cancelled": "Iptal edildi" },
+    "attendance": { "present": "Mevcut", "absent": "Devamsiz", "halfDay": "Yarim gun", "remote": "Uzaktan", "onLeave": "Izinli", "markAllPresent": "Tumunu mevcut isaretle" },
+    "lifecycle": { "title": "Zaman cizelgesi", "addEvent": "Olay ekle", "empty": "Kayitli yasam dongusu olayı yok.", "hired": "Ise alindi", "promoted": "Terfi etti", "transferred": "Transfer edildi", "resigned": "Istifa etti", "terminated": "Ayrildi", "salaryChange": "Maas degisikligi", "roleChange": "Rol degisikligi", "other": "Diger olay", "salarychange": "Maas degisikligi", "rolechange": "Rol degisikligi" }
   },
   "sign": {
     "title": "İmza",

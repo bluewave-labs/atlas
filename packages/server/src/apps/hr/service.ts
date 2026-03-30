@@ -1,5 +1,10 @@
 import { db } from '../../config/database';
-import { employees, departments, timeOffRequests, leaveBalances, onboardingTasks, onboardingTemplates, employeeDocuments } from '../../db/schema';
+import {
+  employees, departments, timeOffRequests, leaveBalances, onboardingTasks, onboardingTemplates, employeeDocuments,
+  hrLeaveTypes, hrLeavePolicies, hrLeavePolicyAssignments,
+  hrHolidayCalendars, hrHolidays,
+  hrLifecycleEvents,
+} from '../../db/schema';
 import { eq, and, asc, desc, sql, gte, lte } from 'drizzle-orm';
 import { logger } from '../../utils/logger';
 
@@ -213,6 +218,12 @@ export async function createEmployee(userId: string, accountId: string, input: C
 
 export async function updateEmployee(userId: string, id: string, input: UpdateEmployeeInput) {
   const now = new Date();
+  const today = now.toISOString().slice(0, 10);
+
+  // Fetch current employee for lifecycle event comparison
+  const [current] = await db.select().from(employees)
+    .where(and(eq(employees.id, id), eq(employees.userId, userId))).limit(1);
+
   const updates: Record<string, unknown> = { updatedAt: now };
 
   if (input.name !== undefined) updates.name = input.name;
@@ -250,6 +261,43 @@ export async function updateEmployee(userId: string, id: string, input: UpdateEm
     .from(employees)
     .where(and(eq(employees.id, id), eq(employees.userId, userId)))
     .limit(1);
+
+  // Auto-create lifecycle events for tracked field changes
+  if (current && updated) {
+    const accountId = current.accountId;
+    try {
+      if (input.departmentId !== undefined && input.departmentId !== current.departmentId) {
+        await createLifecycleEvent(accountId, {
+          employeeId: id, eventType: 'transferred', eventDate: today,
+          fromDepartmentId: current.departmentId, toDepartmentId: input.departmentId,
+          createdBy: userId,
+        });
+      }
+      if (input.salary !== undefined && input.salary !== current.salary) {
+        await createLifecycleEvent(accountId, {
+          employeeId: id, eventType: 'salary-change', eventDate: today,
+          fromValue: current.salary?.toString() ?? '0', toValue: input.salary?.toString() ?? '0',
+          createdBy: userId,
+        });
+      }
+      if (input.role !== undefined && input.role !== current.role) {
+        await createLifecycleEvent(accountId, {
+          employeeId: id, eventType: 'role-change', eventDate: today,
+          fromValue: current.role, toValue: input.role,
+          createdBy: userId,
+        });
+      }
+      if (input.status === 'terminated' && current.status !== 'terminated') {
+        await createLifecycleEvent(accountId, {
+          employeeId: id, eventType: 'terminated', eventDate: today,
+          fromValue: current.status, toValue: 'terminated',
+          createdBy: userId,
+        });
+      }
+    } catch (err) {
+      logger.warn({ err, employeeId: id }, 'Failed to create lifecycle event during employee update');
+    }
+  }
 
   return updated || null;
 }
@@ -943,6 +991,326 @@ export async function getEmployeeDocument(accountId: string, docId: string) {
   return doc || null;
 }
 
+// ─── Leave Types ──────────────────────────────────────────────────
+
+export async function listLeaveTypes(accountId: string, includeInactive = false) {
+  const conditions = [eq(hrLeaveTypes.accountId, accountId), eq(hrLeaveTypes.isArchived, false)];
+  if (!includeInactive) {
+    conditions.push(eq(hrLeaveTypes.isActive, true));
+  }
+  return db.select().from(hrLeaveTypes).where(and(...conditions)).orderBy(asc(hrLeaveTypes.sortOrder));
+}
+
+export async function createLeaveType(accountId: string, input: {
+  name: string; slug: string; color?: string; defaultDaysPerYear?: number;
+  maxCarryForward?: number; requiresApproval?: boolean; isPaid?: boolean;
+}) {
+  const now = new Date();
+  const [maxSort] = await db
+    .select({ max: sql<number>`COALESCE(MAX(${hrLeaveTypes.sortOrder}), -1)` })
+    .from(hrLeaveTypes).where(eq(hrLeaveTypes.accountId, accountId));
+  const sortOrder = (maxSort?.max ?? -1) + 1;
+
+  const [created] = await db.insert(hrLeaveTypes).values({
+    accountId, name: input.name, slug: input.slug, color: input.color ?? '#3b82f6',
+    defaultDaysPerYear: input.defaultDaysPerYear ?? 0, maxCarryForward: input.maxCarryForward ?? 0,
+    requiresApproval: input.requiresApproval ?? true, isPaid: input.isPaid ?? true,
+    sortOrder, createdAt: now, updatedAt: now,
+  }).returning();
+  return created;
+}
+
+export async function updateLeaveType(accountId: string, id: string, input: Partial<{
+  name: string; slug: string; color: string; defaultDaysPerYear: number;
+  maxCarryForward: number; requiresApproval: boolean; isPaid: boolean;
+  isActive: boolean; sortOrder: number; isArchived: boolean;
+}>) {
+  const now = new Date();
+  const updates: Record<string, unknown> = { updatedAt: now };
+  for (const [k, v] of Object.entries(input)) { if (v !== undefined) updates[k] = v; }
+
+  const [updated] = await db.update(hrLeaveTypes).set(updates)
+    .where(and(eq(hrLeaveTypes.id, id), eq(hrLeaveTypes.accountId, accountId))).returning();
+  return updated || null;
+}
+
+export async function deleteLeaveType(accountId: string, id: string) {
+  return updateLeaveType(accountId, id, { isArchived: true });
+}
+
+export async function seedDefaultLeaveTypes(accountId: string) {
+  const existing = await db.select({ id: hrLeaveTypes.id }).from(hrLeaveTypes)
+    .where(eq(hrLeaveTypes.accountId, accountId)).limit(1);
+  if (existing.length > 0) return null;
+
+  const vacation = await createLeaveType(accountId, {
+    name: 'Vacation', slug: 'vacation', color: '#3b82f6', defaultDaysPerYear: 20,
+    maxCarryForward: 5, requiresApproval: true, isPaid: true,
+  });
+  const sick = await createLeaveType(accountId, {
+    name: 'Sick leave', slug: 'sick', color: '#ef4444', defaultDaysPerYear: 10,
+    maxCarryForward: 0, requiresApproval: false, isPaid: true,
+  });
+  const personal = await createLeaveType(accountId, {
+    name: 'Personal', slug: 'personal', color: '#f59e0b', defaultDaysPerYear: 5,
+    maxCarryForward: 0, requiresApproval: true, isPaid: true,
+  });
+
+  // Create default policy
+  const policy = await createLeavePolicy(accountId, {
+    name: 'Standard', description: 'Default leave policy for all employees',
+    isDefault: true, allocations: [
+      { leaveTypeId: vacation.id, daysPerYear: 20 },
+      { leaveTypeId: sick.id, daysPerYear: 10 },
+      { leaveTypeId: personal.id, daysPerYear: 5 },
+    ],
+  });
+
+  return { leaveTypes: [vacation, sick, personal], policy };
+}
+
+// ─── Leave Policies ───────────────────────────────────────────────
+
+export async function listLeavePolicies(accountId: string) {
+  return db.select().from(hrLeavePolicies)
+    .where(and(eq(hrLeavePolicies.accountId, accountId), eq(hrLeavePolicies.isArchived, false)))
+    .orderBy(desc(hrLeavePolicies.isDefault), asc(hrLeavePolicies.name));
+}
+
+export async function createLeavePolicy(accountId: string, input: {
+  name: string; description?: string | null; isDefault?: boolean;
+  allocations: Array<{ leaveTypeId: string; daysPerYear: number }>;
+}) {
+  const now = new Date();
+  const [created] = await db.insert(hrLeavePolicies).values({
+    accountId, name: input.name, description: input.description ?? null,
+    isDefault: input.isDefault ?? false, allocations: input.allocations,
+    createdAt: now, updatedAt: now,
+  }).returning();
+  return created;
+}
+
+export async function updateLeavePolicy(accountId: string, id: string, input: Partial<{
+  name: string; description: string | null; isDefault: boolean;
+  allocations: Array<{ leaveTypeId: string; daysPerYear: number }>; isArchived: boolean;
+}>) {
+  const now = new Date();
+  const updates: Record<string, unknown> = { updatedAt: now };
+  for (const [k, v] of Object.entries(input)) { if (v !== undefined) updates[k] = v; }
+
+  const [updated] = await db.update(hrLeavePolicies).set(updates)
+    .where(and(eq(hrLeavePolicies.id, id), eq(hrLeavePolicies.accountId, accountId))).returning();
+  return updated || null;
+}
+
+export async function deleteLeavePolicy(accountId: string, id: string) {
+  return updateLeavePolicy(accountId, id, { isArchived: true });
+}
+
+export async function assignPolicy(accountId: string, employeeId: string, policyId: string, effectiveFrom?: string) {
+  const now = new Date();
+
+  // Archive old assignments
+  await db.update(hrLeavePolicyAssignments).set({ isArchived: true, updatedAt: now })
+    .where(and(eq(hrLeavePolicyAssignments.accountId, accountId), eq(hrLeavePolicyAssignments.employeeId, employeeId), eq(hrLeavePolicyAssignments.isArchived, false)));
+
+  // Create new assignment
+  const [assignment] = await db.insert(hrLeavePolicyAssignments).values({
+    accountId, employeeId, policyId, effectiveFrom: effectiveFrom ?? now.toISOString().slice(0, 10),
+    createdAt: now, updatedAt: now,
+  }).returning();
+
+  // Auto-allocate leave balances from policy
+  const [policy] = await db.select().from(hrLeavePolicies).where(eq(hrLeavePolicies.id, policyId)).limit(1);
+  if (policy) {
+    const currentYear = now.getFullYear();
+    const leaveTypes = await db.select().from(hrLeaveTypes)
+      .where(and(eq(hrLeaveTypes.accountId, accountId), eq(hrLeaveTypes.isArchived, false)));
+
+    for (const alloc of policy.allocations) {
+      const lt = leaveTypes.find(t => t.id === alloc.leaveTypeId);
+      if (!lt) continue;
+
+      // Check if balance already exists
+      const existing = await db.select().from(leaveBalances)
+        .where(and(
+          eq(leaveBalances.accountId, accountId), eq(leaveBalances.employeeId, employeeId),
+          eq(leaveBalances.leaveType, lt.slug), eq(leaveBalances.year, currentYear),
+        )).limit(1);
+
+      if (existing.length > 0) {
+        await db.update(leaveBalances).set({ allocated: alloc.daysPerYear, leaveTypeId: lt.id, updatedAt: now })
+          .where(eq(leaveBalances.id, existing[0].id));
+      } else {
+        await db.insert(leaveBalances).values({
+          accountId, employeeId, leaveType: lt.slug, year: currentYear,
+          allocated: alloc.daysPerYear, used: 0, carried: 0, leaveTypeId: lt.id,
+          createdAt: now, updatedAt: now,
+        });
+      }
+    }
+  }
+
+  return assignment;
+}
+
+export async function getEmployeePolicy(accountId: string, employeeId: string) {
+  const [assignment] = await db.select({
+    id: hrLeavePolicyAssignments.id,
+    policyId: hrLeavePolicyAssignments.policyId,
+    effectiveFrom: hrLeavePolicyAssignments.effectiveFrom,
+    policyName: hrLeavePolicies.name,
+    allocations: hrLeavePolicies.allocations,
+  })
+    .from(hrLeavePolicyAssignments)
+    .innerJoin(hrLeavePolicies, eq(hrLeavePolicyAssignments.policyId, hrLeavePolicies.id))
+    .where(and(
+      eq(hrLeavePolicyAssignments.accountId, accountId),
+      eq(hrLeavePolicyAssignments.employeeId, employeeId),
+      eq(hrLeavePolicyAssignments.isArchived, false),
+    ))
+    .orderBy(desc(hrLeavePolicyAssignments.createdAt))
+    .limit(1);
+
+  return assignment || null;
+}
+
+// ─── Holiday Calendars ────────────────────────────────────────────
+
+export async function listHolidayCalendars(accountId: string) {
+  return db.select().from(hrHolidayCalendars)
+    .where(and(eq(hrHolidayCalendars.accountId, accountId), eq(hrHolidayCalendars.isArchived, false)))
+    .orderBy(desc(hrHolidayCalendars.year), asc(hrHolidayCalendars.name));
+}
+
+export async function createHolidayCalendar(accountId: string, input: {
+  name: string; year: number; description?: string | null; isDefault?: boolean;
+}) {
+  const now = new Date();
+  const [created] = await db.insert(hrHolidayCalendars).values({
+    accountId, name: input.name, year: input.year, description: input.description ?? null,
+    isDefault: input.isDefault ?? false, createdAt: now, updatedAt: now,
+  }).returning();
+  return created;
+}
+
+export async function updateHolidayCalendar(accountId: string, id: string, input: Partial<{
+  name: string; year: number; description: string | null; isDefault: boolean; isArchived: boolean;
+}>) {
+  const now = new Date();
+  const updates: Record<string, unknown> = { updatedAt: now };
+  for (const [k, v] of Object.entries(input)) { if (v !== undefined) updates[k] = v; }
+
+  const [updated] = await db.update(hrHolidayCalendars).set(updates)
+    .where(and(eq(hrHolidayCalendars.id, id), eq(hrHolidayCalendars.accountId, accountId))).returning();
+  return updated || null;
+}
+
+export async function deleteHolidayCalendar(accountId: string, id: string) {
+  return updateHolidayCalendar(accountId, id, { isArchived: true });
+}
+
+// ─── Holidays ─────────────────────────────────────────────────────
+
+export async function listHolidays(accountId: string, calendarId: string) {
+  return db.select().from(hrHolidays)
+    .where(and(eq(hrHolidays.calendarId, calendarId), eq(hrHolidays.accountId, accountId), eq(hrHolidays.isArchived, false)))
+    .orderBy(asc(hrHolidays.date));
+}
+
+export async function createHoliday(accountId: string, input: {
+  calendarId: string; name: string; date: string; description?: string | null;
+  type?: string; isRecurring?: boolean;
+}) {
+  const now = new Date();
+  const [created] = await db.insert(hrHolidays).values({
+    accountId, calendarId: input.calendarId, name: input.name, date: input.date,
+    description: input.description ?? null, type: input.type ?? 'public',
+    isRecurring: input.isRecurring ?? false, createdAt: now, updatedAt: now,
+  }).returning();
+  return created;
+}
+
+export async function updateHoliday(accountId: string, id: string, input: Partial<{
+  name: string; date: string; description: string | null; type: string; isRecurring: boolean; isArchived: boolean;
+}>) {
+  const now = new Date();
+  const updates: Record<string, unknown> = { updatedAt: now };
+  for (const [k, v] of Object.entries(input)) { if (v !== undefined) updates[k] = v; }
+
+  const [updated] = await db.update(hrHolidays).set(updates)
+    .where(and(eq(hrHolidays.id, id), eq(hrHolidays.accountId, accountId))).returning();
+  return updated || null;
+}
+
+export async function deleteHoliday(accountId: string, id: string) {
+  return updateHoliday(accountId, id, { isArchived: true });
+}
+
+export async function calculateWorkingDays(accountId: string, startDate: string, endDate: string, calendarId?: string) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  // Get holidays for the range
+  let holidays: string[] = [];
+  if (calendarId) {
+    const hols = await db.select({ date: hrHolidays.date }).from(hrHolidays)
+      .where(and(
+        eq(hrHolidays.calendarId, calendarId), eq(hrHolidays.isArchived, false),
+        gte(hrHolidays.date, startDate), lte(hrHolidays.date, endDate),
+      ));
+    holidays = hols.map(h => h.date);
+  }
+
+  // Count weekdays minus holidays
+  let workingDays = 0;
+  const current = new Date(start);
+  while (current <= end) {
+    const day = current.getDay();
+    const dateStr = current.toISOString().slice(0, 10);
+    if (day !== 0 && day !== 6 && !holidays.includes(dateStr)) {
+      workingDays++;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+
+  return workingDays;
+}
+
+// ─── Lifecycle Events ─────────────────────────────────────────────
+
+export async function getLifecycleTimeline(accountId: string, employeeId: string) {
+  return db.select().from(hrLifecycleEvents)
+    .where(and(eq(hrLifecycleEvents.accountId, accountId), eq(hrLifecycleEvents.employeeId, employeeId), eq(hrLifecycleEvents.isArchived, false)))
+    .orderBy(desc(hrLifecycleEvents.eventDate), desc(hrLifecycleEvents.createdAt));
+}
+
+export async function createLifecycleEvent(accountId: string, input: {
+  employeeId: string; eventType: string; eventDate: string; effectiveDate?: string | null;
+  fromValue?: string | null; toValue?: string | null;
+  fromDepartmentId?: string | null; toDepartmentId?: string | null;
+  notes?: string | null; createdBy?: string | null;
+}) {
+  const now = new Date();
+  const [created] = await db.insert(hrLifecycleEvents).values({
+    accountId, employeeId: input.employeeId, eventType: input.eventType,
+    eventDate: input.eventDate, effectiveDate: input.effectiveDate ?? null,
+    fromValue: input.fromValue ?? null, toValue: input.toValue ?? null,
+    fromDepartmentId: input.fromDepartmentId ?? null, toDepartmentId: input.toDepartmentId ?? null,
+    notes: input.notes ?? null, createdBy: input.createdBy ?? null,
+    createdAt: now, updatedAt: now,
+  }).returning();
+  return created;
+}
+
+export async function deleteLifecycleEvent(accountId: string, id: string) {
+  const now = new Date();
+  const [updated] = await db.update(hrLifecycleEvents)
+    .set({ isArchived: true, updatedAt: now })
+    .where(and(eq(hrLifecycleEvents.id, id), eq(hrLifecycleEvents.accountId, accountId))).returning();
+  return updated || null;
+}
+
 // ─── Seed Sample Data ───────────────────────────────────────────────
 
 export async function seedSampleData(userId: string, accountId: string) {
@@ -1225,6 +1593,51 @@ export async function seedSampleData(userId: string, accountId: string) {
     await updateOnboardingTask(accountId, t.id, { completedAt: new Date(), completedBy: diego.id });
   }
 
+  // ── Leave types, policies, holiday calendar, lifecycle events ─────
+  const leaveTypeResult = await seedDefaultLeaveTypes(accountId);
+
+  // Holiday calendar with 10 US holidays for current year
+  const cal = await createHolidayCalendar(accountId, { name: 'US 2026', year: currentYear, description: 'US federal holidays', isDefault: true });
+  if (cal) {
+    const usHolidays = [
+      { name: "New Year's Day", date: `${currentYear}-01-01`, type: 'public' },
+      { name: 'Martin Luther King Jr. Day', date: `${currentYear}-01-19`, type: 'public' },
+      { name: "Presidents' Day", date: `${currentYear}-02-16`, type: 'public' },
+      { name: 'Memorial Day', date: `${currentYear}-05-25`, type: 'public' },
+      { name: 'Independence Day', date: `${currentYear}-07-04`, type: 'public' },
+      { name: 'Labor Day', date: `${currentYear}-09-07`, type: 'public' },
+      { name: 'Columbus Day', date: `${currentYear}-10-12`, type: 'optional' },
+      { name: 'Veterans Day', date: `${currentYear}-11-11`, type: 'public' },
+      { name: 'Thanksgiving Day', date: `${currentYear}-11-26`, type: 'public' },
+      { name: 'Christmas Day', date: `${currentYear}-12-25`, type: 'public' },
+    ];
+    for (const h of usHolidays) {
+      await createHoliday(accountId, { calendarId: cal.id, name: h.name, date: h.date, type: h.type });
+    }
+  }
+
+  // Lifecycle events (hired events for all employees)
+  for (const emp of allEmps) {
+    try {
+      await createLifecycleEvent(accountId, {
+        employeeId: emp.id, eventType: 'hired', eventDate: emp.startDate || today,
+        toValue: emp.role, notes: `Joined as ${emp.role}`, createdBy: userId,
+      });
+    } catch (_) { /* ignore duplicates */ }
+  }
+
+  // Sample lifecycle events for some employees
+  await createLifecycleEvent(accountId, {
+    employeeId: henry.id, eventType: 'promoted', eventDate: d(-365),
+    fromValue: 'Senior Backend Engineer', toValue: 'Staff Backend Engineer',
+    notes: 'Promoted for exceptional performance', createdBy: userId,
+  });
+  await createLifecycleEvent(accountId, {
+    employeeId: carol.id, eventType: 'salary-change', eventDate: d(-180),
+    fromValue: '140000', toValue: '155000',
+    notes: 'Annual performance review adjustment', createdBy: userId,
+  });
+
   logger.info({ userId, accountId }, 'Seeded rich HR sample data');
   return {
     departments: 6,
@@ -1233,5 +1646,9 @@ export async function seedSampleData(userId: string, accountId: string) {
     leaveBalances: 60,
     onboardingTasks: 11,
     onboardingTemplates: 1,
+    leaveTypes: 3,
+    leavePolicies: 1,
+    holidays: 10,
+    lifecycleEvents: 22,
   };
 }

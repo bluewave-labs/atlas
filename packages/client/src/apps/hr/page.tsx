@@ -6,7 +6,9 @@ import {
   ChevronRight, Trash2, Edit3,
   User, Briefcase, Tag,
   LayoutDashboard, GitBranch, Upload, Download, FileText,
-  Cake, Clock,
+  Cake, Clock, ClipboardList, Calendar, Shield, Activity,
+  UserCheck, ArrowRight, DollarSign, Star, AlertCircle,
+  ChevronLeft,
 } from 'lucide-react';
 import {
   useEmployeeList, useEmployeeCounts, useCreateEmployee, useUpdateEmployee, useDeleteEmployee,
@@ -16,8 +18,19 @@ import {
   useOnboardingTasks, useCreateOnboardingTask, useUpdateOnboardingTask, useDeleteOnboardingTask,
   useApplyOnboardingTemplate, useOnboardingTemplates,
   useEmployeeDocuments, useUploadEmployeeDocument, useDeleteEmployeeDocument,
+  useLeaveTypes, useCreateLeaveType, useUpdateLeaveType, useDeleteLeaveType,
+  useLeavePolicies, useCreateLeavePolicy, useUpdateLeavePolicy,
+  useHolidayCalendars, useCreateHolidayCalendar, useHolidays, useCreateHoliday, useDeleteHoliday,
+  useLeaveApplications, useCreateLeaveApplication, useSubmitLeaveApplication,
+  useApproveLeaveApplication, useRejectLeaveApplication, useCancelLeaveApplication,
+  useLeaveCalendar,
+  useAttendanceList, useMarkAttendance, useBulkMarkAttendance, useAttendanceToday,
+  useLifecycleTimeline, useCreateLifecycleEvent,
   type HrEmployee, type HrDepartment, type HrTimeOff, type HrDashboardData,
   type OnboardingTask, type EmployeeDocument, type LeaveBalance,
+  type HrLeaveType, type HrLeavePolicy, type HrLeaveApplication,
+  type HrHolidayCalendar, type HrHoliday,
+  type HrAttendanceRecord, type HrLifecycleEvent,
 } from './hooks';
 import { AppSidebar, SidebarSection, SidebarItem } from '../../components/layout/app-sidebar';
 import { Button } from '../../components/ui/button';
@@ -37,7 +50,9 @@ import '../../styles/hr.css';
 
 // ─── Navigation ────────────────────────────────────────────────────
 
-type NavSection = 'dashboard' | 'employees' | 'departments' | 'org-chart' | 'time-off' | `dept:${string}`;
+type NavSection = 'dashboard' | 'employees' | 'departments' | 'org-chart' | 'time-off'
+  | 'attendance' | 'my-leave' | 'team-calendar' | 'leave-types' | 'holidays' | 'policies'
+  | `dept:${string}`;
 
 // ─── Status helpers ────────────────────────────────────────────────
 
@@ -732,7 +747,7 @@ function EmployeeDetailPanel({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'details' | 'onboarding' | 'documents'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'onboarding' | 'documents' | 'timeline'>('details');
   const [status, setStatus] = useState(employee.status);
   const [departmentId, setDepartmentId] = useState(employee.departmentId || '');
   const [role, setRole] = useState(employee.role);
@@ -770,6 +785,7 @@ function EmployeeDetailPanel({
     { id: 'details' as const, label: t('hr.tabs.details') },
     { id: 'onboarding' as const, label: t('hr.tabs.onboarding') },
     { id: 'documents' as const, label: t('hr.tabs.documents') },
+    { id: 'timeline' as const, label: t('hr.tabs.timeline') },
   ];
 
   return (
@@ -1108,6 +1124,9 @@ function EmployeeDetailPanel({
 
         {activeTab === 'documents' && (
           <DocumentsSection employeeId={employee.id} />
+        )}
+        {activeTab === 'timeline' && (
+          <LifecycleTimeline employeeId={employee.id} departments={departments} />
         )}
       </div>
     </div>
@@ -1720,6 +1739,709 @@ function TimeOffView({
   );
 }
 
+// ─── Leave Types View ─────────────────────────────────────────────
+
+function LeaveTypesView() {
+  const { t } = useTranslation();
+  const { data: leaveTypes, isLoading } = useLeaveTypes(true);
+  const createLeaveType = useCreateLeaveType();
+  const updateLeaveType = useUpdateLeaveType();
+  const deleteLeaveType = useDeleteLeaveType();
+  const [showCreate, setShowCreate] = useState(false);
+  const [name, setName] = useState('');
+  const [slug, setSlug] = useState('');
+  const [color, setColor] = useState('#3b82f6');
+  const [days, setDays] = useState(0);
+  const [carryForward, setCarryForward] = useState(0);
+
+  const handleCreate = () => {
+    if (!name.trim()) return;
+    createLeaveType.mutate({
+      name: name.trim(), slug: slug.trim() || name.trim().toLowerCase().replace(/\s+/g, '-'),
+      color, defaultDaysPerYear: days, maxCarryForward: carryForward,
+    }, { onSuccess: () => { setShowCreate(false); setName(''); setSlug(''); setDays(0); setCarryForward(0); } });
+  };
+
+  if (isLoading) return <div style={{ padding: 'var(--spacing-xl)' }}><Skeleton height={200} /></div>;
+
+  return (
+    <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-xl)' }}>
+      {(!leaveTypes || leaveTypes.length === 0) && !showCreate && (
+        <div style={{ textAlign: 'center', padding: 'var(--spacing-2xl)', color: 'var(--color-text-tertiary)' }}>
+          <ClipboardList size={40} style={{ marginBottom: 'var(--spacing-md)', opacity: 0.5 }} />
+          <p style={{ fontFamily: 'var(--font-family)', fontSize: 'var(--font-size-md)' }}>{t('hr.leaveTypes.empty')}</p>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {leaveTypes?.map((lt) => (
+          <div key={lt.id} style={{
+            display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: 'var(--spacing-md) var(--spacing-lg)',
+            borderBottom: '1px solid var(--color-border-secondary)',
+          }}>
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: lt.color, flexShrink: 0 }} />
+            <span style={{ flex: 1, fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
+              {lt.name}
+            </span>
+            <span style={{ width: 80, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>
+              {lt.defaultDaysPerYear} {t('hr.leaveBalance.days').toLowerCase()}/{t('hr.period.yearly').toLowerCase()}
+            </span>
+            <span style={{ width: 80, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
+              {t('hr.leaveTypes.carry')}: {lt.maxCarryForward}
+            </span>
+            <Badge variant={lt.isPaid ? 'success' : 'default'}>{lt.isPaid ? t('hr.leaveTypes.paid') : t('hr.leaveTypes.unpaid')}</Badge>
+            <Badge variant={lt.isActive ? 'primary' : 'default'}>{lt.isActive ? t('hr.status.active') : t('hr.leaveTypes.inactive')}</Badge>
+            <IconButton
+              icon={lt.isActive ? <XCircle size={14} /> : <Check size={14} />}
+              label={lt.isActive ? t('hr.leaveTypes.deactivate') : t('hr.leaveTypes.activate')}
+              size={26}
+              onClick={() => updateLeaveType.mutate({ id: lt.id, isActive: !lt.isActive })}
+            />
+            <IconButton icon={<Trash2 size={14} />} label={t('common.delete')} size={26} destructive onClick={() => deleteLeaveType.mutate(lt.id)} />
+          </div>
+        ))}
+      </div>
+
+      {showCreate && (
+        <div style={{ marginTop: 'var(--spacing-lg)', padding: 'var(--spacing-lg)', border: '1px solid var(--color-border-primary)', borderRadius: 'var(--radius-lg)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+            <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
+              <Input label={t('hr.fields.name')} value={name} onChange={(e) => setName(e.target.value)} placeholder="Vacation" style={{ flex: 1 }} autoFocus />
+              <Input label={t('hr.leaveTypes.slug')} value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="vacation" style={{ flex: 1 }} />
+            </div>
+            <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
+              <Input label={t('hr.leaveTypes.daysPerYear')} type="number" value={String(days)} onChange={(e) => setDays(Number(e.target.value))} style={{ flex: 1 }} />
+              <Input label={t('hr.leaveTypes.maxCarry')} type="number" value={String(carryForward)} onChange={(e) => setCarryForward(Number(e.target.value))} style={{ flex: 1 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+                <label className="hr-field-label">{t('hr.fields.color')}</label>
+                <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ width: 34, height: 34, border: 'none', background: 'none', cursor: 'pointer' }} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 'var(--spacing-sm)', justifyContent: 'flex-end' }}>
+              <Button variant="ghost" size="sm" onClick={() => setShowCreate(false)}>{t('common.cancel')}</Button>
+              <Button variant="primary" size="sm" onClick={handleCreate} disabled={!name.trim()}>{t('common.save')}</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!showCreate && (
+        <div style={{ marginTop: 'var(--spacing-lg)' }}>
+          <Button variant="secondary" size="sm" icon={<Plus size={14} />} onClick={() => setShowCreate(true)}>
+            {t('hr.leaveTypes.add')}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Leave Policies View ──────────────────────────────────────────
+
+function LeavePoliciesView() {
+  const { t } = useTranslation();
+  const { data: policies, isLoading } = useLeavePolicies();
+  const { data: leaveTypes } = useLeaveTypes();
+  const createPolicy = useCreateLeavePolicy();
+  const [showCreate, setShowCreate] = useState(false);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+
+  const handleCreate = () => {
+    if (!name.trim()) return;
+    createPolicy.mutate({
+      name: name.trim(), description: description.trim() || null,
+      allocations: leaveTypes?.map(lt => ({ leaveTypeId: lt.id, daysPerYear: lt.defaultDaysPerYear })) || [],
+    }, { onSuccess: () => { setShowCreate(false); setName(''); setDescription(''); } });
+  };
+
+  const getLeaveTypeName = (id: string) => leaveTypes?.find(lt => lt.id === id)?.name ?? id;
+  const getLeaveTypeColor = (id: string) => leaveTypes?.find(lt => lt.id === id)?.color ?? '#6b7280';
+
+  if (isLoading) return <div style={{ padding: 'var(--spacing-xl)' }}><Skeleton height={200} /></div>;
+
+  return (
+    <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-xl)' }}>
+      {(!policies || policies.length === 0) && !showCreate && (
+        <div style={{ textAlign: 'center', padding: 'var(--spacing-2xl)', color: 'var(--color-text-tertiary)' }}>
+          <Shield size={40} style={{ marginBottom: 'var(--spacing-md)', opacity: 0.5 }} />
+          <p style={{ fontFamily: 'var(--font-family)', fontSize: 'var(--font-size-md)' }}>{t('hr.policies.empty')}</p>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+        {policies?.map((p) => (
+          <div key={p.id} style={{
+            padding: 'var(--spacing-lg)', border: '1px solid var(--color-border-secondary)',
+            borderRadius: 'var(--radius-lg)', background: 'var(--color-bg-primary)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
+              <span style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
+                {p.name}
+              </span>
+              {p.isDefault && <Badge variant="primary">{t('hr.policies.default')}</Badge>}
+            </div>
+            {p.description && (
+              <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', marginBottom: 'var(--spacing-md)', fontFamily: 'var(--font-family)' }}>
+                {p.description}
+              </p>
+            )}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-sm)' }}>
+              {p.allocations.map((alloc, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', padding: 'var(--spacing-xs) var(--spacing-sm)', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)' }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: getLeaveTypeColor(alloc.leaveTypeId) }} />
+                  <span style={{ color: 'var(--color-text-secondary)' }}>{getLeaveTypeName(alloc.leaveTypeId)}</span>
+                  <span style={{ fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)' }}>{alloc.daysPerYear}d</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {showCreate && (
+        <div style={{ marginTop: 'var(--spacing-lg)', padding: 'var(--spacing-lg)', border: '1px solid var(--color-border-primary)', borderRadius: 'var(--radius-lg)' }}>
+          <Input label={t('hr.fields.name')} value={name} onChange={(e) => setName(e.target.value)} placeholder="Standard" autoFocus />
+          <div style={{ marginTop: 'var(--spacing-md)' }}>
+            <Input label={t('hr.fields.description')} value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('hr.fields.optionalDescription')} />
+          </div>
+          <div style={{ display: 'flex', gap: 'var(--spacing-sm)', justifyContent: 'flex-end', marginTop: 'var(--spacing-md)' }}>
+            <Button variant="ghost" size="sm" onClick={() => setShowCreate(false)}>{t('common.cancel')}</Button>
+            <Button variant="primary" size="sm" onClick={handleCreate} disabled={!name.trim()}>{t('common.save')}</Button>
+          </div>
+        </div>
+      )}
+
+      {!showCreate && (
+        <div style={{ marginTop: 'var(--spacing-lg)' }}>
+          <Button variant="secondary" size="sm" icon={<Plus size={14} />} onClick={() => setShowCreate(true)}>
+            {t('hr.policies.add')}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Holidays View ────────────────────────────────────────────────
+
+function HolidaysView() {
+  const { t } = useTranslation();
+  const { data: calendars } = useHolidayCalendars();
+  const createCalendar = useCreateHolidayCalendar();
+  const [selectedCalendarId, setSelectedCalendarId] = useState<string | null>(null);
+  const { data: holidays } = useHolidays(selectedCalendarId ?? undefined);
+  const createHoliday = useCreateHoliday();
+  const deleteHoliday = useDeleteHoliday();
+  const [showAddHoliday, setShowAddHoliday] = useState(false);
+  const [hName, setHName] = useState('');
+  const [hDate, setHDate] = useState('');
+  const [hType, setHType] = useState('public');
+
+  // Auto-select first calendar
+  useEffect(() => {
+    if (calendars?.length && !selectedCalendarId) setSelectedCalendarId(calendars[0].id);
+  }, [calendars, selectedCalendarId]);
+
+  const handleCreateCalendar = () => {
+    const year = new Date().getFullYear();
+    createCalendar.mutate({ name: `${t('hr.holidays.calendar')} ${year}`, year, isDefault: true });
+  };
+
+  const handleAddHoliday = () => {
+    if (!hName.trim() || !hDate || !selectedCalendarId) return;
+    createHoliday.mutate({ calendarId: selectedCalendarId, name: hName.trim(), date: hDate, type: hType }, {
+      onSuccess: () => { setShowAddHoliday(false); setHName(''); setHDate(''); },
+    });
+  };
+
+  const typeColors: Record<string, string> = { public: 'var(--color-error)', company: 'var(--color-accent-primary)', optional: 'var(--color-warning)' };
+
+  return (
+    <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-xl)' }}>
+      {/* Calendar selector */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-xl)' }}>
+        {calendars && calendars.length > 0 ? (
+          <Select
+            value={selectedCalendarId || ''}
+            onChange={(v) => setSelectedCalendarId(v)}
+            options={calendars.map(c => ({ value: c.id, label: `${c.name} (${c.year})` }))}
+            size="sm"
+          />
+        ) : (
+          <Button variant="secondary" size="sm" onClick={handleCreateCalendar}>{t('hr.holidays.createCalendar')}</Button>
+        )}
+      </div>
+
+      {/* Holiday list */}
+      {selectedCalendarId && (
+        <>
+          {(!holidays || holidays.length === 0) && !showAddHoliday && (
+            <div style={{ textAlign: 'center', padding: 'var(--spacing-2xl)', color: 'var(--color-text-tertiary)' }}>
+              <Calendar size={40} style={{ marginBottom: 'var(--spacing-md)', opacity: 0.5 }} />
+              <p style={{ fontFamily: 'var(--font-family)', fontSize: 'var(--font-size-md)' }}>{t('hr.holidays.empty')}</p>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {holidays?.map((h) => (
+              <div key={h.id} style={{
+                display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: 'var(--spacing-md) var(--spacing-lg)',
+                borderBottom: '1px solid var(--color-border-secondary)',
+              }}>
+                <div style={{ width: 4, height: 24, borderRadius: 2, background: typeColors[h.type] || 'var(--color-text-tertiary)', flexShrink: 0 }} />
+                <span style={{ width: 100, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>
+                  {formatDate(h.date)}
+                </span>
+                <span style={{ flex: 1, fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
+                  {h.name}
+                </span>
+                <Badge variant={h.type === 'public' ? 'error' : h.type === 'company' ? 'primary' : 'warning'}>{h.type}</Badge>
+                <IconButton icon={<Trash2 size={14} />} label={t('common.delete')} size={26} destructive onClick={() => deleteHoliday.mutate(h.id)} />
+              </div>
+            ))}
+          </div>
+
+          {showAddHoliday && (
+            <div style={{ marginTop: 'var(--spacing-lg)', padding: 'var(--spacing-lg)', border: '1px solid var(--color-border-primary)', borderRadius: 'var(--radius-lg)' }}>
+              <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
+                <Input label={t('hr.holidays.name')} value={hName} onChange={(e) => setHName(e.target.value)} placeholder="New Year's Day" style={{ flex: 1 }} autoFocus />
+                <Input label={t('hr.holidays.date')} type="date" value={hDate} onChange={(e) => setHDate(e.target.value)} style={{ flex: 1 }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)', flex: 1 }}>
+                  <label className="hr-field-label">{t('hr.fields.type')}</label>
+                  <Select value={hType} onChange={setHType} options={[
+                    { value: 'public', label: t('hr.holidays.typePublic') },
+                    { value: 'company', label: t('hr.holidays.typeCompany') },
+                    { value: 'optional', label: t('hr.holidays.typeOptional') },
+                  ]} size="sm" />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 'var(--spacing-sm)', justifyContent: 'flex-end', marginTop: 'var(--spacing-md)' }}>
+                <Button variant="ghost" size="sm" onClick={() => setShowAddHoliday(false)}>{t('common.cancel')}</Button>
+                <Button variant="primary" size="sm" onClick={handleAddHoliday} disabled={!hName.trim() || !hDate}>{t('common.save')}</Button>
+              </div>
+            </div>
+          )}
+
+          {!showAddHoliday && (
+            <div style={{ marginTop: 'var(--spacing-lg)' }}>
+              <Button variant="secondary" size="sm" icon={<Plus size={14} />} onClick={() => setShowAddHoliday(true)}>
+                {t('hr.holidays.add')}
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─── My Leave View ────────────────────────────────────────────────
+
+function MyLeaveView({ employees }: { employees: HrEmployee[] }) {
+  const { t } = useTranslation();
+  const { data: applications, isLoading } = useLeaveApplications();
+  const { data: leaveTypes } = useLeaveTypes();
+  const createApp = useCreateLeaveApplication();
+  const submitApp = useSubmitLeaveApplication();
+  const cancelApp = useCancelLeaveApplication();
+  const approveApp = useApproveLeaveApplication();
+  const rejectApp = useRejectLeaveApplication();
+  const [showRequest, setShowRequest] = useState(false);
+  const [reqEmployeeId, setReqEmployeeId] = useState('');
+  const [reqLeaveTypeId, setReqLeaveTypeId] = useState('');
+  const [reqStartDate, setReqStartDate] = useState('');
+  const [reqEndDate, setReqEndDate] = useState('');
+  const [reqReason, setReqReason] = useState('');
+  const [reqHalfDay, setReqHalfDay] = useState(false);
+
+  const handleRequest = () => {
+    if (!reqEmployeeId || !reqLeaveTypeId || !reqStartDate || !reqEndDate) return;
+    createApp.mutate({
+      employeeId: reqEmployeeId, leaveTypeId: reqLeaveTypeId,
+      startDate: reqStartDate, endDate: reqEndDate,
+      reason: reqReason || undefined, halfDay: reqHalfDay,
+    }, {
+      onSuccess: (data) => {
+        setShowRequest(false);
+        setReqEmployeeId(''); setReqLeaveTypeId(''); setReqStartDate(''); setReqEndDate(''); setReqReason(''); setReqHalfDay(false);
+        // Auto-submit
+        if (data?.id) submitApp.mutate(data.id);
+      },
+    });
+  };
+
+  const statusBadge = (status: string) => {
+    const variants: Record<string, 'default' | 'primary' | 'success' | 'warning' | 'error'> = {
+      draft: 'default', pending: 'warning', approved: 'success', rejected: 'error', cancelled: 'default',
+    };
+    return <Badge variant={variants[status] || 'default'}>{t(`hr.leaveAppStatus.${status}`)}</Badge>;
+  };
+
+  if (isLoading) return <div style={{ padding: 'var(--spacing-xl)' }}><Skeleton height={200} /></div>;
+
+  return (
+    <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-xl)' }}>
+      {(!applications || applications.length === 0) && !showRequest && (
+        <div style={{ textAlign: 'center', padding: 'var(--spacing-2xl)', color: 'var(--color-text-tertiary)' }}>
+          <CalendarDays size={40} style={{ marginBottom: 'var(--spacing-md)', opacity: 0.5 }} />
+          <p style={{ fontFamily: 'var(--font-family)', fontSize: 'var(--font-size-md)' }}>{t('hr.myLeave.empty')}</p>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {applications?.map((app) => (
+          <div key={app.id} style={{
+            display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: 'var(--spacing-md) var(--spacing-lg)',
+            borderBottom: '1px solid var(--color-border-secondary)',
+          }}>
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: app.leaveTypeColor || '#6b7280', flexShrink: 0 }} />
+            <span style={{ width: 140, flexShrink: 0, fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
+              {app.employeeName}
+            </span>
+            <span style={{ width: 100, flexShrink: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>
+              {app.leaveTypeName}
+            </span>
+            <span style={{ width: 180, flexShrink: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>
+              {formatDate(app.startDate)} - {formatDate(app.endDate)}
+            </span>
+            <span style={{ width: 50, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
+              {app.totalDays}d
+            </span>
+            <span style={{ width: 80, flexShrink: 0 }}>{statusBadge(app.status)}</span>
+            <span style={{ flex: 1, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {app.reason || '-'}
+            </span>
+            <div style={{ width: 80, flexShrink: 0, display: 'flex', gap: 2 }}>
+              {app.status === 'pending' && (
+                <>
+                  <IconButton icon={<Check size={14} />} label={t('hr.actions.approve')} size={26} onClick={() => approveApp.mutate({ id: app.id })} style={{ color: 'var(--color-success)' }} />
+                  <IconButton icon={<XCircle size={14} />} label={t('hr.actions.reject')} size={26} destructive onClick={() => rejectApp.mutate({ id: app.id })} />
+                </>
+              )}
+              {app.status === 'approved' && (
+                <IconButton icon={<X size={14} />} label={t('hr.myLeave.cancel')} size={26} destructive onClick={() => cancelApp.mutate(app.id)} />
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {showRequest && (
+        <Modal open={showRequest} onOpenChange={(o) => !o && setShowRequest(false)} width={480} title={t('hr.myLeave.requestLeave')}>
+          <Modal.Header title={t('hr.myLeave.requestLeave')} />
+          <Modal.Body>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+                <label className="hr-field-label">{t('hr.fields.employee')}</label>
+                <Select value={reqEmployeeId} onChange={setReqEmployeeId}
+                  options={[{ value: '', label: t('hr.fields.selectEmployee') }, ...employees.map(e => ({ value: e.id, label: e.name }))]}
+                  size="sm" />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+                <label className="hr-field-label">{t('hr.fields.type')}</label>
+                <Select value={reqLeaveTypeId} onChange={setReqLeaveTypeId}
+                  options={[{ value: '', label: t('hr.myLeave.selectType') }, ...(leaveTypes?.map(lt => ({ value: lt.id, label: lt.name })) || [])]}
+                  size="sm" />
+              </div>
+              <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
+                <Input label={t('hr.fields.startDate')} type="date" value={reqStartDate} onChange={(e) => setReqStartDate(e.target.value)} style={{ flex: 1 }} />
+                <Input label={t('hr.fields.endDate')} type="date" value={reqEndDate} onChange={(e) => setReqEndDate(e.target.value)} style={{ flex: 1 }} />
+              </div>
+              <Input label={t('hr.myLeave.reason')} value={reqReason} onChange={(e) => setReqReason(e.target.value)} placeholder={t('hr.fields.optionalNotes')} />
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="ghost" onClick={() => setShowRequest(false)}>{t('common.cancel')}</Button>
+            <Button variant="primary" onClick={handleRequest} disabled={!reqEmployeeId || !reqLeaveTypeId || !reqStartDate || !reqEndDate}>
+              {t('hr.myLeave.submit')}
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
+
+      <div style={{ marginTop: 'var(--spacing-lg)' }}>
+        <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setShowRequest(true)}>
+          {t('hr.myLeave.requestLeave')}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Team Calendar View ───────────────────────────────────────────
+
+function TeamCalendarView() {
+  const { t } = useTranslation();
+  const [currentMonth, setCurrentMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const { data: calendarData } = useLeaveCalendar(currentMonth);
+
+  const [year, month] = currentMonth.split('-').map(Number);
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const monthName = new Date(year, month - 1).toLocaleDateString('en', { month: 'long', year: 'numeric' });
+
+  const prevMonth = () => {
+    const d = new Date(year, month - 2, 1);
+    setCurrentMonth(d.toISOString().slice(0, 7));
+  };
+  const nextMonth = () => {
+    const d = new Date(year, month, 1);
+    setCurrentMonth(d.toISOString().slice(0, 7));
+  };
+
+  // Group by employee
+  const byEmployee = useMemo(() => {
+    const map: Record<string, { name: string; leaves: typeof calendarData }> = {};
+    for (const entry of calendarData || []) {
+      if (!map[entry.employeeId]) map[entry.employeeId] = { name: entry.employeeName, leaves: [] };
+      map[entry.employeeId].leaves!.push(entry);
+    }
+    return Object.entries(map);
+  }, [calendarData]);
+
+  return (
+    <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-xl)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-xl)' }}>
+        <IconButton icon={<ChevronLeft size={14} />} label={t('common.previous')} size={28} onClick={prevMonth} />
+        <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)', minWidth: 180, textAlign: 'center' }}>
+          {monthName}
+        </span>
+        <IconButton icon={<ChevronRight size={14} />} label={t('common.next')} size={28} onClick={nextMonth} />
+      </div>
+
+      {byEmployee.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: 'var(--spacing-2xl)', color: 'var(--color-text-tertiary)' }}>
+          <Calendar size={40} style={{ marginBottom: 'var(--spacing-md)', opacity: 0.5 }} />
+          <p style={{ fontFamily: 'var(--font-family)', fontSize: 'var(--font-size-md)' }}>{t('hr.teamCalendar.noLeaves')}</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+          {byEmployee.map(([empId, { name, leaves }]) => (
+            <div key={empId} style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: 'var(--spacing-sm) 0' }}>
+              <span style={{ width: 140, flexShrink: 0, fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>{name}</span>
+              <div style={{ flex: 1, display: 'flex', gap: 2, position: 'relative', height: 24 }}>
+                {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
+                  const dateStr = `${currentMonth}-${String(day).padStart(2, '0')}`;
+                  const leave = leaves?.find(l => l.startDate <= dateStr && l.endDate >= dateStr);
+                  return (
+                    <div key={day} style={{
+                      flex: 1, height: 24, borderRadius: 'var(--radius-sm)',
+                      background: leave ? leave.leaveTypeColor : 'var(--color-bg-secondary)',
+                      opacity: leave ? 0.7 : 0.3, minWidth: 4,
+                    }} title={leave ? `${leave.leaveTypeName} (${formatDate(leave.startDate)} - ${formatDate(leave.endDate)})` : dateStr} />
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Attendance View ──────────────────────────────────────────────
+
+function AttendanceView({ employees }: { employees: HrEmployee[] }) {
+  const { t } = useTranslation();
+  const today = new Date().toISOString().slice(0, 10);
+  const [selectedDate, setSelectedDate] = useState(today);
+  const { data: records, isLoading } = useAttendanceList({ date: selectedDate });
+  const { data: todaySummary } = useAttendanceToday();
+  const markAttendance = useMarkAttendance();
+  const bulkMark = useBulkMarkAttendance();
+
+  const activeEmployees = employees.filter(e => e.status === 'active');
+
+  // Map records by employeeId
+  const recordMap = useMemo(() => {
+    const map: Record<string, HrAttendanceRecord> = {};
+    for (const r of records || []) map[r.employeeId] = r;
+    return map;
+  }, [records]);
+
+  const handleMarkAll = () => {
+    const unmarked = activeEmployees.filter(e => !recordMap[e.id]).map(e => e.id);
+    if (unmarked.length === 0) return;
+    bulkMark.mutate({ employeeIds: unmarked, date: selectedDate, status: 'present' });
+  };
+
+  const statusOptions = [
+    { value: 'present', label: t('hr.attendance.present') },
+    { value: 'absent', label: t('hr.attendance.absent') },
+    { value: 'half-day', label: t('hr.attendance.halfDay') },
+    { value: 'remote', label: t('hr.attendance.remote') },
+    { value: 'on-leave', label: t('hr.attendance.onLeave') },
+  ];
+
+  const statusColors: Record<string, string> = {
+    present: 'var(--color-success)', absent: 'var(--color-error)',
+    'half-day': 'var(--color-warning)', remote: 'var(--color-accent-primary)', 'on-leave': 'var(--color-warning)',
+  };
+
+  return (
+    <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-xl)' }}>
+      {/* Summary cards */}
+      {selectedDate === today && todaySummary && (
+        <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-xl)' }}>
+          {['present', 'absent', 'remote', 'on-leave'].map(s => (
+            <div key={s} style={{ flex: 1, padding: 'var(--spacing-md)', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
+              <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-bold)', color: statusColors[s] || 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
+                {todaySummary[s] || 0}
+              </div>
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', textTransform: 'capitalize' }}>
+                {t(`hr.attendance.${s === 'half-day' ? 'halfDay' : s === 'on-leave' ? 'onLeave' : s}`)}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Date picker + actions */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)' }}>
+        <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} size="sm" style={{ width: 180 }} />
+        <Button variant="secondary" size="sm" onClick={handleMarkAll}>{t('hr.attendance.markAllPresent')}</Button>
+      </div>
+
+      {/* Employee list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {activeEmployees.map((emp) => {
+          const record = recordMap[emp.id];
+          return (
+            <div key={emp.id} style={{
+              display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: 'var(--spacing-sm) var(--spacing-lg)',
+              borderBottom: '1px solid var(--color-border-secondary)',
+            }}>
+              <Avatar name={emp.name} src={emp.avatarUrl} size={28} />
+              <span style={{ width: 180, flexShrink: 0, fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
+                {emp.name}
+              </span>
+              <span style={{ width: 120, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
+                {emp.departmentName || '-'}
+              </span>
+              <div style={{ width: 140 }}>
+                <Select
+                  value={record?.status || ''}
+                  onChange={(v) => markAttendance.mutate({ employeeId: emp.id, date: selectedDate, status: v })}
+                  options={[{ value: '', label: '-' }, ...statusOptions]}
+                  size="sm"
+                />
+              </div>
+              {record && (
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: statusColors[record.status] || 'var(--color-text-tertiary)' }} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Lifecycle Timeline View ──────────────────────────────────────
+
+function LifecycleTimeline({ employeeId, departments }: { employeeId: string; departments: HrDepartment[] }) {
+  const { t } = useTranslation();
+  const { data: events, isLoading } = useLifecycleTimeline(employeeId);
+  const createEvent = useCreateLifecycleEvent();
+  const [showAdd, setShowAdd] = useState(false);
+  const [evtType, setEvtType] = useState('other');
+  const [evtDate, setEvtDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [evtNotes, setEvtNotes] = useState('');
+
+  const eventIcons: Record<string, typeof Activity> = {
+    hired: UserCheck, promoted: Star, transferred: ArrowRight, resigned: AlertCircle,
+    terminated: XCircle, 'salary-change': DollarSign, 'role-change': Briefcase, other: Activity,
+  };
+
+  const handleAdd = () => {
+    createEvent.mutate({ employeeId, eventType: evtType, eventDate: evtDate, notes: evtNotes || undefined }, {
+      onSuccess: () => { setShowAdd(false); setEvtNotes(''); },
+    });
+  };
+
+  const getDeptName = (id: string | null) => departments.find(d => d.id === id)?.name || '-';
+
+  if (isLoading) return <Skeleton height={100} />;
+
+  return (
+    <div style={{ padding: 'var(--spacing-md)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--spacing-md)' }}>
+        <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
+          {t('hr.lifecycle.title')}
+        </span>
+        <Button variant="ghost" size="sm" icon={<Plus size={12} />} onClick={() => setShowAdd(true)}>{t('hr.lifecycle.addEvent')}</Button>
+      </div>
+
+      {showAdd && (
+        <div style={{ marginBottom: 'var(--spacing-md)', padding: 'var(--spacing-md)', border: '1px solid var(--color-border-primary)', borderRadius: 'var(--radius-md)' }}>
+          <div style={{ display: 'flex', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
+            <Select value={evtType} onChange={setEvtType} options={[
+              { value: 'hired', label: t('hr.lifecycle.hired') }, { value: 'promoted', label: t('hr.lifecycle.promoted') },
+              { value: 'transferred', label: t('hr.lifecycle.transferred') }, { value: 'salary-change', label: t('hr.lifecycle.salaryChange') },
+              { value: 'role-change', label: t('hr.lifecycle.roleChange') }, { value: 'resigned', label: t('hr.lifecycle.resigned') },
+              { value: 'terminated', label: t('hr.lifecycle.terminated') }, { value: 'other', label: t('hr.lifecycle.other') },
+            ]} size="sm" />
+            <Input type="date" value={evtDate} onChange={(e) => setEvtDate(e.target.value)} size="sm" />
+          </div>
+          <Input value={evtNotes} onChange={(e) => setEvtNotes(e.target.value)} placeholder={t('hr.fields.optionalNotes')} size="sm" />
+          <div style={{ display: 'flex', gap: 'var(--spacing-xs)', justifyContent: 'flex-end', marginTop: 'var(--spacing-sm)' }}>
+            <Button variant="ghost" size="sm" onClick={() => setShowAdd(false)}>{t('common.cancel')}</Button>
+            <Button variant="primary" size="sm" onClick={handleAdd}>{t('common.save')}</Button>
+          </div>
+        </div>
+      )}
+
+      {(!events || events.length === 0) && (
+        <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
+          {t('hr.lifecycle.empty')}
+        </p>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {events?.map((evt, i) => {
+          const Icon = eventIcons[evt.eventType] || Activity;
+          return (
+            <div key={evt.id} style={{ display: 'flex', gap: 'var(--spacing-md)', paddingBottom: 'var(--spacing-md)', position: 'relative' }}>
+              {i < (events.length - 1) && (
+                <div style={{ position: 'absolute', left: 11, top: 24, bottom: 0, width: 1, background: 'var(--color-border-secondary)' }} />
+              )}
+              <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--color-bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, zIndex: 1 }}>
+                <Icon size={12} style={{ color: 'var(--color-text-secondary)' }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+                  <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
+                    {t(`hr.lifecycle.${evt.eventType.replace('-', '')}`, evt.eventType)}
+                  </span>
+                  <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
+                    {formatDate(evt.eventDate)}
+                  </span>
+                </div>
+                {(evt.fromValue || evt.toValue) && (
+                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)', marginTop: 2 }}>
+                    {evt.fromValue} {evt.fromValue && evt.toValue ? '→' : ''} {evt.toValue}
+                  </div>
+                )}
+                {(evt.fromDepartmentId || evt.toDepartmentId) && (
+                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)', marginTop: 2 }}>
+                    {getDeptName(evt.fromDepartmentId)} → {getDeptName(evt.toDepartmentId)}
+                  </div>
+                )}
+                {evt.notes && (
+                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', marginTop: 2 }}>
+                    {evt.notes}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main HR Page ──────────────────────────────────────────────────
 
 export function HrPage() {
@@ -1818,6 +2540,12 @@ export function HrPage() {
     if (activeNav === 'departments') return t('hr.sidebar.departments');
     if (activeNav === 'org-chart') return t('hr.sidebar.orgChart');
     if (activeNav === 'time-off') return t('hr.sidebar.timeOff');
+    if (activeNav === 'attendance') return t('hr.sidebar.attendance');
+    if (activeNav === 'my-leave') return t('hr.sidebar.myLeave');
+    if (activeNav === 'team-calendar') return t('hr.sidebar.teamCalendar');
+    if (activeNav === 'leave-types') return t('hr.sidebar.leaveTypes');
+    if (activeNav === 'holidays') return t('hr.sidebar.holidays');
+    if (activeNav === 'policies') return t('hr.sidebar.policies');
     if (activeNav.startsWith('dept:')) {
       const dept = departments.find((d) => d.id === activeNav.replace('dept:', ''));
       return dept?.name || t('hr.sidebar.department');
@@ -1836,7 +2564,7 @@ export function HrPage() {
   const handleDeleteTimeOff = (id: string) => { deleteTimeOff.mutate(id); };
   const handleDeleteDepartment = (id: string) => { deleteDepartment.mutate(id); };
 
-  const showAddButton = activeNav !== 'dashboard' && activeNav !== 'org-chart';
+  const showAddButton = activeNav === 'employees' || activeNav === 'departments' || activeNav === 'time-off' || activeNav.startsWith('dept:');
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
@@ -1901,12 +2629,49 @@ export function HrPage() {
             onClick={() => { setActiveNav('org-chart'); setSelectedEmployeeId(null); }}
           />
           <SidebarItem
-            label={t('hr.sidebar.timeOff')}
+            label={t('hr.sidebar.attendance')}
+            icon={<UserCheck size={14} />}
+            iconColor="#10b981"
+            isActive={activeNav === 'attendance'}
+            onClick={() => { setActiveNav('attendance'); setSelectedEmployeeId(null); }}
+          />
+        </SidebarSection>
+
+        <SidebarSection title={t('hr.sidebar.leaveSection')}>
+          <SidebarItem
+            label={t('hr.sidebar.myLeave')}
             icon={<CalendarDays size={14} />}
             iconColor="#f59e0b"
-            isActive={activeNav === 'time-off'}
-            count={counts.pendingTimeOff}
-            onClick={() => { setActiveNav('time-off'); setSelectedEmployeeId(null); }}
+            isActive={activeNav === 'my-leave'}
+            onClick={() => { setActiveNav('my-leave'); setSelectedEmployeeId(null); }}
+          />
+          <SidebarItem
+            label={t('hr.sidebar.teamCalendar')}
+            icon={<Calendar size={14} />}
+            iconColor="#f59e0b"
+            isActive={activeNav === 'team-calendar'}
+            onClick={() => { setActiveNav('team-calendar'); setSelectedEmployeeId(null); }}
+          />
+          <SidebarItem
+            label={t('hr.sidebar.leaveTypes')}
+            icon={<ClipboardList size={14} />}
+            iconColor="#8b5cf6"
+            isActive={activeNav === 'leave-types'}
+            onClick={() => { setActiveNav('leave-types'); setSelectedEmployeeId(null); }}
+          />
+          <SidebarItem
+            label={t('hr.sidebar.holidays')}
+            icon={<Calendar size={14} />}
+            iconColor="#ef4444"
+            isActive={activeNav === 'holidays'}
+            onClick={() => { setActiveNav('holidays'); setSelectedEmployeeId(null); }}
+          />
+          <SidebarItem
+            label={t('hr.sidebar.policies')}
+            icon={<Shield size={14} />}
+            iconColor="#06b6d4"
+            isActive={activeNav === 'policies'}
+            onClick={() => { setActiveNav('policies'); setSelectedEmployeeId(null); }}
           />
         </SidebarSection>
       </AppSidebar>
@@ -1980,6 +2745,13 @@ export function HrPage() {
             onDelete={handleDeleteTimeOff}
           />
         )}
+
+        {activeNav === 'attendance' && <AttendanceView employees={allEmployees} />}
+        {activeNav === 'my-leave' && <MyLeaveView employees={allEmployees} />}
+        {activeNav === 'team-calendar' && <TeamCalendarView />}
+        {activeNav === 'leave-types' && <LeaveTypesView />}
+        {activeNav === 'holidays' && <HolidaysView />}
+        {activeNav === 'policies' && <LeavePoliciesView />}
       </div>
 
       {/* Detail panel */}

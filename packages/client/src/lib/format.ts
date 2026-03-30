@@ -18,9 +18,9 @@ export function formatBytes(bytes: number | null): string {
  * Reads from the settings store.
  */
 export function formatDate(date: string | Date | null | undefined): string {
-  if (!date) return '—';
+  if (!date) return '\u2014';
   const d = typeof date === 'string' ? new Date(date) : date;
-  if (isNaN(d.getTime())) return '—';
+  if (isNaN(d.getTime())) return '\u2014';
 
   const { dateFormat } = useSettingsStore.getState();
   const day = String(d.getDate()).padStart(2, '0');
@@ -38,9 +38,9 @@ export function formatDate(date: string | Date | null | undefined): string {
  * Format a date with time using the user's format preferences.
  */
 export function formatDateTime(date: string | Date | null | undefined): string {
-  if (!date) return '—';
+  if (!date) return '\u2014';
   const d = typeof date === 'string' ? new Date(date) : date;
-  if (isNaN(d.getTime())) return '—';
+  if (isNaN(d.getTime())) return '\u2014';
 
   const { timeFormat } = useSettingsStore.getState();
   const datePart = formatDate(d);
@@ -64,9 +64,9 @@ export function formatDateTime(date: string | Date | null | undefined): string {
  * Falls back to formatDate for older dates.
  */
 export function formatRelativeDate(date: string | Date | null | undefined): string {
-  if (!date) return '—';
+  if (!date) return '\u2014';
   const d = typeof date === 'string' ? new Date(date) : date;
-  if (isNaN(d.getTime())) return '—';
+  if (isNaN(d.getTime())) return '\u2014';
 
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -87,7 +87,7 @@ export function formatRelativeDate(date: string | Date | null | undefined): stri
  * Format a number as currency using the user's currency symbol and number format.
  */
 export function formatCurrency(value: number | null | undefined): string {
-  if (value == null) return '—';
+  if (value == null) return '\u2014';
 
   const { currencySymbol } = useSettingsStore.getState();
   const formatted = formatNumber(value);
@@ -98,7 +98,7 @@ export function formatCurrency(value: number | null | undefined): string {
  * Format a currency value in a compact form (e.g. $1.2M, $50K).
  */
 export function formatCurrencyCompact(value: number | null | undefined): string {
-  if (value == null) return '—';
+  if (value == null) return '\u2014';
   const { currencySymbol } = useSettingsStore.getState();
 
   if (Math.abs(value) >= 1_000_000) {
@@ -116,7 +116,7 @@ export function formatCurrencyCompact(value: number | null | undefined): string 
  * Format a number using the user's number format preference.
  */
 export function formatNumber(value: number | null | undefined, decimals?: number): string {
-  if (value == null) return '—';
+  if (value == null) return '\u2014';
 
   const { numberFormat } = useSettingsStore.getState();
   const dec = decimals ?? (Number.isInteger(value) ? 0 : 2);

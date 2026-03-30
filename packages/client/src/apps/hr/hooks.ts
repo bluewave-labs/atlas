@@ -490,6 +490,441 @@ export function useDeleteEmployeeDocument() {
   });
 }
 
+// ─── Leave Types ──────────────────────────────────────────────────
+
+export interface HrLeaveType {
+  id: string;
+  accountId: string;
+  name: string;
+  slug: string;
+  color: string;
+  defaultDaysPerYear: number;
+  maxCarryForward: number;
+  requiresApproval: boolean;
+  isPaid: boolean;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export function useLeaveTypes(includeInactive = false) {
+  return useQuery({
+    queryKey: queryKeys.hr.leaveTypes,
+    queryFn: async () => {
+      const params = includeInactive ? '?includeInactive=true' : '';
+      const { data } = await api.get(`/hr/leave-types${params}`);
+      return data.data as HrLeaveType[];
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateLeaveType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: Partial<HrLeaveType>) => {
+      const { data } = await api.post('/hr/leave-types', input);
+      return data.data as HrLeaveType;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
+export function useUpdateLeaveType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...input }: Partial<HrLeaveType> & { id: string }) => {
+      const { data } = await api.patch(`/hr/leave-types/${id}`, input);
+      return data.data as HrLeaveType;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
+export function useDeleteLeaveType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => { await api.delete(`/hr/leave-types/${id}`); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
+// ─── Leave Policies ───────────────────────────────────────────────
+
+export interface HrLeavePolicy {
+  id: string;
+  name: string;
+  description: string | null;
+  isDefault: boolean;
+  allocations: Array<{ leaveTypeId: string; daysPerYear: number }>;
+}
+
+export function useLeavePolicies() {
+  return useQuery({
+    queryKey: queryKeys.hr.leavePolicies,
+    queryFn: async () => {
+      const { data } = await api.get('/hr/leave-policies');
+      return data.data as HrLeavePolicy[];
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateLeavePolicy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: Partial<HrLeavePolicy>) => {
+      const { data } = await api.post('/hr/leave-policies', input);
+      return data.data as HrLeavePolicy;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
+export function useUpdateLeavePolicy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...input }: Partial<HrLeavePolicy> & { id: string }) => {
+      const { data } = await api.patch(`/hr/leave-policies/${id}`, input);
+      return data.data as HrLeavePolicy;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
+export function useAssignPolicy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ employeeId, policyId, effectiveFrom }: { employeeId: string; policyId: string; effectiveFrom?: string }) => {
+      const { data } = await api.post(`/hr/${employeeId}/assign-policy`, { policyId, effectiveFrom });
+      return data.data;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
+export function useEmployeePolicy(employeeId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.hr.policyAssignment(employeeId!),
+    queryFn: async () => {
+      const { data } = await api.get(`/hr/${employeeId}/policy`);
+      return data.data as { policyId: string; policyName: string; effectiveFrom: string; allocations: Array<{ leaveTypeId: string; daysPerYear: number }> } | null;
+    },
+    enabled: !!employeeId,
+    staleTime: 30_000,
+  });
+}
+
+// ─── Holiday Calendars ────────────────────────────────────────────
+
+export interface HrHolidayCalendar {
+  id: string;
+  name: string;
+  year: number;
+  description: string | null;
+  isDefault: boolean;
+}
+
+export interface HrHoliday {
+  id: string;
+  calendarId: string;
+  name: string;
+  date: string;
+  description: string | null;
+  type: string;
+  isRecurring: boolean;
+}
+
+export function useHolidayCalendars() {
+  return useQuery({
+    queryKey: queryKeys.hr.holidayCalendars,
+    queryFn: async () => {
+      const { data } = await api.get('/hr/holiday-calendars');
+      return data.data as HrHolidayCalendar[];
+    },
+    staleTime: 60_000,
+  });
+}
+
+export function useCreateHolidayCalendar() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: Partial<HrHolidayCalendar>) => {
+      const { data } = await api.post('/hr/holiday-calendars', input);
+      return data.data as HrHolidayCalendar;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
+export function useHolidays(calendarId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.hr.holidays(calendarId!),
+    queryFn: async () => {
+      const { data } = await api.get(`/hr/holiday-calendars/${calendarId}/holidays`);
+      return data.data as HrHoliday[];
+    },
+    enabled: !!calendarId,
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateHoliday() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: Partial<HrHoliday> & { calendarId: string }) => {
+      const { data } = await api.post('/hr/holidays', input);
+      return data.data as HrHoliday;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
+export function useDeleteHoliday() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => { await api.delete(`/hr/holidays/${id}`); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
+// ─── Leave Applications ───────────────────────────────────────────
+
+export interface HrLeaveApplication {
+  id: string;
+  employeeId: string;
+  leaveTypeId: string;
+  startDate: string;
+  endDate: string;
+  halfDay: boolean;
+  halfDayDate: string | null;
+  totalDays: number;
+  reason: string | null;
+  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'cancelled';
+  approverId: string | null;
+  approverComment: string | null;
+  approvedAt: string | null;
+  rejectedAt: string | null;
+  balanceBefore: number | null;
+  createdAt: string;
+  employeeName?: string;
+  leaveTypeName?: string;
+  leaveTypeColor?: string;
+}
+
+export function useLeaveApplications(filters?: { employeeId?: string; status?: string }) {
+  const filterKey = filters ? JSON.stringify(filters) : '';
+  return useQuery({
+    queryKey: queryKeys.hr.leaveApplications(filterKey),
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.employeeId) params.set('employeeId', filters.employeeId);
+      if (filters?.status) params.set('status', filters.status);
+      const qs = params.toString();
+      const { data } = await api.get(`/hr/leave-applications${qs ? `?${qs}` : ''}`);
+      return data.data as HrLeaveApplication[];
+    },
+    staleTime: 15_000,
+  });
+}
+
+export function useCreateLeaveApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { employeeId: string; leaveTypeId: string; startDate: string; endDate: string; halfDay?: boolean; halfDayDate?: string; reason?: string }) => {
+      const { data } = await api.post('/hr/leave-applications', input);
+      return data.data as HrLeaveApplication;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
+export function useSubmitLeaveApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.post(`/hr/leave-applications/${id}/submit`);
+      return data.data as HrLeaveApplication;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
+export function useApproveLeaveApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, comment }: { id: string; comment?: string }) => {
+      const { data } = await api.post(`/hr/leave-applications/${id}/approve`, { comment });
+      return data.data as HrLeaveApplication;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
+export function useRejectLeaveApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, comment }: { id: string; comment?: string }) => {
+      const { data } = await api.post(`/hr/leave-applications/${id}/reject`, { comment });
+      return data.data as HrLeaveApplication;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
+export function useCancelLeaveApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.post(`/hr/leave-applications/${id}/cancel`);
+      return data.data as HrLeaveApplication;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
+export function useLeaveCalendar(month: string) {
+  return useQuery({
+    queryKey: queryKeys.hr.leaveCalendar(month),
+    queryFn: async () => {
+      const { data } = await api.get(`/hr/leave-calendar?month=${month}`);
+      return data.data as Array<{
+        id: string; employeeId: string; startDate: string; endDate: string;
+        totalDays: number; halfDay: boolean; employeeName: string;
+        leaveTypeName: string; leaveTypeColor: string;
+      }>;
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function usePendingApprovals() {
+  return useQuery({
+    queryKey: queryKeys.hr.pendingApprovals,
+    queryFn: async () => {
+      const { data } = await api.get('/hr/leave-applications/pending');
+      return data.data as HrLeaveApplication[];
+    },
+    staleTime: 15_000,
+  });
+}
+
+// ─── Attendance ───────────────────────────────────────────────────
+
+export interface HrAttendanceRecord {
+  id: string;
+  employeeId: string;
+  date: string;
+  status: 'present' | 'absent' | 'half-day' | 'remote' | 'on-leave';
+  checkInTime: string | null;
+  checkOutTime: string | null;
+  workingHours: number | null;
+  notes: string | null;
+  markedBy: string | null;
+  employeeName?: string;
+}
+
+export function useAttendanceList(filters?: { date?: string; employeeId?: string; startDate?: string; endDate?: string }) {
+  const filterKey = filters ? JSON.stringify(filters) : '';
+  return useQuery({
+    queryKey: queryKeys.hr.attendance(filterKey),
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.date) params.set('date', filters.date);
+      if (filters?.employeeId) params.set('employeeId', filters.employeeId);
+      if (filters?.startDate) params.set('startDate', filters.startDate);
+      if (filters?.endDate) params.set('endDate', filters.endDate);
+      const qs = params.toString();
+      const { data } = await api.get(`/hr/attendance${qs ? `?${qs}` : ''}`);
+      return data.data as HrAttendanceRecord[];
+    },
+    staleTime: 10_000,
+  });
+}
+
+export function useMarkAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { employeeId: string; date: string; status: string; checkInTime?: string; checkOutTime?: string; notes?: string }) => {
+      const { data } = await api.post('/hr/attendance', input);
+      return data.data as HrAttendanceRecord;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
+export function useBulkMarkAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { employeeIds: string[]; date: string; status: string }) => {
+      const { data } = await api.post('/hr/attendance/bulk', input);
+      return data.data as HrAttendanceRecord[];
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
+export function useAttendanceToday() {
+  return useQuery({
+    queryKey: queryKeys.hr.attendanceToday,
+    queryFn: async () => {
+      const { data } = await api.get('/hr/attendance/today');
+      return data.data as Record<string, number>;
+    },
+    staleTime: 15_000,
+  });
+}
+
+export function useAttendanceReport(month: string) {
+  return useQuery({
+    queryKey: queryKeys.hr.attendanceReport(month),
+    queryFn: async () => {
+      const { data } = await api.get(`/hr/attendance/report?month=${month}`);
+      return data.data as Array<{ employeeId: string; date: string; status: string; workingHours: number | null; employeeName: string }>;
+    },
+    staleTime: 30_000,
+  });
+}
+
+// ─── Lifecycle Events ─────────────────────────────────────────────
+
+export interface HrLifecycleEvent {
+  id: string;
+  employeeId: string;
+  eventType: string;
+  eventDate: string;
+  effectiveDate: string | null;
+  fromValue: string | null;
+  toValue: string | null;
+  fromDepartmentId: string | null;
+  toDepartmentId: string | null;
+  notes: string | null;
+  createdBy: string | null;
+  createdAt: string;
+}
+
+export function useLifecycleTimeline(employeeId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.hr.lifecycle(employeeId!),
+    queryFn: async () => {
+      const { data } = await api.get(`/hr/${employeeId}/lifecycle`);
+      return data.data as HrLifecycleEvent[];
+    },
+    enabled: !!employeeId,
+    staleTime: 15_000,
+  });
+}
+
+export function useCreateLifecycleEvent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ employeeId, ...input }: { employeeId: string; eventType: string; eventDate: string; effectiveDate?: string; fromValue?: string; toValue?: string; fromDepartmentId?: string; toDepartmentId?: string; notes?: string }) => {
+      const { data } = await api.post(`/hr/${employeeId}/lifecycle`, input);
+      return data.data as HrLifecycleEvent;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
 // ─── Seed ──────────────────────────────────────────────────────────
 
 export function useSeedHrData() {

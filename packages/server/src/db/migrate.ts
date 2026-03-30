@@ -1053,6 +1053,141 @@ export async function runMigrations() {
       );
     `);
 
+    // ─── HR: New leave/attendance/lifecycle tables ─────────────────
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS hr_leave_types (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        slug VARCHAR(100) NOT NULL,
+        color VARCHAR(20) NOT NULL DEFAULT '#3b82f6',
+        default_days_per_year INTEGER NOT NULL DEFAULT 0,
+        max_carry_forward INTEGER NOT NULL DEFAULT 0,
+        requires_approval BOOLEAN NOT NULL DEFAULT TRUE,
+        is_paid BOOLEAN NOT NULL DEFAULT TRUE,
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(account_id, slug)
+      );
+
+      CREATE TABLE IF NOT EXISTS hr_leave_policies (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        is_default BOOLEAN NOT NULL DEFAULT FALSE,
+        allocations JSONB NOT NULL DEFAULT '[]',
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS hr_leave_policy_assignments (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+        employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+        policy_id UUID NOT NULL REFERENCES hr_leave_policies(id) ON DELETE CASCADE,
+        effective_from TEXT,
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS hr_holiday_calendars (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        year INTEGER NOT NULL,
+        description TEXT,
+        is_default BOOLEAN NOT NULL DEFAULT FALSE,
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS hr_holidays (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+        calendar_id UUID NOT NULL REFERENCES hr_holiday_calendars(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        date TEXT NOT NULL,
+        description TEXT,
+        type VARCHAR(50) NOT NULL DEFAULT 'public',
+        is_recurring BOOLEAN NOT NULL DEFAULT FALSE,
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS hr_leave_applications (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+        employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+        leave_type_id UUID NOT NULL REFERENCES hr_leave_types(id),
+        start_date TEXT NOT NULL,
+        end_date TEXT NOT NULL,
+        half_day BOOLEAN NOT NULL DEFAULT FALSE,
+        half_day_date TEXT,
+        total_days REAL NOT NULL DEFAULT 0,
+        reason TEXT,
+        status VARCHAR(50) NOT NULL DEFAULT 'draft',
+        approver_id UUID REFERENCES employees(id) ON DELETE SET NULL,
+        approver_comment TEXT,
+        approved_at TIMESTAMPTZ,
+        rejected_at TIMESTAMPTZ,
+        balance_before REAL,
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS hr_attendance (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+        employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+        date TEXT NOT NULL,
+        status VARCHAR(50) NOT NULL DEFAULT 'present',
+        check_in_time TEXT,
+        check_out_time TEXT,
+        working_hours REAL,
+        notes TEXT,
+        marked_by UUID,
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(employee_id, date)
+      );
+
+      CREATE TABLE IF NOT EXISTS hr_lifecycle_events (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+        employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+        event_type VARCHAR(50) NOT NULL,
+        event_date TEXT NOT NULL,
+        effective_date TEXT,
+        from_value TEXT,
+        to_value TEXT,
+        from_department_id UUID,
+        to_department_id UUID,
+        notes TEXT,
+        created_by UUID,
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      -- Add leave_type_id to leave_balances
+      ALTER TABLE leave_balances ADD COLUMN IF NOT EXISTS leave_type_id UUID;
+
+      -- Add holiday_calendar_id to employees
+      ALTER TABLE employees ADD COLUMN IF NOT EXISTS holiday_calendar_id UUID;
+    `);
+
     // ─── Indexes ────────────────────────────────────────────────────
 
     const indexes = [
@@ -1206,6 +1341,28 @@ export async function runMigrations() {
       'CREATE INDEX IF NOT EXISTS idx_crm_notes_company ON crm_notes(company_id)',
       // CRM Email/Calendar GIN indexes for JSONB containment queries
       'CREATE INDEX IF NOT EXISTS idx_emails_from ON emails(from_address)',
+      // HR Leave Types
+      'CREATE INDEX IF NOT EXISTS idx_hr_leave_types_account_active ON hr_leave_types(account_id, is_active)',
+      // HR Leave Policies
+      'CREATE INDEX IF NOT EXISTS idx_hr_leave_policies_account ON hr_leave_policies(account_id)',
+      // HR Leave Policy Assignments
+      'CREATE INDEX IF NOT EXISTS idx_hr_policy_assignments_employee ON hr_leave_policy_assignments(employee_id)',
+      'CREATE INDEX IF NOT EXISTS idx_hr_policy_assignments_account ON hr_leave_policy_assignments(account_id)',
+      // HR Holiday Calendars
+      'CREATE INDEX IF NOT EXISTS idx_hr_holiday_calendars_account ON hr_holiday_calendars(account_id)',
+      // HR Holidays
+      'CREATE INDEX IF NOT EXISTS idx_hr_holidays_calendar ON hr_holidays(calendar_id)',
+      'CREATE INDEX IF NOT EXISTS idx_hr_holidays_account_date ON hr_holidays(account_id, date)',
+      // HR Leave Applications
+      'CREATE INDEX IF NOT EXISTS idx_hr_leave_apps_employee_status ON hr_leave_applications(employee_id, status)',
+      'CREATE INDEX IF NOT EXISTS idx_hr_leave_apps_approver_status ON hr_leave_applications(approver_id, status)',
+      'CREATE INDEX IF NOT EXISTS idx_hr_leave_apps_account_status ON hr_leave_applications(account_id, status)',
+      // HR Attendance
+      'CREATE INDEX IF NOT EXISTS idx_hr_attendance_account_date ON hr_attendance(account_id, date)',
+      'CREATE INDEX IF NOT EXISTS idx_hr_attendance_employee_status ON hr_attendance(employee_id, status)',
+      // HR Lifecycle Events
+      'CREATE INDEX IF NOT EXISTS idx_hr_lifecycle_employee_date ON hr_lifecycle_events(employee_id, event_date)',
+      'CREATE INDEX IF NOT EXISTS idx_hr_lifecycle_account ON hr_lifecycle_events(account_id)',
     ];
 
     for (const idx of indexes) {

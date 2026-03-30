@@ -1066,7 +1066,7 @@
   },
   "hr": {
     "title": "RH",
-    "sidebar": { "dashboard": "Tableau de bord", "allEmployees": "Tous les employes", "departments": "Tous les departements", "departmentsTitle": "Departements", "department": "Departement", "orgChart": "Organigramme", "timeOff": "Conges", "allDepartments": "Tous les departements", "settings": "Parametres" },
+    "sidebar": { "dashboard": "Tableau de bord", "allEmployees": "Tous les employes", "departments": "Tous les departements", "departmentsTitle": "Departements", "department": "Departement", "orgChart": "Organigramme", "timeOff": "Conges", "allDepartments": "Tous les departements", "settings": "Parametres", "attendance": "Presence", "leaveSection": "Conges", "myLeave": "Mes conges", "teamCalendar": "Calendrier equipe", "leaveTypes": "Types de conge", "holidays": "Jours feries", "policies": "Politiques" },
     "status": { "active": "Actif", "onLeave": "En conge", "terminated": "Parti" },
     "leaveType": { "vacation": "Vacances", "sick": "Maladie", "personal": "Personnel" },
     "timeOffStatus": { "pending": "En attente", "approved": "Approuve", "rejected": "Refuse" },
@@ -1077,7 +1077,7 @@
     "columns": { "name": "Nom", "email": "E-mail", "role": "Role", "department": "Departement", "status": "Statut", "started": "Debut", "employee": "Employe", "type": "Type", "dates": "Dates", "notes": "Notes", "actions": "Actions" },
     "actions": { "addEmployee": "Ajouter un employe", "addEmployeeSubtitle": "Creer un nouveau dossier employe", "deleteEmployee": "Supprimer l'employe", "editDepartment": "Modifier le departement", "deleteDepartment": "Supprimer le departement", "addDepartment": "Ajouter un departement", "addDepartmentSubtitle": "Creer un nouveau departement", "requestTimeOff": "Demander un conge", "requestTimeOffSubtitle": "Soumettre une demande de conge", "submitRequest": "Soumettre", "approve": "Approuver", "reject": "Refuser", "search": "Rechercher", "searchPlaceholder": "Rechercher des employes..." },
     "detail": { "title": "Detail de l'employe" },
-    "tabs": { "details": "Details", "onboarding": "Integration", "documents": "Documents" },
+    "tabs": { "details": "Details", "onboarding": "Integration", "documents": "Documents", "timeline": "Chronologie" },
     "sections": { "personal": "Personnel", "employment": "Emploi", "compensation": "Remuneration", "timeOffRequests": "Demandes de conge" },
     "employees": { "noMatch": "Aucun employe correspondant", "noMatchDesc": "Essayez un autre terme de recherche.", "empty": "Pas encore d'employes", "emptyDesc": "Ajoutez votre premier employe pour commencer." },
     "departments": { "empty": "Pas encore de departements", "emptyDesc": "Creez des departements pour organiser votre equipe.", "noHead": "Pas de responsable", "member": "membre", "members": "membres" },
@@ -1096,7 +1096,15 @@
       "h2Desc": "Organisez votre équipe en départements avec des responsables",
       "h3Title": "Suivi des congés",
       "h3Desc": "Gérez les demandes de congés et suivez les soldes"
-    }
+    },
+    "leaveTypes": { "empty": "Aucun type de conge configure.", "add": "Ajouter un type de conge", "slug": "Identifiant", "daysPerYear": "Jours par an", "maxCarry": "Report max", "paid": "Paye", "unpaid": "Non paye", "inactive": "Inactif", "deactivate": "Desactiver", "activate": "Activer", "carry": "Report" },
+    "policies": { "empty": "Aucune politique de conge configuree.", "add": "Ajouter une politique", "default": "Par defaut" },
+    "holidays": { "empty": "Aucun jour ferie dans ce calendrier.", "add": "Ajouter un jour ferie", "calendar": "Calendrier des jours feries", "createCalendar": "Creer un calendrier", "name": "Nom du jour ferie", "date": "Date", "typePublic": "Jour ferie", "typeCompany": "Jour d'entreprise", "typeOptional": "Jour optionnel" },
+    "myLeave": { "empty": "Aucune demande de conge.", "requestLeave": "Demander un conge", "selectType": "Type de conge...", "reason": "Motif", "submit": "Soumettre", "cancel": "Annuler le conge" },
+    "teamCalendar": { "noLeaves": "Aucun conge approuve pour ce mois." },
+    "leaveAppStatus": { "draft": "Brouillon", "pending": "En attente", "approved": "Approuve", "rejected": "Refuse", "cancelled": "Annule" },
+    "attendance": { "present": "Present", "absent": "Absent", "halfDay": "Demi-journee", "remote": "Teletravail", "onLeave": "En conge", "markAllPresent": "Tous presents" },
+    "lifecycle": { "title": "Chronologie", "addEvent": "Ajouter un evenement", "empty": "Aucun evenement enregistre.", "hired": "Embauche", "promoted": "Promu", "transferred": "Transfere", "resigned": "Demissionne", "terminated": "Parti", "salaryChange": "Changement de salaire", "roleChange": "Changement de role", "other": "Autre evenement", "salarychange": "Changement de salaire", "rolechange": "Changement de role" }
   },
   "sign": {
     "title": "Signature",

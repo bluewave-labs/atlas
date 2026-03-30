@@ -1066,7 +1066,7 @@
   },
   "hr": {
     "title": "Personal",
-    "sidebar": { "dashboard": "Dashboard", "allEmployees": "Alle Mitarbeiter", "departments": "Alle Abteilungen", "departmentsTitle": "Abteilungen", "department": "Abteilung", "orgChart": "Organigramm", "timeOff": "Abwesenheit", "allDepartments": "Alle Abteilungen", "settings": "Einstellungen" },
+    "sidebar": { "dashboard": "Dashboard", "allEmployees": "Alle Mitarbeiter", "departments": "Alle Abteilungen", "departmentsTitle": "Abteilungen", "department": "Abteilung", "orgChart": "Organigramm", "timeOff": "Abwesenheit", "allDepartments": "Alle Abteilungen", "settings": "Einstellungen", "attendance": "Anwesenheit", "leaveSection": "Urlaub", "myLeave": "Mein Urlaub", "teamCalendar": "Teamkalender", "leaveTypes": "Urlaubsarten", "holidays": "Feiertage", "policies": "Richtlinien" },
     "status": { "active": "Aktiv", "onLeave": "Abwesend", "terminated": "Ausgeschieden" },
     "leaveType": { "vacation": "Urlaub", "sick": "Krankheit", "personal": "Persoenlich" },
     "timeOffStatus": { "pending": "Ausstehend", "approved": "Genehmigt", "rejected": "Abgelehnt" },
@@ -1077,7 +1077,7 @@
     "columns": { "name": "Name", "email": "E-Mail", "role": "Rolle", "department": "Abteilung", "status": "Status", "started": "Begonnen", "employee": "Mitarbeiter", "type": "Typ", "dates": "Daten", "notes": "Notizen", "actions": "Aktionen" },
     "actions": { "addEmployee": "Mitarbeiter hinzufuegen", "addEmployeeSubtitle": "Neuen Mitarbeiterdatensatz erstellen", "deleteEmployee": "Mitarbeiter loeschen", "editDepartment": "Abteilung bearbeiten", "deleteDepartment": "Abteilung loeschen", "addDepartment": "Abteilung hinzufuegen", "addDepartmentSubtitle": "Neue Abteilung erstellen", "requestTimeOff": "Abwesenheit beantragen", "requestTimeOffSubtitle": "Abwesenheitsantrag einreichen", "submitRequest": "Antrag einreichen", "approve": "Genehmigen", "reject": "Ablehnen", "search": "Suchen", "searchPlaceholder": "Mitarbeiter suchen..." },
     "detail": { "title": "Mitarbeiterdetail" },
-    "tabs": { "details": "Details", "onboarding": "Einarbeitung", "documents": "Dokumente" },
+    "tabs": { "details": "Details", "onboarding": "Einarbeitung", "documents": "Dokumente", "timeline": "Zeitleiste" },
     "sections": { "personal": "Persoenlich", "employment": "Beschaeftigung", "compensation": "Verguetung", "timeOffRequests": "Abwesenheitsantraege" },
     "employees": { "noMatch": "Keine passenden Mitarbeiter", "noMatchDesc": "Versuchen Sie einen anderen Suchbegriff.", "empty": "Noch keine Mitarbeiter", "emptyDesc": "Fuegen Sie Ihren ersten Mitarbeiter hinzu." },
     "departments": { "empty": "Noch keine Abteilungen", "emptyDesc": "Erstellen Sie Abteilungen, um Ihr Team zu organisieren.", "noHead": "Kein Leiter zugewiesen", "member": "Mitglied", "members": "Mitglieder" },
@@ -1096,7 +1096,15 @@
       "h2Desc": "Organisieren Sie Ihr Team in Abteilungen mit Managern",
       "h3Title": "Abwesenheitsverfolgung",
       "h3Desc": "Verwalten Sie Urlaubsanträge und verfolgen Sie Kontingente"
-    }
+    },
+    "leaveTypes": { "empty": "Noch keine Urlaubsarten konfiguriert.", "add": "Urlaubsart hinzufuegen", "slug": "Kuerzel", "daysPerYear": "Tage pro Jahr", "maxCarry": "Max. Uebertrag", "paid": "Bezahlt", "unpaid": "Unbezahlt", "inactive": "Inaktiv", "deactivate": "Deaktivieren", "activate": "Aktivieren", "carry": "Uebertrag" },
+    "policies": { "empty": "Noch keine Urlaubsrichtlinien konfiguriert.", "add": "Richtlinie hinzufuegen", "default": "Standard" },
+    "holidays": { "empty": "Keine Feiertage in diesem Kalender.", "add": "Feiertag hinzufuegen", "calendar": "Feiertagskalender", "createCalendar": "Kalender erstellen", "name": "Feiertagsname", "date": "Datum", "typePublic": "Gesetzlicher Feiertag", "typeCompany": "Firmenfeiertag", "typeOptional": "Optionaler Feiertag" },
+    "myLeave": { "empty": "Noch keine Urlaubsantraege.", "requestLeave": "Urlaub beantragen", "selectType": "Urlaubsart waehlen...", "reason": "Grund", "submit": "Antrag einreichen", "cancel": "Urlaub stornieren" },
+    "teamCalendar": { "noLeaves": "Keine genehmigten Abwesenheiten fuer diesen Monat." },
+    "leaveAppStatus": { "draft": "Entwurf", "pending": "Ausstehend", "approved": "Genehmigt", "rejected": "Abgelehnt", "cancelled": "Storniert" },
+    "attendance": { "present": "Anwesend", "absent": "Abwesend", "halfDay": "Halber Tag", "remote": "Remote", "onLeave": "Im Urlaub", "markAllPresent": "Alle anwesend markieren" },
+    "lifecycle": { "title": "Zeitleiste", "addEvent": "Ereignis hinzufuegen", "empty": "Keine Lebenszyklus-Ereignisse.", "hired": "Eingestellt", "promoted": "Befoerdert", "transferred": "Versetzt", "resigned": "Gekuendigt", "terminated": "Ausgeschieden", "salaryChange": "Gehaltsaenderung", "roleChange": "Rollenaenderung", "other": "Sonstiges", "salarychange": "Gehaltsaenderung", "rolechange": "Rollenaenderung" }
   },
   "sign": {
     "title": "Unterschrift",

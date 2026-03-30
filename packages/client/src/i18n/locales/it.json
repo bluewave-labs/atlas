@@ -1066,7 +1066,7 @@
   },
   "hr": {
     "title": "Risorse Umane",
-    "sidebar": { "dashboard": "Dashboard", "allEmployees": "Tutti i dipendenti", "departments": "Tutti i reparti", "departmentsTitle": "Reparti", "department": "Reparto", "orgChart": "Organigramma", "timeOff": "Permessi", "allDepartments": "Tutti i reparti", "settings": "Impostazioni" },
+    "sidebar": { "dashboard": "Dashboard", "allEmployees": "Tutti i dipendenti", "departments": "Tutti i reparti", "departmentsTitle": "Reparti", "department": "Reparto", "orgChart": "Organigramma", "timeOff": "Permessi", "allDepartments": "Tutti i reparti", "settings": "Impostazioni", "attendance": "Presenze", "leaveSection": "Permessi", "myLeave": "I miei permessi", "teamCalendar": "Calendario team", "leaveTypes": "Tipi di permesso", "holidays": "Festivita", "policies": "Politiche" },
     "status": { "active": "Attivo", "onLeave": "In permesso", "terminated": "Cessato" },
     "leaveType": { "vacation": "Ferie", "sick": "Malattia", "personal": "Personale" },
     "timeOffStatus": { "pending": "In attesa", "approved": "Approvato", "rejected": "Rifiutato" },
@@ -1077,7 +1077,7 @@
     "columns": { "name": "Nome", "email": "Email", "role": "Ruolo", "department": "Reparto", "status": "Stato", "started": "Inizio", "employee": "Dipendente", "type": "Tipo", "dates": "Date", "notes": "Note", "actions": "Azioni" },
     "actions": { "addEmployee": "Aggiungi dipendente", "addEmployeeSubtitle": "Crea un nuovo record dipendente", "deleteEmployee": "Elimina dipendente", "editDepartment": "Modifica reparto", "deleteDepartment": "Elimina reparto", "addDepartment": "Aggiungi reparto", "addDepartmentSubtitle": "Crea un nuovo reparto", "requestTimeOff": "Richiedi permesso", "requestTimeOffSubtitle": "Invia una richiesta di permesso", "submitRequest": "Invia richiesta", "approve": "Approva", "reject": "Rifiuta", "search": "Cerca", "searchPlaceholder": "Cerca dipendenti..." },
     "detail": { "title": "Dettaglio dipendente" },
-    "tabs": { "details": "Dettagli", "onboarding": "Inserimento", "documents": "Documenti" },
+    "tabs": { "details": "Dettagli", "onboarding": "Inserimento", "documents": "Documenti", "timeline": "Cronologia" },
     "sections": { "personal": "Personale", "employment": "Impiego", "compensation": "Retribuzione", "timeOffRequests": "Richieste di permesso" },
     "employees": { "noMatch": "Nessun dipendente corrispondente", "noMatchDesc": "Prova un termine di ricerca diverso.", "empty": "Nessun dipendente ancora", "emptyDesc": "Aggiungi il tuo primo dipendente per iniziare." },
     "departments": { "empty": "Nessun reparto ancora", "emptyDesc": "Crea reparti per organizzare il tuo team.", "noHead": "Nessun responsabile", "member": "membro", "members": "membri" },
@@ -1096,7 +1096,15 @@
       "h2Desc": "Organizza il tuo team in reparti con responsabili",
       "h3Title": "Monitoraggio assenze",
       "h3Desc": "Gestisci le richieste di permesso e monitora i saldi"
-    }
+    },
+    "leaveTypes": { "empty": "Nessun tipo di permesso configurato.", "add": "Aggiungi tipo di permesso", "slug": "Identificativo", "daysPerYear": "Giorni per anno", "maxCarry": "Riporto max", "paid": "Retribuito", "unpaid": "Non retribuito", "inactive": "Inattivo", "deactivate": "Disattiva", "activate": "Attiva", "carry": "Riporto" },
+    "policies": { "empty": "Nessuna politica configurata.", "add": "Aggiungi politica", "default": "Predefinita" },
+    "holidays": { "empty": "Nessuna festivita in questo calendario.", "add": "Aggiungi festivita", "calendar": "Calendario festivita", "createCalendar": "Crea calendario", "name": "Nome festivita", "date": "Data", "typePublic": "Festivita pubblica", "typeCompany": "Festivita aziendale", "typeOptional": "Festivita opzionale" },
+    "myLeave": { "empty": "Nessuna richiesta di permesso.", "requestLeave": "Richiedi permesso", "selectType": "Tipo di permesso...", "reason": "Motivo", "submit": "Invia richiesta", "cancel": "Annulla permesso" },
+    "teamCalendar": { "noLeaves": "Nessun permesso approvato per questo mese." },
+    "leaveAppStatus": { "draft": "Bozza", "pending": "In attesa", "approved": "Approvato", "rejected": "Rifiutato", "cancelled": "Annullato" },
+    "attendance": { "present": "Presente", "absent": "Assente", "halfDay": "Mezza giornata", "remote": "Da remoto", "onLeave": "In permesso", "markAllPresent": "Segna tutti presenti" },
+    "lifecycle": { "title": "Cronologia", "addEvent": "Aggiungi evento", "empty": "Nessun evento registrato.", "hired": "Assunto", "promoted": "Promosso", "transferred": "Trasferito", "resigned": "Dimesso", "terminated": "Cessato", "salaryChange": "Cambio stipendio", "roleChange": "Cambio ruolo", "other": "Altro evento", "salarychange": "Cambio stipendio", "rolechange": "Cambio ruolo" }
   },
   "sign": {
     "title": "Firma",
