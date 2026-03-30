@@ -1,188 +1,245 @@
-# Miru Feature Analysis — Atlas Implementation Reference
+# Projects App — Feature Analysis & Implementation Reference
 
-Based on analysis of [Miru](https://github.com/saeloun/miru-web) (Ruby on Rails + React time tracking/invoicing platform).
-
-Scoped to: **Time Tracking, Invoicing, Projects, Client Portal** — no employee benefits/leave management.
+Based on [Miru](https://github.com/saeloun/miru-web). Scoped to: **Clients, Projects, Time Tracking, Invoicing, Client Portal, Reports**. No payments entity, no employee benefits, no Stripe.
 
 ---
 
-## 1. Time Tracking
+## Entity 1: Clients
 
 ### Data model
-- **TimesheetEntry**: user, project, company, duration (minutes), work_date, bill_status (billable/unbilled), billed (boolean), locked (boolean), notes
-- Entries linked to projects, projects linked to clients
-- Billable/non-billable classification per entry
-- Locking mechanism — admin locks entries after review or invoicing
+| Field | Type | Notes |
+|-------|------|-------|
+| name | text | Required |
+| email | text | Primary contact email |
+| phone | text | Optional |
+| address | text | Street address |
+| city | text | |
+| state | text | |
+| country | text | |
+| postalCode | text | |
+| currency | text | Default currency for invoices |
+| logo | text | URL or uploaded image |
+| portalToken | text | Unique token for client portal access |
+| notes | text | Internal notes about the client |
 
-### UI patterns
-- Weekly timesheet view (Mon-Sun grid, projects as rows)
-- Manual entry: select project → enter hours → add note
-- No timer/stopwatch in Miru (manual entry only) — **Atlas should add a running timer**
-- Bulk operations: approve, reject, lock entries
-- Calendar view for visual time distribution
+### Features
+- Client list with search, sort, filter
+- Client detail: contact info, projects, invoices, total billed, outstanding amount
+- Client portal token generation (one click, shareable link)
+- Logo upload displayed on invoices
+- Cross-app linking to CRM contacts/companies via record_links
+
+---
+
+## Entity 2: Projects
+
+### Data model
+| Field | Type | Notes |
+|-------|------|-------|
+| clientId | uuid | FK to client |
+| name | text | Required, unique per client |
+| description | text | Optional |
+| billable | boolean | Controls whether time entries can be billable |
+| status | text | active, paused, completed, archived |
+| estimatedHours | number | Optional budget in hours |
+| estimatedAmount | number | Optional budget in currency |
+| startDate | date | Optional |
+| endDate | date | Optional |
+| color | text | For UI distinction in charts/calendar |
+
+### Project members
+| Field | Type | Notes |
+|-------|------|-------|
+| userId | uuid | FK to users |
+| projectId | uuid | FK to project |
+| hourlyRate | decimal | Member's rate for this project |
+| role | text | manager, member |
+
+### Features
+- Project list: name, client, status, hours logged, budget remaining
+- Project detail: members, time entries, invoices, budget burn-down
+- Budget tracking: estimated vs actual hours/amount with progress bar
+- Team member assignment with per-project hourly rates
+- Status workflow: active → paused → completed → archived
+- Project-level time entry and invoice aggregation
+
+---
+
+## Entity 3: Time entries
+
+### Data model
+| Field | Type | Notes |
+|-------|------|-------|
+| userId | uuid | Who logged the time |
+| projectId | uuid | FK to project |
+| durationMinutes | integer | Duration in minutes |
+| workDate | date | The date the work was done |
+| startTime | timestamp | Optional, for timer-based entries |
+| endTime | timestamp | Optional, for timer-based entries |
+| billable | boolean | Whether this entry is billable |
+| billed | boolean | Whether included in an invoice |
+| locked | boolean | Prevents editing after invoicing/approval |
+| invoiceLineItemId | uuid | FK to invoice line item when billed |
+| notes | text | Description of work done |
+| taskDescription | text | Short task label (e.g., "Frontend development") |
+
+### Features
+- **Weekly timesheet view** — Mon-Sun grid, projects as rows, click cell to enter hours
+- **Running timer** — start/stop button in the toolbar, creates entry on stop
+- **Manual entry** — select project, date, duration, notes
+- **Billable/non-billable toggle** — per entry, constrained by project billable flag
+- **Locking** — auto-lock when invoiced, admin can manually lock/unlock
+- **Bulk operations** — approve, reject, lock selected entries
+- **Calendar view** — visual time distribution across days/weeks
+- **Daily totals** — hours per day summary
+- **Copy previous week** — duplicate last week's structure for repetitive work
 
 ### Business rules
-- Cannot edit locked entries
+- Cannot edit locked entries (only admin can unlock)
 - Cannot set billable on non-billable projects
-- When entry is invoiced, it gets locked automatically
-- Duration stored as minutes (integer), displayed as hours:minutes
+- When included in an invoice, entry locks and billed=true
+- If invoice deleted, entry unlocks and billed=false
+- Timer entries calculate duration from startTime/endTime
+- Duration stored as minutes, displayed as Xh Ym
 
 ---
 
-## 2. Invoicing
+## Entity 4: Invoices
 
-### Data model
-- **Invoice**: client, company, amount, currency, status, invoice_number (auto-generated), issue_date, due_date, notes, tax, discount
-- **InvoiceLineItem**: invoice, timesheet_entry (optional), description, quantity, unit_price, amount
-- Line items can be tied to timesheet entries OR freeform (manual line items)
+### Invoice data model
+| Field | Type | Notes |
+|-------|------|-------|
+| clientId | uuid | FK to client |
+| invoiceNumber | text | Auto-generated (INV-001, INV-002) |
+| status | text | draft, sent, viewed, overdue, paid, waived |
+| amount | decimal | Total (calculated from line items) |
+| tax | decimal | Tax percentage |
+| taxAmount | decimal | Calculated tax amount |
+| discount | decimal | Discount percentage |
+| discountAmount | decimal | Calculated discount amount |
+| currency | text | From client's currency setting |
+| issueDate | date | When issued |
+| dueDate | date | Payment deadline |
+| notes | text | Displayed on invoice |
+| sentAt | timestamp | When email was sent |
+| viewedAt | timestamp | When client opened portal link |
+| paidAt | timestamp | When marked as paid |
 
-### Invoice statuses
+### Line items
+| Field | Type | Notes |
+|-------|------|-------|
+| invoiceId | uuid | FK to invoice |
+| timeEntryId | uuid | Optional FK to time entry |
+| description | text | Line item description |
+| quantity | decimal | Hours or units |
+| unitPrice | decimal | Rate per unit |
+| amount | decimal | quantity x unitPrice |
+
+### Statuses
 ```
 Draft → Sent → Viewed → Paid
-                ↘ Overdue (auto, based on due_date)
-                ↘ Waived
+         ↘ Overdue (auto, when past due_date)
+         ↘ Waived (cancel/forgive)
 ```
 
 ### Features
-- Auto-populate line items from unbilled time entries (select client → select date range → pulls all unbilled entries)
-- Manual line items (for fixed-fee work, expenses, etc.)
-- PDF generation
-- Email sending with payment link
-- Tax calculation (percentage-based)
-- Discount support
-- Multi-currency (invoice in client's currency, convert to company base currency)
-- Invoice numbering: auto-increment per company (e.g., INV-001, INV-002)
-- Archive functionality
-- Cannot modify paid invoices
-- Duplicate/clone invoice
-- Bulk download as ZIP
-
-### Payment tracking
-- **Payment**: invoice, amount, currency, transaction_date, transaction_type (bank_transfer, credit_card, stripe, paypal, cash, etc.), status
-- Partial payments supported — invoice stays "partially paid" until full amount received
-- Stripe integration for online payment links in emailed invoices
+- **Invoice builder** — select client, choose date range, auto-populate from unbilled time entries
+- **Manual line items** — freeform items (fixed fees, materials, etc.)
+- **Auto-numbering** — INV-001, INV-002 per tenant
+- **Tax and discount** — percentage-based with calculated amounts
+- **PDF generation** — company logo, client address, line items, totals
+- **Email sending** — send PDF to client with portal link
+- **Status tracking** — sent, viewed (when client opens portal), paid (manual mark)
+- **Overdue detection** — auto-status when past due_date
+- **Duplicate** — clone invoice for recurring work
+- **Bulk download** — multiple invoices as ZIP
+- **Frozen when paid** — cannot modify paid invoices
+- **Archive** — soft archive without deletion
 
 ---
 
-## 3. Projects
-
-### Data model
-- **Project**: client, name, description, billable (boolean), status
-- **ProjectMember**: user, project, hourly_rate
-- Each team member can have a different hourly rate per project
-
-### Features
-- Project dashboard: total hours logged, total amount billed, outstanding amount
-- Billable flag controls whether time entries can be marked as billable
-- Team member assignment with per-member rates
-- Budget tracking (optional: estimated hours/amount vs actual)
-- Project-level reports
-
-### Relationship chain
-```
-Client → Project → ProjectMember (with hourly_rate)
-                 → TimesheetEntry → InvoiceLineItem → Invoice → Payment
-```
-
----
-
-## 4. Client Portal
-
-### Data model
-- **Client**: name, email, phone, currency, address, logo, stripe_id
-- **ClientMember**: client contacts who can log in to the portal
-- Clients are separate from team members — they have their own auth
-
-### Portal features
-- Client-facing dashboard showing:
-  - All invoices (filterable by status)
-  - Total outstanding amount
-  - Payment history
-  - Invoice PDF download
-- Client receives email with invoice → clicks link → views in portal → pays via Stripe
-- No access to internal time tracking data or project details
-
-### Auth
-- Invitation-based: admin invites client contact by email
-- Client gets a separate login (not the same as team login)
-- Scoped access: can only see their own invoices and payments
-
----
-
-## 5. Reports
-
-### Report types
-- **Time tracking report**: hours by project, client, team member, date range
-- **Revenue report**: invoiced amount, paid, outstanding, overdue — by client or project
-- **Utilization report**: hours worked vs capacity per team member
-- **Project profitability**: revenue vs cost (hours × rate) per project
-
-### Export
-- PDF and CSV export
-- Date range filtering
-- Group by: client, project, team member
-- Bulk invoice download (ZIP)
-
----
-
-## 6. Stripe Integration
+## Client Portal
 
 ### How it works
-- Company connects Stripe account (OAuth)
-- Client gets a `stripe_id` when first invoice is sent
-- Invoice email includes a Stripe payment link
-- On payment: webhook creates Payment record, updates invoice status
-- Supports: credit card, bank transfer (ACH), etc.
+- Each client has a `portalToken` (UUID)
+- Public URL: `/portal/:token` — no login required
+- Admin can regenerate token to revoke access
+
+### Portal features
+- Invoice list with status badges (filterable)
+- Invoice detail with line items
+- PDF download
+- Outstanding amount summary at top
+- Responsive/mobile-friendly
+- No access to time tracking, projects, or internal data
 
 ---
 
-## Recommended Atlas Implementation
+## Reports
 
-### What to build (4 entities + portal)
+### 1. Time tracking report
+- Filter by: date range, project, client, team member
+- Group by: project, client, team member, day/week/month
+- Shows: hours (billable vs non-billable), breakdown by grouping
+- Export: CSV, PDF
 
-| Entity | Table | Key fields |
-|--------|-------|------------|
-| **Client** | `billing_clients` | name, email, phone, currency, address, stripe_customer_id |
-| **Project** | `billing_projects` | client_id, name, description, billable, status |
-| **Time Entry** | `time_entries` | user_id, project_id, duration_minutes, work_date, billable, billed, locked, notes |
-| **Invoice** | `invoices` | client_id, number, status, amount, tax, discount, currency, issue_date, due_date, notes |
-| **Invoice Line Item** | `invoice_line_items` | invoice_id, time_entry_id (nullable), description, quantity, unit_price, amount |
-| **Payment** | `payments` | invoice_id, amount, currency, transaction_date, method, status |
-| **Project Member** | `project_members` | user_id, project_id, hourly_rate |
+### 2. Revenue report
+- Filter by: date range, client, project
+- Shows: invoiced amount, outstanding, overdue
+- Breakdown by client or project
+- Export: CSV, PDF
 
-### Atlas app structure
+### 3. Project profitability
+- Per project: hours x avg rate = cost, total invoiced = revenue, profit margin
+- Budget vs actual comparison
+- Members contributing most hours
+
+### 4. Team utilization
+- Per team member: hours logged, capacity (e.g., 40h/week)
+- Utilization % = hours logged / capacity
+- Billable vs non-billable ratio
+
+---
+
+## Atlas app structure
+
 ```
-packages/server/src/apps/billing/
-  manifest.ts
-  routes.ts
-  controller.ts
-  service.ts
+packages/server/src/apps/projects/
+  manifest.ts, routes.ts, controller.ts, service.ts
 
-packages/client/src/apps/billing/
-  manifest.ts
-  page.tsx
-  hooks.ts
+packages/client/src/apps/projects/
+  manifest.ts, page.tsx, hooks.ts, settings-store.ts
   components/
-    time-tracker.tsx      — weekly view + running timer
-    invoice-builder.tsx   — create/edit invoice
-    invoice-pdf.tsx       — PDF template
-    project-dashboard.tsx — project overview
-    client-portal.tsx     — client-facing view
-    reports.tsx           — reports page
+    time-tracker.tsx, time-calendar.tsx, invoice-builder.tsx,
+    invoice-pdf.tsx, project-detail.tsx, client-detail.tsx,
+    reports-view.tsx, project-members.tsx
+
+packages/client/src/pages/
+  project-portal.tsx  (public /portal/:token route)
 ```
 
-### Sidebar views
-- Dashboard (overview: hours this week, outstanding invoices, recent activity)
-- Time tracking (weekly timesheet + timer)
-- Projects (list + detail)
-- Clients (list + detail)
-- Invoices (list + detail + builder)
-- Reports
-- Settings
+### Sidebar
+1. Dashboard — hours this week, outstanding invoices, active projects
+2. Time tracking — weekly grid + timer
+3. Projects — list + detail with budget
+4. Clients — list + detail
+5. Invoices — list + builder
+6. Reports — time, revenue, profitability, utilization
+7. Settings — invoice prefix, default rate, company info for PDFs
 
-### Key differences from Miru
-1. **Running timer** — Miru only has manual entry. Atlas should have a start/stop timer that creates entries automatically.
-2. **Integrated with Atlas apps** — time entries can link to CRM deals, HRM employees, Tasks, etc. via record_links
-3. **No multi-currency initially** — start with single currency from global settings (currencySymbol)
-4. **No Stripe initially** — mark payments manually. Stripe can be added later.
-5. **Client portal** — simple public page (like Sign's public signing page) where clients view their invoices
+### Database tables (7)
+| Table | Purpose |
+|-------|---------|
+| `project_clients` | Client records |
+| `project_projects` | Projects linked to clients |
+| `project_members` | User-project assignments with rates |
+| `project_time_entries` | Time tracking data |
+| `project_invoices` | Invoice headers |
+| `project_invoice_line_items` | Invoice line items |
+| `project_settings` | Invoice prefix, default rate, company info |
+
+### Cross-app integration
+- Link clients to CRM contacts/companies via record_links
+- Link projects to CRM deals
+- Activity feed events for invoice sent, project created
+- Home dashboard widgets: hours today, outstanding invoices
