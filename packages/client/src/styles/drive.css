@@ -50,11 +50,12 @@
 .drive-nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  padding: 7px 10px;
+  height: 32px;
+  padding: 0 8px;
   border: none;
-  border-radius: var(--radius-md, 4px);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
