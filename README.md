@@ -5,8 +5,8 @@ Self-hosted business platform with CRM, HRM, digital signatures, document editor
 ## Quick start
 
 ```bash
-git clone https://github.com/bluewave-labs/atlasmail.git
-cd atlasmail
+git clone https://github.com/bluewave-labs/atlas.git
+cd atlas
 chmod +x setup.sh
 ./setup.sh
 ```
@@ -81,4 +81,4 @@ npm run dev
 
 ## License
 
-MIT
+[Business Source License 1.1](LICENSE) — free for non-production use. Converts to Apache 2.0 after 4 years.
