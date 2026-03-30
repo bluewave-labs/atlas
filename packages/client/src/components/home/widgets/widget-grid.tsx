@@ -7,8 +7,7 @@ import { appRegistry } from '../../../config/app-registry';
 
 const WIDGET_W = 240;
 const WIDGET_H = 160;
-const GAP = 14;
-const COLS = 3;
+const GAP = 12;
 
 export function WidgetGrid() {
   const { data: settings } = useQuery({
@@ -75,9 +74,11 @@ export function WidgetGrid() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: `repeat(${Math.min(COLS, visibleWidgets.length)}, ${WIDGET_W}px)`,
+            gridTemplateColumns: `repeat(auto-fill, ${WIDGET_W}px)`,
             gap: GAP,
             justifyContent: 'center',
+            width: '100%',
+            maxWidth: '90vw',
           }}
         >
           {visibleWidgets.map((widget) => (
@@ -104,9 +105,11 @@ export function WidgetGrid() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: `repeat(${Math.min(COLS, enabledAppWidgets.length)}, ${WIDGET_W}px)`,
+            gridTemplateColumns: `repeat(auto-fill, ${WIDGET_W}px)`,
             gap: GAP,
             justifyContent: 'center',
+            width: '100%',
+            maxWidth: '90vw',
           }}
         >
           {enabledAppWidgets.map((widget) => (
