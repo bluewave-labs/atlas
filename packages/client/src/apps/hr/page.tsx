@@ -838,7 +838,7 @@ function EmployeeDetailPanel({
           <>
             {/* Avatar + name header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
-              <Avatar name={employee.name} email={employee.email} size={48} />
+              <Avatar name={employee.name} size={48} />
               <div>
                 <div style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
                   {employee.name}
@@ -1400,7 +1400,7 @@ function OrgChartView({
                 </div>
                 {head && (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-xs)', marginTop: 'var(--spacing-xs)' }}>
-                    <Avatar name={head.name} email={head.email} size={22} />
+                    <Avatar name={head.name} size={22} />
                     <div>
                       <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
                         {head.name}
@@ -1426,7 +1426,7 @@ function OrgChartView({
                     padding: '6px var(--spacing-sm)', borderRadius: 'var(--radius-sm)',
                     background: 'var(--color-bg-secondary)', fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-family)',
                   }}>
-                    <Avatar name={emp.name} email={emp.email} size={20} />
+                    <Avatar name={emp.name} size={20} />
                     <div style={{ flex: 1, overflow: 'hidden' }}>
                       <div style={{ color: 'var(--color-text-primary)', fontWeight: 'var(--font-weight-medium)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {emp.name}
@@ -1464,7 +1464,7 @@ function OrgChartView({
                     padding: '6px var(--spacing-sm)', borderRadius: 'var(--radius-sm)',
                     background: 'var(--color-bg-secondary)', fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-family)',
                   }}>
-                    <Avatar name={emp.name} email={emp.email} size={20} />
+                    <Avatar name={emp.name} size={20} />
                     <div style={{ flex: 1 }}>
                       <div style={{ color: 'var(--color-text-primary)', fontWeight: 'var(--font-weight-medium)' }}>{emp.name}</div>
                       <div style={{ color: 'var(--color-text-tertiary)', fontSize: '10px' }}>{emp.jobTitle || emp.role}</div>
@@ -1559,7 +1559,7 @@ function EmployeesListView({
         return (
           <div key={emp.id} className={`hr-employee-row${selectedId === emp.id ? ' selected' : ''}`} onClick={() => onSelect(emp.id)}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', width: 220, flexShrink: 0 }}>
-              <Avatar name={emp.name} email={emp.email} size={28} />
+              <Avatar name={emp.name} size={28} />
               <span style={{ fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {emp.name}
               </span>
@@ -1646,7 +1646,7 @@ function DepartmentsView({
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 'var(--spacing-sm)', borderTop: '1px solid var(--color-border-secondary)' }}>
                 {headEmployee ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>
-                    <Avatar name={headEmployee.name} email={headEmployee.email} size={20} />
+                    <Avatar name={headEmployee.name} size={20} />
                     {headEmployee.name}
                   </div>
                 ) : (

@@ -213,7 +213,7 @@ function QuoteWidgetComponent({ width, height }: WidgetProps) {
     >
       <p
         style={{
-          color: 'var(--color-text-inverse)',
+          color: 'rgba(255,255,255,0.9)',
           fontSize: 'var(--font-size-lg)',
           lineHeight: 1.4,
           margin: 0,
