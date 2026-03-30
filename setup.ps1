@@ -3,21 +3,71 @@ Write-Host "  Atlas - Setup"
 Write-Host "  -------------"
 Write-Host ""
 
-# Check prerequisites
+# ── Prerequisites ──────────────────────────────────────────────────
+
+$missing = @()
+
 if (-not (Get-Command "docker" -ErrorAction SilentlyContinue)) {
-    Write-Host "Error: docker is required but not found." -ForegroundColor Red
+    $missing += "  - docker (Docker Desktop for Windows)"
+}
+
+if ($missing.Count -gt 0) {
+    Write-Host "  Missing required tools:" -ForegroundColor Red
+    Write-Host ""
+    $missing | ForEach-Object { Write-Host $_ }
+    Write-Host ""
+    Write-Host "  Please install them and try again."
     exit 1
 }
 
 # Check Docker daemon
+$dockerRunning = $true
 try {
-    docker info | Out-Null 2>&1
+    $null = docker info 2>&1
+    if ($LASTEXITCODE -ne 0) { $dockerRunning = $false }
 } catch {
-    Write-Host "Error: Docker daemon is not running. Please start Docker Desktop and try again." -ForegroundColor Red
+    $dockerRunning = $false
+}
+
+if (-not $dockerRunning) {
+    Write-Host "  Error: Docker daemon is not running." -ForegroundColor Red
+    Write-Host "  Please start Docker Desktop and try again."
     exit 1
 }
 
-# Generate .env if it doesn't exist
+# Check we're in the right directory
+if (-not (Test-Path "docker-compose.production.yml")) {
+    Write-Host "  Error: docker-compose.production.yml not found." -ForegroundColor Red
+    Write-Host "  Please run this script from the Atlas project root."
+    exit 1
+}
+
+if (-not (Test-Path ".env.example")) {
+    Write-Host "  Error: .env.example not found." -ForegroundColor Red
+    Write-Host "  Please run this script from the Atlas project root."
+    exit 1
+}
+
+# Check port 3001
+$portInUse = $false
+try {
+    $conn = New-Object System.Net.Sockets.TcpClient
+    $conn.Connect("127.0.0.1", 3001)
+    $conn.Close()
+    $portInUse = $true
+} catch {}
+
+if ($portInUse) {
+    Write-Host "  Warning: Port 3001 is already in use." -ForegroundColor Yellow
+    Write-Host "  Atlas needs this port. Stop the other process or change PORT in .env."
+    Write-Host ""
+}
+
+Write-Host "  Prerequisites: OK"
+Write-Host ""
+
+# ── Generate .env ──────────────────────────────────────────────────
+
 if (-not (Test-Path ".env")) {
     Write-Host "  [1/3] Generating secrets..."
     Copy-Item ".env.example" ".env"
@@ -43,11 +93,27 @@ if (-not (Test-Path ".env")) {
     Write-Host "  [1/3] Using existing .env file"
 }
 
-# Start services
-Write-Host "  [2/3] Starting containers (this may take a few minutes on first run)..."
-docker compose -f docker-compose.production.yml up -d --build
+# ── Build and start ────────────────────────────────────────────────
 
-# Wait for health
+Write-Host "  [2/3] Building and starting containers (first run may take a few minutes)..."
+Write-Host ""
+
+docker compose -f docker-compose.production.yml up -d --build
+if ($LASTEXITCODE -ne 0) {
+    Write-Host ""
+    Write-Host "  Error: Docker build failed." -ForegroundColor Red
+    Write-Host ""
+    Write-Host "  Common fixes:"
+    Write-Host "    - Make sure Docker Desktop has enough memory (4GB+ recommended)"
+    Write-Host "    - Try again: docker compose -f docker-compose.production.yml up -d --build"
+    Write-Host ""
+    exit 1
+}
+
+Write-Host ""
+
+# ── Health check ───────────────────────────────────────────────────
+
 Write-Host "  [3/3] Waiting for Atlas to be ready..."
 $ready = $false
 for ($i = 0; $i -lt 60; $i++) {
