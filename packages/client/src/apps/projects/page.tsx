@@ -288,8 +288,8 @@ function DashboardView() {
 
   return (
     <div style={{ overflow: 'auto', flex: 1, padding: 'var(--spacing-lg)' }}>
-      {/* KPI Cards */}
-      <div style={{ display: 'flex', gap: 'var(--spacing-md)', flexWrap: 'wrap', marginBottom: 'var(--spacing-lg)' }}>
+      {/* KPI Cards — responsive grid */}
+      <div className="projects-dashboard-kpi-grid">
         <KpiCard
           icon={<Clock size={18} />}
           label={t('projects.dashboard.hoursThisWeek')}
@@ -320,18 +320,14 @@ function DashboardView() {
         />
       </div>
 
-      {/* Charts row */}
-      <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)' }}>
-        <div style={{ flex: 1 }}>
-          <DashboardRevenueChart
-            invoiced={data?.revenue?.invoiced ?? 0}
-            paid={data?.revenue?.paid ?? 0}
-            outstanding={data?.revenue?.outstanding ?? 0}
-          />
-        </div>
-        <div style={{ flex: 1 }}>
-          <DashboardHoursChart hoursByDay={data?.hoursByDay ?? []} />
-        </div>
+      {/* Charts — responsive grid */}
+      <div className="projects-dashboard-charts-grid">
+        <DashboardRevenueChart
+          invoiced={data?.revenue?.invoiced ?? 0}
+          paid={data?.revenue?.paid ?? 0}
+          outstanding={data?.revenue?.outstanding ?? 0}
+        />
+        <DashboardHoursChart hoursByDay={data?.hoursByDay ?? []} />
       </div>
 
       {/* Quick time log */}
