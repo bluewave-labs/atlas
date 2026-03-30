@@ -127,31 +127,29 @@ export function SettingsToggle({
         position: 'relative',
         display: 'inline-flex',
         alignItems: 'center',
-        width: 44,
-        height: 24,
-        borderRadius: 'var(--radius-full)',
+        width: 34,
+        height: 20,
+        borderRadius: 10,
         background: checked ? 'var(--color-accent-primary)' : 'var(--color-border-primary)',
         border: 'none',
         cursor: 'pointer',
         padding: 0,
-        transition: 'background var(--transition-normal)',
+        transition: 'background 0.2s ease',
         flexShrink: 0,
         outline: 'none',
       }}
-      onFocus={() => {}}
-      onBlur={() => {}}
     >
       <span
         style={{
           position: 'absolute',
-          top: 3,
-          left: checked ? 23 : 3,
-          width: 18,
-          height: 18,
+          top: 2,
+          left: checked ? 16 : 2,
+          width: 16,
+          height: 16,
           borderRadius: '50%',
-          background: 'var(--color-bg-primary)',
-          transition: 'left var(--transition-normal)',
-          boxShadow: 'var(--shadow-sm)',
+          background: '#fff',
+          transition: 'left 0.2s ease',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.15), 0 0 1px rgba(0,0,0,0.06)',
         }}
       />
     </button>
