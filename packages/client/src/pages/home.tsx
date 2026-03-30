@@ -928,6 +928,7 @@ export function HomePage() {
         <nav
           ref={dockRef}
           className="atlas-dock"
+          onMouseMove={handleDockItemHover}
           onMouseLeave={handleDockMouseLeave}
           style={{
             position: 'absolute',
@@ -952,7 +953,6 @@ export function HomePage() {
               <div
                 key={app.route}
                 className="dock-item"
-                onMouseMove={handleDockItemHover}
               >
                 <div
                   onClick={() => navigate(app.route)}

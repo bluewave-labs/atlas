@@ -589,7 +589,7 @@ function QuickLink({
         fontSize: 13,
       }}
     >
-      <span style={{ flex: 1 }}>{label}</span>
+      <span style={{ flex: 1, textAlign: 'left' }}>{label}</span>
       {badge !== undefined && (
         <span
           style={{
