@@ -22,47 +22,50 @@ export function CpuWidget(_props: AppWidgetProps) {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
         padding: 'var(--spacing-lg)',
         gap: 'var(--spacing-sm)',
         fontFamily: 'var(--font-family)',
       }}
     >
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-        <Cpu size={14} style={{ color: 'var(--color-text-tertiary)' }} />
-        <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
+        <Cpu size={12} style={{ color: 'rgba(255,255,255,0.5)' }} />
+        <span style={{ fontSize: 'var(--font-size-xs)', color: 'rgba(255,255,255,0.5)' }}>
           {t('system.cpuUsage')}
         </span>
       </div>
 
-      {/* Big number */}
-      <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-text-primary)', lineHeight: 1 }}>
+      {/* Big number — centered */}
+      <div style={{ fontSize: 32, fontWeight: 'var(--font-weight-bold)', color: 'rgba(255,255,255,0.95)', lineHeight: 1 }}>
         {usage.toFixed(0)}%
       </div>
 
       {/* Progress bar */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 'var(--spacing-xs)' }}>
+      <div style={{ width: '100%', maxWidth: 160 }}>
         <div style={{
-          height: 8,
-          background: 'var(--color-bg-tertiary)',
-          borderRadius: 'var(--radius-sm)',
+          height: 6,
+          background: 'rgba(255,255,255,0.15)',
+          borderRadius: 'var(--radius-full)',
           overflow: 'hidden',
-          border: '1px solid var(--color-border-secondary)',
         }}>
           <div style={{
             height: '100%',
             width: `${Math.min(100, usage)}%`,
             background: color,
-            borderRadius: 'var(--radius-sm)',
+            borderRadius: 'var(--radius-full)',
             transition: 'width 0.5s ease',
           }} />
         </div>
-        {metrics && (
-          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
-            {metrics.cpu.model.split(' ').slice(0, 3).join(' ')} · {metrics.cpu.cores} {t('system.cores')}
-          </div>
-        )}
       </div>
+
+      {/* Subtitle */}
+      {metrics && (
+        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+          {metrics.cpu.cores} {t('system.cores')}
+        </div>
+      )}
     </div>
   );
 }

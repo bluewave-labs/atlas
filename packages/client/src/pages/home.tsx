@@ -719,14 +719,16 @@ export function HomePage() {
         )}
       </div>
 
-      {/* Dark overlay — stronger in dark theme for readability */}
+      {/* Dark overlay for readability — stronger for photos, lighter for already-dark solid/gradient */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          background: document.documentElement.getAttribute('data-theme') === 'dark'
-            ? 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.65) 100%)'
-            : 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.4) 100%)',
+          background: backgroundStyle
+            ? 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.45) 100%)'
+            : document.documentElement.getAttribute('data-theme') === 'dark'
+              ? 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.65) 100%)'
+              : 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.4) 100%)',
           zIndex: 1,
         }}
       />

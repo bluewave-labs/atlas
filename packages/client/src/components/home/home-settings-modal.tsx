@@ -11,24 +11,29 @@ import { appRegistry } from '../../config/app-registry';
 
 type BgType = 'unsplash' | 'solid' | 'gradient' | 'custom';
 
+// Only dark colors that ensure white text readability
 const SOLID_COLORS = [
   '#1a1a2e', '#16213e', '#0f3460', '#533483',
-  '#2c3e50', '#1b4332', '#3d348b', '#7678ed',
-  '#f35b04', '#e63946', '#264653', '#2a9d8f',
-  '#e9c46a', '#f4a261', '#606c38', '#283618',
+  '#2c3e50', '#1b4332', '#3d348b', '#264653',
+  '#283618', '#1e293b', '#18181b', '#1c1917',
+  '#1e1b4b', '#172554', '#14532d', '#4c1d95',
+  '#7c2d12', '#78350f', '#312e81', '#0c4a6e',
 ];
 
+// Only dark gradients that ensure white text readability
 const GRADIENTS = [
   'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-  'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
-  'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
-  'linear-gradient(135deg, #667eea 0%, #f7797d 100%)',
   'linear-gradient(135deg, #0c0c1d 0%, #1a1a3e 50%, #2d1b69 100%)',
   'linear-gradient(135deg, #232526 0%, #414345 100%)',
+  'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
+  'linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%)',
+  'linear-gradient(135deg, #141e30 0%, #243b55 100%)',
+  'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)',
+  'linear-gradient(135deg, #000428 0%, #004e92 100%)',
+  'linear-gradient(135deg, #1f1c2c 0%, #928dab 100%)',
+  'linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%)',
+  'linear-gradient(135deg, #373b44 0%, #4286f4 100%)',
+  'linear-gradient(135deg, #0f0c29 0%, #6a0572 100%)',
 ];
 
 const swatch: CSSProperties = {
@@ -79,9 +84,8 @@ export function HomeBackgroundPanel() {
 
   const typeOptions: Array<{ value: BgType; label: string; desc: string }> = [
     { value: 'unsplash', label: 'Photo rotation', desc: 'Beautiful photos that change throughout the day' },
-    { value: 'solid', label: 'Solid color', desc: 'A single background color' },
-    { value: 'gradient', label: 'Gradient', desc: 'Smooth color gradients' },
-    { value: 'custom', label: 'Custom color', desc: 'Enter a specific hex color code' },
+    { value: 'solid', label: 'Solid color', desc: 'Dark colors curated for readability' },
+    { value: 'gradient', label: 'Gradient', desc: 'Dark gradients curated for readability' },
   ];
 
   return (
