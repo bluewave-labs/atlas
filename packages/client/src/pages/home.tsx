@@ -944,7 +944,7 @@ export function HomePage() {
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255,255,255,0.18)',
             boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
-            gap: 6,
+            gap: 2,
           }}
         >
           {dockApps.map((app) => {
