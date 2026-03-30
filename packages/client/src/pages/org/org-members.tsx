@@ -91,7 +91,7 @@ export function OrgMembersPage() {
     return (
       <div style={{ padding: 32, fontFamily: 'var(--font-family)', color: 'var(--color-text-secondary)' }}>
         <h2 style={{ fontSize: 20, marginBottom: 12, color: 'var(--color-text-primary)' }}>Team</h2>
-        <p>Team management requires a company account. Please register or ask your admin to add you.</p>
+        <p>Team management requires a company account. Please ask your admin to add you.</p>
       </div>
     );
   }

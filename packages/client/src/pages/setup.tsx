@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api-client';
 import { useAuthStore } from '../stores/auth-store';
@@ -35,6 +35,21 @@ export function SetupPage() {
   const [companyName, setCompanyName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  // Redirect to login if setup is already complete
+  useEffect(() => {
+    api.get('/auth/setup-status')
+      .then(({ data }) => {
+        if (!data.data.needsSetup) {
+          navigate(ROUTES.LOGIN, { replace: true });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setChecking(false));
+  }, [navigate]);
+
+  if (checking) return null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
