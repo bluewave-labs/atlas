@@ -1032,3 +1032,17 @@ export async function portalGetInvoiceDetail(req: Request, res: Response) {
     res.status(500).json({ success: false, error: 'Failed to get portal invoice detail' });
   }
 }
+
+// ─── Seed ──────────────────────────────────────────────────────────
+
+export async function seedSampleData(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const accountId = req.auth!.accountId;
+    const result = await projectService.seedSampleData(userId, accountId);
+    res.json({ success: true, data: { message: 'Seeded Projects sample data', ...result } });
+  } catch (error) {
+    logger.error({ error }, 'Failed to seed Projects sample data');
+    res.status(500).json({ success: false, error: 'Failed to seed Projects data' });
+  }
+}

@@ -77,4 +77,7 @@ router.get('/reports/utilization', projectsController.getTeamUtilization);
 router.get('/settings', projectsController.getSettings);
 router.patch('/settings', projectsController.updateSettings);
 
+// Seed
+router.post('/seed', projectsController.seedSampleData);
+
 export default router;
