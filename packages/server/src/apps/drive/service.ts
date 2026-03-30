@@ -387,6 +387,81 @@ export async function duplicateItem(userId: string, itemId: string) {
   return normalizeTags(created);
 }
 
+// ─── Copy item (with recursive folder support) ──────────────────────
+
+export async function copyItem(userId: string, accountId: string, itemId: string, targetParentId?: string | null): Promise<typeof driveItems.$inferSelect | null> {
+  const item = await getItem(userId, itemId);
+  if (!item) return null;
+
+  const now = new Date();
+  const [maxSort] = await db
+    .select({ max: sql<number>`COALESCE(MAX(${driveItems.sortOrder}), -1)` })
+    .from(driveItems)
+    .where(eq(driveItems.userId, userId));
+  const sortOrder = (maxSort?.max ?? -1) + 1;
+
+  // Determine parent: use targetParentId if provided, otherwise same parent as original
+  const parentId = targetParentId !== undefined ? targetParentId : item.parentId;
+
+  // Add (copy) suffix
+  let copyName: string;
+  if (item.type === 'file') {
+    const extIdx = item.name.lastIndexOf('.');
+    if (extIdx > 0) {
+      copyName = `${item.name.slice(0, extIdx)} (copy)${item.name.slice(extIdx)}`;
+    } else {
+      copyName = `${item.name} (copy)`;
+    }
+  } else {
+    copyName = `${item.name} (copy)`;
+  }
+
+  let newStoragePath: string | null = null;
+  if (item.type === 'file' && item.storagePath) {
+    const srcPath = path.join(UPLOADS_DIR, item.storagePath);
+    if (existsSync(srcPath)) {
+      const ext = path.extname(item.storagePath);
+      const newFilename = `${userId}_${Date.now()}_copy_${crypto.randomUUID()}${ext}`;
+      newStoragePath = newFilename;
+      copyFileSync(srcPath, path.join(UPLOADS_DIR, newFilename));
+    }
+  }
+
+  const [created] = await db
+    .insert(driveItems)
+    .values({
+      accountId,
+      userId,
+      name: copyName,
+      type: item.type,
+      mimeType: item.mimeType,
+      size: item.size,
+      parentId: parentId || null,
+      storagePath: newStoragePath,
+      isFavourite: false,
+      tags: item.tags as any,
+      sortOrder,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning();
+
+  // If it's a folder, recursively copy all children into the new folder
+  if (item.type === 'folder') {
+    const children = await db
+      .select()
+      .from(driveItems)
+      .where(and(eq(driveItems.userId, userId), eq(driveItems.parentId, itemId), eq(driveItems.isArchived, false)));
+
+    for (const child of children) {
+      await copyItem(userId, accountId, child.id, created.id);
+    }
+  }
+
+  logger.info({ userId, itemId: created.id, originalId: itemId }, 'Drive item copied');
+  return normalizeTags(created);
+}
+
 // ─── Batch delete (soft) ─────────────────────────────────────────────
 
 export async function batchDelete(userId: string, itemIds: string[]) {

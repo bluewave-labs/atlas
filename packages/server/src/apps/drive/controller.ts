@@ -284,6 +284,27 @@ export async function duplicateItem(req: Request, res: Response) {
   }
 }
 
+// POST /api/drive/:id/copy
+export async function copyItem(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const accountId = req.auth!.accountId;
+    const itemId = req.params.id as string;
+    const { targetParentId } = req.body as { targetParentId?: string | null };
+
+    const item = await driveService.copyItem(userId, accountId, itemId, targetParentId);
+    if (!item) {
+      res.status(404).json({ success: false, error: 'Item not found' });
+      return;
+    }
+
+    res.json({ success: true, data: item });
+  } catch (error) {
+    logger.error({ error }, 'Failed to copy drive item');
+    res.status(500).json({ success: false, error: 'Failed to copy drive item' });
+  }
+}
+
 // POST /api/drive/batch/delete
 export async function batchDelete(req: Request, res: Response) {
   try {

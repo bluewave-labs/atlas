@@ -302,6 +302,20 @@ export function useDuplicateDriveItem() {
   });
 }
 
+export function useCopyDriveItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, targetParentId }: { id: string; targetParentId?: string | null }) => {
+      const { data } = await api.post(`/drive/${id}/copy`, { targetParentId });
+      return data.data as DriveItem;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.drive.all });
+    },
+  });
+}
+
 export function useBatchDeleteDriveItems() {
   const queryClient = useQueryClient();
 

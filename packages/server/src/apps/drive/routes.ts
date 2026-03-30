@@ -51,6 +51,7 @@ router.post('/:id/versions/:versionId/restore', driveController.restoreVersion);
 router.get('/:id/versions/:versionId/download', driveController.downloadVersion);
 router.post('/:id/share', driveController.createShareLink);
 router.get('/:id/share', driveController.listShareLinks);
+router.post('/:id/copy', driveController.copyItem);
 router.post('/:id/duplicate', driveController.duplicateItem);
 router.patch('/:id', driveController.updateItem);
 router.delete('/:id', driveController.deleteItem);

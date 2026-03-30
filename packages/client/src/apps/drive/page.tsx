@@ -7,7 +7,7 @@ import {
   LayoutGrid, LayoutList, Home, Clock, Heart, HardDrive, Upload as UploadIcon,
   Copy, X, Check, ChevronDown, Tag, FileArchive, Share2, History,
   FileImage, FileText, FileVideo, FileAudio, Link2, Trash, Music, Settings,
-  ExternalLink, Table2, File,
+  ExternalLink, Table2, File, Clipboard,
 } from 'lucide-react';
 import { ColumnHeader } from '../../components/ui/column-header';
 import { AppSidebar } from '../../components/layout/app-sidebar';
@@ -19,10 +19,10 @@ import {
   useDriveTrash, useDriveSearch, useCreateFolder, useUploadFiles,
   useUpdateDriveItem, useDeleteDriveItem, useRestoreDriveItem,
   usePermanentDeleteDriveItem, useDriveStorage, useDriveFolders,
-  useDuplicateDriveItem, useBatchDeleteDriveItems, useBatchMoveDriveItems,
-  useBatchFavouriteDriveItems, useFilePreview, useFileVersions,
-  useReplaceFile, useRestoreVersion, useShareLinks, useCreateShareLink,
-  useDeleteShareLink, useDriveItemsByType,
+  useDuplicateDriveItem, useCopyDriveItem, useBatchDeleteDriveItems,
+  useBatchMoveDriveItems, useBatchFavouriteDriveItems, useFilePreview,
+  useFileVersions, useReplaceFile, useRestoreVersion, useShareLinks,
+  useCreateShareLink, useDeleteShareLink, useDriveItemsByType,
   useCreateLinkedDocument, useCreateLinkedDrawing, useCreateLinkedSpreadsheet,
 } from './hooks';
 import { api } from '../../lib/api-client';
@@ -600,9 +600,13 @@ export function DrivePage() {
   const restoreVersion = useRestoreVersion();
   const createShareLink = useCreateShareLink();
   const deleteShareLink = useDeleteShareLink();
+  const copyItem = useCopyDriveItem();
   const createLinkedDocument = useCreateLinkedDocument();
   const createLinkedDrawing = useCreateLinkedDrawing();
   const createLinkedSpreadsheet = useCreateLinkedSpreadsheet();
+
+  // Clipboard for copy/paste (Feature 3 & 4)
+  const [clipboardItemId, setClipboardItemId] = useState<string | null>(null);
 
   // Determine which items to show
   const displayItems = useMemo(() => {
@@ -654,16 +658,6 @@ export function DrivePage() {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [sortDropdownOpen, typeDropdownOpen, modifiedDropdownOpen, newDropdownOpen]);
-
-  // Close preview on Escape
-  useEffect(() => {
-    if (!previewItem) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setPreviewItem(null);
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [previewItem]);
 
   // Auto-dismiss upload progress
   useEffect(() => {
@@ -944,11 +938,37 @@ export function DrivePage() {
   const handleDuplicate = useCallback((item: DriveItem) => {
     duplicateItem.mutate(item.id, {
       onSuccess: () => {
-        addToast({ type: 'success', message: 'Duplicated' });
+        addToast({ type: 'success', message: t('drive.actions.duplicated') });
       },
     });
     setContextMenu(null);
-  }, [duplicateItem, addToast]);
+  }, [duplicateItem, addToast, t]);
+
+  const handleCopyItem = useCallback((item: DriveItem) => {
+    copyItem.mutate({ id: item.id, targetParentId: currentParentId }, {
+      onSuccess: () => {
+        addToast({ type: 'success', message: t('drive.actions.copied') });
+      },
+    });
+    setContextMenu(null);
+  }, [copyItem, currentParentId, addToast, t]);
+
+  const handleClipboardCopy = useCallback(() => {
+    if (selectedIds.size === 1) {
+      const id = Array.from(selectedIds)[0];
+      setClipboardItemId(id);
+      addToast({ type: 'success', message: t('drive.actions.copiedToClipboard') });
+    }
+  }, [selectedIds, addToast, t]);
+
+  const handleClipboardPaste = useCallback(() => {
+    if (!clipboardItemId) return;
+    copyItem.mutate({ id: clipboardItemId, targetParentId: currentParentId }, {
+      onSuccess: () => {
+        addToast({ type: 'success', message: t('drive.actions.pasted') });
+      },
+    });
+  }, [clipboardItemId, currentParentId, copyItem, addToast, t]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent, item: DriveItem) => {
     e.preventDefault();
@@ -1069,8 +1089,9 @@ export function DrivePage() {
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    // Only handle file drops from OS, not internal drags
+    // Only handle file drops from desktop, not internal drags
     if (dragItemId) return;
+    if (!e.dataTransfer.types.includes('Files')) return;
     dragCounter.current++;
     if (dragCounter.current === 1) setIsDraggingOver(true);
   }, [dragItemId]);
@@ -1078,6 +1099,7 @@ export function DrivePage() {
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     if (dragItemId) return;
+    if (!e.dataTransfer.types.includes('Files')) return;
     dragCounter.current--;
     if (dragCounter.current === 0) setIsDraggingOver(false);
   }, [dragItemId]);
@@ -1091,6 +1113,7 @@ export function DrivePage() {
     dragCounter.current = 0;
     setIsDraggingOver(false);
     if (dragItemId) return; // internal drag, not file upload
+    if (!e.dataTransfer.types.includes('Files')) return;
     if (e.dataTransfer.files.length > 0) {
       handleUpload(e.dataTransfer.files);
     }
@@ -1247,6 +1270,149 @@ export function DrivePage() {
     buildLevel(null, 0);
     return tree;
   }, [foldersData, selectedIds]);
+
+  // ─── Keyboard shortcuts ────────────────────────────────────────────
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Don't handle shortcuts when input/textarea is focused or a modal is open
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+      if (newFolderOpen || moveModalOpen || batchMoveOpen || !!tagModalItem || !!shareModalItem || !!iconPickerItem || !!confirmDelete || !!confirmPermanent) return;
+
+      const isMod = e.metaKey || e.ctrlKey;
+
+      // Cmd/Ctrl + C: copy selected item to clipboard
+      if (isMod && e.key === 'c' && !e.shiftKey) {
+        if (selectedIds.size === 1) {
+          e.preventDefault();
+          handleClipboardCopy();
+        }
+        return;
+      }
+
+      // Cmd/Ctrl + V: paste copied item into current folder
+      if (isMod && e.key === 'v' && !e.shiftKey) {
+        if (clipboardItemId) {
+          e.preventDefault();
+          handleClipboardPaste();
+        }
+        return;
+      }
+
+      // Cmd/Ctrl + Shift + N: create new folder
+      if (isMod && e.shiftKey && (e.key === 'N' || e.key === 'n')) {
+        e.preventDefault();
+        setNewFolderOpen(true);
+        return;
+      }
+
+      // F2: rename selected item
+      if (e.key === 'F2') {
+        if (selectedIds.size === 1) {
+          e.preventDefault();
+          const id = Array.from(selectedIds)[0];
+          const item = displayItems.find((i) => i.id === id);
+          if (item) handleRename(item);
+        }
+        return;
+      }
+
+      // Delete / Backspace: move to trash
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedIds.size > 0 && !isMod) {
+          e.preventDefault();
+          if (selectedIds.size > 1) {
+            handleBulkDelete();
+          } else {
+            const id = Array.from(selectedIds)[0];
+            const item = displayItems.find((i) => i.id === id);
+            if (item) handleMoveToTrash(item);
+          }
+        }
+        return;
+      }
+
+      // Escape: deselect / close preview
+      if (e.key === 'Escape') {
+        if (previewItem) {
+          setPreviewItem(null);
+        } else if (selectedIds.size > 0) {
+          setSelectedIds(new Set());
+        }
+        return;
+      }
+
+      // Arrow Down: move selection down
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (displayItems.length === 0) return;
+        if (selectedIds.size === 0) {
+          setSelectedIds(new Set([displayItems[0].id]));
+          setLastClickedId(displayItems[0].id);
+        } else if (selectedIds.size === 1) {
+          const currentId = Array.from(selectedIds)[0];
+          const idx = displayItems.findIndex((i) => i.id === currentId);
+          if (idx < displayItems.length - 1) {
+            const nextItem = displayItems[idx + 1];
+            setSelectedIds(new Set([nextItem.id]));
+            setLastClickedId(nextItem.id);
+            if (driveSettings.showPreviewPanel && (nextItem.type === 'file' || nextItem.linkedResourceType)) {
+              setPreviewItem(nextItem);
+            } else {
+              setPreviewItem(null);
+            }
+          }
+        }
+        return;
+      }
+
+      // Arrow Up: move selection up
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (displayItems.length === 0) return;
+        if (selectedIds.size === 0) {
+          const last = displayItems[displayItems.length - 1];
+          setSelectedIds(new Set([last.id]));
+          setLastClickedId(last.id);
+        } else if (selectedIds.size === 1) {
+          const currentId = Array.from(selectedIds)[0];
+          const idx = displayItems.findIndex((i) => i.id === currentId);
+          if (idx > 0) {
+            const prevItem = displayItems[idx - 1];
+            setSelectedIds(new Set([prevItem.id]));
+            setLastClickedId(prevItem.id);
+            if (driveSettings.showPreviewPanel && (prevItem.type === 'file' || prevItem.linkedResourceType)) {
+              setPreviewItem(prevItem);
+            } else {
+              setPreviewItem(null);
+            }
+          }
+        }
+        return;
+      }
+
+      // Enter: open selected item
+      if (e.key === 'Enter') {
+        if (selectedIds.size === 1) {
+          e.preventDefault();
+          const id = Array.from(selectedIds)[0];
+          const item = displayItems.find((i) => i.id === id);
+          if (item) handleItemDoubleClick(item);
+        }
+        return;
+      }
+    };
+
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [
+    selectedIds, displayItems, clipboardItemId, previewItem, currentParentId,
+    newFolderOpen, moveModalOpen, batchMoveOpen, tagModalItem, shareModalItem,
+    iconPickerItem, confirmDelete, confirmPermanent, driveSettings.showPreviewPanel,
+    handleClipboardCopy, handleClipboardPaste, handleRename, handleMoveToTrash,
+    handleBulkDelete, handleItemDoubleClick,
+  ]);
 
   // ─── Render helpers ────────────────────────────────────────────────
 
@@ -1513,6 +1679,21 @@ export function DrivePage() {
           </div>
 
           <div className="drive-toolbar-right">
+            {/* Download folder as ZIP */}
+            {sidebarView === 'files' && folderId && (
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<FileArchive size={14} />}
+                onClick={() => {
+                  const token = localStorage.getItem('atlasmail_token');
+                  window.open(`/api/v1/drive/${folderId}/download-zip${token ? `?token=${encodeURIComponent(token)}` : ''}`, '_blank');
+                }}
+              >
+                {t('drive.actions.downloadZip')}
+              </Button>
+            )}
+
             {/* Type filter dropdown */}
             <div ref={typeDropdownRef} style={{ position: 'relative' }}>
               <Button
@@ -2258,12 +2439,17 @@ export function DrivePage() {
               )}
               <ContextMenuItem
                 icon={<Copy size={14} />}
-                label="Duplicate"
+                label={t('drive.context.duplicate')}
                 onClick={() => handleDuplicate(contextMenu.item)}
               />
               <ContextMenuItem
+                icon={<Clipboard size={14} />}
+                label={t('drive.context.makeACopy')}
+                onClick={() => handleCopyItem(contextMenu.item)}
+              />
+              <ContextMenuItem
                 icon={<FolderInput size={14} />}
-                label="Move to..."
+                label={t('drive.context.moveTo')}
                 onClick={() => handleMove(contextMenu.item)}
               />
               <ContextMenuItem

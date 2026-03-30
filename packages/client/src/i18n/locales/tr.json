@@ -1062,6 +1062,19 @@
       "h3Title": "Bağlantılarla paylaşın",
       "h3Desc": "Herhangi bir dosya veya klasör için paylaşılabilir bağlantılar oluşturun",
       "uploadFiles": "Dosya yükle"
+    },
+    "actions": {
+      "downloadZip": "ZIP indir",
+      "duplicated": "Çoğaltıldı",
+      "copied": "Kopyalandı",
+      "copiedToClipboard": "Panoya kopyalandı",
+      "pasted": "Yapıştırıldı",
+      "dropFilesToUpload": "Yüklemek için dosyaları buraya bırakın"
+    },
+    "context": {
+      "duplicate": "Çoğalt",
+      "makeACopy": "Kopya oluştur",
+      "moveTo": "Taşı..."
     }
   },
   "hr": {

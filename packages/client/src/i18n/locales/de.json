@@ -1062,6 +1062,19 @@
       "h3Title": "Mit Links teilen",
       "h3Desc": "Erstellen Sie teilbare Links für jede Datei oder jeden Ordner",
       "uploadFiles": "Dateien hochladen"
+    },
+    "actions": {
+      "downloadZip": "ZIP herunterladen",
+      "duplicated": "Dupliziert",
+      "copied": "Kopiert",
+      "copiedToClipboard": "In die Zwischenablage kopiert",
+      "pasted": "Eingefugt",
+      "dropFilesToUpload": "Dateien hierher ziehen zum Hochladen"
+    },
+    "context": {
+      "duplicate": "Duplizieren",
+      "makeACopy": "Kopie erstellen",
+      "moveTo": "Verschieben nach..."
     }
   },
   "hr": {

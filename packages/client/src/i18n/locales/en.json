@@ -1105,6 +1105,19 @@
       "h3Title": "Share with links",
       "h3Desc": "Generate shareable links for any file or folder",
       "uploadFiles": "Upload files"
+    },
+    "actions": {
+      "downloadZip": "Download ZIP",
+      "duplicated": "Duplicated",
+      "copied": "Copied",
+      "copiedToClipboard": "Copied to clipboard",
+      "pasted": "Pasted",
+      "dropFilesToUpload": "Drop files here to upload"
+    },
+    "context": {
+      "duplicate": "Duplicate",
+      "makeACopy": "Make a copy",
+      "moveTo": "Move to..."
     }
   },
   "hr": {

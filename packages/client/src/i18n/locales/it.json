@@ -1062,6 +1062,19 @@
       "h3Title": "Condividi con i link",
       "h3Desc": "Genera link condivisibili per qualsiasi file o cartella",
       "uploadFiles": "Carica file"
+    },
+    "actions": {
+      "downloadZip": "Scarica ZIP",
+      "duplicated": "Duplicato",
+      "copied": "Copiato",
+      "copiedToClipboard": "Copiato negli appunti",
+      "pasted": "Incollato",
+      "dropFilesToUpload": "Trascina i file qui per caricarli"
+    },
+    "context": {
+      "duplicate": "Duplica",
+      "makeACopy": "Crea una copia",
+      "moveTo": "Sposta in..."
     }
   },
   "hr": {
