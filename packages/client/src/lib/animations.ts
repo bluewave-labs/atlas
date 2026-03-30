@@ -1,5 +1,5 @@
 /**
- * Shared animation utilities for AtlasMail.
+ * Shared animation utilities for Atlas.
  *
  * Provides:
  * - CSS keyframe injection (deduped, one-time)

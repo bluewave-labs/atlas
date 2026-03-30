@@ -906,6 +906,11 @@ export async function runMigrations() {
       ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS calendar_start_day TEXT NOT NULL DEFAULT 'sunday';
     `);
 
+    // Add app_widgets column to user_settings (idempotent)
+    await client.query(`
+      ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS app_widgets JSONB;
+    `);
+
     // ─── CRM tables ─────────────────────────────────────────────────
 
     await client.query(`

@@ -31,6 +31,7 @@ import { Button } from '../../components/ui/button';
 import { IconButton } from '../../components/ui/icon-button';
 import { Select } from '../../components/ui/select';
 import { FeatureEmptyState } from '../../components/ui/feature-empty-state';
+import { StatusDot } from '../../components/ui/status-dot';
 import '../../styles/tasks.css';
 
 // ─── Navigation sections (Things 3 inspired) ────────────────────────
@@ -816,7 +817,7 @@ function TaskDetailPanel({
                   }}
                 >
                   {opt.color !== 'transparent' && (
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: opt.color }} />
+                    <StatusDot color={opt.color} size={6} />
                   )}
                   {opt.label}
                 </button>

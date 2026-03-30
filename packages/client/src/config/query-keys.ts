@@ -166,4 +166,8 @@ export const queryKeys = {
     objects: ['data-model', 'objects'] as const,
     objectFields: (appId: string, objectId: string) => ['data-model', 'fields', appId, objectId] as const,
   },
+  system: {
+    all: ['system'] as const,
+    metrics: ['system', 'metrics'] as const,
+  },
 };

@@ -32,7 +32,7 @@ function createWindow() {
     height: 860,
     minWidth: 800,
     minHeight: 500,
-    title: 'AtlasMail',
+    title: 'Atlas',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     trafficLightPosition: { x: 16, y: 12 },
     backgroundColor: '#101114',

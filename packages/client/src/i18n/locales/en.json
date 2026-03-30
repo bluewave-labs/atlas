@@ -389,9 +389,9 @@
     "tables": "Tables"
   },
   "home": {
-    "goodMorning": "Good Morning!",
-    "goodAfternoon": "Good Afternoon!",
-    "goodEvening": "Good Evening!",
+    "goodMorning": "Good morning",
+    "goodAfternoon": "Good afternoon",
+    "goodEvening": "Good evening",
     "welcomeBack": "Welcome back, {{name}}. What would you like to do?",
     "whatToDo": "What would you like to do?",
     "unread_one": "{{count}} unread",

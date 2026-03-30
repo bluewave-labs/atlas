@@ -49,6 +49,10 @@ import { SmartButtonBar } from '../../components/shared/SmartButtonBar';
 import { ConfirmDialog } from '../../components/ui/confirm-dialog';
 import { ColumnHeader } from '../../components/ui/column-header';
 import { FeatureEmptyState } from '../../components/ui/feature-empty-state';
+import { StatusDot } from '../../components/ui/status-dot';
+import { DetailPanel } from '../../components/ui/detail-panel';
+import { ListToolbar } from '../../components/ui/list-toolbar';
+import { ContentArea } from '../../components/ui/content-area';
 import { useUIStore } from '../../stores/ui-store';
 import '../../styles/crm.css';
 
@@ -766,7 +770,7 @@ function DealDetailPanel({
                   options={stages.map((s) => ({
                     value: s.id,
                     label: s.name,
-                    icon: <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.color }} />,
+                    icon: <StatusDot color={s.color} size={8} />,
                   }))}
                   size="sm"
                 />
@@ -1402,7 +1406,7 @@ function DealsListView({
                   {deal.stageName && (
                     <Badge variant="default">
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: deal.stageColor || '#6b7280' }} />
+                        <StatusDot color={deal.stageColor || '#6b7280'} size={6} />
                         {deal.stageName}
                       </span>
                     </Badge>
@@ -2363,18 +2367,11 @@ export function CrmPage() {
       </AppSidebar>
 
       {/* Main content */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {/* Content header */}
-        {activeView !== 'leads' && activeView !== 'forecast' && (
-        <div className="crm-content-header">
-          <span className="crm-content-header-title">
-            {sectionTitle}
-            {activeView === 'deals' && <span style={{ color: 'var(--color-text-tertiary)', fontWeight: 400, marginLeft: 8 }}>&middot; {filteredDeals.length}</span>}
-            {activeView === 'contacts' && <span style={{ color: 'var(--color-text-tertiary)', fontWeight: 400, marginLeft: 8 }}>&middot; {filteredContacts.length}</span>}
-            {activeView === 'companies' && <span style={{ color: 'var(--color-text-tertiary)', fontWeight: 400, marginLeft: 8 }}>&middot; {filteredCompanies.length}</span>}
-          </span>
-          {activeView !== 'dashboard' && activeView !== 'automations' && activeView !== 'permissions' && (
-            <div className="crm-content-header-actions">
+      <ContentArea
+        title={sectionTitle ?? ''}
+        actions={
+          activeView !== 'dashboard' && activeView !== 'automations' && activeView !== 'permissions' ? (
+            <>
               <IconButton
                 icon={<Search size={14} />}
                 label={t('crm.actions.search')}
@@ -2394,11 +2391,10 @@ export function CrmPage() {
                     {addButtonLabel}
                   </Button>
                 ) : null}
-            </div>
-          )}
-        </div>
-        )}
-
+            </>
+          ) : undefined
+        }
+      >
         {/* Search bar */}
         {showSearch && (
           <div className="crm-search-bar">
@@ -2422,27 +2418,31 @@ export function CrmPage() {
 
         {/* Toolbar (for deals, contacts, companies) */}
         {(activeView === 'deals' || activeView === 'contacts' || activeView === 'companies') && (
-          <div className="crm-toolbar">
+          <ListToolbar
+            actions={
+              <>
+                <Button variant="ghost" size="sm" icon={<Upload size={13} />} onClick={() => setShowImportModal(true)}>
+                  {t('crm.actions.import')}
+                </Button>
+                <Button variant="ghost" size="sm" icon={<Download size={13} />} onClick={handleExport}>
+                  {t('crm.actions.export')}
+                </Button>
+              </>
+            }
+          >
             <SavedViews
               entityType={importEntityType as 'deals' | 'contacts' | 'companies'}
               currentFilters={filters}
               currentSort={sort}
               onApplyView={handleApplyView}
             />
-            <div className="crm-toolbar-separator" />
+            <ListToolbar.Separator />
             <FilterBar
               columns={currentFilterColumns}
               filters={filters}
               onFiltersChange={setFilters}
             />
-            <div className="crm-toolbar-separator" />
-            <Button variant="ghost" size="sm" icon={<Upload size={13} />} onClick={() => setShowImportModal(true)}>
-              {t('crm.actions.import')}
-            </Button>
-            <Button variant="ghost" size="sm" icon={<Download size={13} />} onClick={handleExport}>
-              {t('crm.actions.export')}
-            </Button>
-          </div>
+          </ListToolbar>
         )}
 
         {/* Content area */}
@@ -2583,7 +2583,7 @@ export function CrmPage() {
             </div>
           )}
         </div>
-      </div>
+      </ContentArea>
 
       {/* Floating bulk action bar */}
       {selectedIds.size > 0 && (activeView === 'deals' || activeView === 'contacts' || activeView === 'companies') && (

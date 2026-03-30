@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import type { ClientAppManifest, AppRoute } from './app-manifest.client';
+import type { ClientAppManifest, AppRoute, ClientAppWidget } from './app-manifest.client';
 import type { SettingsCategory } from './settings-registry';
 
 class AppRegistry {
@@ -44,6 +44,24 @@ class AppRegistry {
     return this.getAll()
       .map(app => app.settingsCategory)
       .filter((c): c is SettingsCategory => c !== undefined);
+  }
+
+  /** Collect widgets from all registered apps with app metadata attached */
+  getAllWidgets(): Array<ClientAppWidget & { appId: string; appName: string; appColor: string }> {
+    const result: Array<ClientAppWidget & { appId: string; appName: string; appColor: string }> = [];
+    for (const app of this.getAll()) {
+      if (app.widgets) {
+        for (const widget of app.widgets) {
+          result.push({ ...widget, appId: app.id, appName: app.name, appColor: app.color });
+        }
+      }
+    }
+    return result;
+  }
+
+  /** Get widgets registered by a specific app */
+  getAppWidgets(appId: string): ClientAppWidget[] {
+    return this.get(appId)?.widgets ?? [];
   }
 }
 

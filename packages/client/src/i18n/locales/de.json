@@ -346,9 +346,9 @@
     "tables": "Tabellen"
   },
   "home": {
-    "goodMorning": "Guten Morgen!",
-    "goodAfternoon": "Guten Tag!",
-    "goodEvening": "Guten Abend!",
+    "goodMorning": "Guten Morgen",
+    "goodAfternoon": "Guten Tag",
+    "goodEvening": "Guten Abend",
     "welcomeBack": "Willkommen zurück, {{name}}. Was möchten Sie tun?",
     "whatToDo": "Was möchten Sie tun?",
     "unread_one": "{{count}} ungelesen",

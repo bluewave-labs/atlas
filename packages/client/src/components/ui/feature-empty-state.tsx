@@ -1,4 +1,5 @@
-import type { ReactNode, CSSProperties } from 'react';
+import { useState, type ReactNode, type CSSProperties } from 'react';
+import { ChevronRight } from 'lucide-react';
 import { Button } from './button';
 import { injectKeyframes } from '../../lib/animations';
 
@@ -8,6 +9,14 @@ injectKeyframes('empty-fade-in', `
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }`);
+
+// ─── Accent palettes (VerifyWise-inspired rotating colors) ──────────
+
+const ACCENT_PALETTES = [
+  { bg: 'color-mix(in srgb, var(--color-success) 10%, transparent)', icon: 'var(--color-success)', border: 'color-mix(in srgb, var(--color-success) 30%, transparent)' },
+  { bg: 'color-mix(in srgb, var(--color-accent-primary) 10%, transparent)', icon: 'var(--color-accent-primary)', border: 'color-mix(in srgb, var(--color-accent-primary) 30%, transparent)' },
+  { bg: 'color-mix(in srgb, var(--color-warning) 10%, transparent)', icon: 'var(--color-warning)', border: 'color-mix(in srgb, var(--color-warning) 30%, transparent)' },
+];
 
 // ─── SVG Illustrations (80x80) ──────────────────────────────────────
 
@@ -244,6 +253,88 @@ export interface FeatureEmptyStateProps {
   onAction?: () => void;
 }
 
+// ─── Collapsible Feature Tip ────────────────────────────────────────
+
+function FeatureTip({ highlight, palette }: { highlight: FeatureHighlight; palette: typeof ACCENT_PALETTES[0] }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--spacing-md)',
+          padding: 'var(--spacing-md)',
+          background: open ? palette.bg : 'transparent',
+          border: `1px solid ${open ? palette.border : 'var(--color-border-secondary)'}`,
+          borderRadius: open ? 'var(--radius-lg) var(--radius-lg) 0 0' : 'var(--radius-lg)',
+          cursor: 'pointer',
+          fontFamily: 'var(--font-family)',
+          textAlign: 'left',
+          transition: 'background var(--transition-normal), border-color var(--transition-normal)',
+          outline: 'none',
+          width: '100%',
+        }}
+      >
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 30,
+            height: 30,
+            borderRadius: 'var(--radius-md)',
+            background: palette.bg,
+            color: palette.icon,
+            flexShrink: 0,
+          }}
+        >
+          {highlight.icon}
+        </span>
+        <span
+          style={{
+            flex: 1,
+            fontSize: 'var(--font-size-sm)',
+            fontWeight: 'var(--font-weight-normal)' as CSSProperties['fontWeight'],
+            color: 'var(--color-text-primary)',
+            minWidth: 0,
+          }}
+        >
+          {highlight.title}
+        </span>
+        <ChevronRight
+          size={14}
+          style={{
+            color: 'var(--color-text-tertiary)',
+            transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
+            transition: 'transform var(--transition-normal)',
+            flexShrink: 0,
+          }}
+        />
+      </button>
+      {open && (
+        <div
+          style={{
+            padding: 'var(--spacing-sm) var(--spacing-md) var(--spacing-md) calc(30px + var(--spacing-md) + var(--spacing-md))',
+            fontSize: 'var(--font-size-xs)',
+            color: 'var(--color-text-tertiary)',
+            lineHeight: 'var(--line-height-normal)',
+            fontFamily: 'var(--font-family)',
+            background: palette.bg,
+            border: `1px solid ${palette.border}`,
+            borderTop: 'none',
+            borderRadius: '0 0 var(--radius-lg) var(--radius-lg)',
+          }}
+        >
+          {highlight.description}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Component ──────────────────────────────────────────────────────
 
 export function FeatureEmptyState({
@@ -316,64 +407,20 @@ export function FeatureEmptyState({
         </span>
       )}
 
-      {/* Feature highlights */}
+      {/* Feature tips (collapsible, VerifyWise-inspired) */}
       {highlights && highlights.length > 0 && (
         <div
           style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: 'var(--spacing-md)',
-            maxWidth: 420,
+            gap: 'var(--spacing-sm)',
+            maxWidth: 440,
             width: '100%',
-            marginTop: 'var(--spacing-sm)',
+            marginTop: 'var(--spacing-md)',
           }}
         >
           {highlights.map((h, i) => (
-            <div
-              key={i}
-              style={{
-                display: 'flex',
-                gap: 'var(--spacing-md)',
-                alignItems: 'flex-start',
-                borderLeft: '2px solid var(--color-accent-primary)',
-                paddingLeft: 'var(--spacing-md)',
-              }}
-            >
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  color: 'var(--color-accent-primary)',
-                  marginTop: 1,
-                }}
-              >
-                {h.icon}
-              </span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span
-                  style={{
-                    fontSize: 'var(--font-size-sm)',
-                    fontWeight: 'var(--font-weight-medium)' as CSSProperties['fontWeight'],
-                    color: 'var(--color-text-primary)',
-                    fontFamily: 'var(--font-family)',
-                  }}
-                >
-                  {h.title}
-                </span>
-                <span
-                  style={{
-                    fontSize: 'var(--font-size-xs)',
-                    color: 'var(--color-text-tertiary)',
-                    lineHeight: 'var(--line-height-normal)',
-                    fontFamily: 'var(--font-family)',
-                  }}
-                >
-                  {h.description}
-                </span>
-              </div>
-            </div>
+            <FeatureTip key={i} highlight={h} palette={ACCENT_PALETTES[i % ACCENT_PALETTES.length]} />
           ))}
         </div>
       )}

@@ -44,6 +44,8 @@ import { Skeleton } from '../../components/ui/skeleton';
 import { SmartButtonBar } from '../../components/shared/SmartButtonBar';
 import { ColumnHeader } from '../../components/ui/column-header';
 import { FeatureEmptyState } from '../../components/ui/feature-empty-state';
+import { StatusDot } from '../../components/ui/status-dot';
+import { ContentArea } from '../../components/ui/content-area';
 import { useUIStore } from '../../stores/ui-store';
 import { formatDate } from '../../lib/format';
 import '../../styles/hr.css';
@@ -896,7 +898,7 @@ function EmployeeDetailPanel({
                     { value: '', label: t('hr.fields.none') },
                     ...departments.map((d) => ({
                       value: d.id, label: d.name,
-                      icon: <div style={{ width: 8, height: 8, borderRadius: '50%', background: d.color }} />,
+                      icon: <StatusDot color={d.color} size={8} />,
                     })),
                   ]}
                   size="sm"
@@ -1390,7 +1392,7 @@ function OrgChartView({
                 textAlign: 'center', width: '100%',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-xs)', marginBottom: 4 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: dept.color }} />
+                  <StatusDot color={dept.color} size={10} />
                   <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
                     {dept.name}
                   </span>
@@ -1570,7 +1572,7 @@ function EmployeesListView({
             <span style={{ width: 120, flexShrink: 0 }}>
               {dept ? (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-family)', color: 'var(--color-text-secondary)' }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: dept.color, flexShrink: 0 }} />
+                  <StatusDot color={dept.color} size={8} />
                   {dept.name}
                 </span>
               ) : (
@@ -1779,7 +1781,7 @@ function LeaveTypesView() {
             display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: 'var(--spacing-md) var(--spacing-lg)',
             borderBottom: '1px solid var(--color-border-secondary)',
           }}>
-            <div style={{ width: 12, height: 12, borderRadius: '50%', background: lt.color, flexShrink: 0 }} />
+            <StatusDot color={lt.color} size={12} />
             <span style={{ flex: 1, fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
               {lt.name}
             </span>
@@ -1889,7 +1891,7 @@ function LeavePoliciesView() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-sm)' }}>
               {p.allocations.map((alloc, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', padding: 'var(--spacing-xs) var(--spacing-sm)', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)' }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: getLeaveTypeColor(alloc.leaveTypeId) }} />
+                  <StatusDot color={getLeaveTypeColor(alloc.leaveTypeId)} size={8} />
                   <span style={{ color: 'var(--color-text-secondary)' }}>{getLeaveTypeName(alloc.leaveTypeId)}</span>
                   <span style={{ fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)' }}>{alloc.daysPerYear}d</span>
                 </div>
@@ -2095,7 +2097,7 @@ function MyLeaveView({ employees }: { employees: HrEmployee[] }) {
             display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: 'var(--spacing-md) var(--spacing-lg)',
             borderBottom: '1px solid var(--color-border-secondary)',
           }}>
-            <div style={{ width: 10, height: 10, borderRadius: '50%', background: app.leaveTypeColor || '#6b7280', flexShrink: 0 }} />
+            <StatusDot color={app.leaveTypeColor || '#6b7280'} size={10} />
             <span style={{ width: 140, flexShrink: 0, fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
               {app.employeeName}
             </span>
@@ -2328,7 +2330,7 @@ function AttendanceView({ employees }: { employees: HrEmployee[] }) {
                 />
               </div>
               {record && (
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: statusColors[record.status] || 'var(--color-text-tertiary)' }} />
+                <StatusDot color={statusColors[record.status] || 'var(--color-text-tertiary)'} size={10} />
               )}
             </div>
           );
@@ -2612,7 +2614,7 @@ export function HrPage() {
             <SidebarItem
               key={dept.id}
               label={dept.name}
-              icon={<div style={{ width: 10, height: 10, borderRadius: '50%', background: dept.color, flexShrink: 0 }} />}
+              icon={<StatusDot color={dept.color} size={10} />}
               isActive={activeNav === `dept:${dept.id}`}
               count={deptEmployeeCounts[dept.id] ?? 0}
               onClick={() => { setActiveNav(`dept:${dept.id}`); setSelectedEmployeeId(null); }}
@@ -2677,11 +2679,10 @@ export function HrPage() {
       </AppSidebar>
 
       {/* Main content */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {/* Content header */}
-        <div className="hr-content-header">
-          <span className="hr-content-header-title">{sectionTitle}</span>
-          <div className="hr-content-header-actions">
+      <ContentArea
+        title={sectionTitle}
+        actions={
+          <>
             {(activeNav === 'employees' || activeNav.startsWith('dept:')) && (
               <IconButton
                 icon={<Search size={14} />}
@@ -2696,9 +2697,9 @@ export function HrPage() {
                 {activeNav === 'departments' ? t('hr.actions.addDepartment') : activeNav === 'time-off' ? t('hr.actions.requestTimeOff') : t('hr.actions.addEmployee')}
               </Button>
             )}
-          </div>
-        </div>
-
+          </>
+        }
+      >
         {/* Search bar */}
         {showSearch && (activeNav === 'employees' || activeNav.startsWith('dept:')) && (
           <div className="hr-search-bar">
@@ -2752,7 +2753,7 @@ export function HrPage() {
         {activeNav === 'leave-types' && <LeaveTypesView />}
         {activeNav === 'holidays' && <HolidaysView />}
         {activeNav === 'policies' && <LeavePoliciesView />}
-      </div>
+      </ContentArea>
 
       {/* Detail panel */}
       {selectedEmployee && (activeNav === 'employees' || activeNav.startsWith('dept:')) && (

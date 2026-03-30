@@ -3,7 +3,6 @@ import { Palette, Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   useDrawSettingsStore,
-  type DrawBackground,
   type DrawExportQuality,
   type DrawAutoSaveInterval,
 } from '../settings-store';
@@ -11,7 +10,6 @@ import {
   SettingsSection,
   SettingsRow,
   SettingsToggle,
-  SelectableCard,
   SettingsSelect,
 } from '../../../components/settings/settings-primitives';
 import { Modal, ModalSidebarNavButton } from '../../../components/ui/modal';
@@ -37,18 +35,11 @@ interface DrawSidebarSection {
 // Panel: Canvas
 // ---------------------------------------------------------------------------
 
-const BG_COLORS: Record<DrawBackground, string> = {
-  white: '#ffffff',
-  light: '#f5f5f5',
-  dark: '#1e1e1e',
-};
-
 export function DrawCanvasPanel() {
   const { t } = useTranslation();
   const {
     gridMode, setGridMode,
     snapToGrid, setSnapToGrid,
-    defaultBackground, setDefaultBackground,
     autoSaveInterval, setAutoSaveInterval,
   } = useDrawSettingsStore();
 
@@ -57,12 +48,6 @@ export function DrawCanvasPanel() {
     { value: 2000, label: t('draw.autoSave2s') },
     { value: 5000, label: t('draw.autoSave5s') },
     { value: 10000, label: t('draw.autoSave10s') },
-  ];
-
-  const bgOptions: { id: DrawBackground; label: string }[] = [
-    { id: 'white', label: t('draw.bgWhite') },
-    { id: 'light', label: t('draw.bgLight') },
-    { id: 'dark', label: t('draw.bgDark') },
   ];
 
   return (
@@ -74,40 +59,6 @@ export function DrawCanvasPanel() {
         <SettingsRow label={t('draw.snapToGrid')} description={t('draw.snapToGridDesc')}>
           <SettingsToggle checked={snapToGrid} onChange={setSnapToGrid} label={t('draw.snapToGrid')} />
         </SettingsRow>
-      </SettingsSection>
-
-      <SettingsSection title={t('draw.defaultBg')}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--spacing-sm)' }}>
-          {bgOptions.map((bg) => (
-            <SelectableCard
-              key={bg.id}
-              selected={defaultBackground === bg.id}
-              onClick={() => setDefaultBackground(bg.id)}
-              style={{ padding: 'var(--spacing-md) var(--spacing-lg)' }}
-            >
-              <span
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 'var(--radius-md)',
-                  background: BG_COLORS[bg.id],
-                  border: '1px solid var(--color-border-primary)',
-                }}
-              />
-              <span
-                style={{
-                  fontSize: 'var(--font-size-sm)',
-                  color: defaultBackground === bg.id ? 'var(--color-accent-primary)' : 'var(--color-text-secondary)',
-                  fontWeight: defaultBackground === bg.id
-                    ? ('var(--font-weight-medium)' as CSSProperties['fontWeight'])
-                    : ('var(--font-weight-normal)' as CSSProperties['fontWeight']),
-                }}
-              >
-                {bg.label}
-              </span>
-            </SelectableCard>
-          ))}
-        </div>
       </SettingsSection>
 
       <SettingsSection title={t('draw.autoSaveInterval')}>

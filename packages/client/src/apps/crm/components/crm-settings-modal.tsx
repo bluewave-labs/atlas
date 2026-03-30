@@ -25,6 +25,7 @@ import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { IconButton } from '../../../components/ui/icon-button';
 import { Badge } from '../../../components/ui/badge';
+import { StatusDot } from '../../../components/ui/status-dot';
 import { useStages, useCreateStage, useUpdateStage, useDeleteStage, useReorderStages, useGoogleSyncStatus, useStartGoogleSync, useStopGoogleSync } from '../hooks';
 import { api } from '../../../lib/api-client';
 import { formatRelativeDate } from '../../../lib/format';
@@ -91,7 +92,7 @@ function SortableStageRow({
       >
         <GripVertical size={14} />
       </div>
-      <div style={{ width: 12, height: 12, borderRadius: '50%', background: isEditing ? editColor : stage.color, flexShrink: 0 }} />
+      <StatusDot color={isEditing ? editColor : stage.color} size={12} />
 
       {isEditing ? (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
@@ -222,7 +223,7 @@ export function CrmStagesPanel() {
 
         {showAdd ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', padding: '8px var(--spacing-sm)', borderRadius: 'var(--radius-md)', background: 'var(--color-bg-tertiary)', marginTop: 'var(--spacing-xs)' }}>
-            <div style={{ width: 12, height: 12, borderRadius: '50%', background: newColor, flexShrink: 0 }} />
+            <StatusDot color={newColor} size={12} />
             <Input
               value={newName}
               onChange={(e) => setNewName(e.target.value)}

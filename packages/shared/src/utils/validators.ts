@@ -129,6 +129,11 @@ export const settingsSchema = z.object({
   homeBgValue: z.string().max(1000).nullable().optional(),
   // Home widget settings
   homeEnabledWidgets: z.array(z.string()).nullable().optional(),
+  // App widget settings
+  appWidgets: z.record(z.object({
+    enabledIds: z.array(z.string()),
+    order: z.array(z.string()),
+  })).nullable().optional(),
   // Search
   recentSearches: z.array(z.string()).optional(),
 });

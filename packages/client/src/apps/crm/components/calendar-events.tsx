@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { CalendarDays, MapPin, Users, ExternalLink, ChevronDown } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
+import { StatusDot } from '../../../components/ui/status-dot';
 import { formatDate, formatDateTime } from '../../../lib/format';
 import {
   useContactEvents,
@@ -19,9 +20,7 @@ function EventStatusDot({ status }: { status: string }) {
     status === 'cancelled' ? 'var(--color-error)' :
     'var(--color-text-tertiary)';
 
-  return (
-    <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />
-  );
+  return <StatusDot color={color} size={8} />;
 }
 
 function EventItem({ event }: { event: CrmCalendarEvent }) {

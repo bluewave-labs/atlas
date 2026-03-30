@@ -47,4 +47,5 @@ export interface UserSettings {
   homeBgType: 'unsplash' | 'solid' | 'gradient' | 'custom';
   homeBgValue: string | null;
   recentItems: string; // JSON array string
+  appWidgets: Record<string, { enabledIds: string[]; order: string[] }> | null;
 }

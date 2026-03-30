@@ -16,7 +16,7 @@
   },
   "build": {
     "appId": "dev.atlasmail.app",
-    "productName": "AtlasMail",
+    "productName": "Atlas",
     "files": [
       "dist/**/*",
       "renderer/**/*"

@@ -346,9 +346,9 @@
     "tables": "Tablolar"
   },
   "home": {
-    "goodMorning": "Günaydın!",
-    "goodAfternoon": "İyi günler!",
-    "goodEvening": "İyi akşamlar!",
+    "goodMorning": "Günaydın",
+    "goodAfternoon": "İyi günler",
+    "goodEvening": "İyi akşamlar",
     "welcomeBack": "Tekrar hoş geldin, {{name}}. Ne yapmak istersin?",
     "whatToDo": "Ne yapmak istersiniz?",
     "unread_one": "{{count}} okunmamış",

@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { DollarSign } from 'lucide-react';
 import type { CrmDeal, CrmDealStage } from '../hooks';
 import { formatCurrencyCompact, formatNumber } from '../../../lib/format';
+import { StatusDot } from '../../../components/ui/status-dot';
 
 interface DealKanbanProps {
   deals: CrmDeal[];
@@ -108,7 +109,7 @@ export function DealKanban({ deals, stages, onMoveDeal, onDealClick }: DealKanba
             {/* Column header */}
             <div className="crm-kanban-column-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: stage.color, flexShrink: 0 }} />
+                <StatusDot color={stage.color} size={8} />
                 <span style={{
                   fontSize: 'var(--font-size-sm)',
                   fontWeight: 'var(--font-weight-semibold)',

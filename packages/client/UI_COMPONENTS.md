@@ -1,4 +1,4 @@
-# AtlasMail UI Components Reference
+# Atlas UI Components Reference
 
 Complete documentation for shared UI components in `/packages/client/src/components/ui/`.
 

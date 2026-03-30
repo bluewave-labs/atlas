@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Mail, ChevronDown, ChevronRight, Paperclip } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
+import { StatusDot } from '../../../components/ui/status-dot';
 import { formatRelativeDate } from '../../../lib/format';
 import {
   useContactEmails,
@@ -59,7 +60,7 @@ function EmailItem({ email }: { email: CrmEmail }) {
         {/* Unread dot */}
         <div style={{ paddingTop: 6, flexShrink: 0 }}>
           {email.isUnread ? (
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-accent-primary)' }} />
+            <StatusDot color="var(--color-accent-primary)" size={8} />
           ) : (
             <div style={{ width: 8, height: 8 }} />
           )}

@@ -505,6 +505,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
 }
 
 .crm-dashboard-card {

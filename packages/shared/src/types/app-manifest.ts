@@ -50,6 +50,25 @@ export interface EntityObjectMeta {
   relations?: EntityRelationMeta[];
 }
 
+// ─── Widget Metadata ───────────────────────────────────────────────
+
+export interface AppWidgetMeta {
+  /** Unique widget identifier within the app, e.g. 'cpu-usage' */
+  id: string;
+  /** Human-readable name */
+  name: string;
+  /** Short description of what this widget shows */
+  description: string;
+  /** Lucide icon name (string) for server-safe reference */
+  iconName: string;
+  /** Default grid size: sm=1col, md=2col, lg=full-row */
+  defaultSize: 'sm' | 'md' | 'lg';
+  /** Auto-refresh interval in ms (optional) */
+  refreshInterval?: number;
+  /** Whether the widget is enabled by default for new users */
+  defaultEnabled: boolean;
+}
+
 /**
  * Shared (isomorphic) portion of the app manifest.
  * No React components, no Express routers — safe for both client and server.
@@ -88,6 +107,9 @@ export interface AppManifestBase {
 
   /** Entity/object metadata for the data model settings panel */
   objects?: EntityObjectMeta[];
+
+  /** Widget definitions this app contributes */
+  widgets?: AppWidgetMeta[];
 }
 
 // ─── Cross-App Record Linking ───────────────────────────────────────

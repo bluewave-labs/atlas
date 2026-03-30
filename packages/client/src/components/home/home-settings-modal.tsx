@@ -1,10 +1,13 @@
 import React, { type CSSProperties, useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api-client';
 import { queryKeys } from '../../config/query-keys';
 import { SettingsSection, SettingsRow, SettingsToggle } from '../settings/settings-primitives';
 import { Input } from '../ui/input';
+import { Chip } from '../ui/chip';
 import { widgetRegistry } from './widgets/registry';
+import { appRegistry } from '../../config/app-registry';
 
 type BgType = 'unsplash' | 'solid' | 'gradient' | 'custom';
 
@@ -223,6 +226,7 @@ export function HomeBackgroundPanel() {
 // ---------------------------------------------------------------------------
 
 export function HomeWidgetsPanel() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const { data: settings } = useQuery({
@@ -270,9 +274,41 @@ export function HomeWidgetsPanel() {
     mutation.mutate(next);
   };
 
+  // App widgets
+  const allAppWidgets = useMemo(() => appRegistry.getAllWidgets(), []);
+  const appWidgetsByApp = useMemo(() => {
+    const grouped = new Map<string, typeof allAppWidgets>();
+    for (const w of allAppWidgets) {
+      const list = grouped.get(w.appId) ?? [];
+      list.push(w);
+      grouped.set(w.appId, list);
+    }
+    return grouped;
+  }, [allAppWidgets]);
+
+  const isAppWidgetEnabled = (appId: string, widgetId: string): boolean => {
+    const key = `${appId}:${widgetId}`;
+    if (enabledIds === null) {
+      return allAppWidgets.find((w) => w.appId === appId && w.id === widgetId)?.defaultEnabled ?? false;
+    }
+    return enabledIds.includes(key);
+  };
+
+  const toggleAppWidget = (appId: string, widgetId: string) => {
+    const key = `${appId}:${widgetId}`;
+    const currentIds = enabledIds ?? [
+      ...widgetRegistry.filter((w) => w.defaultEnabled).map((w) => w.id),
+      ...allAppWidgets.filter((w) => w.defaultEnabled).map((w) => `${w.appId}:${w.id}`),
+    ];
+    const next = currentIds.includes(key)
+      ? currentIds.filter((id) => id !== key)
+      : [...currentIds, key];
+    mutation.mutate(next);
+  };
+
   return (
     <div>
-      <SettingsSection title="Home widgets" description="Choose which widgets appear on your home screen (max 10)">
+      <SettingsSection title={t('widgets.homeWidgets')} description={t('widgets.homeWidgetsDesc')}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {widgetRegistry.map((widget) => {
             const Icon = widget.icon;
@@ -311,6 +347,57 @@ export function HomeWidgetsPanel() {
           })}
         </div>
       </SettingsSection>
+
+      {appWidgetsByApp.size > 0 && (
+        <SettingsSection title={t('widgets.appWidgets')} description={t('widgets.appWidgetsDesc')}>
+          {Array.from(appWidgetsByApp.entries()).map(([appId, widgets]) => (
+            <div key={appId} style={{ marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                <Chip color={widgets[0].appColor} height={20}>
+                  {widgets[0].appName}
+                </Chip>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {widgets.map((widget) => {
+                  const Icon = widget.icon;
+                  return (
+                    <div
+                      key={widget.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '8px 12px',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid var(--color-border-secondary)',
+                        background: isAppWidgetEnabled(appId, widget.id) ? 'var(--color-bg-tertiary)' : 'transparent',
+                        transition: 'background 0.15s',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Icon size={14} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
+                        <div>
+                          <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 500, color: 'var(--color-text-primary)' }}>
+                            {widget.name}
+                          </div>
+                          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
+                            {widget.description}
+                          </div>
+                        </div>
+                      </div>
+                      <SettingsToggle
+                        checked={isAppWidgetEnabled(appId, widget.id)}
+                        onChange={() => toggleAppWidget(appId, widget.id)}
+                        label={widget.name}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </SettingsSection>
+      )}
     </div>
   );
 }

@@ -346,9 +346,9 @@
     "tables": "Tableaux"
   },
   "home": {
-    "goodMorning": "Bonjour !",
-    "goodAfternoon": "Bon après-midi !",
-    "goodEvening": "Bonsoir !",
+    "goodMorning": "Bonjour",
+    "goodAfternoon": "Bon après-midi",
+    "goodEvening": "Bonsoir",
     "welcomeBack": "Bon retour, {{name}}. Que souhaitez-vous faire ?",
     "whatToDo": "Que souhaitez-vous faire ?",
     "unread_one": "{{count}} non lu",
