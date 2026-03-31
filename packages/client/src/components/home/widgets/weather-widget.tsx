@@ -8,7 +8,7 @@ import {
 import type { WidgetDefinition, WidgetProps } from './types';
 
 interface ForecastDay {
-  day: string;
+  date: string; // ISO date string for locale formatting
   high: number;
   low: number;
   code: number;
@@ -29,7 +29,6 @@ function getWeatherIcon(code: number): ComponentType<LucideProps> {
   return Sun;
 }
 
-const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
 // Try browser geolocation first, then fall back to IP-based location
 async function getLocation(): Promise<{ latitude: number; longitude: number }> {
@@ -54,7 +53,7 @@ async function getLocation(): Promise<{ latitude: number; longitude: number }> {
 }
 
 function WeatherWidgetComponent({ width, height }: WidgetProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [forecast, setForecast] = useState<ForecastDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -64,12 +63,14 @@ function WeatherWidgetComponent({ width, height }: WidgetProps) {
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
-        if (Date.now() - parsed.ts < 60 * 60 * 1000) {
+        // Validate cache: must have `date` field (not old `day` format) and be fresh
+        if (Date.now() - parsed.ts < 60 * 60 * 1000 && parsed.data?.[0]?.date) {
           setForecast(parsed.data);
           setLoading(false);
           return;
         }
       } catch { /* ignore */ }
+      localStorage.removeItem('atlasmail_weather_forecast');
     }
 
     (async () => {
@@ -80,7 +81,7 @@ function WeatherWidgetComponent({ width, height }: WidgetProps) {
         );
         const json = await res.json();
         const days: ForecastDay[] = json.daily.time.map((date: string, i: number) => ({
-          day: DAY_KEYS[new Date(date + 'T12:00:00').getDay()],
+          date,
           high: Math.round(json.daily.temperature_2m_max[i]),
           low: Math.round(json.daily.temperature_2m_min[i]),
           code: json.daily.weather_code[i],
@@ -122,10 +123,11 @@ function WeatherWidgetComponent({ width, height }: WidgetProps) {
     }}>
       {forecast.map((d) => {
         const Icon = getWeatherIcon(d.code);
+        const dayLabel = new Date(d.date + 'T12:00:00').toLocaleDateString(i18n.language, { weekday: 'short' });
         return (
-          <div key={d.day} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+          <div key={d.date} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
             <span style={{ fontSize: 'var(--font-size-md)', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>
-              {t(`widgets.weather.days.${d.day}`)}
+              {dayLabel}
             </span>
             <Icon size={22} color="rgba(255,255,255,0.85)" strokeWidth={1.5} />
             <div style={{ display: 'flex', gap: 4, fontSize: 'var(--font-size-md)', fontWeight: 500 }}>

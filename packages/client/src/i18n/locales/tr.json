@@ -1611,16 +1611,7 @@
     "dockPet": "Dock maskotu",
     "dockPetDesc": "Ana ekranınızda gezinen bir piksel maskot seçin",
     "weather": {
-      "unavailable": "Kullanılamıyor",
-      "days": {
-        "sun": "Paz",
-        "mon": "Pzt",
-        "tue": "Sal",
-        "wed": "Çar",
-        "thu": "Per",
-        "fri": "Cum",
-        "sat": "Cmt"
-      }
+      "unavailable": "Kullanılamıyor"
     }
   },
   "connection": {

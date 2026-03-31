@@ -1611,16 +1611,7 @@
     "dockPet": "Animal du dock",
     "dockPetDesc": "Choisissez un petit animal pixelisé pour votre écran d'accueil",
     "weather": {
-      "unavailable": "Indisponible",
-      "days": {
-        "sun": "Dim",
-        "mon": "Lun",
-        "tue": "Mar",
-        "wed": "Mer",
-        "thu": "Jeu",
-        "fri": "Ven",
-        "sat": "Sam"
-      }
+      "unavailable": "Indisponible"
     }
   },
   "connection": {

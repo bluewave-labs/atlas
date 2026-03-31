@@ -1646,16 +1646,7 @@
     "dockPet": "Dock pet",
     "dockPetDesc": "Choose an animated pixel pet to wander on your home screen",
     "weather": {
-      "unavailable": "Unavailable",
-      "days": {
-        "sun": "Sun",
-        "mon": "Mon",
-        "tue": "Tue",
-        "wed": "Wed",
-        "thu": "Thu",
-        "fri": "Fri",
-        "sat": "Sat"
-      }
+      "unavailable": "Unavailable"
     }
   },
   "notifications": {

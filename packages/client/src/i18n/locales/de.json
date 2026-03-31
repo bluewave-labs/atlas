@@ -1611,16 +1611,7 @@
     "dockPet": "Dock-Haustier",
     "dockPetDesc": "Wählen Sie ein animiertes Pixel-Haustier für Ihren Startbildschirm",
     "weather": {
-      "unavailable": "Nicht verfügbar",
-      "days": {
-        "sun": "So",
-        "mon": "Mo",
-        "tue": "Di",
-        "wed": "Mi",
-        "thu": "Do",
-        "fri": "Fr",
-        "sat": "Sa"
-      }
+      "unavailable": "Nicht verfügbar"
     }
   },
   "connection": {
