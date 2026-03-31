@@ -54,6 +54,7 @@
     "boring-avatars": "^2.0.4",
     "clsx": "^2.1.0",
     "date-fns": "^4.1.0",
+    "dockbar": "^0.1.4",
     "dompurify": "^3.2.0",
     "fast-formula-parser": "^1.0.19",
     "i18next": "^25.8.13",
