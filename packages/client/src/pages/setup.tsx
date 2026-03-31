@@ -310,7 +310,7 @@ export function SetupPage({ preview = false }: { preview?: boolean }) {
             <h1 style={{ color: '#fff', fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'], textAlign: 'center', margin: '0 0 6px' }}>
               {currentStep.title}
             </h1>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 'var(--font-size-sm)', textAlign: 'center', margin: '0 0 24px' }}>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 'var(--font-size-md)', textAlign: 'center', margin: '0 0 24px' }}>
               {currentStep.subtitle}
             </p>
 
@@ -325,27 +325,57 @@ export function SetupPage({ preview = false }: { preview?: boolean }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 24 }}>
               {step === 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {LANGUAGES.map((lang) => (
-                    <button
-                      key={lang.value}
-                      onClick={() => setLanguage(lang.value)}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 12,
-                        padding: '12px 16px',
-                        background: language === lang.value ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)',
-                        border: language === lang.value ? '1px solid rgba(255,255,255,0.35)' : '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: 12, cursor: 'pointer',
-                        transition: 'all 0.15s',
-                        fontFamily: 'var(--font-family)',
-                      }}
-                    >
-                      <span style={{ fontSize: 20, lineHeight: 1 }}>{lang.flag}</span>
-                      <span style={{ color: '#fff', fontSize: 'var(--font-size-md)', flex: 1 }}>{lang.label}</span>
-                      {language === lang.value && (
-                        <CheckCircle2 size={16} color="rgba(255,255,255,0.8)" />
-                      )}
-                    </button>
-                  ))}
+                  {LANGUAGES.map((lang) => {
+                    const isActive = language === lang.value;
+                    return (
+                      <button
+                        key={lang.value}
+                        onClick={() => setLanguage(lang.value)}
+                        style={{
+                          position: 'relative',
+                          display: 'flex', alignItems: 'center',
+                          padding: '14px 18px',
+                          background: isActive ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)',
+                          border: isActive ? '1px solid rgba(255,255,255,0.35)' : '1px solid rgba(255,255,255,0.08)',
+                          borderRadius: 14, cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          fontFamily: 'var(--font-family)',
+                          overflow: 'hidden',
+                          minHeight: 52,
+                        }}
+                      >
+                        {/* Flag as large tilted background */}
+                        <span style={{
+                          position: 'absolute',
+                          right: -10,
+                          top: '50%',
+                          transform: 'translateY(-50%) rotate(15deg)',
+                          fontSize: 64,
+                          lineHeight: 1,
+                          opacity: isActive ? 0.3 : 0.12,
+                          pointerEvents: 'none',
+                          transition: 'opacity 0.2s',
+                          filter: 'saturate(1.2)',
+                        }}>
+                          {lang.flag}
+                        </span>
+                        {/* Dark overlay on right side for readability */}
+                        <span style={{
+                          position: 'absolute',
+                          inset: 0,
+                          background: 'linear-gradient(90deg, transparent 40%, rgba(0,0,0,0.3) 100%)',
+                          pointerEvents: 'none',
+                        }} />
+                        {/* Content */}
+                        <span style={{ position: 'relative', color: '#fff', fontSize: 'var(--font-size-md)', fontWeight: isActive ? 'var(--font-weight-medium)' : 'var(--font-weight-normal)', flex: 1, textAlign: 'left', zIndex: 1 } as CSSProperties}>
+                          {lang.label}
+                        </span>
+                        <span style={{ position: 'relative', zIndex: 1, width: 16, height: 16, flexShrink: 0 }}>
+                          {isActive && <CheckCircle2 size={16} color="rgba(255,255,255,0.8)" />}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
