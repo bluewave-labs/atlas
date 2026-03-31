@@ -1,11 +1,15 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
+import fs from 'fs';
 import path from 'path';
 import * as driveController from './controller';
 import { authMiddleware } from '../../middleware/auth';
 
+const uploadsDir = path.join(__dirname, '../../../uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
 const storage = multer.diskStorage({
-  destination: path.join(__dirname, '../../../uploads'),
+  destination: uploadsDir,
   filename: (_req, file, cb) => {
     const userId = (_req as any).auth?.userId || 'anon';
     const timestamp = Date.now();
@@ -16,8 +20,25 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB
+  limits: { fileSize: 500 * 1024 * 1024 }, // 500 MB
 });
+
+// Multer error handler
+function handleMulterError(err: any, _req: Request, res: Response, next: NextFunction) {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      res.status(413).json({ success: false, error: 'File too large. Maximum size is 500 MB.' });
+      return;
+    }
+    res.status(400).json({ success: false, error: err.message });
+    return;
+  }
+  if (err) {
+    res.status(500).json({ success: false, error: 'Upload failed' });
+    return;
+  }
+  next();
+}
 
 const router = Router();
 router.use(authMiddleware);
@@ -25,7 +46,7 @@ router.use(authMiddleware);
 router.get('/widget', driveController.getWidgetData);
 router.get('/', driveController.listItems);
 router.post('/folder', driveController.createFolder);
-router.post('/upload', upload.array('files', 20), driveController.uploadFiles);
+router.post('/upload', upload.array('files', 20), handleMulterError, driveController.uploadFiles);
 router.get('/search', driveController.searchItems);
 router.get('/trash', driveController.listTrash);
 router.get('/favourites', driveController.listFavourites);
@@ -47,7 +68,7 @@ router.get('/:id/view', driveController.viewFile);
 router.get('/:id/download', driveController.downloadFile);
 router.get('/:id/download-zip', driveController.downloadZip);
 router.get('/:id/versions', driveController.listVersions);
-router.post('/:id/replace', upload.single('file'), driveController.replaceFile);
+router.post('/:id/replace', upload.single('file'), handleMulterError, driveController.replaceFile);
 router.post('/:id/versions/:versionId/restore', driveController.restoreVersion);
 router.get('/:id/versions/:versionId/download', driveController.downloadVersion);
 router.post('/:id/share', driveController.createShareLink);
