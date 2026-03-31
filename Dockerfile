@@ -58,6 +58,9 @@ RUN sed -i 's|"main": "./src/index.ts"|"main": "./dist/index.js"|' packages/shar
 # Create persistent data directories
 RUN mkdir -p /app/data /app/packages/server/uploads
 
+# Copy entrypoint script (auto-detects public IP)
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+
 # Create non-root user
 RUN addgroup -g 1001 atlas && adduser -u 1001 -G atlas -s /bin/sh -D atlas
 RUN chown -R atlas:atlas /app
@@ -72,5 +75,5 @@ EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget -qO- http://localhost:3001/api/v1/health || exit 1
 
-ENTRYPOINT ["dumb-init", "--"]
+ENTRYPOINT ["dumb-init", "--", "/app/docker-entrypoint.sh"]
 CMD ["node", "packages/server/dist/index.js"]
