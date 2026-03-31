@@ -1519,3 +1519,39 @@ export const systemSettings = pgTable('system_settings', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+// ─── Audit Log ────────────────────────────────────────────────────────
+
+export const auditLog = pgTable('audit_log', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id'),
+  accountId: uuid('account_id'),
+  tenantId: uuid('tenant_id'),
+  action: varchar('action', { length: 20 }).notNull(), // 'create', 'update', 'delete'
+  entity: varchar('entity', { length: 100 }).notNull(), // 'crm_deal', 'hr_employee', etc.
+  entityId: varchar('entity_id', { length: 255 }),
+  path: varchar('path', { length: 500 }).notNull(), // request path
+  method: varchar('method', { length: 10 }).notNull(), // HTTP method
+  statusCode: integer('status_code'),
+  ipAddress: varchar('ip_address', { length: 45 }),
+  userAgent: text('user_agent'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  tenantIdx: index('idx_audit_log_tenant').on(table.tenantId, table.createdAt),
+  userIdx: index('idx_audit_log_user').on(table.userId, table.createdAt),
+}));
+
+// ─── App Permissions ──────────────────────────────────────────────────
+
+export const appPermissions = pgTable('app_permissions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull(),
+  userId: uuid('user_id').notNull(),
+  appId: varchar('app_id', { length: 50 }).notNull(),
+  role: varchar('role', { length: 20 }).notNull().default('editor'),
+  recordAccess: varchar('record_access', { length: 20 }).notNull().default('all'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  uniqueIdx: uniqueIndex('idx_app_permissions_unique').on(table.tenantId, table.userId, table.appId),
+}));
+

@@ -1600,6 +1600,42 @@ export async function runMigrations() {
       );
     `);
 
+    // ─── Audit Log ────────────────────────────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS audit_log (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID,
+        account_id UUID,
+        tenant_id UUID,
+        action VARCHAR(20) NOT NULL,
+        entity VARCHAR(100) NOT NULL,
+        entity_id VARCHAR(255),
+        path VARCHAR(500) NOT NULL,
+        method VARCHAR(10) NOT NULL,
+        status_code INTEGER,
+        ip_address VARCHAR(45),
+        user_agent TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_audit_log_tenant ON audit_log (tenant_id, created_at);
+      CREATE INDEX IF NOT EXISTS idx_audit_log_user ON audit_log (user_id, created_at);
+    `);
+
+    // ─── App Permissions ──────────────────────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS app_permissions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        tenant_id UUID NOT NULL,
+        user_id UUID NOT NULL,
+        app_id VARCHAR(50) NOT NULL,
+        role VARCHAR(20) NOT NULL DEFAULT 'editor',
+        record_access VARCHAR(20) NOT NULL DEFAULT 'all',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_app_permissions_unique ON app_permissions (tenant_id, user_id, app_id);
+    `);
+
     logger.info('Database migrations completed');
   } finally {
     await client.end();
