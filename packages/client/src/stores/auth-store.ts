@@ -246,6 +246,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.removeItem('atlasmail_accounts');
       localStorage.removeItem('atlasmail_tokens');
       set({ account: null, accounts: [], isAuthenticated: false, isSuperAdmin: false });
+      window.location.href = '/login';
     }
   },
 }));

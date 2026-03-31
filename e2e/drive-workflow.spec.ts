@@ -20,8 +20,8 @@ test.describe('Drive workflow', () => {
         await page.keyboard.press('Enter');
       }
 
-      // Verify folder appears
-      await expect(page.getByText('E2E Folder')).toBeVisible({ timeout: 5_000 });
+      // Verify folder appears (use .first() in case of duplicates from previous runs)
+      await expect(page.getByText('E2E Folder').first()).toBeVisible({ timeout: 5_000 });
     }
   });
 

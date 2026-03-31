@@ -12,13 +12,16 @@ test.describe.serial('Setup wizard', () => {
   });
 
   test('complete setup if fresh, or skip if already done', async ({ page }) => {
-    await page.goto('/setup');
-    await page.waitForLoadState('networkidle');
-
-    if (page.url().includes('/login')) {
+    // Check if setup is needed via API
+    const res = await page.request.get('/api/v1/auth/setup-status');
+    const body = await res.json();
+    if (!body.data?.needsSetup) {
       test.skip();
       return;
     }
+
+    await page.goto('/setup');
+    await page.waitForLoadState('networkidle');
 
     // Step 0: Language
     await page.getByText('English').click();
