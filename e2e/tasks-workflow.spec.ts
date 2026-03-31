@@ -1,7 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-test.use({ storageState: 'e2e/.auth/user.json' });
-
 test.describe('Tasks workflow', () => {
   test('create a task', async ({ page }) => {
     await page.goto('/tasks');

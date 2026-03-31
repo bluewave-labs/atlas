@@ -1,7 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-test.use({ storageState: 'e2e/.auth/user.json' });
-
 test.describe('Settings', () => {
   test('open settings modal from home page', async ({ page }) => {
     await page.goto('/');

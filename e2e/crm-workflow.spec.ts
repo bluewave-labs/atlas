@@ -1,7 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-test.use({ storageState: 'e2e/.auth/user.json' });
-
 test.describe('CRM workflow', () => {
   test('create a company', async ({ page }) => {
     await page.goto('/crm');

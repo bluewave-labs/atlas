@@ -1,7 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-test.use({ storageState: 'e2e/.auth/user.json' });
-
 test.describe('Drive workflow', () => {
   test('create a folder', async ({ page }) => {
     await page.goto('/drive');

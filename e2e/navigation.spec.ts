@@ -1,8 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-// These tests run after setup+login (authenticated state)
-test.use({ storageState: 'e2e/.auth/user.json' });
-
 test.describe('Home dashboard', () => {
   test('shows dock bar with app icons', async ({ page }) => {
     await page.goto('/');
