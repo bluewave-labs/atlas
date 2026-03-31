@@ -32,7 +32,7 @@ export function CpuWidget(_props: AppWidgetProps) {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
         <Cpu size={12} style={{ color: 'rgba(255,255,255,0.5)' }} />
-        <span style={{ fontSize: 'var(--font-size-xs)', color: 'rgba(255,255,255,0.5)' }}>
+        <span style={{ fontSize: 'var(--font-size-sm)', color: 'rgba(255,255,255,0.5)' }}>
           {t('system.cpuUsage')}
         </span>
       </div>
@@ -62,7 +62,7 @@ export function CpuWidget(_props: AppWidgetProps) {
 
       {/* Subtitle */}
       {metrics && (
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+        <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
           {metrics.cpu.cores} {t('system.cores')}
         </div>
       )}

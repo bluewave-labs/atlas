@@ -33,7 +33,7 @@ export function MemoryWidget(_props: AppWidgetProps) {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
         <MemoryStick size={12} style={{ color: 'rgba(255,255,255,0.5)' }} />
-        <span style={{ fontSize: 'var(--font-size-xs)', color: 'rgba(255,255,255,0.5)' }}>
+        <span style={{ fontSize: 'var(--font-size-sm)', color: 'rgba(255,255,255,0.5)' }}>
           {t('system.memoryUsage')}
         </span>
       </div>
@@ -63,7 +63,7 @@ export function MemoryWidget(_props: AppWidgetProps) {
 
       {/* Subtitle */}
       {metrics && (
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+        <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
           {formatBytes(metrics.memory.used)} / {formatBytes(metrics.memory.total)}
         </div>
       )}

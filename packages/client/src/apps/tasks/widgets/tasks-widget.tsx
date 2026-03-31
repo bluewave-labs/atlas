@@ -44,7 +44,7 @@ export function TasksWidget(_props: AppWidgetProps) {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
         <CheckSquare size={12} style={{ color: 'rgba(255,255,255,0.5)' }} />
-        <span style={{ fontSize: 'var(--font-size-xs)', color: 'rgba(255,255,255,0.5)' }}>
+        <span style={{ fontSize: 'var(--font-size-sm)', color: 'rgba(255,255,255,0.5)' }}>
           {t('tasks.widgetTitle', 'Tasks')}
         </span>
       </div>
@@ -55,12 +55,12 @@ export function TasksWidget(_props: AppWidgetProps) {
       </div>
 
       {/* Subtitle */}
-      <div style={{ fontSize: 'var(--font-size-xs)', color: 'rgba(255,255,255,0.6)' }}>
+      <div style={{ fontSize: 'var(--font-size-sm)', color: 'rgba(255,255,255,0.6)' }}>
         {t('tasks.widgetDueToday', 'due today')}
       </div>
 
       {/* Overdue + completed indicators */}
-      <div style={{ display: 'flex', gap: 'var(--spacing-md)', fontSize: 12, marginTop: 2 }}>
+      <div style={{ display: 'flex', gap: 'var(--spacing-md)', fontSize: 14, marginTop: 2 }}>
         <span style={{ color: overdue > 0 ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)' }}>
           {overdue} {t('tasks.widgetOverdue', 'overdue')}
         </span>

@@ -43,7 +43,7 @@ export function TeamWidget(_props: AppWidgetProps) {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
         <Users size={12} style={{ color: 'rgba(255,255,255,0.5)' }} />
-        <span style={{ fontSize: 'var(--font-size-xs)', color: 'rgba(255,255,255,0.5)' }}>
+        <span style={{ fontSize: 'var(--font-size-sm)', color: 'rgba(255,255,255,0.5)' }}>
           {t('hr.widgetTitle', 'Team')}
         </span>
       </div>
@@ -54,18 +54,18 @@ export function TeamWidget(_props: AppWidgetProps) {
       </div>
 
       {/* Subtitle */}
-      <div style={{ fontSize: 'var(--font-size-xs)', color: 'rgba(255,255,255,0.6)' }}>
+      <div style={{ fontSize: 'var(--font-size-sm)', color: 'rgba(255,255,255,0.6)' }}>
         {departmentCount} {t('hr.widgetDepartments', 'departments')}
       </div>
 
       {/* On leave indicator */}
       {onLeaveToday > 0 && (
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
+        <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
           {onLeaveToday} {t('hr.widgetOnLeave', 'on leave today')}
         </div>
       )}
       {onLeaveToday === 0 && (
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+        <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
           {t('hr.widgetNoLeave', 'No one on leave today')}
         </div>
       )}
