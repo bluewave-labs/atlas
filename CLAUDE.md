@@ -10,6 +10,20 @@ Atlas is an all-in-one business platform with modular app architecture. Each app
 
 ---
 
+## Documentation Index
+
+Detailed documentation lives in `/docs/`. Read the relevant doc before building or modifying a feature.
+
+| Document | What it covers | When to read |
+|----------|---------------|--------------|
+| [API Reference](docs/api-reference.md) | Every API endpoint — method, path, auth, request/response shapes | Building client hooks, testing endpoints, debugging API calls |
+| [Database Schema](docs/database-schema.md) | All tables, columns, types, constraints, FK relationships, indexes | Adding tables, writing migrations, building queries |
+| [App Architecture](docs/app-architecture.md) | App registry pattern, per-app features/routes/tables, adding new apps | Building a new app, understanding how apps register |
+| [Design System](docs/design-system.md) | CSS variables, component library (31 components), layout patterns, i18n | Building UI, creating components, styling, translations |
+| [Infrastructure](docs/infrastructure.md) | Docker, deployment, CI/CD, CLI, env vars, SSL, backups, monitoring | Deploying, configuring, troubleshooting production |
+
+---
+
 ## Monorepo Structure
 
 ```
