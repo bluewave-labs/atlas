@@ -1,5 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback, type CSSProperties } from 'react';
-import 'dockbar';
+import { useState, useEffect, useMemo, useRef, useCallback, type MouseEvent as ReactMouseEvent, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -632,6 +631,43 @@ export function HomePage() {
     }
   }, [userSettings]);
 
+  // Dock magnification
+  const dockRef = useRef<HTMLElement>(null);
+
+  const handleDockItemHover = useCallback((e: ReactMouseEvent<HTMLDivElement>) => {
+    const dock = dockRef.current;
+    if (!dock) return;
+    const mouseX = e.clientX;
+    const BASE = 52;
+    const MAX = 72;
+    const RANGE = 160;
+    const items = dock.querySelectorAll<HTMLElement>('.dock-item');
+    items.forEach((item) => {
+      const rect = item.getBoundingClientRect();
+      const itemCenterX = rect.left + rect.width / 2;
+      const distance = Math.abs(mouseX - itemCenterX);
+      // Parabolic falloff (like real macOS) — smoother than linear
+      const normalized = Math.min(distance / RANGE, 1);
+      const scale = Math.max(0, 1 - normalized * normalized);
+      const size = BASE + (MAX - BASE) * scale;
+      const mt = -(size - BASE);
+      item.style.setProperty('--dock-w', `${size}px`);
+      item.style.setProperty('--dock-h', `${size}px`);
+      item.style.setProperty('--dock-mt', `${mt}px`);
+    });
+  }, []);
+
+  const handleDockMouseLeave = useCallback(() => {
+    const dock = dockRef.current;
+    if (!dock) return;
+    const items = dock.querySelectorAll<HTMLElement>('.dock-item');
+    items.forEach((item) => {
+      item.style.removeProperty('--dock-w');
+      item.style.removeProperty('--dock-h');
+      item.style.removeProperty('--dock-mt');
+    });
+  }, []);
+
   // Dock app definitions
   const dockApps = useMemo(() =>
     appRegistry.getAll().map(app => ({
@@ -1011,23 +1047,20 @@ export function HomePage() {
         </div>
 
         {/* Bottom dock bar */}
-        {/* @ts-expect-error — dockbar web component attributes */}
-        <dock-wrapper
-          class="atlas-dock"
-          size="54"
-          padding="18"
-          gap="19"
-          max-scale="1.7"
-          max-range="410"
-          disabled="false"
-          direction="horizontal"
-          position="bottom"
+        <nav
+          ref={dockRef}
+          className="atlas-dock"
+          onMouseMove={handleDockItemHover}
+          onMouseLeave={handleDockMouseLeave}
           style={{
             position: 'absolute',
             bottom: 20,
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 50,
+            display: 'flex',
+            alignItems: 'flex-end',
+            padding: '4px 8px 6px',
             borderRadius: 18,
             background: 'rgba(255,255,255,0.15)',
             backdropFilter: 'blur(24px)',
@@ -1035,39 +1068,33 @@ export function HomePage() {
             border: '1px solid rgba(255,255,255,0.25)',
             borderBottom: '1px solid rgba(255,255,255,0.10)',
             boxShadow: '0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.15)',
-          } as CSSProperties}
+            gap: 6,
+          }}
         >
           {dockApps.map((app) => {
             const Icon = app.icon;
             return (
-              // @ts-expect-error — dockbar web component
-              <dock-item key={app.route}>
+              <div
+                key={app.route}
+                className="dock-item"
+              >
                 <div
-                  className="dock-icon-wrapper"
+                  className="dock-icon-inner"
                   onClick={() => navigate(app.route)}
-                  style={{ position: 'relative', cursor: 'pointer' }}
+                  style={{
+                    background: `linear-gradient(145deg, color-mix(in srgb, ${app.color} 85%, #fff) 0%, ${app.color} 50%, color-mix(in srgb, ${app.color} 70%, #000) 100%)`,
+                    boxShadow: `0 3px 10px ${app.color}55, inset 0 1px 1px rgba(255,255,255,0.25), inset 0 -1px 2px rgba(0,0,0,0.2)`,
+                  }}
                 >
-                  <div
-                    className="dock-icon-inner"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      background: `linear-gradient(145deg, color-mix(in srgb, ${app.color} 85%, #fff) 0%, ${app.color} 50%, color-mix(in srgb, ${app.color} 70%, #000) 100%)`,
-                      boxShadow: `0 3px 10px ${app.color}55, inset 0 1px 1px rgba(255,255,255,0.25), inset 0 -1px 2px rgba(0,0,0,0.2)`,
-                    }}
-                  >
-                    <Icon size={26} color="#fff" strokeWidth={1.6} style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }} />
-                  </div>
-                  {/* Reflection */}
-                  <div className="dock-icon-reflection" style={{ background: app.color }} />
-                  <span className="dock-tooltip">{app.label}</span>
+                  <Icon size={26} color="#fff" strokeWidth={1.6} style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }} />
                 </div>
-              {/* @ts-expect-error — dockbar web component */}
-              </dock-item>
+                {/* Reflection */}
+                <div className="dock-icon-reflection" style={{ background: app.color }} />
+                <span className="dock-tooltip">{app.label}</span>
+              </div>
             );
           })}
-        {/* @ts-expect-error — dockbar web component */}
-        </dock-wrapper>
+        </nav>
       </div>
     </div>
   );
