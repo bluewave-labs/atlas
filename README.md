@@ -1,6 +1,8 @@
 # Atlas
-
 Self-hosted business platform with CRM, HRM, digital signatures, document editor, task management, spreadsheets, file storage, and drawing tools.
+
+<img width="3422" height="1954" alt="image" src="https://github.com/user-attachments/assets/30a7d84c-5ade-46ac-9192-279050ba20fb" />
+
 
 ## Quick start (Docker)
 
