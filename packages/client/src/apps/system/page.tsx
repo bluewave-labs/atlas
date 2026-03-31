@@ -105,7 +105,7 @@ function DiskBar({ used, total, usagePercent }: { used: number; total: number; u
       style={{
         padding: 20,
         background: 'var(--color-bg-secondary)',
-        border: '1px solid var(--color-border-secondary)',
+        border: '1px solid var(--color-border-primary)',
         borderRadius: 'var(--radius-lg)',
       }}
     >
@@ -277,7 +277,7 @@ function OverviewView({ metrics }: { metrics: NonNullable<ReturnType<typeof useS
           display: 'flex', alignItems: 'center', gap: 20,
           padding: 20,
           background: 'var(--color-bg-primary)',
-          border: '1px solid var(--color-border-secondary)',
+          border: '1px solid var(--color-border-primary)',
           borderRadius: 'var(--radius-lg)',
         }}>
           <GaugeChart
@@ -302,7 +302,7 @@ function OverviewView({ metrics }: { metrics: NonNullable<ReturnType<typeof useS
           display: 'flex', alignItems: 'center', gap: 20,
           padding: 20,
           background: 'var(--color-bg-primary)',
-          border: '1px solid var(--color-border-secondary)',
+          border: '1px solid var(--color-border-primary)',
           borderRadius: 'var(--radius-lg)',
         }}>
           <GaugeChart
