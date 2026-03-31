@@ -370,9 +370,6 @@ export function SetupPage({ preview = false }: { preview?: boolean }) {
                         <span style={{ position: 'relative', color: '#fff', fontSize: 'var(--font-size-md)', fontWeight: isActive ? 'var(--font-weight-medium)' : 'var(--font-weight-normal)', flex: 1, textAlign: 'left', zIndex: 1 } as CSSProperties}>
                           {lang.label}
                         </span>
-                        <span style={{ position: 'relative', zIndex: 1, width: 16, height: 16, flexShrink: 0 }}>
-                          {isActive && <CheckCircle2 size={16} color="rgba(255,255,255,0.8)" />}
-                        </span>
                       </button>
                     );
                   })}
