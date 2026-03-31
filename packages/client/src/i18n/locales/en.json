@@ -1642,7 +1642,9 @@
     "customize": "Customize",
     "addWidget": "Add widget",
     "removeWidget": "Remove widget",
-    "noWidgets": "No widgets enabled"
+    "noWidgets": "No widgets enabled",
+    "dockPet": "Dock pet",
+    "dockPetDesc": "Choose an animated pixel pet to wander on your home screen"
   },
   "notifications": {
     "title": "Notifications",

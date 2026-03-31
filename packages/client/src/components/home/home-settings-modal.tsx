@@ -8,6 +8,7 @@ import { Input } from '../ui/input';
 import { Chip } from '../ui/chip';
 import { widgetRegistry } from './widgets/registry';
 import { appRegistry } from '../../config/app-registry';
+import { PET_OPTIONS, PetPreview, type PetType } from './dock-pet';
 
 type BgType = 'unsplash' | 'solid' | 'gradient' | 'custom';
 
@@ -402,6 +403,56 @@ export function HomeWidgetsPanel() {
                   label={widget.name}
                 />
               </div>
+            );
+          })}
+        </div>
+      </SettingsSection>
+
+      {/* Dock pet picker */}
+      <SettingsSection title={t('widgets.dockPet')} description={t('widgets.dockPetDesc')}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: 8 }}>
+          {PET_OPTIONS.map((option) => {
+            const currentPet = (settings?.homeDockPet as string) || 'cat';
+            const isSelected = option.id === currentPet;
+            return (
+              <button
+                key={option.id}
+                onClick={() => {
+                  api.put('/settings', { homeDockPet: option.id }).then(() => {
+                    queryClient.invalidateQueries({ queryKey: queryKeys.settings.all });
+                  });
+                }}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '12px 8px',
+                  border: `2px solid ${isSelected ? 'var(--color-accent-primary)' : 'var(--color-border-secondary)'}`,
+                  borderRadius: 'var(--radius-lg)',
+                  background: isSelected ? 'color-mix(in srgb, var(--color-accent-primary) 8%, transparent)' : 'transparent',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.15s, background 0.15s',
+                  fontFamily: 'var(--font-family)',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSelected) e.currentTarget.style.borderColor = 'var(--color-border-primary)';
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSelected) e.currentTarget.style.borderColor = 'var(--color-border-secondary)';
+                }}
+              >
+                {option.id !== 'none' ? (
+                  <PetPreview pet={option.id as Exclude<PetType, 'none'>} size={40} />
+                ) : (
+                  <div style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-tertiary)', fontSize: 20 }}>
+                    —
+                  </div>
+                )}
+                <span style={{ fontSize: 'var(--font-size-xs)', color: isSelected ? 'var(--color-accent-primary)' : 'var(--color-text-secondary)' }}>
+                  {option.label}
+                </span>
+              </button>
             );
           })}
         </div>

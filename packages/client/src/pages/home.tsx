@@ -17,7 +17,7 @@ import { appRegistry } from '../apps';
 import { useUIStore } from '../stores/ui-store';
 import { WidgetGrid } from '../components/home/widgets/widget-grid';
 import { ActivityFeed } from '../components/activity/activity-feed';
-import { DockPet } from '../components/home/dock-pet';
+import { DockPet, type PetType } from '../components/home/dock-pet';
 import '../styles/home.css';
 
 // ---------------------------------------------------------------------------
@@ -1047,7 +1047,7 @@ export function HomePage() {
         </div>
 
         {/* Dock pet */}
-        <DockPet pet="cat" bottomOffset={82} />
+        <DockPet pet={(userSettings?.homeDockPet as PetType) || 'cat'} bottomOffset={82} dockRef={dockRef} />
 
         {/* Bottom dock bar */}
         <nav

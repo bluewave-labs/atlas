@@ -4,7 +4,16 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 // Pet sprites config
 // ---------------------------------------------------------------------------
 
-type PetType = 'cat' | 'fox';
+export type PetType = 'cat' | 'fox' | 'dragon' | 'rabbit' | 'unicorn' | 'none';
+
+export const PET_OPTIONS: { id: PetType; label: string }[] = [
+  { id: 'none', label: 'None' },
+  { id: 'cat', label: 'Cat' },
+  { id: 'fox', label: 'Fox' },
+  { id: 'dragon', label: 'Dragon' },
+  { id: 'rabbit', label: 'Rabbit' },
+  { id: 'unicorn', label: 'Unicorn' },
+];
 
 interface PetAnimConfig {
   walkFrames: number;
@@ -14,9 +23,12 @@ interface PetAnimConfig {
   hasSit: boolean;
 }
 
-const PET_CONFIG: Record<PetType, PetAnimConfig> = {
+const PET_CONFIG: Record<Exclude<PetType, 'none'>, PetAnimConfig> = {
   cat: { walkFrames: 6, sitFrames: 10, lickFrames: 12, hasLick: true, hasSit: true },
   fox: { walkFrames: 8, sitFrames: 0, lickFrames: 0, hasLick: false, hasSit: false },
+  dragon: { walkFrames: 8, sitFrames: 0, lickFrames: 0, hasLick: false, hasSit: false },
+  rabbit: { walkFrames: 8, sitFrames: 0, lickFrames: 0, hasLick: false, hasSit: false },
+  unicorn: { walkFrames: 8, sitFrames: 0, lickFrames: 0, hasLick: false, hasSit: false },
 };
 
 function framePath(pet: PetType, action: string, frame: number): string {
@@ -30,15 +42,24 @@ function framePath(pet: PetType, action: string, frame: number): string {
 interface DockPetProps {
   pet?: PetType;
   bottomOffset?: number;
+  /** Ref to dock element — pet will stay within its horizontal bounds */
+  dockRef?: React.RefObject<HTMLElement | null>;
 }
 
 type PetState = 'walk-east' | 'walk-west' | 'idle' | 'sit' | 'lick';
 
-export function DockPet({ pet = 'cat', bottomOffset = 82 }: DockPetProps) {
+export function DockPet({ pet = 'cat', bottomOffset = 82, dockRef }: DockPetProps) {
+  if (pet === 'none') return null;
   const config = PET_CONFIG[pet];
   const [state, setState] = useState<PetState>('idle');
   const [frame, setFrame] = useState(0);
-  const [x, setX] = useState(() => Math.random() * (window.innerWidth - 200) + 100);
+  const [x, setX] = useState(() => {
+    if (dockRef?.current) {
+      const rect = dockRef.current.getBoundingClientRect();
+      return rect.left + rect.width / 2;
+    }
+    return window.innerWidth / 2;
+  });
   const moveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const xRef = useRef(x);
   xRef.current = x;
@@ -55,7 +76,7 @@ export function DockPet({ pet = 'cat', bottomOffset = 82 }: DockPetProps) {
 
     if (state === 'walk-east' || state === 'walk-west') {
       maxFrames = config.walkFrames;
-      rate = 180; // slower walk
+      rate = 220; // slow gentle walk
     } else if (state === 'sit') {
       maxFrames = config.sitFrames;
       rate = 200;
@@ -73,20 +94,28 @@ export function DockPet({ pet = 'cat', bottomOffset = 82 }: DockPetProps) {
     return () => clearInterval(interval);
   }, [state, config]);
 
-  // Movement (only when walking)
+  // Movement (only when walking) — constrained to dock bounds
   useEffect(() => {
     if (state !== 'walk-east' && state !== 'walk-west') return;
-    const speed = 0.5; // slow stroll
+    const speed = 0.35; // gentle stroll
     const interval = setInterval(() => {
       setX((prev) => {
+        // Get dock bounds if available
+        let minX = 20;
+        let maxX = window.innerWidth - 60;
+        if (dockRef?.current) {
+          const rect = dockRef.current.getBoundingClientRect();
+          minX = rect.left;
+          maxX = rect.right - 40;
+        }
         const next = state === 'walk-east' ? prev + speed : prev - speed;
-        if (next > window.innerWidth - 60) { setState('walk-west'); return prev; }
-        if (next < 20) { setState('walk-east'); return prev; }
+        if (next > maxX) { setState('walk-west'); return prev; }
+        if (next < minX) { setState('walk-east'); return prev; }
         return next;
       });
     }, 16);
     return () => clearInterval(interval);
-  }, [state]);
+  }, [state, dockRef]);
 
   // Behavior loop
   const pickNextAction = useCallback(() => {
@@ -144,6 +173,35 @@ export function DockPet({ pet = 'cat', bottomOffset = 82 }: DockPetProps) {
         imageRendering: 'pixelated',
         pointerEvents: 'none',
         zIndex: 45,
+      }}
+    />
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PetPreview — animated walk preview for settings picker
+// ---------------------------------------------------------------------------
+
+export function PetPreview({ pet, size = 48 }: { pet: Exclude<PetType, 'none'>; size?: number }) {
+  const config = PET_CONFIG[pet];
+  const [frame, setFrame] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFrame((f) => (f + 1) % config.walkFrames);
+    }, 180);
+    return () => clearInterval(interval);
+  }, [config.walkFrames]);
+
+  return (
+    <img
+      src={framePath(pet, 'walk-east', frame)}
+      alt={pet}
+      draggable={false}
+      style={{
+        width: size,
+        height: size,
+        imageRendering: 'pixelated',
       }}
     />
   );
