@@ -10,7 +10,6 @@ import {
   SettingsSelect,
 } from './settings-primitives';
 import { SUPPORTED_LANGUAGES } from '../../i18n';
-import { COLOR_THEMES } from '../../lib/color-themes';
 
 // ---------------------------------------------------------------------------
 // AppearancePanel
@@ -22,12 +21,10 @@ export function AppearancePanel() {
     theme,
     fontFamily,
     language,
-    colorTheme,
     themeTransition,
     setTheme,
     setFontFamily,
     setLanguage,
-    setColorTheme,
     setThemeTransition,
   } = useSettingsStore();
 
@@ -91,71 +88,6 @@ export function AppearancePanel() {
         </div>
       </SettingsSection>
 
-      <SettingsSection title={t('settings.colorTheme')} description={t('settings.colorThemeDescription')}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 'var(--spacing-sm)',
-        }}>
-          {COLOR_THEMES.map((ct) => {
-            const isActive = colorTheme === ct.id;
-            return (
-              <button
-                key={ct.id}
-                onClick={() => setColorTheme(ct.id)}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: 'var(--spacing-sm) var(--spacing-xs)',
-                  background: isActive
-                    ? `color-mix(in srgb, ${ct.swatch} 10%, transparent)`
-                    : 'transparent',
-                  border: isActive
-                    ? `1.5px solid ${ct.swatch}`
-                    : '1px solid var(--color-border-secondary)',
-                  borderRadius: 'var(--radius-lg)',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-family)',
-                  transition: 'border-color var(--transition-normal), background var(--transition-normal)',
-                  outline: 'none',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.borderColor = 'var(--color-border-primary)';
-                    e.currentTarget.style.background = 'var(--color-surface-hover)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.borderColor = 'var(--color-border-secondary)';
-                    e.currentTarget.style.background = 'transparent';
-                  }
-                }}
-              >
-                <div style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  background: ct.swatch,
-                  boxShadow: isActive
-                    ? `0 0 0 2px var(--color-bg-primary), 0 0 0 4px ${ct.swatch}`
-                    : 'none',
-                  transition: 'box-shadow var(--transition-normal)',
-                }} />
-                <span style={{
-                  fontSize: 'var(--font-size-xs)',
-                  color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-                  fontWeight: isActive ? 'var(--font-weight-medium)' as CSSProperties['fontWeight'] : 'var(--font-weight-normal)' as CSSProperties['fontWeight'],
-                }}>
-                  {ct.name}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </SettingsSection>
 
       <SettingsSection title={t('settings.language')} description={t('settings.languageDescription')}>
         <SettingsSelect

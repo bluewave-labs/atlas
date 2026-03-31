@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../../lib/api-client';
 import { queryKeys } from '../../../config/query-keys';
@@ -63,6 +64,9 @@ export function WidgetGrid() {
     return all.filter((w) => enabledIds!.includes(`${w.appId}:${w.id}`));
   }, [settings]);
 
+  const navigate = useNavigate();
+  const [hoveredWidget, setHoveredWidget] = useState<string | null>(null);
+
   const hasWidgets = enabledWidgets.length > 0 || enabledAppWidgets.length > 0;
   if (!hasWidgets) return null;
 
@@ -112,23 +116,35 @@ export function WidgetGrid() {
             maxWidth: '90vw',
           }}
         >
-          {enabledAppWidgets.map((widget) => (
-            <div
-              key={`${widget.appId}:${widget.id}`}
-              style={{
-                width: WIDGET_W,
-                height: WIDGET_H,
-                background: 'rgba(0,0,0,0.35)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: 'var(--radius-xl)',
-                overflow: 'hidden',
-              }}
-            >
-              <widget.component width={WIDGET_W} height={WIDGET_H} appId={widget.appId} />
-            </div>
-          ))}
+          {enabledAppWidgets.map((widget) => {
+            const wKey = `${widget.appId}:${widget.id}`;
+            const isHovered = hoveredWidget === wKey;
+            const app = appRegistry.getAll().find((a) => a.id === widget.appId);
+            const route = app?.routes[0]?.path;
+            return (
+              <div
+                key={wKey}
+                onClick={() => route && navigate(route)}
+                onMouseEnter={() => setHoveredWidget(wKey)}
+                onMouseLeave={() => setHoveredWidget(null)}
+                style={{
+                  width: WIDGET_W,
+                  height: WIDGET_H,
+                  background: 'rgba(0,0,0,0.35)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: isHovered ? '1px solid rgba(255,255,255,0.25)' : '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: 'var(--radius-xl)',
+                  overflow: 'hidden',
+                  cursor: route ? 'pointer' : 'default',
+                  transition: 'border-color 0.2s, transform 0.2s',
+                  transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
+                }}
+              >
+                <widget.component width={WIDGET_W} height={WIDGET_H} appId={widget.appId} />
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
