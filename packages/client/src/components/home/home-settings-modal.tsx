@@ -411,8 +411,7 @@ export function HomeWidgetsPanel() {
       {/* Dock pet picker */}
       <SettingsSection title={t('widgets.dockPet')} description={t('widgets.dockPetDesc')}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: 8 }}>
-          {PET_OPTIONS.map((option) => {
-            const currentPet = (settings?.homeDockPet as string) || 'cat';
+          {(() => { const currentPet = String(settings?.homeDockPet ?? 'cat'); return PET_OPTIONS.map((option) => {
             const isSelected = option.id === currentPet;
             return (
               <button
@@ -454,7 +453,7 @@ export function HomeWidgetsPanel() {
                 </span>
               </button>
             );
-          })}
+          }); })()}
         </div>
       </SettingsSection>
 

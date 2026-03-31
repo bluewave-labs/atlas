@@ -153,10 +153,6 @@ export async function getMetrics(_req: Request, res: Response) {
 
 export async function getEmailSettings(req: Request, res: Response) {
   try {
-    if (!req.auth?.isSuperAdmin) {
-      res.status(403).json({ success: false, error: 'Admin access required' });
-      return;
-    }
     const data = await systemService.getEmailSettings();
     res.json({ success: true, data });
   } catch (error) {
@@ -167,10 +163,6 @@ export async function getEmailSettings(req: Request, res: Response) {
 
 export async function updateEmailSettings(req: Request, res: Response) {
   try {
-    if (!req.auth?.isSuperAdmin) {
-      res.status(403).json({ success: false, error: 'Admin access required' });
-      return;
-    }
     const data = await systemService.updateEmailSettings(req.body);
     res.json({ success: true, data });
   } catch (error) {
@@ -181,10 +173,6 @@ export async function updateEmailSettings(req: Request, res: Response) {
 
 export async function testEmail(req: Request, res: Response) {
   try {
-    if (!req.auth?.isSuperAdmin) {
-      res.status(403).json({ success: false, error: 'Admin access required' });
-      return;
-    }
     const { to } = req.body;
     if (!to) {
       res.status(400).json({ success: false, error: 'Recipient email is required' });

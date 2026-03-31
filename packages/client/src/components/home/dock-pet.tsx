@@ -95,17 +95,17 @@ export function DockPet({ pet = 'cat', bottomOffset = 82, dockRef }: DockPetProp
   // Movement (only when walking) — constrained to dock bounds
   useEffect(() => {
     if (state !== 'walk-east' && state !== 'walk-west') return;
-    const speed = 0.35; // gentle stroll
+    // Cache dock bounds once per walk session (avoid getBoundingClientRect every 16ms)
+    let minX = 20;
+    let maxX = window.innerWidth - 60;
+    if (dockRef?.current) {
+      const rect = dockRef.current.getBoundingClientRect();
+      minX = rect.left;
+      maxX = rect.right - 40;
+    }
+    const speed = 0.35;
     const interval = setInterval(() => {
       setX((prev) => {
-        // Get dock bounds if available
-        let minX = 20;
-        let maxX = window.innerWidth - 60;
-        if (dockRef?.current) {
-          const rect = dockRef.current.getBoundingClientRect();
-          minX = rect.left;
-          maxX = rect.right - 40;
-        }
         const next = state === 'walk-east' ? prev + speed : prev - speed;
         if (next > maxX) { setState('walk-west'); return prev; }
         if (next < minX) { setState('walk-east'); return prev; }

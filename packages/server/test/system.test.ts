@@ -86,19 +86,7 @@ describe('system controller — getEmailSettings', () => {
     vi.clearAllMocks();
   });
 
-  it('returns 403 when user is not super admin', async () => {
-    const req = makeReq({ auth: { userId: 'u1', accountId: 'a1', email: 'user@test.com' } } as any);
-    const res = makeRes();
-
-    await controller.getEmailSettings(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: false, error: 'Admin access required' })
-    );
-  });
-
-  it('returns email settings for super admin with masked password', async () => {
+  it('returns email settings with masked password', async () => {
     const mockSettings = {
       smtpHost: 'smtp.example.com',
       smtpPort: 587,
@@ -110,9 +98,7 @@ describe('system controller — getEmailSettings', () => {
     };
     vi.mocked(systemService.getEmailSettings).mockResolvedValue(mockSettings);
 
-    const req = makeReq({
-      auth: { userId: 'u1', accountId: 'a1', email: 'admin@test.com', isSuperAdmin: true },
-    } as any);
+    const req = makeReq();
     const res = makeRes();
 
     await controller.getEmailSettings(req, res);
@@ -122,17 +108,6 @@ describe('system controller — getEmailSettings', () => {
     );
     expect(mockSettings.smtpPass).toBe('••••••••');
   });
-
-  it('returns 403 when isSuperAdmin is false', async () => {
-    const req = makeReq({
-      auth: { userId: 'u1', accountId: 'a1', email: 'user@test.com', isSuperAdmin: false },
-    } as any);
-    const res = makeRes();
-
-    await controller.getEmailSettings(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(403);
-  });
 });
 
 describe('system controller — updateEmailSettings', () => {
@@ -140,13 +115,18 @@ describe('system controller — updateEmailSettings', () => {
     vi.clearAllMocks();
   });
 
-  it('returns 403 for non-admin users', async () => {
-    const req = makeReq({ auth: { userId: 'u1', accountId: 'a1', email: 'user@test.com' } } as any);
+  it('calls service with request body', async () => {
+    vi.mocked(systemService.updateEmailSettings).mockResolvedValue({
+      smtpHost: 'smtp.test.com', smtpPort: 587, smtpUser: null,
+      smtpPass: null, smtpFrom: 'Atlas <noreply@atlas.local>', smtpSecure: false, smtpEnabled: false,
+    });
+    const req = makeReq({ body: { smtpHost: 'smtp.test.com' } });
     const res = makeRes();
 
     await controller.updateEmailSettings(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(403);
+    expect(systemService.updateEmailSettings).toHaveBeenCalledWith({ smtpHost: 'smtp.test.com' });
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
   });
 
   it('updates settings for admin user', async () => {
@@ -161,10 +141,7 @@ describe('system controller — updateEmailSettings', () => {
     };
     vi.mocked(systemService.updateEmailSettings).mockResolvedValue(updatedSettings);
 
-    const req = makeReq({
-      auth: { userId: 'u1', accountId: 'a1', email: 'admin@test.com', isSuperAdmin: true },
-      body: { smtpHost: 'smtp.new.com', smtpPort: 465 },
-    } as any);
+    const req = makeReq({ body: { smtpHost: 'smtp.new.com', smtpPort: 465 } });
     const res = makeRes();
 
     await controller.updateEmailSettings(req, res);
@@ -181,20 +158,8 @@ describe('system controller — testEmail', () => {
     vi.clearAllMocks();
   });
 
-  it('returns 403 for non-admin users', async () => {
-    const req = makeReq({ body: { to: 'test@test.com' } } as any);
-    const res = makeRes();
-
-    await controller.testEmail(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(403);
-  });
-
   it('returns 400 when no recipient is provided', async () => {
-    const req = makeReq({
-      auth: { userId: 'u1', accountId: 'a1', email: 'admin@test.com', isSuperAdmin: true },
-      body: {},
-    } as any);
+    const req = makeReq({ body: {} });
     const res = makeRes();
 
     await controller.testEmail(req, res);

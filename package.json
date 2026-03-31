@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^4.1.2",
     "concurrently": "^9.2.1",
     "prettier": "^3.4.0",
     "turbo": "^2.3.0",
