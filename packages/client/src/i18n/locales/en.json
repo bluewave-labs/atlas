@@ -1334,7 +1334,8 @@
       "h3Desc": "Manage leave requests and track balances"
     },
     "leaveTypes": {
-      "empty": "No leave types configured yet.",
+      "empty": "No leave types configured yet",
+      "emptyDesc": "Define the types of leave your organization offers, such as vacation, sick leave, or personal days.",
       "add": "Add leave type",
       "slug": "Slug",
       "daysPerYear": "Days per year",
@@ -1347,12 +1348,14 @@
       "carry": "Carry"
     },
     "policies": {
-      "empty": "No leave policies configured yet.",
+      "empty": "No leave policies configured yet",
+      "emptyDesc": "Create policies to define how many days of each leave type employees are entitled to per year.",
       "add": "Add policy",
       "default": "Default"
     },
     "holidays": {
-      "empty": "No holidays in this calendar.",
+      "empty": "No holidays in this calendar",
+      "emptyDesc": "Add public holidays, company holidays, and optional days off for your team.",
       "add": "Add holiday",
       "calendar": "Holiday calendar",
       "createCalendar": "Create calendar",
@@ -1363,7 +1366,9 @@
       "typeOptional": "Optional holiday"
     },
     "myLeave": {
-      "empty": "No leave applications yet.",
+      "empty": "No leave applications yet",
+      "emptyDesc": "Submit a leave request to get started. Your manager will be notified for approval.",
+      "request": "Request leave",
       "requestLeave": "Request leave",
       "selectType": "Select leave type...",
       "reason": "Reason",

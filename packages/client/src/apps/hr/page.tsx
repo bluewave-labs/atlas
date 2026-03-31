@@ -1767,10 +1767,14 @@ function LeaveTypesView() {
   return (
     <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-xl)' }}>
       {(!leaveTypes || leaveTypes.length === 0) && !showCreate && (
-        <div style={{ textAlign: 'center', padding: 'var(--spacing-2xl)', color: 'var(--color-text-tertiary)' }}>
-          <ClipboardList size={40} style={{ marginBottom: 'var(--spacing-md)', opacity: 0.5 }} />
-          <p style={{ fontFamily: 'var(--font-family)', fontSize: 'var(--font-size-md)' }}>{t('hr.leaveTypes.empty')}</p>
-        </div>
+        <FeatureEmptyState
+          illustration="generic"
+          title={t('hr.leaveTypes.empty')}
+          description={t('hr.leaveTypes.emptyDesc')}
+          actionLabel={t('hr.leaveTypes.add')}
+          actionIcon={<Plus size={14} />}
+          onAction={() => setShowCreate(true)}
+        />
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -1863,10 +1867,14 @@ function LeavePoliciesView() {
   return (
     <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-xl)' }}>
       {(!policies || policies.length === 0) && !showCreate && (
-        <div style={{ textAlign: 'center', padding: 'var(--spacing-2xl)', color: 'var(--color-text-tertiary)' }}>
-          <Shield size={40} style={{ marginBottom: 'var(--spacing-md)', opacity: 0.5 }} />
-          <p style={{ fontFamily: 'var(--font-family)', fontSize: 'var(--font-size-md)' }}>{t('hr.policies.empty')}</p>
-        </div>
+        <FeatureEmptyState
+          illustration="generic"
+          title={t('hr.policies.empty')}
+          description={t('hr.policies.emptyDesc')}
+          actionLabel={t('hr.policies.add')}
+          actionIcon={<Plus size={14} />}
+          onAction={() => setShowCreate(true)}
+        />
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
@@ -1977,10 +1985,14 @@ function HolidaysView() {
       {selectedCalendarId && (
         <>
           {(!holidays || holidays.length === 0) && !showAddHoliday && (
-            <div style={{ textAlign: 'center', padding: 'var(--spacing-2xl)', color: 'var(--color-text-tertiary)' }}>
-              <Calendar size={40} style={{ marginBottom: 'var(--spacing-md)', opacity: 0.5 }} />
-              <p style={{ fontFamily: 'var(--font-family)', fontSize: 'var(--font-size-md)' }}>{t('hr.holidays.empty')}</p>
-            </div>
+            <FeatureEmptyState
+              illustration="calendar"
+              title={t('hr.holidays.empty')}
+              description={t('hr.holidays.emptyDesc')}
+              actionLabel={t('hr.holidays.add')}
+              actionIcon={<Plus size={14} />}
+              onAction={() => setShowAddHoliday(true)}
+            />
           )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -2083,10 +2095,14 @@ function MyLeaveView({ employees }: { employees: HrEmployee[] }) {
   return (
     <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-xl)' }}>
       {(!applications || applications.length === 0) && !showRequest && (
-        <div style={{ textAlign: 'center', padding: 'var(--spacing-2xl)', color: 'var(--color-text-tertiary)' }}>
-          <CalendarDays size={40} style={{ marginBottom: 'var(--spacing-md)', opacity: 0.5 }} />
-          <p style={{ fontFamily: 'var(--font-family)', fontSize: 'var(--font-size-md)' }}>{t('hr.myLeave.empty')}</p>
-        </div>
+        <FeatureEmptyState
+          illustration="calendar"
+          title={t('hr.myLeave.empty')}
+          description={t('hr.myLeave.emptyDesc')}
+          actionLabel={t('hr.myLeave.request')}
+          actionIcon={<Plus size={14} />}
+          onAction={() => setShowRequest(true)}
+        />
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
