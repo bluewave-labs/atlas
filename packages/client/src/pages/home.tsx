@@ -1061,15 +1061,15 @@ export function HomePage() {
             zIndex: 50,
             display: 'flex',
             alignItems: 'flex-end',
-            padding: '4px 8px 6px',
-            borderRadius: 18,
+            padding: '10px 16px 12px',
+            borderRadius: 20,
             background: 'rgba(255,255,255,0.15)',
             backdropFilter: 'blur(24px)',
             WebkitBackdropFilter: 'blur(24px)',
             border: '1px solid rgba(255,255,255,0.25)',
             borderBottom: '1px solid rgba(255,255,255,0.10)',
             boxShadow: '0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.15)',
-            gap: 6,
+            gap: 12,
           }}
         >
           {dockApps.map((app) => {
