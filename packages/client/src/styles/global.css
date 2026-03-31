@@ -1,3 +1,9 @@
+/* ─── Ken Burns for login/setup backgrounds ────────────────────────── */
+@keyframes loginKenBurns {
+  0% { transform: scale(1.05) translate(0, 0); }
+  100% { transform: scale(1.15) translate(-2%, -1%); }
+}
+
 /* ─── Desktop (Electron) drag region and traffic light offset ──────── */
 
 .desktop-drag-region {

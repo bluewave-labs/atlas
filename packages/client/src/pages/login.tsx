@@ -76,7 +76,7 @@ export function LoginPage() {
   return (
     <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-family)', overflow: 'hidden' }}>
       {/* Background */}
-      <div style={{ position: 'absolute', inset: '-20px', backgroundImage: `url(${BG_IMAGES[getDailyImageIndex()]})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(2px) brightness(0.55)' }} />
+      <div style={{ position: 'absolute', inset: '-20px', backgroundImage: `url(${BG_IMAGES[getDailyImageIndex()]})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'brightness(0.55)', animation: 'loginKenBurns 30s ease-in-out infinite alternate' }} />
 
       {/* Glass card */}
       <div className="glass-card" style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 400, padding: 32, background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 20, boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>

@@ -40,8 +40,8 @@ const BG_IMAGES = [
   'https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=1920&q=80&auto=format&fit=crop',
   // Northern lights over snowy landscape
   'https://images.unsplash.com/photo-1483347756197-71ef80e95f73?w=1920&q=80&auto=format&fit=crop',
-  // Night mountains
-  'https://images.unsplash.com/photo-1475274047050-1d0c55b0b264?w=1920&q=80&auto=format&fit=crop',
+  // Mountain sunset
+  'https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?w=1920&q=80&auto=format&fit=crop',
   // Misty pine forest
   'https://images.unsplash.com/photo-1511497584788-876760111969?w=1920&q=80&auto=format&fit=crop',
   // Desert landscape
