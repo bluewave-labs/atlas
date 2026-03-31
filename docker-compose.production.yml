@@ -9,7 +9,10 @@
 
 services:
   atlas:
-    image: ghcr.io/gorkem-bwl/atlas:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: atlas:latest
     container_name: atlas
     restart: unless-stopped
     ports:
