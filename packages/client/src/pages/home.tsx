@@ -639,8 +639,8 @@ export function HomePage() {
     if (!dock) return;
     const mouseX = e.clientX;
     const BASE = 52;
-    const MAX = 72;
-    const RANGE = 160;
+    const MAX = 82;
+    const RANGE = 200;
     const items = dock.querySelectorAll<HTMLElement>('.dock-item');
     items.forEach((item) => {
       item.classList.remove('dock-resetting');
