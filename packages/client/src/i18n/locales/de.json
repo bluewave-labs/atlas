@@ -1958,6 +1958,13 @@
     "seedingApp": "{{app}} wird eingerichtet...",
     "settingUpAtlas": "Atlas wird eingerichtet"
   },
+  "org": {
+    "restrictAccess": "App-Zugriff einschränken",
+    "defaultAccess": "Mitglieder haben standardmäßig vollen Zugriff auf alle aktivierten Apps.",
+    "defaultRole": "Standard",
+    "defaultRoleDesc": "Voller Zugriff basierend auf Mandantenrolle",
+    "appAccess": "App-Zugriff"
+  },
   "permissions": {
     "title": "{{appName}}-Berechtigungen",
     "description": "Verwalten Sie, wer auf {{appName}} zugreifen und was sie tun können.",

@@ -1968,6 +1968,13 @@
     "seedingApp": "Setting up {{app}}...",
     "settingUpAtlas": "Setting up Atlas"
   },
+  "org": {
+    "restrictAccess": "Restrict app access",
+    "defaultAccess": "Members have full access to all enabled apps by default.",
+    "defaultRole": "Default",
+    "defaultRoleDesc": "Full access based on tenant role",
+    "appAccess": "App access"
+  },
   "permissions": {
     "title": "{{appName}} permissions",
     "desc": "Manage who can access and modify data in this app",

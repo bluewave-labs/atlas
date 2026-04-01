@@ -1958,6 +1958,13 @@
     "seedingApp": "Configuration de {{app}}...",
     "settingUpAtlas": "Configuration d'Atlas"
   },
+  "org": {
+    "restrictAccess": "Restreindre l'accès aux apps",
+    "defaultAccess": "Les membres ont un accès complet à toutes les apps activées par défaut.",
+    "defaultRole": "Par défaut",
+    "defaultRoleDesc": "Accès complet basé sur le rôle du locataire",
+    "appAccess": "Accès aux apps"
+  },
   "permissions": {
     "title": "Permissions de {{appName}}",
     "description": "Gérez qui peut accéder à {{appName}} et ce qu'ils peuvent faire.",

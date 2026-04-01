@@ -1944,6 +1944,13 @@
     "seedingApp": "Configurazione {{app}}...",
     "settingUpAtlas": "Configurazione di Atlas"
   },
+  "org": {
+    "restrictAccess": "Limita accesso alle app",
+    "defaultAccess": "I membri hanno accesso completo a tutte le app abilitate per impostazione predefinita.",
+    "defaultRole": "Predefinito",
+    "defaultRoleDesc": "Accesso completo basato sul ruolo del tenant",
+    "appAccess": "Accesso alle app"
+  },
   "permissions": {
     "title": "Permessi di {{appName}}",
     "description": "Gestisci chi può accedere a {{appName}} e cosa può fare.",

@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
-import { UserPlus, Mail, Search, UserMinus, User, Shield, Calendar } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+import { UserPlus, Mail, Search, UserMinus, User, Shield, Calendar, ChevronDown, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { ColumnHeader } from '../../components/ui/column-header';
 import { useAuthStore } from '../../stores/auth-store';
 import {
@@ -19,6 +20,13 @@ import { Skeleton } from '../../components/ui/skeleton';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
 import { ConfirmDialog } from '../../components/ui/confirm-dialog';
+import { appRegistry } from '../../apps';
+import {
+  useUpdateAppPermission,
+  useDeleteAppPermission,
+  type AppRole,
+  type AppRecordAccess,
+} from '../../hooks/use-app-permissions';
 
 // ---------------------------------------------------------------------------
 // Role chip color map
@@ -29,6 +37,23 @@ const ROLE_COLORS: Record<string, string> = {
   admin: '#2563eb',
   member: '#6b7280',
 };
+
+// ---------------------------------------------------------------------------
+// App permission role/access options
+// ---------------------------------------------------------------------------
+
+const APP_ROLE_OPTIONS = [
+  { value: 'default', label: 'Default' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'editor', label: 'Editor' },
+  { value: 'viewer', label: 'Viewer' },
+];
+
+const APP_ACCESS_OPTIONS = [
+  { value: 'all', label: 'All records' },
+  { value: 'own', label: 'Own records' },
+];
 
 // ---------------------------------------------------------------------------
 // Skeleton row
@@ -63,10 +88,185 @@ function SkeletonRow() {
 }
 
 // ---------------------------------------------------------------------------
+// MemberPermissionsPanel — inline expandable per-user app permissions
+// ---------------------------------------------------------------------------
+
+function MemberPermissionsPanel({
+  userId,
+  userPermissions,
+  onUpdatePermission,
+  onDeletePermission,
+}: {
+  userId: string;
+  userPermissions: Record<string, { role: AppRole; recordAccess: AppRecordAccess }>;
+  onUpdatePermission: (appId: string, userId: string, role: AppRole, recordAccess: AppRecordAccess) => void;
+  onDeletePermission: (appId: string, userId: string) => void;
+}) {
+  const { t } = useTranslation();
+  const allApps = appRegistry.getAll();
+  const [restrictAccess, setRestrictAccess] = useState(Object.keys(userPermissions).length > 0);
+
+  return (
+    <div
+      style={{
+        padding: 'var(--spacing-lg) var(--spacing-lg) var(--spacing-lg) 52px',
+        background: 'var(--color-bg-secondary)',
+        borderBottom: '1px solid var(--color-border-primary)',
+      }}
+    >
+      {/* Restrict access checkbox */}
+      <label
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--spacing-sm)',
+          cursor: 'pointer',
+          fontSize: 'var(--font-size-sm)',
+          color: 'var(--color-text-primary)',
+          fontFamily: 'var(--font-family)',
+          marginBottom: restrictAccess ? 'var(--spacing-lg)' : 0,
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={restrictAccess}
+          onChange={(e) => {
+            setRestrictAccess(e.target.checked);
+            if (!e.target.checked) {
+              // Reset all explicit permissions when unchecking
+              for (const app of allApps) {
+                if (userPermissions[app.id]) {
+                  onDeletePermission(app.id, userId);
+                }
+              }
+            }
+          }}
+          style={{ accentColor: 'var(--color-accent-primary)' }}
+        />
+        {t('org.restrictAccess', 'Restrict app access')}
+      </label>
+
+      {/* Per-app permission grid */}
+      {restrictAccess && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+          {/* Header */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 140px 140px',
+              gap: 'var(--spacing-sm)',
+              padding: '0 0 var(--spacing-xs) 0',
+              borderBottom: '1px solid var(--color-border-secondary)',
+            }}
+          >
+            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-medium)', fontFamily: 'var(--font-family)' }}>
+              {t('org.appAccess', 'App access')}
+            </span>
+            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-medium)', fontFamily: 'var(--font-family)' }}>
+              {t('permissions.role', 'Role')}
+            </span>
+            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-medium)', fontFamily: 'var(--font-family)' }}>
+              {t('permissions.recordAccess', 'Record access')}
+            </span>
+          </div>
+
+          {/* App rows */}
+          {allApps.map((app) => {
+            const Icon = app.icon;
+            const perm = userPermissions[app.id];
+            const hasExplicitRole = !!perm;
+            const displayRole = hasExplicitRole ? perm.role : 'default';
+            const currentAccess = perm?.recordAccess ?? 'all';
+
+            return (
+              <div
+                key={app.id}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 140px 140px',
+                  gap: 'var(--spacing-sm)',
+                  alignItems: 'center',
+                  padding: 'var(--spacing-xs) 0',
+                }}
+              >
+                {/* App icon + name */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+                  <div
+                    style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 'var(--radius-sm)',
+                      background: app.color,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Icon size={13} color="#fff" />
+                  </div>
+                  <span style={{
+                    fontSize: 'var(--font-size-sm)',
+                    color: 'var(--color-text-primary)',
+                    fontFamily: 'var(--font-family)',
+                  }}>
+                    {app.name}
+                  </span>
+                </div>
+
+                {/* Role select */}
+                <Select
+                  value={displayRole}
+                  onChange={(val) => {
+                    if (val === 'default') {
+                      onDeletePermission(app.id, userId);
+                    } else {
+                      onUpdatePermission(app.id, userId, val as AppRole, currentAccess);
+                    }
+                  }}
+                  options={APP_ROLE_OPTIONS}
+                  size="sm"
+                  width={140}
+                />
+
+                {/* Record access select */}
+                <Select
+                  value={currentAccess}
+                  onChange={(val) => {
+                    if (hasExplicitRole) {
+                      onUpdatePermission(app.id, userId, perm.role, val as AppRecordAccess);
+                    }
+                  }}
+                  options={APP_ACCESS_OPTIONS}
+                  size="sm"
+                  width={140}
+                  disabled={!hasExplicitRole}
+                />
+              </div>
+            );
+          })}
+
+          {/* Hint */}
+          <p style={{
+            fontSize: 'var(--font-size-xs)',
+            color: 'var(--color-text-tertiary)',
+            fontFamily: 'var(--font-family)',
+            margin: 'var(--spacing-xs) 0 0',
+          }}>
+            {t('org.defaultRoleDesc', 'Full access based on tenant role')}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // OrgMembersPage
 // ---------------------------------------------------------------------------
 
 export function OrgMembersPage() {
+  const { t } = useTranslation();
   const storeTenantId = useAuthStore((s) => s.tenantId);
   const { data: tenants } = useMyTenants();
   const tenantId = storeTenantId ?? tenants?.[0]?.id ?? null;
@@ -86,6 +286,51 @@ export function OrgMembersPage() {
   const [inviteSuccess, setInviteSuccess] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [confirmRemoveUser, setConfirmRemoveUser] = useState<{ userId: string; displayName: string } | null>(null);
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+
+  // Track user permissions per app: { [userId]: { [appId]: { role, recordAccess } } }
+  const [userPermissions, setUserPermissions] = useState<
+    Record<string, Record<string, { role: AppRole; recordAccess: AppRecordAccess }>>
+  >({});
+
+  // Create mutation hooks for each app (all apps at once)
+  const allApps = appRegistry.getAll();
+  const updateMutations = Object.fromEntries(
+    allApps.map((app) => [app.id, useUpdateAppPermission(app.id)]),
+  );
+  const deleteMutations = Object.fromEntries(
+    allApps.map((app) => [app.id, useDeleteAppPermission(app.id)]),
+  );
+
+  const handleUpdatePermission = useCallback(
+    (appId: string, userId: string, role: AppRole, recordAccess: AppRecordAccess) => {
+      updateMutations[appId]?.mutate({ userId, role, recordAccess });
+      setUserPermissions((prev) => ({
+        ...prev,
+        [userId]: {
+          ...(prev[userId] ?? {}),
+          [appId]: { role, recordAccess },
+        },
+      }));
+    },
+    [updateMutations],
+  );
+
+  const handleDeletePermission = useCallback(
+    (appId: string, userId: string) => {
+      deleteMutations[appId]?.mutate(userId);
+      setUserPermissions((prev) => {
+        const copy = { ...prev };
+        if (copy[userId]) {
+          const appCopy = { ...copy[userId] };
+          delete appCopy[appId];
+          copy[userId] = appCopy;
+        }
+        return copy;
+      });
+    },
+    [deleteMutations],
+  );
 
   if (!tenantId) {
     return (
@@ -135,13 +380,16 @@ export function OrgMembersPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xl)', fontFamily: 'var(--font-family)' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', margin: 0 }}>
             Team members
           </h2>
           <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', margin: '4px 0 0' }}>
             {users ? `${users.length} member${users.length !== 1 ? 's' : ''}` : 'Loading...'}
+          </p>
+          <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', margin: '4px 0 0' }}>
+            {t('org.defaultAccess', 'Members have full access to all enabled apps by default.')}
           </p>
         </div>
         {isAdminOrOwner && (
@@ -241,100 +489,125 @@ export function OrgMembersPage() {
         ) : (
           filteredUsers?.map((user, i) => {
             const isCurrentUser = user.userId === currentUserId;
+            const isExpanded = expandedUserId === user.userId;
+            const isLastRow = i === (filteredUsers?.length ?? 0) - 1;
+
             return (
-              <div
-                key={user.userId}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr 100px 100px 80px',
-                  gap: 'var(--spacing-sm)',
-                  alignItems: 'center',
-                  padding: 'var(--spacing-md) var(--spacing-lg)',
-                  borderBottom: i < (filteredUsers?.length ?? 0) - 1 ? '1px solid var(--color-border-primary)' : 'none',
-                  transition: 'background 0.1s ease',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover, var(--color-bg-secondary))'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-              >
-                {/* User */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', minWidth: 0 }}>
-                  <Avatar name={user.name} email={user.email} size={32} />
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{
-                      fontSize: 'var(--font-size-sm)',
-                      fontWeight: 'var(--font-weight-medium)',
-                      color: 'var(--color-text-primary)',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}>
-                      {user.name || '—'}
+              <div key={user.userId}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr 100px 100px 80px',
+                    gap: 'var(--spacing-sm)',
+                    alignItems: 'center',
+                    padding: 'var(--spacing-md) var(--spacing-lg)',
+                    borderBottom: (!isLastRow || isExpanded) ? '1px solid var(--color-border-primary)' : 'none',
+                    transition: 'background 0.1s ease',
+                    cursor: isAdminOrOwner ? 'pointer' : 'default',
+                  }}
+                  onClick={() => {
+                    if (isAdminOrOwner) {
+                      setExpandedUserId(isExpanded ? null : user.userId);
+                    }
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover, var(--color-bg-secondary))'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                >
+                  {/* User */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', minWidth: 0 }}>
+                    {isAdminOrOwner && (
+                      isExpanded
+                        ? <ChevronDown size={14} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
+                        : <ChevronRight size={14} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
+                    )}
+                    <Avatar name={user.name} email={user.email} size={32} />
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{
+                        fontSize: 'var(--font-size-sm)',
+                        fontWeight: 'var(--font-weight-medium)',
+                        color: 'var(--color-text-primary)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}>
+                        {user.name || '—'}
+                      </div>
+                      {isCurrentUser && (
+                        <span style={{ fontSize: 10, color: 'var(--color-text-tertiary)' }}>You</span>
+                      )}
                     </div>
-                    {isCurrentUser && (
-                      <span style={{ fontSize: 10, color: 'var(--color-text-tertiary)' }}>You</span>
+                  </div>
+
+                  {/* Email */}
+                  <div style={{
+                    fontSize: 'var(--font-size-sm)',
+                    color: 'var(--color-text-secondary)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}>
+                    {user.email}
+                  </div>
+
+                  {/* Role */}
+                  <div onClick={(e) => e.stopPropagation()}>
+                    {isCurrentUser || currentUserRole !== 'owner' || user.role === 'owner' ? (
+                      <Chip
+                        color={ROLE_COLORS[user.role] ?? ROLE_COLORS.member}
+                        height={20}
+                        style={{ textTransform: 'capitalize' }}
+                      >
+                        {user.role}
+                      </Chip>
+                    ) : (
+                      <Select
+                        value={user.role}
+                        onChange={(val) => updateRole.mutate({ userId: user.userId, role: val as TenantMemberRole })}
+                        options={[
+                          { value: 'owner', label: 'Owner', color: ROLE_COLORS.owner },
+                          { value: 'admin', label: 'Admin', color: ROLE_COLORS.admin },
+                          { value: 'member', label: 'Member', color: ROLE_COLORS.member },
+                        ]}
+                        size="sm"
+                        width={100}
+                      />
+                    )}
+                  </div>
+
+                  {/* Joined */}
+                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
+                    {new Date(user.createdAt).toLocaleDateString()}
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
+                    {!isCurrentUser && isAdminOrOwner && (
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        icon={<UserMinus size={13} />}
+                        onClick={() =>
+                          setConfirmRemoveUser({
+                            userId: user.userId,
+                            displayName: user.name || user.email,
+                          })
+                        }
+                      >
+                        Remove
+                      </Button>
                     )}
                   </div>
                 </div>
 
-                {/* Email */}
-                <div style={{
-                  fontSize: 'var(--font-size-sm)',
-                  color: 'var(--color-text-secondary)',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}>
-                  {user.email}
-                </div>
-
-                {/* Role */}
-                <div>
-                  {isCurrentUser || currentUserRole !== 'owner' || user.role === 'owner' ? (
-                    <Chip
-                      color={ROLE_COLORS[user.role] ?? ROLE_COLORS.member}
-                      height={20}
-                      style={{ textTransform: 'capitalize' }}
-                    >
-                      {user.role}
-                    </Chip>
-                  ) : (
-                    <Select
-                      value={user.role}
-                      onChange={(val) => updateRole.mutate({ userId: user.userId, role: val as TenantMemberRole })}
-                      options={[
-                        { value: 'owner', label: 'Owner', color: ROLE_COLORS.owner },
-                        { value: 'admin', label: 'Admin', color: ROLE_COLORS.admin },
-                        { value: 'member', label: 'Member', color: ROLE_COLORS.member },
-                      ]}
-                      size="sm"
-                      width={100}
-                    />
-                  )}
-                </div>
-
-                {/* Joined */}
-                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
-                  {new Date(user.createdAt).toLocaleDateString()}
-                </div>
-
-                {/* Actions */}
-                <div style={{ textAlign: 'right' }}>
-                  {!isCurrentUser && isAdminOrOwner && (
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      icon={<UserMinus size={13} />}
-                      onClick={() =>
-                        setConfirmRemoveUser({
-                          userId: user.userId,
-                          displayName: user.name || user.email,
-                        })
-                      }
-                    >
-                      Remove
-                    </Button>
-                  )}
-                </div>
+                {/* Expanded permissions panel */}
+                {isExpanded && isAdminOrOwner && (
+                  <MemberPermissionsPanel
+                    userId={user.userId}
+                    userPermissions={userPermissions[user.userId] ?? {}}
+                    onUpdatePermission={handleUpdatePermission}
+                    onDeletePermission={handleDeletePermission}
+                  />
+                )}
               </div>
             );
           })

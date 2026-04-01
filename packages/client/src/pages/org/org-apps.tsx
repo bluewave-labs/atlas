@@ -3,16 +3,9 @@ import { useAuthStore } from '../../stores/auth-store';
 import { useMyTenants } from '../../hooks/use-platform';
 import { useTenantAppsAdmin, useToggleTenantApp } from '../../hooks/use-tenant-app-admin';
 import { appRegistry } from '../../apps';
-import { LayoutGrid, Shield } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { LayoutGrid } from 'lucide-react';
 import { Chip } from '../../components/ui/chip';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Button } from '../../components/ui/button';
-import { Modal } from '../../components/ui/modal';
-import { AppPermissionsPanel } from '../../components/shared/app-permissions-panel';
-
-// Apps that support the generic permission management UI
-const APPS_WITH_PERMISSIONS = new Set(['crm', 'hr', 'tasks', 'drive', 'docs', 'draw', 'tables', 'sign', 'projects']);
 
 // ---------------------------------------------------------------------------
 // App descriptions
@@ -35,9 +28,7 @@ const APP_DESCRIPTIONS: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 export function OrgAppsPage() {
-  const { t } = useTranslation();
   const storeTenantId = useAuthStore((s) => s.tenantId);
-  const tenantRole = useAuthStore((s) => s.tenantRole);
   const { data: tenants, isLoading: tenantsLoading } = useMyTenants();
   const tenant = tenants?.[0];
   const effectiveTenantId = storeTenantId ?? tenant?.id ?? '';
@@ -51,10 +42,6 @@ export function OrgAppsPage() {
   );
 
   const isLoading = tenantsLoading || appsLoading;
-  const isAdminOrOwner = tenantRole === 'owner' || tenantRole === 'admin';
-
-  // Permissions modal state
-  const [permApp, setPermApp] = useState<{ id: string; name: string; color: string } | null>(null);
 
   if (isLoading) {
     return (
@@ -92,7 +79,6 @@ export function OrgAppsPage() {
       }}>
         {allApps.map((app) => {
           const isEnabled = enabledSet.has(app.id);
-          const showPermissions = isAdminOrOwner && APPS_WITH_PERMISSIONS.has(app.id) && isEnabled;
           return (
             <AppCard
               key={app.id}
@@ -101,33 +87,10 @@ export function OrgAppsPage() {
               isEnabled={isEnabled}
               isPending={toggleMutation.isPending}
               onToggle={() => toggleMutation.mutate({ appId: app.id, enable: !isEnabled })}
-              showPermissions={showPermissions}
-              onOpenPermissions={() => setPermApp({ id: app.id, name: app.name, color: app.color })}
             />
           );
         })}
       </div>
-
-      {/* Permissions modal */}
-      <Modal
-        open={permApp !== null}
-        onOpenChange={(open) => { if (!open) setPermApp(null); }}
-        width={720}
-        title={permApp ? t('permissions.title', '{{appName}} permissions', { appName: permApp.name }) : ''}
-      >
-        {permApp && (
-          <>
-            <Modal.Header title={t('permissions.title', '{{appName}} permissions', { appName: permApp.name })} />
-            <Modal.Body>
-              <AppPermissionsPanel
-                appId={permApp.id}
-                appName={permApp.name}
-                appColor={permApp.color}
-              />
-            </Modal.Body>
-          </>
-        )}
-      </Modal>
     </div>
   );
 }
@@ -142,18 +105,13 @@ function AppCard({
   isEnabled,
   isPending,
   onToggle,
-  showPermissions,
-  onOpenPermissions,
 }: {
   app: { id: string; name: string; icon: React.ComponentType<{ size?: number; color?: string }>; color: string; category: string };
   description: string;
   isEnabled: boolean;
   isPending: boolean;
   onToggle: () => void;
-  showPermissions?: boolean;
-  onOpenPermissions?: () => void;
 }) {
-  const { t } = useTranslation();
   const [hovered, setHovered] = useState(false);
   const Icon = app.icon;
 
@@ -257,20 +215,6 @@ function AppCard({
       }}>
         {description}
       </div>
-
-      {/* Permissions button */}
-      {showPermissions && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={<Shield size={13} />}
-            onClick={onOpenPermissions}
-          >
-            {t('permissions.permissions', 'Permissions')}
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

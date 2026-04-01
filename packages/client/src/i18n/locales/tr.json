@@ -1958,6 +1958,13 @@
     "seedingApp": "{{app}} kuruluyor...",
     "settingUpAtlas": "Atlas kuruluyor"
   },
+  "org": {
+    "restrictAccess": "Uygulama erişimini kısıtla",
+    "defaultAccess": "Üyeler varsayılan olarak tüm etkin uygulamalara tam erişime sahiptir.",
+    "defaultRole": "Varsayılan",
+    "defaultRoleDesc": "Kiracı rolüne dayalı tam erişim",
+    "appAccess": "Uygulama erişimi"
+  },
   "permissions": {
     "title": "{{appName}} yetkileri",
     "desc": "Bu uygulamadaki verilere erişimi yönetin",
