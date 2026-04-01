@@ -19,6 +19,17 @@ import {
   MemoryStick,
   HardDrive,
   ArrowLeft,
+  Activity,
+  BarChart3,
+  PieChart,
+  Workflow,
+  ClipboardList,
+  KeyRound,
+  Mail,
+  CalendarCheck,
+  MessageSquare,
+  MessagesSquare,
+  type LucideIcon,
 } from 'lucide-react';
 import type { MarketplaceCatalogItem } from '@atlasmail/shared';
 import { Button } from '../../components/ui/button';
@@ -37,6 +48,18 @@ import {
   useRemoveApp,
   useMarketplaceLogs,
 } from './hooks';
+
+// ─── Icon Map ────────────────────────────────────────────────────
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  Activity, BarChart3, PieChart, Workflow, ClipboardList,
+  KeyRound, Mail, CalendarCheck, MessageSquare, MessagesSquare,
+  Store,
+};
+
+function getAppIcon(iconName: string): LucideIcon {
+  return ICON_MAP[iconName] ?? Store;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
@@ -434,6 +457,8 @@ function AppCard({
     setRemoveModalOpen(false);
   };
 
+  const AppIcon = getAppIcon(app.icon);
+
   return (
     <>
       <div
@@ -441,28 +466,69 @@ function AppCard({
         onMouseLeave={() => setHovered(false)}
         style={{
           position: 'relative',
-          background: 'var(--color-bg-primary)',
-          border: '1px solid var(--color-border-primary)',
+          background: 'var(--gradient-card-subtle)',
+          border: `1px solid ${isInstalled ? app.color + '33' : 'var(--color-border-primary)'}`,
           borderRadius: 'var(--radius-lg)',
           padding: 'var(--spacing-xl)',
           display: 'flex',
           flexDirection: 'column',
           gap: 'var(--spacing-md)',
-          transition: 'background var(--transition-normal)',
-          ...(hovered ? { background: 'var(--color-surface-hover)' } : {}),
+          overflow: 'hidden',
+          transition: 'border-color 0.2s, box-shadow 0.2s',
+          ...(hovered ? { borderColor: app.color + '55', boxShadow: `0 0 0 1px ${app.color}22` } : {}),
         }}
       >
-        {/* Header row: name + status */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* Background icon */}
+        <AppIcon
+          size={100}
+          strokeWidth={0.5}
+          style={{
+            position: 'absolute',
+            right: -12,
+            bottom: -12,
+            color: app.color,
+            opacity: 0.07,
+            pointerEvents: 'none',
+            transform: 'rotate(-12deg)',
+          }}
+        />
+
+        {/* Header row: icon + name + status */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', position: 'relative', zIndex: 1 }}>
           <div
             style={{
-              fontSize: 'var(--font-size-lg)',
-              fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'],
-              color: 'var(--color-text-primary)',
-              fontFamily: 'var(--font-family)',
+              width: 36,
+              height: 36,
+              borderRadius: 'var(--radius-md)',
+              background: app.color,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
             }}
           >
-            {app.name}
+            <AppIcon size={18} color="#fff" />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontSize: 'var(--font-size-md)',
+                fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'],
+                color: 'var(--color-text-primary)',
+                fontFamily: 'var(--font-family)',
+              }}
+            >
+              {app.name}
+            </div>
+            <div
+              style={{
+                fontSize: 'var(--font-size-xs)',
+                color: 'var(--color-text-tertiary)',
+                textTransform: 'capitalize',
+              }}
+            >
+              {app.category}
+            </div>
           </div>
           <StatusBadge status={status} t={t} />
         </div>
@@ -476,13 +542,15 @@ function AppCard({
             fontFamily: 'var(--font-family)',
             lineHeight: 'var(--line-height-normal)',
             flex: 1,
+            position: 'relative',
+            zIndex: 1,
           }}
         >
           {app.description}
         </p>
 
         {/* Meta row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', flexWrap: 'wrap', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', flexWrap: 'wrap', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', position: 'relative', zIndex: 1 }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
             <MemoryStick size={12} /> {app.resources.minRam}
           </span>
