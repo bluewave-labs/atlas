@@ -422,7 +422,11 @@ function AppCard({
     setDeployModalOpen(false);
   };
 
-  const handleStart = () => startMutation.mutate(app.id);
+  const handleStart = () => {
+    startMutation.mutate(app.id, {
+      onSuccess: () => navigate(`/marketplace/startup/${app.id}`),
+    });
+  };
   const handleStop = () => stopMutation.mutate(app.id);
   const handleUpdate = () => updateMutation.mutate(app.id);
   const handleRemove = () => {
@@ -568,14 +572,16 @@ function AppCard({
           {/* Running: Open + Stop + overflow */}
           {isRunning && (
             <>
-              <Button
-                variant="primary"
-                size="sm"
-                icon={<ExternalLink size={14} />}
-                onClick={() => navigate(`/marketplace/startup/${app.id}`)}
+              <a
+                href={`http://${window.location.hostname}:${app.assignedPort}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: 'none' }}
               >
-                {t('marketplace.open')}
-              </Button>
+                <Button variant="primary" size="sm" icon={<ExternalLink size={14} />}>
+                  {t('marketplace.open')}
+                </Button>
+              </a>
               {isAdmin && (
                 <Button
                   variant="secondary"
