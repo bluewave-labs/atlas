@@ -343,63 +343,23 @@ export async function seedSampleTasks(req: Request, res: Response) {
     // Create projects
     const work = await taskService.createProject(userId, accountId, { title: 'Work', color: '#3b82f6' });
     const personal = await taskService.createProject(userId, accountId, { title: 'Personal', color: '#10b981' });
-    const health = await taskService.createProject(userId, accountId, { title: 'Health & fitness', color: '#ef4444' });
+    await taskService.createProject(userId, accountId, { title: 'Health', color: '#ef4444' });
 
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
-    const nextMonth = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    // Inbox
+    await taskService.createTask(userId, accountId, { title: 'Review team updates', when: 'inbox' });
 
-    // Inbox tasks
-    await taskService.createTask(userId, accountId, { title: 'Review pull request from Alex', when: 'inbox', priority: 'high', projectId: work.id });
-    await taskService.createTask(userId, accountId, { title: 'Reply to landlord about lease renewal', when: 'inbox', priority: 'medium' });
-    await taskService.createTask(userId, accountId, { title: 'Look into new podcast recommendations', when: 'inbox' });
-    await taskService.createTask(userId, accountId, { title: 'Schedule dentist appointment', when: 'inbox', projectId: health.id });
+    // Today
+    await taskService.createTask(userId, accountId, { title: 'Plan this week\'s priorities', when: 'today', projectId: work.id });
 
-    // Today tasks
-    await taskService.createTask(userId, accountId, { title: 'Prepare slides for team standup', when: 'today', priority: 'high', projectId: work.id, dueDate: today });
-    await taskService.createTask(userId, accountId, { title: 'Morning run — 5K', when: 'today', projectId: health.id });
-    await taskService.createTask(userId, accountId, { title: 'Buy groceries for the week', when: 'today', projectId: personal.id });
-    await taskService.createTask(userId, accountId, { title: 'Send invoice to client', when: 'today', priority: 'medium', projectId: work.id, dueDate: today });
-    await taskService.createTask(userId, accountId, { title: 'Call mom', when: 'today', projectId: personal.id });
+    // Anytime
+    await taskService.createTask(userId, accountId, { title: 'Organize shared drive folders', when: 'anytime', projectId: work.id });
 
-    // Anytime tasks
-    await taskService.createTask(userId, accountId, { title: 'Refactor authentication module', when: 'anytime', projectId: work.id, tags: ['code'] });
-    await taskService.createTask(userId, accountId, { title: 'Organize photo library', when: 'anytime', projectId: personal.id });
-    await taskService.createTask(userId, accountId, { title: 'Research standing desk options', when: 'anytime', projectId: health.id, tags: ['shopping'] });
-    await taskService.createTask(userId, accountId, { title: 'Write blog post about TypeScript patterns', when: 'anytime', projectId: work.id, tags: ['writing'] });
-    await taskService.createTask(userId, accountId, { title: 'Update resume and LinkedIn profile', when: 'anytime' });
-    await taskService.createTask(userId, accountId, { title: 'Clean up email subscriptions', when: 'anytime' });
+    // Someday
+    await taskService.createTask(userId, accountId, { title: 'Learn a new skill', when: 'someday', projectId: personal.id });
 
-    // Someday tasks
-    await taskService.createTask(userId, accountId, { title: 'Learn Rust basics', when: 'someday', tags: ['learning'] });
-    await taskService.createTask(userId, accountId, { title: 'Plan weekend trip to the coast', when: 'someday', projectId: personal.id });
-    await taskService.createTask(userId, accountId, { title: 'Build a personal dashboard app', when: 'someday', tags: ['code'] });
-    await taskService.createTask(userId, accountId, { title: 'Read "Designing Data-Intensive Applications"', when: 'someday', tags: ['reading'] });
-
-    // Tasks with due dates (upcoming)
-    await taskService.createTask(userId, accountId, { title: 'Submit quarterly report', when: 'anytime', priority: 'high', projectId: work.id, dueDate: tomorrow });
-    await taskService.createTask(userId, accountId, { title: 'Renew gym membership', when: 'anytime', projectId: health.id, dueDate: nextWeek });
-    await taskService.createTask(userId, accountId, { title: 'Prepare presentation for conference', when: 'anytime', priority: 'medium', projectId: work.id, dueDate: nextWeek });
-    await taskService.createTask(userId, accountId, { title: 'Pay car insurance', when: 'anytime', priority: 'high', projectId: personal.id, dueDate: nextMonth });
-    await taskService.createTask(userId, accountId, { title: 'File tax documents', when: 'today', priority: 'high', dueDate: yesterday });
-
-    // Completed tasks (logbook)
-    const completed1 = await taskService.createTask(userId, accountId, { title: 'Set up CI/CD pipeline', when: 'anytime', projectId: work.id });
-    await taskService.updateTask(userId, completed1.id, { status: 'completed' });
-
-    const completed2 = await taskService.createTask(userId, accountId, { title: 'Fix login page bug', when: 'today', priority: 'high', projectId: work.id });
-    await taskService.updateTask(userId, completed2.id, { status: 'completed' });
-
-    const completed3 = await taskService.createTask(userId, accountId, { title: 'Order birthday gift for Sarah', when: 'today', projectId: personal.id });
-    await taskService.updateTask(userId, completed3.id, { status: 'completed' });
-
-    const completed4 = await taskService.createTask(userId, accountId, { title: 'Complete React course module 5', when: 'anytime', tags: ['learning'] });
-    await taskService.updateTask(userId, completed4.id, { status: 'completed' });
-
-    const completed5 = await taskService.createTask(userId, accountId, { title: 'Weekly meal prep', when: 'today', projectId: health.id });
-    await taskService.updateTask(userId, completed5.id, { status: 'completed' });
+    // Completed
+    const completed = await taskService.createTask(userId, accountId, { title: 'Set up Atlas', when: 'today', projectId: work.id });
+    await taskService.updateTask(userId, completed.id, { status: 'completed' });
 
     res.json({ success: true, data: { message: 'Seeded sample tasks and projects' } });
   } catch (error) {

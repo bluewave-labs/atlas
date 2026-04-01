@@ -466,28 +466,7 @@ export async function generateSignedPDF(documentId: string, storagePath: string)
 // ─── Seed sample data (called from setup wizard) ────────────────────
 
 export async function seedSampleData(userId: string, accountId: string) {
-  // Idempotency guard — skip if documents already exist
-  const existing = await db.select({ id: signatureDocuments.id }).from(signatureDocuments)
-    .where(and(eq(signatureDocuments.userId, userId), eq(signatureDocuments.isArchived, false)))
-    .limit(1);
-  if (existing.length > 0) return { skipped: true };
-
-  await createDocument(userId, accountId, {
-    title: 'Non-Disclosure Agreement',
-    fileName: 'non-disclosure-agreement.pdf',
-    storagePath: '',
-    status: 'draft',
-  });
-
-  await createDocument(userId, accountId, {
-    title: 'Service Agreement',
-    fileName: 'service-agreement.pdf',
-    storagePath: '',
-    status: 'draft',
-  });
-
-  logger.info({ userId }, 'Sign sample documents seeded');
-  return { seeded: true };
+  return { skipped: true };
 }
 
 // ─── Widget summary (lightweight) ──────────────────────────────────

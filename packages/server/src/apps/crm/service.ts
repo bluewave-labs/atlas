@@ -1088,172 +1088,17 @@ export async function getDashboard(userId: string, accountId: string, recordAcce
 // ─── Seed Sample Data ───────────────────────────────────────────────
 
 export async function seedSampleData(userId: string, accountId: string) {
-  // Idempotency guard — skip if data already exists
-  const existing = await db.select({ id: crmCompanies.id }).from(crmCompanies)
-    .where(eq(crmCompanies.userId, userId)).limit(1);
-  if (existing.length > 0) return { skipped: true };
-
-  // Seed default stages
+  // Seed default pipeline stages only
   const stages = await seedDefaultStages(accountId);
-  const leadStage = stages[0];
-  const qualifiedStage = stages[1];
-  const proposalStage = stages[2];
-  const negotiationStage = stages[3];
 
-  // Create sample companies
-  const acme = await createCompany(userId, accountId, {
-    name: 'Acme Corp', domain: 'acme.com', industry: 'Technology', size: '51-200', phone: '+1-555-1000',
-  });
-  const globex = await createCompany(userId, accountId, {
-    name: 'Globex Inc', domain: 'globex.io', industry: 'Finance', size: '201-500', phone: '+1-555-2000',
-  });
-  const initech = await createCompany(userId, accountId, {
-    name: 'Initech Solutions', domain: 'initech.com', industry: 'Consulting', size: '11-50',
-  });
-  const umbrella = await createCompany(userId, accountId, {
-    name: 'Umbrella Partners', domain: 'umbrella.co', industry: 'Healthcare', size: '501-1000', phone: '+1-555-4000',
-  });
-
-  // Create sample contacts
-  const johnSmith = await createContact(userId, accountId, {
-    name: 'John Smith', email: 'john@acme.com', phone: '+1-555-1001',
-    companyId: acme.id, position: 'CTO', source: 'referral',
-  });
-  const janeDoe = await createContact(userId, accountId, {
-    name: 'Jane Doe', email: 'jane@globex.io', phone: '+1-555-2001',
-    companyId: globex.id, position: 'VP of Engineering', source: 'website',
-  });
-  const bobJohnson = await createContact(userId, accountId, {
-    name: 'Bob Johnson', email: 'bob@initech.com',
-    companyId: initech.id, position: 'Director of IT', source: 'conference',
-  });
-  const aliceWong = await createContact(userId, accountId, {
-    name: 'Alice Wong', email: 'alice@umbrella.co', phone: '+1-555-4001',
-    companyId: umbrella.id, position: 'Head of Procurement', source: 'cold-email',
-  });
-  await createContact(userId, accountId, {
-    name: 'Charlie Brown', email: 'charlie@acme.com',
-    companyId: acme.id, position: 'Engineering Manager', source: 'referral',
-  });
-
-  // Create sample deals
-  const nextMonth = new Date(Date.now() + 30 * 86400000).toISOString();
-  const twoMonths = new Date(Date.now() + 60 * 86400000).toISOString();
-  const threeMonths = new Date(Date.now() + 90 * 86400000).toISOString();
-
-  const deal1 = await createDeal(userId, accountId, {
-    title: 'Acme Enterprise License', value: 50000, stageId: negotiationStage.id,
-    contactId: johnSmith.id, companyId: acme.id, expectedCloseDate: nextMonth,
-    probability: 75,
-  });
-  const deal2 = await createDeal(userId, accountId, {
-    title: 'Globex Platform Migration', value: 120000, stageId: proposalStage.id,
-    contactId: janeDoe.id, companyId: globex.id, expectedCloseDate: twoMonths,
-    probability: 50,
-  });
-  await createDeal(userId, accountId, {
-    title: 'Initech Consulting Package', value: 25000, stageId: qualifiedStage.id,
-    contactId: bobJohnson.id, companyId: initech.id, expectedCloseDate: threeMonths,
-    probability: 25,
-  });
-  await createDeal(userId, accountId, {
-    title: 'Umbrella Annual Contract', value: 80000, stageId: leadStage.id,
-    contactId: aliceWong.id, companyId: umbrella.id,
-    probability: 10,
-  });
-
-  // Create sample activities
-  await createActivity(userId, accountId, {
-    type: 'call', body: 'Initial discovery call with John. Discussed current pain points and potential solutions.',
-    dealId: deal1.id, contactId: johnSmith.id, companyId: acme.id,
-  });
-  await createActivity(userId, accountId, {
-    type: 'meeting', body: 'Product demo with Jane and her team. Very positive feedback on the platform.',
-    dealId: deal2.id, contactId: janeDoe.id, companyId: globex.id,
-  });
-  await createActivity(userId, accountId, {
-    type: 'email', body: 'Sent proposal document to Bob for review.',
-    contactId: bobJohnson.id, companyId: initech.id,
-  });
-  await createActivity(userId, accountId, {
-    type: 'note', body: 'Alice mentioned they are evaluating three vendors. Follow up next week.',
-    contactId: aliceWong.id, companyId: umbrella.id,
-  });
-  await createActivity(userId, accountId, {
-    type: 'call', body: 'Follow-up call to discuss pricing. They want a 10% volume discount.',
-    dealId: deal1.id, contactId: johnSmith.id, companyId: acme.id,
-  });
-
-  // Create sample leads
-  await createLead(userId, accountId, {
-    name: 'David Park', email: 'david.park@novacorp.io', phone: '+1-555-7001',
-    companyName: 'NovaCorp', source: 'website',
-    notes: 'Requested a demo after reading our blog post on workflow automation.',
-  });
-  await createLead(userId, accountId, {
-    name: 'Sarah Chen', email: 'sarah.chen@brightpath.com', phone: '+1-555-7002',
-    companyName: 'BrightPath Analytics', source: 'linkedin',
-    notes: 'Connected on LinkedIn. Interested in enterprise plan for 200+ users.',
-  });
-  await createLead(userId, accountId, {
-    name: 'Marcus Rivera', email: 'mrivera@steelridge.co',
-    companyName: 'SteelRidge Manufacturing', source: 'conference',
-    notes: 'Met at SaaS Connect 2026. Looking to replace their current CRM.',
-  });
-  await createLead(userId, accountId, {
-    name: 'Emma Johansson', email: 'emma@nordiqsystems.se', phone: '+46-70-555-0103',
-    companyName: 'Nordiq Systems', source: 'referral',
-    notes: 'Referred by Alice Wong at Umbrella Partners. Evaluating tools for Q3.',
-  });
-  await createLead(userId, accountId, {
-    name: 'Raj Patel', email: 'raj.patel@cloudnine.in', phone: '+91-98765-43210',
-    companyName: 'CloudNine Solutions', source: 'cold-email',
-    notes: 'Replied to outbound campaign. Wants to see pricing for their 50-person team.',
-  });
-  await createLead(userId, accountId, {
-    name: 'Lisa Tanaka', email: 'ltanaka@futureworks.jp',
-    companyName: 'FutureWorks Inc', source: 'website',
-    notes: 'Downloaded the whitepaper. VP of Operations.',
-  });
-  await createLead(userId, accountId, {
-    name: 'Tom Bradley', email: 'tbradley@apexventures.com', phone: '+1-555-7007',
-    companyName: 'Apex Ventures', source: 'partner',
-    notes: 'Inbound from partner channel. Seed-stage startup, 15 employees.',
-  });
-  await createLead(userId, accountId, {
-    name: 'Ana Morales', email: 'ana.morales@luminahealth.mx', phone: '+52-55-5555-0108',
-    companyName: 'Lumina Health', source: 'webinar',
-    notes: 'Attended our webinar on data-driven sales. Asked about HIPAA compliance.',
-  });
-
-  logger.info({ userId, accountId }, 'Seeded CRM sample data');
-  return { companies: 4, contacts: 5, stages: stages.length, deals: 4, activities: 5, leads: 8 };
+  logger.info({ userId, accountId }, 'Seeded CRM default stages');
+  return { stages: stages.length };
 }
 
 // ─── Seed Sample Leads (standalone) ──────────────────────────────────
 
 export async function seedSampleLeads(userId: string, accountId: string) {
-  const existing = await db.select({ id: crmLeads.id }).from(crmLeads)
-    .where(and(eq(crmLeads.userId, userId), eq(crmLeads.isArchived, false))).limit(1);
-  if (existing.length > 0) return { skipped: true };
-
-  const leads = [
-    { name: 'David Park', email: 'david.park@novacorp.io', phone: '+1-555-7001', companyName: 'NovaCorp', source: 'website', notes: 'Requested a demo after reading our blog post on workflow automation.' },
-    { name: 'Sarah Chen', email: 'sarah.chen@brightpath.com', phone: '+1-555-7002', companyName: 'BrightPath Analytics', source: 'linkedin', notes: 'Connected on LinkedIn. Interested in enterprise plan for 200+ users.' },
-    { name: 'Marcus Rivera', email: 'mrivera@steelridge.co', companyName: 'SteelRidge Manufacturing', source: 'conference', notes: 'Met at SaaS Connect 2026. Looking to replace their current CRM.' },
-    { name: 'Emma Johansson', email: 'emma@nordiqsystems.se', phone: '+46-70-555-0103', companyName: 'Nordiq Systems', source: 'referral', notes: 'Referred by Alice Wong at Umbrella Partners. Evaluating tools for Q3.' },
-    { name: 'Raj Patel', email: 'raj.patel@cloudnine.in', phone: '+91-98765-43210', companyName: 'CloudNine Solutions', source: 'cold-email', notes: 'Replied to outbound campaign. Wants to see pricing for their 50-person team.' },
-    { name: 'Lisa Tanaka', email: 'ltanaka@futureworks.jp', companyName: 'FutureWorks Inc', source: 'website', notes: 'Downloaded the whitepaper. VP of Operations.' },
-    { name: 'Tom Bradley', email: 'tbradley@apexventures.com', phone: '+1-555-7007', companyName: 'Apex Ventures', source: 'partner', notes: 'Inbound from partner channel. Seed-stage startup, 15 employees.' },
-    { name: 'Ana Morales', email: 'ana.morales@luminahealth.mx', phone: '+52-55-5555-0108', companyName: 'Lumina Health', source: 'webinar', notes: 'Attended our webinar on data-driven sales. Asked about HIPAA compliance.' },
-  ];
-
-  for (const lead of leads) {
-    await createLead(userId, accountId, lead);
-  }
-
-  logger.info({ userId, accountId, count: leads.length }, 'Seeded CRM sample leads');
-  return { leads: leads.length };
+  return { skipped: true };
 }
 
 // ─── Seed Example Workflows ──────────────────────────────────────────
