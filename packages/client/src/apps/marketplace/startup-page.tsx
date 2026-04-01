@@ -59,12 +59,11 @@ export function MarketplaceStartupPage() {
     if (isHealthy && port && !redirecting) {
       setRedirecting(true);
       const id = setTimeout(() => {
-        window.open(getAppUrl(port), '_blank');
-        navigate('/marketplace');
+        window.location.href = getAppUrl(port);
       }, 800);
       return () => clearTimeout(id);
     }
-  }, [isHealthy, port, redirecting, navigate]);
+  }, [isHealthy, port, redirecting]);
 
   const progressPercent = Math.min((elapsed / MAX_WAIT_SECONDS) * 100, 100);
 
