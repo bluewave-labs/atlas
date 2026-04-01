@@ -4,6 +4,7 @@ import { TrendingUp, DollarSign, Trophy } from 'lucide-react';
 import { useForecast, type CrmForecast } from '../hooks';
 import { formatCurrencyCompact } from '../../../lib/format';
 import { Skeleton } from '../../../components/ui/skeleton';
+import { StatCard } from '../../../components/ui/stat-card';
 
 function ForecastSkeleton() {
   return (
@@ -32,37 +33,25 @@ export function ForecastView() {
   return (
     <div style={{ padding: 'var(--spacing-xl)', maxWidth: 900 }}>
       {/* Summary cards */}
-      <div style={{ display: 'flex', gap: 'var(--spacing-lg)', marginBottom: 'var(--spacing-xl)', flexWrap: 'wrap' }}>
-        <div className="crm-kpi-card">
-          <div className="crm-kpi-card-icon" style={{ color: 'var(--color-accent-primary)' }}>
-            <TrendingUp size={18} />
-          </div>
-          <div className="crm-kpi-card-content">
-            <span className="crm-kpi-card-label">{t('crm.forecast.weightedForecast')}</span>
-            <span className="crm-kpi-card-value">{formatCurrencyCompact(forecast.totalWeighted)}</span>
-            <span className="crm-kpi-card-subtitle">{t('crm.forecast.weightedForecast')}</span>
-          </div>
-        </div>
-        <div className="crm-kpi-card">
-          <div className="crm-kpi-card-icon" style={{ color: '#3b82f6' }}>
-            <DollarSign size={18} />
-          </div>
-          <div className="crm-kpi-card-content">
-            <span className="crm-kpi-card-label">{t('crm.forecast.bestCase')}</span>
-            <span className="crm-kpi-card-value">{formatCurrencyCompact(forecast.bestCase)}</span>
-            <span className="crm-kpi-card-subtitle">{t('crm.forecast.bestCase')}</span>
-          </div>
-        </div>
-        <div className="crm-kpi-card">
-          <div className="crm-kpi-card-icon" style={{ color: 'var(--color-success)' }}>
-            <Trophy size={18} />
-          </div>
-          <div className="crm-kpi-card-content">
-            <span className="crm-kpi-card-label">{t('crm.forecast.committed')}</span>
-            <span className="crm-kpi-card-value">{formatCurrencyCompact(forecast.committed)}</span>
-            <span className="crm-kpi-card-subtitle">{t('crm.forecast.committed')}</span>
-          </div>
-        </div>
+      <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-xl)', flexWrap: 'wrap' }}>
+        <StatCard
+          label={t('crm.forecast.weightedForecast')}
+          value={formatCurrencyCompact(forecast.totalWeighted)}
+          color="var(--color-accent-primary)"
+          icon={TrendingUp}
+        />
+        <StatCard
+          label={t('crm.forecast.bestCase')}
+          value={formatCurrencyCompact(forecast.bestCase)}
+          color="#3b82f6"
+          icon={DollarSign}
+        />
+        <StatCard
+          label={t('crm.forecast.committed')}
+          value={formatCurrencyCompact(forecast.committed)}
+          color="var(--color-success)"
+          icon={Trophy}
+        />
       </div>
 
       {/* Monthly bar chart */}

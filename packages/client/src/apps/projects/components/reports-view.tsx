@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download } from 'lucide-react';
+import { Download, FileText, AlertTriangle, Clock } from 'lucide-react';
 import {
   useTimeReport, useRevenueReport, useProfitabilityReport, useUtilizationReport,
 } from '../hooks';
@@ -8,6 +8,7 @@ import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Select } from '../../../components/ui/select';
 import { Badge } from '../../../components/ui/badge';
+import { StatCard } from '../../../components/ui/stat-card';
 import { ColumnHeader } from '../../../components/ui/column-header';
 import { formatCurrency, formatNumber } from '../../../lib/format';
 
@@ -162,25 +163,25 @@ function RevenueReportTab() {
       </div>
 
       {/* Summary cards */}
-      <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)' }}>
-        <div className="projects-kpi-card">
-          <div className="projects-kpi-card-content">
-            <span className="projects-kpi-card-label">{t('projects.reports.invoiced')}</span>
-            <span className="projects-kpi-card-value">{formatCurrency(data?.invoiced ?? 0)}</span>
-          </div>
-        </div>
-        <div className="projects-kpi-card">
-          <div className="projects-kpi-card-content">
-            <span className="projects-kpi-card-label">{t('projects.reports.outstanding')}</span>
-            <span className="projects-kpi-card-value">{formatCurrency(data?.outstanding ?? 0)}</span>
-          </div>
-        </div>
-        <div className="projects-kpi-card">
-          <div className="projects-kpi-card-content">
-            <span className="projects-kpi-card-label">{t('projects.reports.overdue')}</span>
-            <span className="projects-kpi-card-value" style={{ color: 'var(--color-error)' }}>{formatCurrency(data?.overdue ?? 0)}</span>
-          </div>
-        </div>
+      <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)', flexWrap: 'wrap' }}>
+        <StatCard
+          label={t('projects.reports.invoiced')}
+          value={formatCurrency(data?.invoiced ?? 0)}
+          icon={FileText}
+          color="#3b82f6"
+        />
+        <StatCard
+          label={t('projects.reports.outstanding')}
+          value={formatCurrency(data?.outstanding ?? 0)}
+          icon={Clock}
+          color="var(--color-warning)"
+        />
+        <StatCard
+          label={t('projects.reports.overdue')}
+          value={formatCurrency(data?.overdue ?? 0)}
+          icon={AlertTriangle}
+          color="var(--color-error)"
+        />
       </div>
 
       {/* Stacked bar chart: Invoiced vs Outstanding per client */}

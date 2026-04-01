@@ -213,15 +213,12 @@ function DealsTable({
 function DashboardSkeleton() {
   return (
     <div className="crm-dashboard">
-      <div className="crm-kpi-row">
+      <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)', flexWrap: 'wrap' }}>
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="crm-kpi-card">
-            <Skeleton width={36} height={36} style={{ borderRadius: 'var(--radius-md)' }} />
-            <div className="crm-kpi-card-content">
-              <Skeleton width={80} height={12} />
-              <Skeleton width={100} height={24} />
-              <Skeleton width={60} height={10} />
-            </div>
+          <div key={i} style={{ flex: 1, minWidth: 180, padding: '18px 20px', background: 'var(--color-bg-primary)', border: '1px solid var(--color-border-primary)', borderRadius: 'var(--radius-lg)' }}>
+            <Skeleton width={80} height={12} />
+            <Skeleton width={100} height={24} style={{ marginTop: 6 }} />
+            <Skeleton width={60} height={10} style={{ marginTop: 3 }} />
           </div>
         ))}
       </div>
