@@ -346,13 +346,13 @@ export async function seedSampleData(userId: string, accountId: string) {
   if (existing.length > 0) return { skipped: true };
 
   // Create top-level folders
-  await createFolder(userId, accountId, { name: 'Documents' });
-  await createFolder(userId, accountId, { name: 'Marketing' });
-  await createFolder(userId, accountId, { name: 'HR' });
-  const crm = await createFolder(userId, accountId, { name: 'CRM' });
+  const company = await createFolder(userId, accountId, { name: 'Company' });
+  await createFolder(userId, accountId, { name: 'Projects' });
+  await createFolder(userId, accountId, { name: 'Shared' });
 
-  // Create subfolder inside CRM
-  await createFolder(userId, accountId, { name: 'Proposals', parentId: crm.id });
+  // Create subfolders inside Company
+  await createFolder(userId, accountId, { name: 'Templates', parentId: company.id });
+  await createFolder(userId, accountId, { name: 'Policies', parentId: company.id });
 
   logger.info({ userId }, 'Drive sample folders seeded');
   return { seeded: true };
