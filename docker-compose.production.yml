@@ -28,6 +28,8 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3001}
     volumes:
       - atlas-uploads:/app/packages/server/uploads
+      - /var/run/docker.sock:/var/run/docker.sock
+      - atlas-marketplace:/app/data/marketplace
     depends_on:
       postgres:
         condition: service_healthy
@@ -66,3 +68,4 @@ volumes:
   atlas-uploads:
   atlas-pg-data:
   atlas-redis-data:
+  atlas-marketplace:

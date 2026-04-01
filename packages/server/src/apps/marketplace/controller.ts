@@ -3,6 +3,7 @@ import { logger } from '../../utils/logger';
 import * as service from './service';
 import * as dockerService from './docker.service';
 import { generateComposeFile } from './compose.generator';
+import { checkForUpdates } from './update-checker';
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
@@ -360,5 +361,29 @@ export async function getLogs(req: Request, res: Response) {
   } catch (error) {
     logger.error({ error }, 'Failed to get app logs');
     res.status(500).json({ success: false, error: 'Failed to get app logs' });
+  }
+}
+
+// ─── 10. POST /check-updates ───────────────────────────────────────
+
+export async function triggerUpdateCheck(req: Request, res: Response) {
+  if (!requireAdmin(req, res)) return;
+
+  try {
+    const results = await checkForUpdates();
+
+    const updatesAvailable = results.filter(r => r.updateAvailable);
+
+    res.json({
+      success: true,
+      data: {
+        checked: results.length,
+        updatesAvailable: updatesAvailable.length,
+        results,
+      },
+    });
+  } catch (error) {
+    logger.error({ error }, 'Failed to check for updates');
+    res.status(500).json({ success: false, error: 'Failed to check for updates' });
   }
 }

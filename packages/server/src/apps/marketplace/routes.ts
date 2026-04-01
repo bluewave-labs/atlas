@@ -11,6 +11,9 @@ router.use(authMiddleware);
 router.get('/catalog', controller.getCatalog);
 router.get('/installed', controller.getInstalled);
 
+// Update checking (admin-only, must be before :appId routes)
+router.post('/check-updates', controller.triggerUpdateCheck);
+
 // App lifecycle (admin-only checks are handled inside each controller)
 router.post('/:appId/deploy', controller.deploy);
 router.post('/:appId/start', controller.start);
