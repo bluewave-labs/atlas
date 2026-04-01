@@ -381,7 +381,13 @@ export async function deleteDealStage(req: Request, res: Response) {
 
 export async function reorderDealStages(req: Request, res: Response) {
   try {
+    const userId = req.auth!.userId;
     const accountId = req.auth!.accountId;
+    const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
+    if (!canAccessEntity(perm.role, 'deals', 'update', perm.entityPermissions)) {
+      res.status(403).json({ success: false, error: 'No permission to reorder stages' });
+      return;
+    }
     const { stageIds } = req.body;
 
     if (!Array.isArray(stageIds)) {
@@ -717,6 +723,11 @@ export async function updateActivity(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
     const accountId = req.auth!.accountId;
+    const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
+    if (!canAccessEntity(perm.role, 'activities', 'update', perm.entityPermissions)) {
+      res.status(403).json({ success: false, error: 'No permission to update activities' });
+      return;
+    }
     const id = req.params.id as string;
     const { type, body, dealId, contactId, companyId, scheduledAt, completedAt, isArchived } = req.body;
 
