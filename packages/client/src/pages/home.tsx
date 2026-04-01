@@ -18,6 +18,7 @@ import { useUIStore } from '../stores/ui-store';
 import { WidgetGrid } from '../components/home/widgets/widget-grid';
 import { ActivityFeed } from '../components/activity/activity-feed';
 import { DockPet, type PetType } from '../components/home/dock-pet';
+import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import '../styles/home.css';
 
 // ---------------------------------------------------------------------------
@@ -658,14 +659,14 @@ export function HomePage() {
   }, []);
 
   // Clear demo data handler
+  const [showClearDemoConfirm, setShowClearDemoConfirm] = useState(false);
   const handleClearDemoData = useCallback(async () => {
-    const confirmed = window.confirm(t('home.clearDemoConfirm', 'This will remove all sample data. Your own data won\'t be affected.'));
-    if (!confirmed) return;
     try {
       await api.put('/settings', { homeDemoDataActive: false });
       queryClient.invalidateQueries();
     } catch { /* ignore */ }
-  }, [t, queryClient]);
+    setShowClearDemoConfirm(false);
+  }, [queryClient]);
 
   // Dock app definitions
   const dockApps = useMemo(() =>
@@ -1125,7 +1126,7 @@ export function HomePage() {
             color: 'rgba(255,255,255,0.7)',
           }}>
             <span>{t('home.demoDataActive', 'Sample data active')}</span>
-            <button onClick={handleClearDemoData} style={{
+            <button onClick={() => setShowClearDemoConfirm(true)} style={{
               background: 'rgba(255,255,255,0.15)',
               border: '1px solid rgba(255,255,255,0.25)',
               borderRadius: 12,
@@ -1140,6 +1141,15 @@ export function HomePage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={showClearDemoConfirm}
+        onOpenChange={setShowClearDemoConfirm}
+        title={t('home.clearDemoConfirmTitle', 'Clear sample data?')}
+        description={t('home.clearDemoConfirm', "This will remove all sample data. Your own data won't be affected.")}
+        confirmLabel={t('home.clearDemoData', 'Clear all')}
+        onConfirm={handleClearDemoData}
+      />
     </div>
   );
 }

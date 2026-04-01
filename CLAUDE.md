@@ -318,6 +318,7 @@ Atlas uses `react-i18next` for internationalization. 5 languages: EN, TR, DE, FR
 - Use localStorage for settings — use server API + React Query
 - Create files outside the app directory — keep apps self-contained
 - Import from one app into another — use cross-app linking (record_links) instead
+- Use `window.confirm()` or `window.alert()` — always use the `<ConfirmDialog>` component from `components/ui/confirm-dialog.tsx` for destructive action confirmations. It provides a proper modal with title, description, and styled confirm/cancel buttons.
 
 ### Always do
 - Use `req.auth!.userId` and `req.auth!.accountId` for data scoping
