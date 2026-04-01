@@ -1091,6 +1091,24 @@
       "duplicate": "Duplizieren",
       "makeACopy": "Kopie erstellen",
       "moveTo": "Verschieben nach..."
+    },
+    "sidebar": {
+      "sharedWithMe": "Mit mir geteilt"
+    },
+    "sharing": {
+      "shareWithUser": "Mit Teammitglied teilen",
+      "sharePermission": "Berechtigung",
+      "shareView": "Kann ansehen",
+      "shareEdit": "Kann bearbeiten",
+      "shareRevoke": "Widerrufen",
+      "shareNoShares": "Mit niemandem geteilt",
+      "sharedEmpty": "Keine geteilten Elemente",
+      "sharedEmptyDesc": "Von Teammitgliedern geteilte Dateien und Ordner werden hier angezeigt",
+      "selectUser": "Benutzer auswählen...",
+      "shareAction": "Teilen",
+      "shareSuccess": "Erfolgreich geteilt",
+      "revokeSuccess": "Freigabe widerrufen",
+      "publicLink": "Öffentlicher Link"
     }
   },
   "hr": {

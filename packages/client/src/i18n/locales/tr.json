@@ -1091,6 +1091,24 @@
       "duplicate": "Çoğalt",
       "makeACopy": "Kopya oluştur",
       "moveTo": "Taşı..."
+    },
+    "sidebar": {
+      "sharedWithMe": "Benimle paylaşılan"
+    },
+    "sharing": {
+      "shareWithUser": "Ekip üyesiyle paylaş",
+      "sharePermission": "İzin",
+      "shareView": "Görüntüleyebilir",
+      "shareEdit": "Düzenleyebilir",
+      "shareRevoke": "İptal et",
+      "shareNoShares": "Kimseyle paylaşılmadı",
+      "sharedEmpty": "Sizinle paylaşılan öğe yok",
+      "sharedEmptyDesc": "Ekip üyelerinin paylaştığı dosya ve klasörler burada görünecek",
+      "selectUser": "Kullanıcı seçin...",
+      "shareAction": "Paylaş",
+      "shareSuccess": "Başarıyla paylaşıldı",
+      "revokeSuccess": "Paylaşım iptal edildi",
+      "publicLink": "Herkese açık bağlantı"
     }
   },
   "hr": {

@@ -433,6 +433,58 @@ export function useCreateLinkedSpreadsheet() {
   });
 }
 
+// ─── Internal sharing queries ───────────────────────────────────────
+
+export function useSharedWithMe() {
+  return useQuery({
+    queryKey: queryKeys.drive.sharedWithMe,
+    queryFn: async () => {
+      const { data } = await api.get('/drive/shared-with-me');
+      return data.data as DriveItem[];
+    },
+    staleTime: 10_000,
+  });
+}
+
+export function useItemShares(itemId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.drive.shares(itemId!),
+    queryFn: async () => {
+      const { data } = await api.get(`/drive/${itemId}/shares`);
+      return data.data as Array<{ id: string; sharedWithUserId: string; permission: string; sharedByUserId: string; createdAt: string }>;
+    },
+    enabled: !!itemId,
+    staleTime: 10_000,
+  });
+}
+
+// ─── Internal sharing mutations ─────────────────────────────────────
+
+export function useShareItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { itemId: string; userId: string; permission?: string }) => {
+      const { data } = await api.post(`/drive/${input.itemId}/shares`, { userId: input.userId, permission: input.permission || 'view' });
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.drive.all });
+    },
+  });
+}
+
+export function useRevokeShare() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { itemId: string; userId: string }) => {
+      await api.delete(`/drive/${input.itemId}/shares/${input.userId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.drive.all });
+    },
+  });
+}
+
 // ─── Share link mutations ────────────────────────────────────────────
 
 export function useCreateShareLink() {

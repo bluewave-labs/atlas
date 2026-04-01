@@ -1118,6 +1118,24 @@
       "duplicate": "Duplicate",
       "makeACopy": "Make a copy",
       "moveTo": "Move to..."
+    },
+    "sidebar": {
+      "sharedWithMe": "Shared with me"
+    },
+    "sharing": {
+      "shareWithUser": "Share with team member",
+      "sharePermission": "Permission",
+      "shareView": "Can view",
+      "shareEdit": "Can edit",
+      "shareRevoke": "Revoke",
+      "shareNoShares": "Not shared with anyone",
+      "sharedEmpty": "No items shared with you",
+      "sharedEmptyDesc": "Files and folders shared by team members will appear here",
+      "selectUser": "Select a user...",
+      "shareAction": "Share",
+      "shareSuccess": "Shared successfully",
+      "revokeSuccess": "Share revoked",
+      "publicLink": "Public link"
     }
   },
   "hr": {

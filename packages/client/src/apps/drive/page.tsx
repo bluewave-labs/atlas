@@ -7,7 +7,7 @@ import {
   LayoutGrid, LayoutList, Home, Clock, Heart, HardDrive, Upload as UploadIcon,
   Copy, X, Check, ChevronDown, Tag, FileArchive, Share2, History,
   FileImage, FileText, FileVideo, FileAudio, Link2, Trash, Music, Settings,
-  ExternalLink, Table2, File, Clipboard,
+  ExternalLink, Table2, File, Clipboard, Users, UserX,
 } from 'lucide-react';
 import { ColumnHeader } from '../../components/ui/column-header';
 import { AppSidebar } from '../../components/layout/app-sidebar';
@@ -24,6 +24,7 @@ import {
   useFileVersions, useReplaceFile, useRestoreVersion, useShareLinks,
   useCreateShareLink, useDeleteShareLink, useDriveItemsByType,
   useCreateLinkedDocument, useCreateLinkedDrawing, useCreateLinkedSpreadsheet,
+  useSharedWithMe, useItemShares, useShareItem, useRevokeShare,
 } from './hooks';
 import { api } from '../../lib/api-client';
 import { useToastStore } from '../../stores/toast-store';
@@ -37,6 +38,8 @@ import { getFileTypeIcon, formatBytes, formatRelativeDate, isImageFile } from '.
 import { ROUTES } from '../../config/routes';
 import { useDriveSettingsStore, useDriveSettingsSync } from './settings-store';
 import { useUIStore } from '../../stores/ui-store';
+import { useAuthStore } from '../../stores/auth-store';
+import { useTenantUsers } from '../../hooks/use-platform';
 import { useQuery } from '@tanstack/react-query';
 import type { DriveItem, DriveShareLink } from '@atlasmail/shared';
 import { FeatureEmptyState } from '../../components/ui/feature-empty-state';
@@ -74,7 +77,7 @@ const MAX_PREVIEW_WIDTH = 600;
 const VIEW_MODE_KEY = 'atlasmail_drive_view_mode';
 
 type ViewMode = 'list' | 'grid';
-type SidebarView = 'files' | 'favourites' | 'recent' | 'trash' | 'images' | 'documents' | 'videos' | 'audio';
+type SidebarView = 'files' | 'favourites' | 'recent' | 'trash' | 'shared' | 'images' | 'documents' | 'videos' | 'audio';
 type SortBy = 'default' | 'name' | 'size' | 'date' | 'type';
 type TypeFilter = 'all' | 'folders' | 'documents' | 'spreadsheets' | 'presentations' | 'photos' | 'pdfs' | 'videos' | 'archives' | 'audio' | 'drawings' | 'word' | 'excel' | 'powerpoint' | 'code' | 'text';
 type ModifiedFilter = 'any' | 'today' | '7days' | '30days' | 'thisYear' | 'lastYear';
@@ -585,6 +588,12 @@ export function DrivePage() {
   const { data: versionsData } = useFileVersions(versionHistoryOpen ? versionItemId : undefined);
   const { data: shareLinksData } = useShareLinks(shareModalItem?.id);
 
+  // Internal sharing queries
+  const { data: sharedWithMeData } = useSharedWithMe();
+  const { data: itemSharesData } = useItemShares(shareModalItem?.id ?? null);
+  const tenantId = useAuthStore((s) => s.tenantId);
+  const { data: tenantUsersData } = useTenantUsers(tenantId ?? undefined);
+
   // Mutations
   const createFolder = useCreateFolder();
   const uploadFiles = useUploadFiles();
@@ -604,6 +613,12 @@ export function DrivePage() {
   const createLinkedDocument = useCreateLinkedDocument();
   const createLinkedDrawing = useCreateLinkedDrawing();
   const createLinkedSpreadsheet = useCreateLinkedSpreadsheet();
+  const shareItem = useShareItem();
+  const revokeShare = useRevokeShare();
+
+  // Share with user state
+  const [shareUserId, setShareUserId] = useState<string>('');
+  const [sharePermission, setSharePermission] = useState<string>('view');
 
   // Clipboard for copy/paste (Feature 3 & 4)
   const [clipboardItemId, setClipboardItemId] = useState<string | null>(null);
@@ -615,6 +630,7 @@ export function DrivePage() {
     else if (sidebarView === 'favourites') items = favouritesData?.items ?? [];
     else if (sidebarView === 'recent') items = recentData?.items ?? [];
     else if (sidebarView === 'trash') items = trashData?.items ?? [];
+    else if (sidebarView === 'shared') items = sharedWithMeData ?? [];
     else if (['images', 'documents', 'videos', 'audio'].includes(sidebarView)) items = typeData?.items ?? [];
     else items = itemsData?.items ?? [];
 
@@ -626,7 +642,7 @@ export function DrivePage() {
       items = items.filter((item) => matchesModifiedFilter(item, modifiedFilter));
     }
     return items;
-  }, [sidebarView, searchQuery, itemsData, favouritesData, recentData, trashData, searchData, typeData, typeFilter, modifiedFilter]);
+  }, [sidebarView, searchQuery, itemsData, favouritesData, recentData, trashData, searchData, typeData, sharedWithMeData, typeFilter, modifiedFilter]);
 
   const isLoading = sidebarView === 'files' && itemsLoading;
   const breadcrumbs = breadcrumbsData?.breadcrumbs ?? [];
@@ -1231,6 +1247,7 @@ export function DrivePage() {
     if (sidebarView === 'favourites') return 'Favourites';
     if (sidebarView === 'recent') return 'Recent';
     if (sidebarView === 'trash') return 'Trash';
+    if (sidebarView === 'shared') return t('drive.sidebar.sharedWithMe');
     return '';
   }, [sidebarView, searchQuery]);
 
@@ -1596,6 +1613,13 @@ export function DrivePage() {
             <Trash2 size={16} style={{ color: '#78716c' }} />
             Trash
           </button>
+          <button
+            className={`drive-nav-item ${sidebarView === 'shared' ? 'active' : ''}`}
+            onClick={() => { setSidebarView('shared'); setSearchQuery(''); }}
+          >
+            <Users size={16} style={{ color: '#8b5cf6' }} />
+            {t('drive.sidebar.sharedWithMe')}
+          </button>
 
           <div className="drive-nav-divider" />
           <div className="drive-nav-section-label">File types</div>
@@ -1852,6 +1876,12 @@ export function DrivePage() {
                   <Trash2 size={40} strokeWidth={1.2} />
                   <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500, color: 'var(--color-text-secondary)' }}>Trash is empty</span>
                   <span style={{ fontSize: 'var(--font-size-sm)' }}>Deleted files will appear here</span>
+                </>
+              ) : sidebarView === 'shared' ? (
+                <>
+                  <Users size={40} strokeWidth={1.2} />
+                  <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500, color: 'var(--color-text-secondary)' }}>{t('drive.sharing.sharedEmpty')}</span>
+                  <span style={{ fontSize: 'var(--font-size-sm)' }}>{t('drive.sharing.sharedEmptyDesc')}</span>
                 </>
               ) : sidebarView === 'favourites' ? (
                 <>
@@ -2717,8 +2747,110 @@ export function DrivePage() {
       </Modal>
 
       {/* ─── Share modal ──────────────────────────────────────────── */}
-      <Modal open={!!shareModalItem} onOpenChange={() => setShareModalItem(null)} width={440} title={`Share "${shareModalItem?.name || ''}"`}>
+      <Modal open={!!shareModalItem} onOpenChange={() => { setShareModalItem(null); setShareUserId(''); setSharePermission('view'); }} width={480} title={`Share "${shareModalItem?.name || ''}"`}>
         <div style={{ padding: 'var(--spacing-xl)' }}>
+          {/* ── Share with team member section ─────────────────── */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 8 }}>
+              {t('drive.sharing.shareWithUser')}
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              <Select
+                value={shareUserId}
+                onChange={(v) => setShareUserId(v)}
+                options={[
+                  { value: '', label: t('drive.sharing.selectUser') },
+                  ...(tenantUsersData ?? [])
+                    .filter((u) => {
+                      // Exclude users already shared with
+                      const alreadyShared = (itemSharesData ?? []).map((s) => s.sharedWithUserId);
+                      return !alreadyShared.includes(u.userId);
+                    })
+                    .map((u) => ({ value: u.userId, label: u.name || u.email })),
+                ]}
+                style={{ flex: 1 }}
+              />
+              <Select
+                value={sharePermission}
+                onChange={(v) => setSharePermission(v)}
+                options={[
+                  { value: 'view', label: t('drive.sharing.shareView') },
+                  { value: 'edit', label: t('drive.sharing.shareEdit') },
+                ]}
+                style={{ width: 120 }}
+              />
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<Users size={14} />}
+                disabled={!shareUserId || shareItem.isPending}
+                onClick={() => {
+                  if (!shareModalItem || !shareUserId) return;
+                  shareItem.mutate({ itemId: shareModalItem.id, userId: shareUserId, permission: sharePermission }, {
+                    onSuccess: () => {
+                      addToast({ type: 'success', message: t('drive.sharing.shareSuccess') });
+                      setShareUserId('');
+                      setSharePermission('view');
+                    },
+                  });
+                }}
+                style={{ whiteSpace: 'nowrap' }}
+              >
+                {t('drive.sharing.shareAction')}
+              </Button>
+            </div>
+
+            {/* Current internal shares list */}
+            {itemSharesData && itemSharesData.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {itemSharesData.map((share) => {
+                  const user = (tenantUsersData ?? []).find((u) => u.userId === share.sharedWithUserId);
+                  return (
+                    <div
+                      key={share.id}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '6px 8px', borderRadius: 'var(--radius-sm)',
+                        background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border-secondary)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                        <Users size={14} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
+                        <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {user?.name || user?.email || share.sharedWithUserId}
+                        </span>
+                        <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', flexShrink: 0 }}>
+                          {share.permission === 'edit' ? t('drive.sharing.shareEdit') : t('drive.sharing.shareView')}
+                        </span>
+                      </div>
+                      <IconButton
+                        icon={<UserX size={13} />}
+                        label={t('drive.sharing.shareRevoke')}
+                        size={22}
+                        tooltip={false}
+                        destructive
+                        onClick={() => revokeShare.mutate({ itemId: shareModalItem!.id, userId: share.sharedWithUserId }, {
+                          onSuccess: () => addToast({ type: 'success', message: t('drive.sharing.revokeSuccess') }),
+                        })}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', textAlign: 'center', padding: '8px 0' }}>
+                {t('drive.sharing.shareNoShares')}
+              </div>
+            )}
+          </div>
+
+          {/* ── Divider ───────────────────────────────────────── */}
+          <div style={{ height: 1, background: 'var(--color-border-secondary)', margin: '16px 0' }} />
+
+          {/* ── Public link section ───────────────────────────── */}
+          <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 8 }}>
+            {t('drive.sharing.publicLink')}
+          </div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
             <Select
               value={shareExpiry}

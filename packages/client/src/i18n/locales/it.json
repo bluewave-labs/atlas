@@ -1091,6 +1091,24 @@
       "duplicate": "Duplica",
       "makeACopy": "Crea una copia",
       "moveTo": "Sposta in..."
+    },
+    "sidebar": {
+      "sharedWithMe": "Condivisi con me"
+    },
+    "sharing": {
+      "shareWithUser": "Condividi con un membro",
+      "sharePermission": "Permesso",
+      "shareView": "Può visualizzare",
+      "shareEdit": "Può modificare",
+      "shareRevoke": "Revoca",
+      "shareNoShares": "Non condiviso con nessuno",
+      "sharedEmpty": "Nessun elemento condiviso con te",
+      "sharedEmptyDesc": "I file e le cartelle condivisi dai membri del team appariranno qui",
+      "selectUser": "Seleziona un utente...",
+      "shareAction": "Condividi",
+      "shareSuccess": "Condiviso con successo",
+      "revokeSuccess": "Condivisione revocata",
+      "publicLink": "Link pubblico"
     }
   },
   "hr": {
