@@ -12,10 +12,16 @@ import type { MarketplaceManifest, MarketplaceAppRecord } from './types';
 
 const CATALOG_DIR = path.join(__dirname, 'catalog');
 
+// In-memory catalog cache — files only change on server restart
+let catalogCache: MarketplaceManifest[] | null = null;
+
 /**
- * Read all JSON manifests from the catalog directory and return them.
+ * Read all JSON manifests from the catalog directory.
+ * Cached in memory since catalog files only change between deploys.
  */
 export function getCatalog(): MarketplaceManifest[] {
+  if (catalogCache) return catalogCache;
+
   const files = fs.readdirSync(CATALOG_DIR).filter(f => f.endsWith('.json'));
   const manifests: MarketplaceManifest[] = [];
 
@@ -28,6 +34,7 @@ export function getCatalog(): MarketplaceManifest[] {
     }
   }
 
+  catalogCache = manifests;
   return manifests;
 }
 
@@ -35,8 +42,7 @@ export function getCatalog(): MarketplaceManifest[] {
  * Get a single manifest by ID from the catalog.
  */
 export function getManifest(appId: string): MarketplaceManifest | undefined {
-  const catalog = getCatalog();
-  return catalog.find(m => m.id === appId);
+  return getCatalog().find(m => m.id === appId);
 }
 
 // ─── Installed Apps (DB) ───────────────────────────────────────────
@@ -321,8 +327,6 @@ export async function removeInstallation(
  */
 export function getAppDir(appId: string): string {
   const dir = path.join(process.cwd(), 'data', 'marketplace', appId);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
+  fs.mkdirSync(dir, { recursive: true });
   return dir;
 }

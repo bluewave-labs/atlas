@@ -25,8 +25,10 @@ export async function getCatalog(req: Request, res: Response) {
   try {
     const accountId = req.auth!.accountId;
     const catalog = service.getCatalog();
-    const installed = await service.getInstalledApps(accountId);
-    const dockerAvailable = await dockerService.isDockerAvailable();
+    const [installed, dockerAvailable] = await Promise.all([
+      service.getInstalledApps(accountId),
+      dockerService.isDockerAvailable(),
+    ]);
 
     const installedMap = new Map(installed.map(app => [app.appId, app]));
 

@@ -97,7 +97,6 @@ export function useStartApp() {
       return data.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.marketplace.catalog });
       queryClient.invalidateQueries({ queryKey: queryKeys.marketplace.installed });
     },
   });
@@ -113,7 +112,6 @@ export function useStopApp() {
       return data.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.marketplace.catalog });
       queryClient.invalidateQueries({ queryKey: queryKeys.marketplace.installed });
     },
   });
@@ -129,7 +127,6 @@ export function useUpdateApp() {
       return data.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.marketplace.catalog });
       queryClient.invalidateQueries({ queryKey: queryKeys.marketplace.installed });
     },
   });
