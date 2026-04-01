@@ -536,6 +536,20 @@ export const driveShareLinks = pgTable('drive_share_links', {
   itemIdx: index('idx_share_links_item').on(table.driveItemId),
 }));
 
+// ─── Drive item shares (per-user sharing) ───────────────────────────
+
+export const driveItemShares = pgTable('drive_item_shares', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  driveItemId: uuid('drive_item_id').notNull().references(() => driveItems.id, { onDelete: 'cascade' }),
+  sharedWithUserId: uuid('shared_with_user_id').notNull(),
+  permission: varchar('permission', { length: 20 }).notNull().default('view'),
+  sharedByUserId: uuid('shared_by_user_id').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  uniqueIdx: uniqueIndex('idx_drive_shares_unique').on(table.driveItemId, table.sharedWithUserId),
+  sharedWithIdx: index('idx_drive_shares_user').on(table.sharedWithUserId),
+}));
+
 export const drawings = pgTable('drawings', {
   id: uuid('id').primaryKey().defaultRandom(),
   accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),

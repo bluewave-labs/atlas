@@ -1,5 +1,5 @@
 import { db } from '../../config/database';
-import { driveItems, driveItemVersions, driveShareLinks } from '../../db/schema';
+import { driveItems, driveItemVersions, driveShareLinks, driveItemShares } from '../../db/schema';
 import { eq, and, asc, desc, sql, isNull, inArray } from 'drizzle-orm';
 import { logger } from '../../utils/logger';
 import { unlinkSync, existsSync, copyFileSync } from 'node:fs';
@@ -830,4 +830,42 @@ export async function getFolderContents(userId: string, folderId: string): Promi
 
   await walk(folderId, '');
   return results;
+}
+
+// ─── Per-user sharing ───────────────────────────────────────────────
+
+export async function shareItem(driveItemId: string, sharedWithUserId: string, permission: string, sharedByUserId: string) {
+  const [share] = await db.insert(driveItemShares).values({
+    driveItemId, sharedWithUserId, permission, sharedByUserId,
+  }).onConflictDoUpdate({
+    target: [driveItemShares.driveItemId, driveItemShares.sharedWithUserId],
+    set: { permission },
+  }).returning();
+  return share;
+}
+
+export async function listItemShares(driveItemId: string) {
+  return db.select().from(driveItemShares)
+    .where(eq(driveItemShares.driveItemId, driveItemId));
+}
+
+export async function revokeShare(driveItemId: string, sharedWithUserId: string) {
+  await db.delete(driveItemShares)
+    .where(and(
+      eq(driveItemShares.driveItemId, driveItemId),
+      eq(driveItemShares.sharedWithUserId, sharedWithUserId),
+    ));
+}
+
+export async function listSharedWithMe(userId: string, _accountId: string) {
+  const shares = await db.select({
+    share: driveItemShares,
+    item: driveItems,
+  }).from(driveItemShares)
+    .innerJoin(driveItems, eq(driveItems.id, driveItemShares.driveItemId))
+    .where(and(
+      eq(driveItemShares.sharedWithUserId, userId),
+      eq(driveItems.isArchived, false),
+    ));
+  return shares.map(s => ({ ...s.item, sharePermission: s.share.permission, sharedBy: s.share.sharedByUserId }));
 }

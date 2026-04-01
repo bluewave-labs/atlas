@@ -729,6 +729,62 @@ export async function createLinkedSpreadsheet(req: Request, res: Response) {
   }
 }
 
+// POST /api/drive/:id/shares — share item with a user
+export async function shareWithUser(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const itemId = req.params.id as string;
+    const { userId: targetUserId, permission } = req.body as { userId?: string; permission?: string };
+    if (!targetUserId) {
+      res.status(400).json({ success: false, error: 'userId is required' });
+      return;
+    }
+    const share = await driveService.shareItem(itemId, targetUserId, permission || 'view', userId);
+    res.json({ success: true, data: share });
+  } catch (error) {
+    logger.error({ error }, 'Failed to share item');
+    res.status(500).json({ success: false, error: 'Failed to share item' });
+  }
+}
+
+// GET /api/drive/:id/shares — list shares for an item
+export async function listShares(req: Request, res: Response) {
+  try {
+    const itemId = req.params.id as string;
+    const shares = await driveService.listItemShares(itemId);
+    res.json({ success: true, data: shares });
+  } catch (error) {
+    logger.error({ error }, 'Failed to list shares');
+    res.status(500).json({ success: false, error: 'Failed to list shares' });
+  }
+}
+
+// DELETE /api/drive/:id/shares/:userId — revoke share
+export async function revokeShare(req: Request, res: Response) {
+  try {
+    const itemId = req.params.id as string;
+    const targetUserId = req.params.userId as string;
+    await driveService.revokeShare(itemId, targetUserId);
+    res.json({ success: true });
+  } catch (error) {
+    logger.error({ error }, 'Failed to revoke share');
+    res.status(500).json({ success: false, error: 'Failed to revoke share' });
+  }
+}
+
+// GET /api/drive/shared-with-me — list items shared with current user
+export async function getSharedWithMe(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const accountId = req.auth!.accountId;
+    const items = await driveService.listSharedWithMe(userId, accountId);
+    res.json({ success: true, data: items });
+  } catch (error) {
+    logger.error({ error }, 'Failed to get shared items');
+    res.status(500).json({ success: false, error: 'Failed to get shared items' });
+  }
+}
+
 // POST /api/drive/seed
 export async function seedSampleData(req: Request, res: Response) {
   try {

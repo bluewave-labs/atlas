@@ -445,6 +445,16 @@ export async function runMigrations() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
 
+      CREATE TABLE IF NOT EXISTS drive_item_shares (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        drive_item_id UUID NOT NULL REFERENCES drive_items(id) ON DELETE CASCADE,
+        shared_with_user_id UUID NOT NULL,
+        permission VARCHAR(20) NOT NULL DEFAULT 'view',
+        shared_by_user_id UUID NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        CONSTRAINT idx_drive_shares_unique UNIQUE (drive_item_id, shared_with_user_id)
+      );
+
       CREATE TABLE IF NOT EXISTS drawings (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
@@ -1392,6 +1402,8 @@ export async function runMigrations() {
       // Drive share links
       'CREATE INDEX IF NOT EXISTS idx_share_links_token ON drive_share_links(share_token)',
       'CREATE INDEX IF NOT EXISTS idx_share_links_item ON drive_share_links(drive_item_id)',
+      // Drive item shares
+      'CREATE INDEX IF NOT EXISTS idx_drive_shares_user ON drive_item_shares(shared_with_user_id)',
       // Drawings
       'CREATE INDEX IF NOT EXISTS idx_drawings_account ON drawings(account_id, is_archived)',
       'CREATE INDEX IF NOT EXISTS idx_drawings_user ON drawings(user_id, is_archived)',
