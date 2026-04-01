@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback, type MouseEvent as ReactMouseEvent, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api-client';
 import { queryKeys } from '../config/query-keys';
 import {
@@ -524,6 +524,7 @@ export function HomePage() {
   const logout = useAuthStore((s) => s.logout);
   const { data: taskCounts } = useTaskCounts({ enabled: isAuthenticated });
   const parallax = useMouseParallax(15);
+  const queryClient = useQueryClient();
 
   // User settings for home background + recent items
   const { data: userSettings } = useQuery({
@@ -655,6 +656,16 @@ export function HomePage() {
       item.style.removeProperty('--dock-mt');
     });
   }, []);
+
+  // Clear demo data handler
+  const handleClearDemoData = useCallback(async () => {
+    const confirmed = window.confirm(t('home.clearDemoConfirm', 'This will remove all sample data. Your own data won\'t be affected.'));
+    if (!confirmed) return;
+    try {
+      await api.put('/settings', { homeDemoDataActive: false });
+      queryClient.invalidateQueries();
+    } catch { /* ignore */ }
+  }, [t, queryClient]);
 
   // Dock app definitions
   const dockApps = useMemo(() =>
@@ -1094,6 +1105,40 @@ export function HomePage() {
             );
           })}
         </nav>
+
+        {/* Demo data pill */}
+        {!!userSettings?.homeDemoDataActive && (
+          <div style={{
+            position: 'absolute',
+            bottom: 24,
+            left: 24,
+            zIndex: 50,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '8px 14px',
+            background: 'rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            borderRadius: 20,
+            fontSize: 'var(--font-size-sm)',
+            color: 'rgba(255,255,255,0.7)',
+          }}>
+            <span>{t('home.demoDataActive', 'Sample data active')}</span>
+            <button onClick={handleClearDemoData} style={{
+              background: 'rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.25)',
+              borderRadius: 12,
+              padding: '2px 10px',
+              color: 'rgba(255,255,255,0.9)',
+              fontSize: 'var(--font-size-xs)',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-family)',
+            }}>
+              {t('home.clearDemoData', 'Clear all')}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

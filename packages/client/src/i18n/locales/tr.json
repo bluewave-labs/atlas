@@ -396,7 +396,11 @@
     "tables_one": "{{count}} tablo",
     "tables_other": "{{count}} tablo",
     "files_one": "{{count}} dosya",
-    "files_other": "{{count}} dosya"
+    "files_other": "{{count}} dosya",
+    "demoDataActive": "Örnek veriler etkin",
+    "clearDemoData": "Temizle",
+    "clearDemoConfirm": "Tüm örnek veriler kaldırılacak. Kendi verileriniz etkilenmez.",
+    "clearDemoConfirmTitle": "Örnek veriler temizlensin mi?"
   },
   "calendar": {
     "title": "Takvim",
@@ -1956,7 +1960,11 @@
     "creatingAccount": "Hesap oluşturuluyor...",
     "savingPrefs": "Tercihler kaydediliyor...",
     "seedingApp": "{{app}} kuruluyor...",
-    "settingUpAtlas": "Atlas kuruluyor"
+    "settingUpAtlas": "Atlas kuruluyor",
+    "startFresh": "Boş başla",
+    "startFreshDesc": "Verileriniz için hazır boş çalışma alanı",
+    "exploreSample": "Örnek verilerle keşfet",
+    "exploreSampleDesc": "Özellikleri keşfetmek için hazır örnekler"
   },
   "org": {
     "restrictAccess": "Uygulama erişimini kısıtla",

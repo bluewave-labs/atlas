@@ -423,7 +423,11 @@
     "tables_one": "{{count}} table",
     "tables_other": "{{count}} tables",
     "files_one": "{{count}} file",
-    "files_other": "{{count}} files"
+    "files_other": "{{count}} files",
+    "demoDataActive": "Sample data active",
+    "clearDemoData": "Clear all",
+    "clearDemoConfirm": "This will remove all sample data. Your own data won't be affected.",
+    "clearDemoConfirmTitle": "Clear sample data?"
   },
   "calendar": {
     "title": "Calendar",
@@ -1966,7 +1970,11 @@
     "creatingAccount": "Creating account...",
     "savingPrefs": "Saving preferences...",
     "seedingApp": "Setting up {{app}}...",
-    "settingUpAtlas": "Setting up Atlas"
+    "settingUpAtlas": "Setting up Atlas",
+    "startFresh": "Start fresh",
+    "startFreshDesc": "Empty workspace, ready for your data",
+    "exploreSample": "Explore with sample data",
+    "exploreSampleDesc": "Pre-filled examples to explore features"
   },
   "org": {
     "restrictAccess": "Restrict app access",

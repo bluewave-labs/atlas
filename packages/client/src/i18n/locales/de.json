@@ -396,7 +396,11 @@
     "tables_one": "{{count}} Tabelle",
     "tables_other": "{{count}} Tabellen",
     "files_one": "{{count}} Datei",
-    "files_other": "{{count}} Dateien"
+    "files_other": "{{count}} Dateien",
+    "demoDataActive": "Beispieldaten aktiv",
+    "clearDemoData": "Alle löschen",
+    "clearDemoConfirm": "Alle Beispieldaten werden entfernt. Ihre eigenen Daten bleiben unberührt.",
+    "clearDemoConfirmTitle": "Beispieldaten löschen?"
   },
   "calendar": {
     "title": "Kalender",
@@ -1956,7 +1960,11 @@
     "creatingAccount": "Konto wird erstellt...",
     "savingPrefs": "Einstellungen werden gespeichert...",
     "seedingApp": "{{app}} wird eingerichtet...",
-    "settingUpAtlas": "Atlas wird eingerichtet"
+    "settingUpAtlas": "Atlas wird eingerichtet",
+    "startFresh": "Neu starten",
+    "startFreshDesc": "Leerer Arbeitsbereich für Ihre Daten",
+    "exploreSample": "Mit Beispieldaten erkunden",
+    "exploreSampleDesc": "Vorgefüllte Beispiele zum Erkunden"
   },
   "org": {
     "restrictAccess": "App-Zugriff einschränken",

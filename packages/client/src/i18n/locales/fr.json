@@ -396,7 +396,11 @@
     "tables_one": "{{count}} tableau",
     "tables_other": "{{count}} tableaux",
     "files_one": "{{count}} fichier",
-    "files_other": "{{count}} fichiers"
+    "files_other": "{{count}} fichiers",
+    "demoDataActive": "Données d'exemple actives",
+    "clearDemoData": "Tout effacer",
+    "clearDemoConfirm": "Toutes les données d'exemple seront supprimées. Vos propres données ne seront pas affectées.",
+    "clearDemoConfirmTitle": "Effacer les données d'exemple ?"
   },
   "calendar": {
     "title": "Calendrier",
@@ -1956,7 +1960,11 @@
     "creatingAccount": "Création du compte...",
     "savingPrefs": "Enregistrement des préférences...",
     "seedingApp": "Configuration de {{app}}...",
-    "settingUpAtlas": "Configuration d'Atlas"
+    "settingUpAtlas": "Configuration d'Atlas",
+    "startFresh": "Commencer vide",
+    "startFreshDesc": "Espace de travail vide, prêt pour vos données",
+    "exploreSample": "Explorer avec des exemples",
+    "exploreSampleDesc": "Exemples pré-remplis pour découvrir les fonctionnalités"
   },
   "org": {
     "restrictAccess": "Restreindre l'accès aux apps",

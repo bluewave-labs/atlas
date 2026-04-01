@@ -8,7 +8,7 @@ import { ROUTES } from '../config/routes';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Select } from '../components/ui/select';
-import { CheckCircle2, ArrowRight, ArrowLeft, Globe, Building2, User, Settings } from 'lucide-react';
+import { CheckCircle2, ArrowRight, ArrowLeft, Globe, Building2, User, Settings, Rocket, ClipboardList } from 'lucide-react';
 import type { Account } from '@atlasmail/shared';
 
 // Wallpaper #4 — Mountain range
@@ -153,6 +153,7 @@ export function SetupPage({ preview = false }: { preview?: boolean }) {
   const [timezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [dateFormat, setDateFormat] = useState('DD/MM/YYYY');
   const [currency, setCurrency] = useState('$');
+  const [withDemoData, setWithDemoData] = useState(true);
 
   // Redirect if already set up (skip in preview mode)
   useEffect(() => {
@@ -238,26 +239,33 @@ export function SetupPage({ preview = false }: { preview?: boolean }) {
         });
       } catch { /* non-critical */ }
 
-      // 3. Seed all apps with sample data
-      const seedSteps = [
-        { label: 'CRM', url: '/crm/seed' },
-        { label: 'HRM', url: '/hr/seed' },
-        { label: 'Tasks', url: '/tasks/seed' },
-        { label: 'Projects', url: '/projects/seed' },
-        { label: 'Tables', url: '/tables/seed' },
-        { label: 'Drive', url: '/drive/seed' },
-        { label: 'Docs', url: '/docs/seed' },
-        { label: 'Draw', url: '/drawings/seed' },
-        { label: 'Sign', url: '/sign/seed' },
-      ];
+      // 3. Seed all apps with sample data (only if user chose demo data)
+      if (withDemoData) {
+        const seedSteps = [
+          { label: 'CRM', url: '/crm/seed' },
+          { label: 'HRM', url: '/hr/seed' },
+          { label: 'Tasks', url: '/tasks/seed' },
+          { label: 'Projects', url: '/projects/seed' },
+          { label: 'Tables', url: '/tables/seed' },
+          { label: 'Drive', url: '/drive/seed' },
+          { label: 'Docs', url: '/docs/seed' },
+          { label: 'Draw', url: '/drawings/seed' },
+          { label: 'Sign', url: '/sign/seed' },
+        ];
 
-      for (let i = 0; i < seedSteps.length; i++) {
-        const s = seedSteps[i];
-        setSeedingStep(t('setup.seedingApp', 'Setting up {{app}}...', { app: s.label }));
-        setSeedingProgress(20 + Math.round(((i + 1) / seedSteps.length) * 75));
+        for (let i = 0; i < seedSteps.length; i++) {
+          const s = seedSteps[i];
+          setSeedingStep(t('setup.seedingApp', 'Setting up {{app}}...', { app: s.label }));
+          setSeedingProgress(20 + Math.round(((i + 1) / seedSteps.length) * 75));
+          try {
+            await api.post(s.url);
+          } catch { /* non-critical — seed may already exist */ }
+        }
+
+        // Flag so the dashboard shows the "clear demo data" pill
         try {
-          await api.post(s.url);
-        } catch { /* non-critical — seed may already exist */ }
+          await api.put('/settings', { homeDemoDataActive: true });
+        } catch { /* non-critical */ }
       }
 
       setSeedingProgress(100);
@@ -443,6 +451,45 @@ export function SetupPage({ preview = false }: { preview?: boolean }) {
 
               {step === 3 && (
                 <>
+                  {/* Demo data choice */}
+                  <div style={{ display: 'flex', gap: 10, marginBottom: 8 }}>
+                    {([
+                      { key: false, icon: Rocket, label: t('setup.startFresh', 'Start fresh'), desc: t('setup.startFreshDesc', 'Empty workspace, ready for your data') },
+                      { key: true, icon: ClipboardList, label: t('setup.exploreSample', 'Explore with sample data'), desc: t('setup.exploreSampleDesc', 'Pre-filled examples to explore features') },
+                    ] as const).map((opt) => {
+                      const isActive = withDemoData === opt.key;
+                      const Icon = opt.icon;
+                      return (
+                        <button
+                          key={String(opt.key)}
+                          onClick={() => setWithDemoData(opt.key)}
+                          style={{
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 8,
+                            padding: '16px 12px',
+                            background: isActive ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)',
+                            border: isActive ? '1px solid rgba(255,255,255,0.35)' : '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: 14,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            fontFamily: 'var(--font-family)',
+                          }}
+                        >
+                          <Icon size={22} color={isActive ? '#fff' : 'rgba(255,255,255,0.5)'} />
+                          <span style={{ color: '#fff', fontSize: 'var(--font-size-sm)', fontWeight: isActive ? 'var(--font-weight-medium)' : 'var(--font-weight-normal)' } as React.CSSProperties}>
+                            {opt.label}
+                          </span>
+                          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 'var(--font-size-xs)', lineHeight: 1.3, textAlign: 'center' }}>
+                            {opt.desc}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <label style={{ fontSize: 'var(--font-size-sm)', color: 'rgba(255,255,255,0.7)' }}>
                       {t('setup.timezone', 'Timezone')}

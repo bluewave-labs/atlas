@@ -935,6 +935,11 @@ export async function runMigrations() {
       ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS home_flying_birds BOOLEAN NOT NULL DEFAULT TRUE;
     `);
 
+    // Add home_demo_data_active column to user_settings (idempotent)
+    await client.query(`
+      ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS home_demo_data_active BOOLEAN NOT NULL DEFAULT FALSE;
+    `);
+
     // ─── CRM tables ─────────────────────────────────────────────────
 
     await client.query(`

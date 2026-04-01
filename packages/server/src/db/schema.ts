@@ -245,6 +245,7 @@ export const userSettings = pgTable('user_settings', {
   homeEnabledWidgets: jsonb('home_enabled_widgets').$type<string[] | null>(),
   homeDockPet: varchar('home_dock_pet', { length: 20 }).notNull().default('cat'),
   homeFlyingBirds: boolean('home_flying_birds').notNull().default(true),
+  homeDemoDataActive: boolean('home_demo_data_active').notNull().default(false),
   appWidgets: jsonb('app_widgets').$type<Record<string, { enabledIds: string[]; order: string[] }> | null>(),
   recentItems: jsonb('recent_items').$type<string[]>().notNull().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
