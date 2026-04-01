@@ -183,6 +183,12 @@ export const queryKeys = {
     metrics: ['system', 'metrics'] as const,
     emailSettings: ['system', 'email-settings'] as const,
   },
+  marketplace: {
+    catalog: ['marketplace', 'catalog'] as const,
+    installed: ['marketplace', 'installed'] as const,
+    status: (appId: string) => ['marketplace', 'status', appId] as const,
+    logs: (appId: string) => ['marketplace', 'logs', appId] as const,
+  },
   notifications: {
     all: ['notifications'] as const,
     list: ['notifications', 'list'] as const,

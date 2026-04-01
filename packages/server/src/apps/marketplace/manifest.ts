@@ -1,8 +1,5 @@
-import { Router } from 'express';
 import type { ServerAppManifest } from '../../config/app-manifest.server';
-
-// Placeholder router — controller/routes will be added in Phase 2
-const marketplaceRouter = Router();
+import { marketplaceRouter } from './routes';
 
 export const marketplaceServerManifest: ServerAppManifest = {
   id: 'marketplace',
