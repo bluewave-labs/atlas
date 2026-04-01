@@ -67,7 +67,7 @@ export async function createFolder(req: Request, res: Response) {
     const { name, parentId } = req.body;
 
     const folder = await driveService.createFolder(userId, accountId, { name, parentId });
-    driveService.logDriveActivity({ driveItemId: folder.id, accountId, userId, action: 'folder.created', metadata: { name: folder.name } }).catch(() => {});
+    driveService.logDriveActivity({ driveItemId: folder.id, accountId, userId, action: 'folder.created', metadata: { name: folder.name } }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     res.json({ success: true, data: folder });
   } catch (error) {
     logger.error({ error }, 'Failed to create folder');
@@ -118,12 +118,12 @@ export async function uploadFiles(req: Request, res: Response) {
         eventType: 'file.uploaded',
         title: `uploaded ${created.length === 1 ? names : `${created.length} files`}`,
         metadata: { itemIds: created.map((i) => i.id) },
-      }).catch(() => {});
+      }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     }
 
     // Activity log — fire-and-forget
     for (const item of created) {
-      driveService.logDriveActivity({ driveItemId: item.id, accountId, userId, action: 'file.uploaded', metadata: { name: item.name } }).catch(() => {});
+      driveService.logDriveActivity({ driveItemId: item.id, accountId, userId, action: 'file.uploaded', metadata: { name: item.name } }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     }
 
     res.json({ success: true, data: { items: created } });
@@ -332,7 +332,7 @@ export async function updateItem(req: Request, res: Response) {
 
     // Activity log for rename
     if (name !== undefined) {
-      driveService.logDriveActivity({ driveItemId: itemId, accountId, userId, action: 'file.renamed', metadata: { name } }).catch(() => {});
+      driveService.logDriveActivity({ driveItemId: itemId, accountId, userId, action: 'file.renamed', metadata: { name } }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     }
 
     res.json({ success: true, data: item });
@@ -355,7 +355,7 @@ export async function deleteItem(req: Request, res: Response) {
     const itemId = req.params.id as string;
 
     await driveService.deleteItem(userId, itemId);
-    driveService.logDriveActivity({ driveItemId: itemId, accountId: req.auth!.accountId, userId, action: 'file.deleted' }).catch(() => {});
+    driveService.logDriveActivity({ driveItemId: itemId, accountId: req.auth!.accountId, userId, action: 'file.deleted' }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete drive item');
@@ -381,7 +381,7 @@ export async function restoreItem(req: Request, res: Response) {
       return;
     }
 
-    driveService.logDriveActivity({ driveItemId: itemId, accountId: req.auth!.accountId, userId, action: 'file.restored' }).catch(() => {});
+    driveService.logDriveActivity({ driveItemId: itemId, accountId: req.auth!.accountId, userId, action: 'file.restored' }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     res.json({ success: true, data: item });
   } catch (error) {
     logger.error({ error }, 'Failed to restore drive item');
@@ -850,10 +850,10 @@ export async function createShareLink(req: Request, res: Response) {
         eventType: 'file.shared',
         title: `shared ${item?.name ?? 'a file'}`,
         metadata: { itemId, linkId: link.id },
-      }).catch(() => {});
+      }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     }
 
-    driveService.logDriveActivity({ driveItemId: itemId, accountId, userId, action: 'share_link.created' }).catch(() => {});
+    driveService.logDriveActivity({ driveItemId: itemId, accountId, userId, action: 'share_link.created' }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     res.json({ success: true, data: link });
   } catch (error) {
     logger.error({ error }, 'Failed to create share link');
@@ -981,7 +981,7 @@ export async function shareWithUser(req: Request, res: Response) {
       return;
     }
     const share = await driveService.shareItem(itemId, targetUserId, permission || 'view', userId);
-    driveService.logDriveActivity({ driveItemId: itemId, accountId: req.auth!.accountId, userId, action: 'file.shared', metadata: { sharedWith: targetUserId, permission: permission || 'view' } }).catch(() => {});
+    driveService.logDriveActivity({ driveItemId: itemId, accountId: req.auth!.accountId, userId, action: 'file.shared', metadata: { sharedWith: targetUserId, permission: permission || 'view' } }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     res.json({ success: true, data: share });
   } catch (error) {
     logger.error({ error }, 'Failed to share item');
