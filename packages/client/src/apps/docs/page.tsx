@@ -1666,7 +1666,7 @@ function DocumentView({
         </div>
 
         {/* Inline title */}
-        <Textarea
+        <textarea
           ref={titleRef}
           className="doc-inline-title"
           value={doc.title}
