@@ -12,6 +12,9 @@ services:
     image: ghcr.io/bluewave-labs/atlas:${IMAGE_TAG:-latest}
     container_name: atlas
     restart: unless-stopped
+    # Run as root for Docker socket access (marketplace app deployment)
+    # On Linux with non-root setup, use: group_add: ["${DOCKER_GID}"] instead
+    user: root
     ports:
       - "${PORT:-3001}:3001"
     env_file:
