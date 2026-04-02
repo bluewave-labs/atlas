@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
@@ -8,27 +8,30 @@ interface PdfViewerProps {
   scale?: number;
   onPageCount?: (count: number) => void;
   renderOverlay?: (pageNumber: number, pageWidth: number, pageHeight: number) => ReactNode;
+  /** Callback to receive page image data URLs for thumbnail rendering */
+  onPageImages?: (images: Array<{ page: number; dataUrl: string; width: number; height: number }>) => void;
+  /** When set, scrolls the given page into view */
+  scrollToPage?: number | null;
 }
 
-interface PageInfo {
+interface PageData {
   pageNumber: number;
   width: number;
   height: number;
+  dataUrl: string;
 }
 
-export function PdfViewer({ url, scale = 1.5, onPageCount, renderOverlay }: PdfViewerProps) {
-  const [pages, setPages] = useState<PageInfo[]>([]);
+export function PdfViewer({ url, scale = 1.5, onPageCount, renderOverlay, onPageImages, scrollToPage }: PdfViewerProps) {
+  const [pages, setPages] = useState<PageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map());
   const pdfDocRef = useRef<pdfjsLib.PDFDocumentProxy | null>(null);
-  const hasRendered = useRef(false);
+  const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const urlRef = useRef(url);
 
-  // Load PDF and render — only when URL changes
+  // Load PDF and convert each page to an image data URL
   useEffect(() => {
     let cancelled = false;
-    hasRendered.current = false;
     urlRef.current = url;
 
     async function loadAndRender() {
@@ -44,23 +47,60 @@ export function PdfViewer({ url, scale = 1.5, onPageCount, renderOverlay }: PdfV
         const pageCount = pdfDoc.numPages;
         onPageCount?.(pageCount);
 
-        const pageInfos: PageInfo[] = [];
+        const pageDataArr: PageData[] = [];
+        const thumbnailArr: Array<{ page: number; dataUrl: string; width: number; height: number }> = [];
+
         for (let i = 1; i <= pageCount; i++) {
           const page = await pdfDoc.getPage(i);
+          if (cancelled) return;
+
+          // Render full-size page
           const viewport = page.getViewport({ scale });
-          pageInfos.push({ pageNumber: i, width: viewport.width, height: viewport.height });
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) continue;
+
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          await page.render({ canvasContext: ctx, viewport } as any).promise;
+          if (cancelled) return;
+
+          const dataUrl = canvas.toDataURL('image/png');
+          pageDataArr.push({
+            pageNumber: i,
+            width: viewport.width,
+            height: viewport.height,
+            dataUrl,
+          });
+
+          // Generate thumbnail at a smaller scale
+          const thumbScale = 0.3;
+          const thumbViewport = page.getViewport({ scale: thumbScale });
+          const thumbCanvas = document.createElement('canvas');
+          const thumbCtx = thumbCanvas.getContext('2d');
+          if (thumbCtx) {
+            thumbCanvas.width = thumbViewport.width;
+            thumbCanvas.height = thumbViewport.height;
+            await page.render({ canvasContext: thumbCtx, viewport: thumbViewport } as any).promise;
+            if (!cancelled) {
+              thumbnailArr.push({
+                page: i,
+                dataUrl: thumbCanvas.toDataURL('image/png'),
+                width: thumbViewport.width,
+                height: thumbViewport.height,
+              });
+            }
+          }
         }
 
         if (cancelled) return;
-        setPages(pageInfos);
+        setPages(pageDataArr);
         setLoading(false);
 
-        // Wait for React to mount the canvases, then render
-        requestAnimationFrame(() => {
-          if (cancelled || hasRendered.current) return;
-          hasRendered.current = true;
-          renderPages(pdfDoc, pageCount, scale);
-        });
+        // Send thumbnail data to parent
+        if (onPageImages && thumbnailArr.length > 0) {
+          onPageImages(thumbnailArr);
+        }
       } catch (err) {
         if (!cancelled) {
           console.error('PDF load error:', err);
@@ -79,30 +119,18 @@ export function PdfViewer({ url, scale = 1.5, onPageCount, renderOverlay }: PdfV
         pdfDocRef.current = null;
       }
     };
-    // Only re-run when URL changes — NOT on scale/onPageCount changes
+    // Only re-run when URL changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
-  async function renderPages(doc: pdfjsLib.PDFDocumentProxy, pageCount: number, renderScale: number) {
-    for (let i = 1; i <= pageCount; i++) {
-      const canvas = canvasRefs.current.get(i);
-      if (!canvas) continue;
-
-      try {
-        const page = await doc.getPage(i);
-        const viewport = page.getViewport({ scale: renderScale });
-        const context = canvas.getContext('2d');
-        if (!context) continue;
-
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-
-        await page.render({ canvasContext: context, viewport, canvas } as any).promise;
-      } catch (err) {
-        console.error(`Failed to render page ${i}:`, err);
-      }
+  // Scroll to page when requested
+  useEffect(() => {
+    if (scrollToPage == null) return;
+    const el = pageRefs.current.get(scrollToPage);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }
+  }, [scrollToPage]);
 
   if (loading) {
     return (
@@ -123,17 +151,28 @@ export function PdfViewer({ url, scale = 1.5, onPageCount, renderOverlay }: PdfV
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '16px 0' }}>
       {pages.map((page) => (
-        <div key={page.pageNumber} id={`sign-page-${page.pageNumber}`} style={{ position: 'relative' }}>
-          <canvas
-            ref={(el) => {
-              if (el) canvasRefs.current.set(page.pageNumber, el);
-              else canvasRefs.current.delete(page.pageNumber);
-            }}
+        <div
+          key={page.pageNumber}
+          id={`sign-page-${page.pageNumber}`}
+          ref={(el) => {
+            if (el) pageRefs.current.set(page.pageNumber, el);
+            else pageRefs.current.delete(page.pageNumber);
+          }}
+          style={{ position: 'relative' }}
+        >
+          <img
+            src={page.dataUrl}
+            alt={`Page ${page.pageNumber}`}
+            width={page.width}
+            height={page.height}
             style={{
               display: 'block',
               boxShadow: 'var(--shadow-md)',
               borderRadius: 'var(--radius-sm)',
+              userSelect: 'none',
+              pointerEvents: 'none',
             }}
+            draggable={false}
           />
           {renderOverlay && (
             <div

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo, type CSSProperties } from 'react';
+import { useState, useCallback, useRef, useMemo, type CSSProperties, type DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   FileText,
@@ -175,8 +175,14 @@ export function SignPage() {
   // Template delete
   const [deleteTemplateId, setDeleteTemplateId] = useState<string | null>(null);
   const [deleteTemplateOpen, setDeleteTemplateOpen] = useState(false);
+  // Page thumbnails for sidebar navigation
+  const [pageThumbnails, setPageThumbnails] = useState<Array<{ page: number; dataUrl: string; width: number; height: number }>>([]);
+  const [scrollToPage, setScrollToPage] = useState<number | null>(null);
+  // Track which page number is visible for thumbnail highlight
+  const [activePageNumber, setActivePageNumber] = useState(1);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfContentRef = useRef<HTMLDivElement>(null);
 
   // Queries
   const { data: documents, isLoading: docsLoading } = useSignDocuments();
@@ -276,7 +282,7 @@ export function SignPage() {
   }, [selectedDocId, voidDoc]);
 
   const handleAddField = useCallback(
-    async (type: SignatureFieldType) => {
+    async (type: SignatureFieldType, pageNumber = 1, x = 25, y = 40) => {
       if (!selectedDocId) return;
       // Auto-assign to active signer if one is selected
       const assignedEmail = activeSignerIndex !== null && signers[activeSignerIndex]?.email.trim()
@@ -284,11 +290,11 @@ export function SignPage() {
         : null;
       await createField.mutateAsync({
         type,
-        pageNumber: 1,
-        x: 25,
-        y: 40,
-        width: 20,
-        height: 5,
+        pageNumber,
+        x,
+        y,
+        width: type === 'checkbox' ? 5 : 20,
+        height: type === 'checkbox' ? 4 : 5,
         signerEmail: assignedEmail,
         label: null,
         required: true,
@@ -297,6 +303,54 @@ export function SignPage() {
     },
     [selectedDocId, createField, activeSignerIndex, signers],
   );
+
+  // Handle drop from toolbar onto a PDF page
+  const handlePageDrop = useCallback(
+    (e: DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      const fieldType = e.dataTransfer.getData('application/sign-field-type') as SignatureFieldType;
+      if (!fieldType) return;
+
+      // Find which page element was dropped on
+      const pdfContent = pdfContentRef.current;
+      if (!pdfContent) return;
+
+      const pageElements = pdfContent.querySelectorAll('[id^="sign-page-"]');
+      let targetPage = 1;
+      let relX = 25;
+      let relY = 40;
+
+      for (const pageEl of pageElements) {
+        const rect = pageEl.getBoundingClientRect();
+        if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
+          const pageNum = parseInt(pageEl.id.replace('sign-page-', ''), 10);
+          if (!isNaN(pageNum)) {
+            targetPage = pageNum;
+            // Calculate position relative to the page as percentages
+            // The img inside is the first child; its dimensions are the page dimensions
+            const imgEl = pageEl.querySelector('img');
+            if (imgEl) {
+              const imgRect = imgEl.getBoundingClientRect();
+              relX = ((e.clientX - imgRect.left) / imgRect.width) * 100;
+              relY = ((e.clientY - imgRect.top) / imgRect.height) * 100;
+              // Clamp so the field stays within bounds
+              relX = Math.max(0, Math.min(80, relX));
+              relY = Math.max(0, Math.min(90, relY));
+            }
+          }
+          break;
+        }
+      }
+
+      handleAddField(fieldType, targetPage, relX, relY);
+    },
+    [handleAddField],
+  );
+
+  const handlePageDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  }, []);
 
   const handleFieldMove = useCallback(
     (id: string, x: number, y: number) => {
@@ -924,18 +978,28 @@ export function SignPage() {
 
             <SmartButtonBar appId="sign" recordId={selectedDoc.id} />
 
-            {/* Field toolbar (vertical) + PDF viewer + Right sidebar */}
+            {/* Field toolbar (vertical) + Page thumbnails + PDF viewer + Right sidebar */}
             <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-              {/* Vertical field type toolbar */}
+              {/* Vertical field type toolbar — items are draggable */}
               <div className="sign-field-toolbar">
                 <div className="sign-field-toolbar-group">
                   <Tooltip content={t('sign.fields.signature')} side="right">
-                    <button className="sign-field-toolbar-btn" onClick={() => handleAddField('signature')}>
+                    <button
+                      className="sign-field-toolbar-btn"
+                      draggable
+                      onDragStart={(e) => { e.dataTransfer.setData('application/sign-field-type', 'signature'); e.dataTransfer.effectAllowed = 'copy'; }}
+                      onClick={() => handleAddField('signature')}
+                    >
                       <PenTool size={18} />
                     </button>
                   </Tooltip>
                   <Tooltip content={t('sign.fields.initials')} side="right">
-                    <button className="sign-field-toolbar-btn" onClick={() => handleAddField('initials')}>
+                    <button
+                      className="sign-field-toolbar-btn"
+                      draggable
+                      onDragStart={(e) => { e.dataTransfer.setData('application/sign-field-type', 'initials'); e.dataTransfer.effectAllowed = 'copy'; }}
+                      onClick={() => handleAddField('initials')}
+                    >
                       <Type size={18} />
                     </button>
                   </Tooltip>
@@ -943,12 +1007,22 @@ export function SignPage() {
                 <div className="sign-field-toolbar-divider" />
                 <div className="sign-field-toolbar-group">
                   <Tooltip content={t('sign.fields.date')} side="right">
-                    <button className="sign-field-toolbar-btn" onClick={() => handleAddField('date')}>
+                    <button
+                      className="sign-field-toolbar-btn"
+                      draggable
+                      onDragStart={(e) => { e.dataTransfer.setData('application/sign-field-type', 'date'); e.dataTransfer.effectAllowed = 'copy'; }}
+                      onClick={() => handleAddField('date')}
+                    >
                       <Calendar size={18} />
                     </button>
                   </Tooltip>
                   <Tooltip content={t('sign.fields.text')} side="right">
-                    <button className="sign-field-toolbar-btn" onClick={() => handleAddField('text')}>
+                    <button
+                      className="sign-field-toolbar-btn"
+                      draggable
+                      onDragStart={(e) => { e.dataTransfer.setData('application/sign-field-type', 'text'); e.dataTransfer.effectAllowed = 'copy'; }}
+                      onClick={() => handleAddField('text')}
+                    >
                       <AlignLeft size={18} />
                     </button>
                   </Tooltip>
@@ -956,12 +1030,22 @@ export function SignPage() {
                 <div className="sign-field-toolbar-divider" />
                 <div className="sign-field-toolbar-group">
                   <Tooltip content={t('sign.fields.checkbox')} side="right">
-                    <button className="sign-field-toolbar-btn" onClick={() => handleAddField('checkbox')}>
+                    <button
+                      className="sign-field-toolbar-btn"
+                      draggable
+                      onDragStart={(e) => { e.dataTransfer.setData('application/sign-field-type', 'checkbox'); e.dataTransfer.effectAllowed = 'copy'; }}
+                      onClick={() => handleAddField('checkbox')}
+                    >
                       <CheckSquare size={18} />
                     </button>
                   </Tooltip>
                   <Tooltip content={t('sign.fields.dropdown')} side="right">
-                    <button className="sign-field-toolbar-btn" onClick={() => handleAddField('dropdown')}>
+                    <button
+                      className="sign-field-toolbar-btn"
+                      draggable
+                      onDragStart={(e) => { e.dataTransfer.setData('application/sign-field-type', 'dropdown'); e.dataTransfer.effectAllowed = 'copy'; }}
+                      onClick={() => handleAddField('dropdown')}
+                    >
                       <ChevronDown size={18} />
                     </button>
                   </Tooltip>
@@ -969,20 +1053,61 @@ export function SignPage() {
                 <div className="sign-field-toolbar-divider" />
                 <div className="sign-field-toolbar-group">
                   <Tooltip content={t('sign.fields.name')} side="right">
-                    <button className="sign-field-toolbar-btn" onClick={() => handleAddField('name')}>
+                    <button
+                      className="sign-field-toolbar-btn"
+                      draggable
+                      onDragStart={(e) => { e.dataTransfer.setData('application/sign-field-type', 'name'); e.dataTransfer.effectAllowed = 'copy'; }}
+                      onClick={() => handleAddField('name')}
+                    >
                       <User size={18} />
                     </button>
                   </Tooltip>
                   <Tooltip content={t('sign.fields.email')} side="right">
-                    <button className="sign-field-toolbar-btn" onClick={() => handleAddField('email')}>
+                    <button
+                      className="sign-field-toolbar-btn"
+                      draggable
+                      onDragStart={(e) => { e.dataTransfer.setData('application/sign-field-type', 'email'); e.dataTransfer.effectAllowed = 'copy'; }}
+                      onClick={() => handleAddField('email')}
+                    >
                       <Mail size={18} />
                     </button>
                   </Tooltip>
                 </div>
               </div>
 
+              {/* Page thumbnails sidebar */}
+              {pageThumbnails.length > 1 && (
+                <div className="sign-page-thumbnails">
+                  {pageThumbnails.map((thumb) => (
+                    <button
+                      key={thumb.page}
+                      className={`sign-page-thumbnail${activePageNumber === thumb.page ? ' sign-page-thumbnail--active' : ''}`}
+                      onClick={() => {
+                        setActivePageNumber(thumb.page);
+                        setScrollToPage(thumb.page);
+                        // Reset after scroll starts
+                        setTimeout(() => setScrollToPage(null), 100);
+                      }}
+                    >
+                      <img
+                        src={thumb.dataUrl}
+                        alt={`Page ${thumb.page}`}
+                        style={{ width: '100%', height: 'auto', display: 'block', borderRadius: 2 }}
+                        draggable={false}
+                      />
+                      <span className="sign-page-thumbnail-label">{thumb.page}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* PDF viewer + field overlay */}
-              <div className="sign-content">
+              <div
+                className="sign-content"
+                ref={pdfContentRef}
+                onDrop={handlePageDrop}
+                onDragOver={handlePageDragOver}
+              >
                 {uploading ? (
                   <div className="sign-upload-feedback">
                     <Skeleton width={120} height={120} borderRadius="var(--radius-lg)" />
@@ -995,6 +1120,8 @@ export function SignPage() {
                     <PdfViewer
                       url={pdfUrl}
                       scale={1.5}
+                      scrollToPage={scrollToPage}
+                      onPageImages={(images) => setPageThumbnails(images)}
                       onPageCount={(count) => {
                         if (selectedDoc.pageCount !== count) {
                           updateDoc.mutate({ pageCount: count });

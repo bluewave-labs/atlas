@@ -84,6 +84,61 @@
   color: var(--color-text-primary);
 }
 
+.sign-field-toolbar-btn[draggable="true"] {
+  cursor: grab;
+}
+
+.sign-field-toolbar-btn[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+/* Page thumbnails sidebar */
+.sign-page-thumbnails {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 6px;
+  width: 72px;
+  flex-shrink: 0;
+  background: var(--color-bg-secondary);
+  border-right: 1px solid var(--color-border-primary);
+  overflow-y: auto;
+}
+
+.sign-page-thumbnail {
+  position: relative;
+  display: block;
+  width: 100%;
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 0;
+  background: var(--color-bg-primary);
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.sign-page-thumbnail:hover {
+  border-color: var(--color-border-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.sign-page-thumbnail--active {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.3);
+}
+
+.sign-page-thumbnail-label {
+  display: block;
+  text-align: center;
+  font-size: 9px;
+  font-family: var(--font-family);
+  color: var(--color-text-tertiary);
+  padding: 2px 0;
+  background: var(--color-bg-secondary);
+}
+
 /* Right sidebar panel */
 .sign-right-sidebar {
   width: 240px;
