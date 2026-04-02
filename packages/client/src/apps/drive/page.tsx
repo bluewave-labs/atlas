@@ -42,6 +42,7 @@ import { Chip } from '../../components/ui/chip';
 import { EmojiPicker } from '../../components/shared/emoji-picker';
 import { PresenceAvatars } from '../../components/shared/presence-avatars';
 import { VisibilityToggle } from '../../components/shared/visibility-toggle';
+import { MentionInput } from '../../components/shared/mention-input';
 import { getFileTypeIcon, formatBytes, formatRelativeDate, isImageFile } from '../../lib/drive-utils';
 import { ROUTES } from '../../config/routes';
 import { useDriveSettingsStore, useDriveSettingsSync } from './settings-store';
@@ -2517,21 +2518,19 @@ export function DrivePage() {
                 <div style={{ marginTop: 'var(--spacing-xs)' }}>
                   {/* Comment input */}
                   <div style={{ display: 'flex', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-md)', alignItems: 'flex-end' }}>
-                    <div style={{ flex: 1 }}>
-                      <Input
-                        size="sm"
-                        value={commentBody}
-                        onChange={(e) => setCommentBody(e.target.value)}
-                        placeholder={t('drive.comments.placeholder')}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && commentBody.trim() && previewItem) {
-                            createFileComment.mutate({ itemId: previewItem.id, body: commentBody.trim() }, {
-                              onSuccess: () => setCommentBody(''),
-                            });
-                          }
-                        }}
-                      />
-                    </div>
+                    <MentionInput
+                      value={commentBody}
+                      onChange={setCommentBody}
+                      placeholder={t('drive.comments.placeholder')}
+                      onSubmit={() => {
+                        if (commentBody.trim() && previewItem) {
+                          createFileComment.mutate({ itemId: previewItem.id, body: commentBody.trim() }, {
+                            onSuccess: () => setCommentBody(''),
+                          });
+                        }
+                      }}
+                      style={{ fontSize: '13px', padding: '4px var(--spacing-sm)' }}
+                    />
                     <Button
                       variant="primary"
                       size="sm"

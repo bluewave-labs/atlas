@@ -2242,5 +2242,9 @@
   "presence": {
     "viewing": "Şu anda görüntülüyor",
     "andMore": "+{{count}} kişi daha"
+  },
+  "mentions": {
+    "mentionedYou": "{{name}} sizden bahsetti",
+    "typeToMention": "Bahsetmek için @ yazın"
   }
 }

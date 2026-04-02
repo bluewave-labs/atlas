@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import * as documentService from './service';
 import { logger } from '../../utils/logger';
 import { getAppPermission, canAccess } from '../../services/app-permissions.service';
+import { parseMentionsAndNotify } from '../../utils/mentions';
 
 // GET /api/docs
 export async function listDocuments(req: Request, res: Response) {
@@ -341,6 +342,21 @@ export async function createComment(req: Request, res: Response) {
 
     const comment = await documentService.createComment(req.auth!.userId, req.auth!.accountId, req.params.id as string, req.body);
     res.json({ success: true, data: comment });
+
+    // Fire-and-forget: parse @mentions and create notifications
+    const commentContent = req.body?.content || '';
+    if (req.auth?.tenantId && commentContent) {
+      const authorEmail = req.auth.email || '';
+      const authorName = authorEmail.split('@')[0] || 'Someone';
+      parseMentionsAndNotify({
+        body: commentContent,
+        tenantId: req.auth.tenantId,
+        authorUserId: req.auth.userId,
+        authorName,
+        sourceApp: 'docs',
+        sourceRecordId: req.params.id as string,
+      }).catch(() => {});
+    }
   } catch (error) {
     logger.error({ error }, 'Failed to create comment');
     res.status(500).json({ success: false, error: 'Failed to create comment' });

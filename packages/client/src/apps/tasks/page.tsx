@@ -44,6 +44,7 @@ import { Select } from '../../components/ui/select';
 import { ConfirmDialog } from '../../components/ui/confirm-dialog';
 import { FeatureEmptyState } from '../../components/ui/feature-empty-state';
 import { StatusDot } from '../../components/ui/status-dot';
+import { MentionInput } from '../../components/shared/mention-input';
 import '../../styles/tasks.css';
 
 // ─── Navigation sections (Things 3 inspired) ────────────────────────
@@ -899,26 +900,10 @@ function CommentSection({ taskId }: { taskId: string }) {
         gap: 'var(--spacing-sm)',
         marginTop: 'var(--spacing-md)',
       }}>
-        <input
-          style={{
-            flex: 1,
-            fontSize: 'var(--font-size-sm)',
-            fontFamily: 'var(--font-family)',
-            padding: '6px var(--spacing-sm)',
-            border: '1px solid var(--color-border-primary)',
-            borderRadius: 'var(--radius-sm)',
-            background: 'var(--color-bg-tertiary)',
-            color: 'var(--color-text-primary)',
-            outline: 'none',
-          }}
+        <MentionInput
           value={newComment}
-          onChange={e => setNewComment(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSubmit();
-            }
-          }}
+          onChange={setNewComment}
+          onSubmit={handleSubmit}
           placeholder={t('tasks.comments.placeholder')}
         />
         <IconButton

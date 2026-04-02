@@ -3,6 +3,7 @@ import * as driveService from './service';
 import { logger } from '../../utils/logger';
 import { emitAppEvent } from '../../services/event.service';
 import { getAppPermission, canAccess } from '../../services/app-permissions.service';
+import { parseMentionsAndNotify } from '../../utils/mentions';
 import path from 'node:path';
 import { existsSync, createReadStream, readFileSync, statSync } from 'node:fs';
 import archiver from 'archiver';
@@ -1116,6 +1117,20 @@ export async function createComment(req: Request, res: Response) {
 
     const comment = await driveService.createComment(userId, accountId, itemId, body.trim());
     res.json({ success: true, data: comment });
+
+    // Fire-and-forget: parse @mentions and create notifications
+    if (req.auth?.tenantId) {
+      const authorEmail = req.auth.email || '';
+      const authorName = authorEmail.split('@')[0] || 'Someone';
+      parseMentionsAndNotify({
+        body: body.trim(),
+        tenantId: req.auth.tenantId,
+        authorUserId: userId,
+        authorName,
+        sourceApp: 'drive',
+        sourceRecordId: itemId,
+      }).catch(() => {});
+    }
   } catch (error) {
     logger.error({ error }, 'Failed to create comment');
     res.status(500).json({ success: false, error: 'Failed to create comment' });

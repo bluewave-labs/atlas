@@ -2246,5 +2246,9 @@
   "presence": {
     "viewing": "Attualmente in visualizzazione",
     "andMore": "+{{count}} in più"
+  },
+  "mentions": {
+    "mentionedYou": "{{name}} ti ha menzionato",
+    "typeToMention": "Digita @ per menzionare"
   }
 }

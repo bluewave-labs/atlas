@@ -3,6 +3,7 @@ import * as taskService from './service';
 import { logger } from '../../utils/logger';
 import { emitAppEvent } from '../../services/event.service';
 import { getAppPermission, canAccess } from '../../services/app-permissions.service';
+import { parseMentionsAndNotify } from '../../utils/mentions';
 
 // ─── Widget ─────────────────────────────────────────────────────────
 
@@ -611,6 +612,18 @@ export async function createComment(req: Request, res: Response) {
 
     const comment = await taskService.createComment(userId, accountId, taskId, body.trim());
     res.json({ success: true, data: comment });
+
+    // Fire-and-forget: parse @mentions and create notifications
+    if (req.auth?.tenantId) {
+      parseMentionsAndNotify({
+        body: body.trim(),
+        tenantId: req.auth.tenantId,
+        authorUserId: userId,
+        authorName: comment.userName || comment.userEmail || 'Someone',
+        sourceApp: 'tasks',
+        sourceRecordId: taskId,
+      }).catch(() => {});
+    }
   } catch (error) {
     logger.error({ error }, 'Failed to create task comment');
     res.status(500).json({ success: false, error: 'Failed to create task comment' });

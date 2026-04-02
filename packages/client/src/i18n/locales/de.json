@@ -2235,5 +2235,9 @@
   "presence": {
     "viewing": "Wird gerade angesehen",
     "andMore": "+{{count}} weitere"
+  },
+  "mentions": {
+    "mentionedYou": "{{name}} hat Sie erwähnt",
+    "typeToMention": "@ eingeben zum Erwähnen"
   }
 }

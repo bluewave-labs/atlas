@@ -2235,5 +2235,9 @@
   "presence": {
     "viewing": "En cours de consultation",
     "andMore": "+{{count}} de plus"
+  },
+  "mentions": {
+    "mentionedYou": "{{name}} vous a mentionné",
+    "typeToMention": "Tapez @ pour mentionner"
   }
 }

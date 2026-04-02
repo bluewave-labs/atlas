@@ -2252,5 +2252,9 @@
   "presence": {
     "viewing": "Currently viewing",
     "andMore": "+{{count}} more"
+  },
+  "mentions": {
+    "mentionedYou": "{{name}} mentioned you",
+    "typeToMention": "Type @ to mention"
   }
 }
