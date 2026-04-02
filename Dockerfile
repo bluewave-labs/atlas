@@ -33,8 +33,8 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Install dumb-init for proper PID 1 signal handling
-RUN apk add --no-cache dumb-init
+# Install dumb-init for proper PID 1 signal handling + Docker CLI for marketplace
+RUN apk add --no-cache dumb-init docker-cli docker-cli-compose
 
 # Copy root config files for workspace resolution
 COPY package.json package-lock.json ./
