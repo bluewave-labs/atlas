@@ -965,6 +965,11 @@ export async function runMigrations() {
       ALTER TABLE signing_tokens ADD COLUMN IF NOT EXISTS role VARCHAR(50) NOT NULL DEFAULT 'signer';
     `);
 
+    // Add redirect_url column to signature_documents (idempotent)
+    await client.query(`
+      ALTER TABLE signature_documents ADD COLUMN IF NOT EXISTS redirect_url TEXT;
+    `);
+
     // ─── Signature audit log ────────────────────────────────────────
     await client.query(`
       CREATE TABLE IF NOT EXISTS sign_audit_log (

@@ -1066,6 +1066,161 @@ function DateRenderer(params: ICellRendererParams) {
   return <span>{formatDateByPattern(d, fmt)}</span>;
 }
 
+// ─── Linked record cell renderer ────────────────────────────────────
+
+function LinkedRecordRenderer(params: ICellRendererParams) {
+  const linkedRows = params.colDef?.cellRendererParams?.linkedRows as Array<{ _id: string; [key: string]: unknown }> | undefined;
+  const linkedColumns = params.colDef?.cellRendererParams?.linkedColumns as Array<{ id: string; name: string }> | undefined;
+  const value = params.value;
+  if (!value || !Array.isArray(value) || value.length === 0) return null;
+  const firstCol = linkedColumns?.[0];
+  return (
+    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center', padding: '2px 0' }}>
+      {value.map((rowId: string) => {
+        const row = linkedRows?.find((r) => r._id === rowId);
+        const label = row && firstCol ? String(row[firstCol.id] ?? '') : rowId.slice(0, 8);
+        return (
+          <span
+            key={rowId}
+            style={{
+              display: 'inline-block',
+              padding: '1px 8px',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--color-bg-tertiary)',
+              border: '1px solid var(--color-border-secondary)',
+              fontSize: 'var(--font-size-xs)',
+              color: 'var(--color-text-primary)',
+              maxWidth: 120,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {label || rowId.slice(0, 8)}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Linked record cell editor ──────────────────────────────────────
+
+function LinkedRecordEditor(props: {
+  value: string[];
+  onValueChange: (val: string[]) => void;
+  stopEditing: () => void;
+  colDef: { cellRendererParams?: { linkedRows?: Array<{ _id: string; [key: string]: unknown }>; linkedColumns?: Array<{ id: string; name: string }> } };
+}) {
+  const { value: initialValue, onValueChange, stopEditing, colDef } = props;
+  const linkedRows = colDef?.cellRendererParams?.linkedRows ?? [];
+  const linkedColumns = colDef?.cellRendererParams?.linkedColumns ?? [];
+  const firstCol = linkedColumns[0];
+  const [selected, setSelected] = useState<string[]>(initialValue ?? []);
+  const [search, setSearch] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        onValueChange(selected);
+        stopEditing();
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [selected, onValueChange, stopEditing]);
+
+  const filtered = linkedRows.filter((row) => {
+    if (!search.trim()) return true;
+    const label = firstCol ? String(row[firstCol.id] ?? '') : row._id;
+    return label.toLowerCase().includes(search.toLowerCase());
+  });
+
+  const toggle = (rowId: string) => {
+    const next = selected.includes(rowId)
+      ? selected.filter((id) => id !== rowId)
+      : [...selected, rowId];
+    setSelected(next);
+    onValueChange(next);
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        position: 'absolute',
+        zIndex: 100,
+        background: 'var(--color-bg-elevated)',
+        border: '1px solid var(--color-border-primary)',
+        borderRadius: 'var(--radius-md)',
+        boxShadow: 'var(--shadow-md)',
+        width: 240,
+        maxHeight: 260,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <input
+        autoFocus
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search..."
+        style={{
+          padding: '6px 8px',
+          border: 'none',
+          borderBottom: '1px solid var(--color-border-secondary)',
+          outline: 'none',
+          fontSize: 'var(--font-size-sm)',
+          fontFamily: 'var(--font-family)',
+          background: 'transparent',
+          color: 'var(--color-text-primary)',
+        }}
+      />
+      <div style={{ overflowY: 'auto', maxHeight: 220, padding: 4 }}>
+        {filtered.map((row) => {
+          const label = firstCol ? String(row[firstCol.id] ?? '') : row._id.slice(0, 8);
+          const isSelected = selected.includes(row._id);
+          return (
+            <button
+              key={row._id}
+              onClick={() => toggle(row._id)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                width: '100%',
+                padding: '4px 8px',
+                border: 'none',
+                borderRadius: 'var(--radius-sm)',
+                background: isSelected ? 'var(--color-surface-selected)' : 'transparent',
+                cursor: 'pointer',
+                fontSize: 'var(--font-size-sm)',
+                fontFamily: 'var(--font-family)',
+                color: 'var(--color-text-primary)',
+                textAlign: 'left',
+              }}
+            >
+              <span style={{ width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {isSelected ? <Check size={14} style={{ color: 'var(--color-accent-primary)' }} /> : null}
+              </span>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {label || row._id.slice(0, 8)}
+              </span>
+            </button>
+          );
+        })}
+        {filtered.length === 0 && (
+          <div style={{ padding: '8px', color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)', textAlign: 'center' }}>
+            No rows found
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Row number header (select-all checkbox) ───────────────────────
 
 function RowNumberHeader(props: { api: { selectAll: () => void; deselectAll: () => void; getSelectedRows: () => unknown[] } }) {
@@ -1114,6 +1269,7 @@ function buildColDefs(
   frozenColumnCount?: number,
   onHeaderClicked?: (colId: string) => void,
   settings?: BuildColDefsSettings,
+  linkedTableData?: Map<string, { rows: Array<{ _id: string; [key: string]: unknown }>; columns: Array<{ id: string; name: string }> }>,
 ): ColDef[] {
   return columns.map((col, idx) => {
     const TypeIcon = settings?.showFieldTypeIcons !== false ? FIELD_TYPE_ICONS[col.type] : undefined;
@@ -1237,6 +1393,18 @@ function buildColDefs(
         base.cellEditorPopup = true;
         base.cellEditorParams = { maxLength: 5000, rows: 6, cols: 50 };
         break;
+      case 'linkedRecord': {
+        const linked = col.linkedTableId ? linkedTableData?.get(col.linkedTableId) : undefined;
+        base.cellRenderer = LinkedRecordRenderer;
+        base.cellRendererParams = {
+          linkedRows: linked?.rows ?? [],
+          linkedColumns: linked?.columns ?? [],
+        };
+        base.cellEditor = LinkedRecordEditor;
+        base.cellEditorPopup = true;
+        base.editable = true;
+        break;
+      }
     }
 
     return base;
@@ -1349,14 +1517,17 @@ function KanbanColumn({
 function AddColumnPopover({
   onAdd,
   onClose,
+  tables,
 }: {
-  onAdd: (name: string, type: TableFieldType, options?: string[]) => void;
+  onAdd: (name: string, type: TableFieldType, options?: string[], linkedTableId?: string) => void;
   onClose: () => void;
+  tables?: Array<{ id: string; title: string }>;
 }) {
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [type, setType] = useState<TableFieldType>('text');
   const [options, setOptions] = useState('');
+  const [linkedTableId, setLinkedTableId] = useState('');
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -1388,15 +1559,17 @@ function AddColumnPopover({
   }, [showTypeDropdown]);
 
   const needsOptions = type === 'singleSelect' || type === 'multiSelect';
+  const needsLinkedTable = type === 'linkedRecord';
   const selectedFieldType = FIELD_TYPES.find((ft) => ft.value === type);
   const TypeIcon = FIELD_TYPE_ICONS[type];
 
   const handleSubmit = () => {
     if (!name.trim()) return;
+    if (needsLinkedTable && !linkedTableId) return;
     const opts = needsOptions
       ? options.split(',').map((o) => o.trim()).filter(Boolean)
       : undefined;
-    onAdd(name.trim(), type, opts);
+    onAdd(name.trim(), type, opts, needsLinkedTable ? linkedTableId : undefined);
     onClose();
   };
 
@@ -1452,6 +1625,30 @@ function AddColumnPopover({
           />
         </div>
       )}
+      {needsLinkedTable && (
+        <div>
+          <label>{t('tables.fields.selectTable')}</label>
+          <select
+            value={linkedTableId}
+            onChange={(e) => setLinkedTableId(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '6px 8px',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--color-border-primary)',
+              background: 'var(--color-bg-tertiary)',
+              color: 'var(--color-text-primary)',
+              fontSize: 'var(--font-size-sm)',
+              fontFamily: 'var(--font-family)',
+            }}
+          >
+            <option value="">{t('tables.fields.selectTable')}</option>
+            {(tables ?? []).map((tbl) => (
+              <option key={tbl.id} value={tbl.id}>{tbl.title}</option>
+            ))}
+          </select>
+        </div>
+      )}
       <div className="tables-add-col-actions">
         <Button variant="secondary" size="sm" onClick={onClose}>{t('tables.cancel')}</Button>
         <Button variant="primary" size="sm" onClick={handleSubmit}>{t('tables.addColumn')}</Button>
@@ -1503,6 +1700,44 @@ export function TablesPage() {
   const [localRows, setLocalRows] = useState<TableRow[]>([]);
   const [localViewConfig, setLocalViewConfig] = useState<TableViewConfig>({ activeView: 'grid' });
   const [localTitle, setLocalTitle] = useState('');
+
+  // Linked record: collect all unique linkedTableIds from columns
+  const linkedTableIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const col of localColumns) {
+      if (col.type === 'linkedRecord' && col.linkedTableId) {
+        ids.add(col.linkedTableId);
+      }
+    }
+    return Array.from(ids);
+  }, [localColumns]);
+
+  // Fetch each linked table's full data for cell renderer/editor
+  const [linkedTablesMap, setLinkedTablesMap] = useState<Map<string, { rows: Array<{ _id: string; [key: string]: unknown }>; columns: Array<{ id: string; name: string }> }>>(new Map());
+
+  useEffect(() => {
+    if (linkedTableIds.length === 0) return;
+    let cancelled = false;
+    const fetchLinked = async () => {
+      const newMap = new Map(linkedTablesMap);
+      for (const tableId of linkedTableIds) {
+        if (newMap.has(tableId)) continue;
+        try {
+          const { data: resp } = await api.get(`/tables/${tableId}`);
+          const tbl = resp.data;
+          newMap.set(tableId, {
+            rows: tbl.rows ?? [],
+            columns: (tbl.columns ?? []).map((c: any) => ({ id: c.id, name: c.name })),
+          });
+        } catch {
+          // ignore
+        }
+      }
+      if (!cancelled) setLinkedTablesMap(newMap);
+    };
+    fetchLinked();
+    return () => { cancelled = true; };
+  }, [linkedTableIds.join(',')]);
 
   // Search state
   const [showSearch, setShowSearch] = useState(false);
@@ -2139,7 +2374,7 @@ export function TablesPage() {
   );
 
   const handleAddColumn = useCallback(
-    (name: string, type: TableFieldType, options?: string[]) => {
+    (name: string, type: TableFieldType, options?: string[], linkedTableId?: string) => {
       pushUndoState();
       const newCol: TableColumn = {
         id: crypto.randomUUID(),
@@ -2147,6 +2382,7 @@ export function TablesPage() {
         type,
         width: 180,
         options: options?.length ? options : undefined,
+        linkedTableId: linkedTableId || undefined,
       };
       const updated = [...localColumns, newCol];
       setLocalColumns(updated);
@@ -2992,7 +3228,7 @@ export function TablesPage() {
       currencySymbol: tablesSettings.currencySymbol,
       showFieldTypeIcons: tablesSettings.showFieldTypeIcons,
     };
-    const baseDefs = buildColDefs(localColumns, t, handleColumnMenuOpen, hiddenColumnsSet, localViewConfig.frozenColumnCount, handleRangeHeaderClicked, colSettings);
+    const baseDefs = buildColDefs(localColumns, t, handleColumnMenuOpen, hiddenColumnsSet, localViewConfig.frozenColumnCount, handleRangeHeaderClicked, colSettings, linkedTablesMap);
     // Add formula valueGetter to each data column
     const formulaDefs: ColDef[] = baseDefs.map((def) => {
       if (!def.field) return def;
@@ -3432,7 +3668,7 @@ export function TablesPage() {
                 </Button>
                 {showAddColumn && (
                   <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 4, zIndex: 100 }}>
-                    <AddColumnPopover onAdd={handleAddColumn} onClose={() => setShowAddColumn(false)} />
+                    <AddColumnPopover onAdd={handleAddColumn} onClose={() => setShowAddColumn(false)} tables={allTables.map((t) => ({ id: t.id, title: t.title }))} />
                   </div>
                 )}
               </div>

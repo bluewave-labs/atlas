@@ -61,7 +61,7 @@ export async function createDocument(req: Request, res: Response) {
 
     const userId = req.auth!.userId;
     const accountId = req.auth!.accountId;
-    const { title, fileName, storagePath, pageCount, status, expiresAt, tags } = req.body;
+    const { title, fileName, storagePath, pageCount, status, expiresAt, tags, redirectUrl } = req.body;
 
     if (!title || !fileName || !storagePath) {
       res.status(400).json({ success: false, error: 'title, fileName, and storagePath are required' });
@@ -76,6 +76,7 @@ export async function createDocument(req: Request, res: Response) {
       status,
       expiresAt,
       tags,
+      redirectUrl,
     });
     res.json({ success: true, data: doc });
   } catch (error) {
@@ -156,7 +157,7 @@ export async function updateDocument(req: Request, res: Response) {
 
     const userId = req.auth!.userId;
     const documentId = req.params.id as string;
-    const { title, status, expiresAt, tags, pageCount } = req.body;
+    const { title, status, expiresAt, tags, pageCount, redirectUrl } = req.body;
 
     const doc = await signService.updateDocument(userId, documentId, {
       title,
@@ -164,6 +165,7 @@ export async function updateDocument(req: Request, res: Response) {
       expiresAt,
       tags,
       pageCount,
+      redirectUrl,
     });
 
     if (!doc) {
@@ -457,7 +459,7 @@ export async function createSigningToken(req: Request, res: Response) {
     }
 
     const documentId = req.params.id as string;
-    const { email, name, expiresInDays, signingOrder, role } = req.body;
+    const { email, name, expiresInDays, signingOrder, role, customSubject, customMessage } = req.body;
 
     if (!email) {
       res.status(400).json({ success: false, error: 'email is required' });
@@ -474,6 +476,8 @@ export async function createSigningToken(req: Request, res: Response) {
       expiresInDays || 30,
       typeof signingOrder === 'number' ? signingOrder : 0,
       tokenRole,
+      customSubject || undefined,
+      customMessage || undefined,
     );
 
     if (req.auth!.tenantId) {
@@ -557,6 +561,7 @@ export async function getByToken(req: Request, res: Response) {
           fileName: doc.fileName,
           pageCount: doc.pageCount,
           status: doc.status,
+          redirectUrl: doc.redirectUrl ?? null,
         },
         fields,
         waitingForPrevious: result.waitingForPrevious,

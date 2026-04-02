@@ -931,6 +931,7 @@ export const signatureDocuments = pgTable('signature_documents', {
   expiresAt: timestamp('expires_at', { withTimezone: true }),
   completedAt: timestamp('completed_at', { withTimezone: true }),
   tags: jsonb('tags').$type<string[]>().notNull().default([]),
+  redirectUrl: text('redirect_url'),
   isArchived: boolean('is_archived').notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

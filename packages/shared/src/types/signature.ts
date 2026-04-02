@@ -17,6 +17,7 @@ export interface SignatureDocument {
   expiresAt: string | null;
   completedAt: string | null;
   tags: string[];
+  redirectUrl: string | null;
   isArchived: boolean;
   sortOrder: number;
   createdAt: string;

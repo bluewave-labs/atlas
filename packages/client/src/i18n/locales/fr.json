@@ -1619,7 +1619,9 @@
       "manageSigners": "Gérer les signataires",
       "addTag": "Ajouter un tag",
       "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible.",
-      "voidConfirm": "Cela annulera tous les liens de signature en cours. Les signataires ne pourront plus signer ce document."
+      "voidConfirm": "Cela annulera tous les liens de signature en cours. Les signataires ne pourront plus signer ce document.",
+      "redirectUrl": "URL de redirection",
+      "redirectUrlPlaceholder": "URL de redirection après la signature (facultatif)"
     },
     "fields": {
       "signature": "Signature",
@@ -1660,7 +1662,11 @@
       "signInOrder": "Signer dans l'ordre",
       "signInOrderDesc": "Les signataires doivent signer un par un dans l'ordre indiqué",
       "signerExpiry": "Expiration",
-      "defaultExpiry": "Par défaut"
+      "defaultExpiry": "Par défaut",
+      "emailSubject": "Objet de l'e-mail",
+      "emailMessage": "Message de l'e-mail",
+      "emailSubjectPlaceholder": "Objet personnalisé (facultatif)",
+      "emailMessagePlaceholder": "Message personnalisé pour l'invitation de signature (facultatif)"
     },
     "reminders": {
       "lastSent": "Dernier rappel envoyé le {{date}}",

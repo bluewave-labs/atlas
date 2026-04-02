@@ -143,6 +143,7 @@ export async function createDocument(
     status?: string;
     expiresAt?: string | null;
     tags?: string[];
+    redirectUrl?: string | null;
   },
 ) {
   const now = new Date();
@@ -165,6 +166,7 @@ export async function createDocument(
       status: data.status ?? 'draft',
       expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
       tags: data.tags ?? [],
+      redirectUrl: data.redirectUrl ?? null,
       sortOrder,
       createdAt: now,
       updatedAt: now,
@@ -195,6 +197,7 @@ export async function updateDocument(
     expiresAt?: string | null;
     tags?: string[];
     pageCount?: number;
+    redirectUrl?: string | null;
   },
 ) {
   const now = new Date();
@@ -205,6 +208,7 @@ export async function updateDocument(
   if (data.expiresAt !== undefined) updates.expiresAt = data.expiresAt ? new Date(data.expiresAt) : null;
   if (data.tags !== undefined) updates.tags = data.tags;
   if (data.pageCount !== undefined) updates.pageCount = data.pageCount;
+  if (data.redirectUrl !== undefined) updates.redirectUrl = data.redirectUrl;
 
   await db
     .update(signatureDocuments)
@@ -346,6 +350,8 @@ export async function createSigningToken(
   expiresInDays = 30,
   signingOrder = 0,
   role: 'signer' | 'viewer' | 'approver' | 'cc' = 'signer',
+  customSubject?: string,
+  customMessage?: string,
 ) {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + expiresInDays * 24 * 60 * 60 * 1000);
@@ -424,6 +430,8 @@ export async function createSigningToken(
         senderName,
         signingLink: `${clientUrl}/sign/${token}`,
         expiresAt,
+        customSubject,
+        customMessage,
       }).catch(() => {});
     }
   }

@@ -153,6 +153,20 @@ export function useAutoSaveTable(delay = 2000) {
   return { save, flush, isSaving: updateMutation.isPending, isSuccess: updateMutation.isSuccess };
 }
 
+// ─── Linked Records ─────────────────────────────────────────────────
+
+export function useTableForLinking(tableId: string | undefined) {
+  return useQuery({
+    queryKey: [...queryKeys.tables.detail(tableId!), 'linking'],
+    queryFn: async () => {
+      const { data } = await api.get(`/tables/${tableId}`);
+      return data.data as Spreadsheet;
+    },
+    enabled: !!tableId,
+    staleTime: 30_000,
+  });
+}
+
 // ─── Row Comments ───────────────────────────────────────────────────
 
 interface RowComment {

@@ -34,6 +34,7 @@ import {
   ListOrdered,
   User,
   Mail,
+  ExternalLink,
 } from 'lucide-react';
 import { ColumnHeader } from '../../components/ui/column-header';
 import { AppSidebar, SidebarSection, SidebarItem } from '../../components/layout/app-sidebar';
@@ -42,6 +43,7 @@ import { ListToolbar } from '../../components/ui/list-toolbar';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
+import { Textarea } from '../../components/ui/textarea';
 import { Modal } from '../../components/ui/modal';
 import { StatusDot } from '../../components/ui/status-dot';
 import { ConfirmDialog } from '../../components/ui/confirm-dialog';
@@ -157,6 +159,9 @@ export function SignPage() {
   const [generatedLinks, setGeneratedLinks] = useState<{ email: string; link: string }[]>([]);
   const [activeSigner, setActiveSigner] = useState<string | undefined>();
   const [signersModalOpen, setSignersModalOpen] = useState(false);
+  // Email customization
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
   // Sequential signing
   const [signInOrder, setSignInOrder] = useState(false);
   // Expiration date
@@ -441,6 +446,8 @@ export function SignPage() {
           expiresInDays,
           signingOrder: signInOrder ? idx : 0,
           role: signer.role || 'signer',
+          customSubject: emailSubject.trim() || undefined,
+          customMessage: emailMessage.trim() || undefined,
         });
         links.push({
           email: signer.email.trim(),
@@ -460,7 +467,7 @@ export function SignPage() {
     } catch {
       // Handled by RQ
     }
-  }, [signers, signInOrder, createSigningLink, updateDoc]);
+  }, [signers, signInOrder, emailSubject, emailMessage, createSigningLink, updateDoc]);
 
   const handleCopyLink = useCallback(() => {
     if (!generatedLink) return;
@@ -476,6 +483,8 @@ export function SignPage() {
       setGeneratedLinks([]);
       setLinkCopied(false);
       setExpiryDate(getDefaultExpiry());
+      setEmailSubject('');
+      setEmailMessage('');
     }
   }, []);
 
@@ -995,6 +1004,18 @@ export function SignPage() {
               )}
             </div>
 
+            {/* Redirect URL setting */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 16px', borderBottom: '1px solid var(--color-border-secondary)' }}>
+              <ExternalLink size={13} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
+              <Input
+                placeholder={t('sign.editor.redirectUrlPlaceholder')}
+                value={selectedDoc.redirectUrl ?? ''}
+                onChange={(e) => updateDoc.mutate({ redirectUrl: e.target.value || null })}
+                size="sm"
+                style={{ flex: 1 }}
+              />
+            </div>
+
             <SmartButtonBar appId="sign" recordId={selectedDoc.id} />
 
             {/* Field toolbar (vertical) + Page thumbnails + PDF viewer + Right sidebar */}
@@ -1345,6 +1366,20 @@ export function SignPage() {
         <Modal.Body>
           {!generatedLink ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <Input
+                label={t('sign.send.emailSubject')}
+                placeholder={t('sign.send.emailSubjectPlaceholder')}
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                size="md"
+              />
+              <Textarea
+                label={t('sign.send.emailMessage')}
+                placeholder={t('sign.send.emailMessagePlaceholder')}
+                value={emailMessage}
+                onChange={(e) => setEmailMessage(e.target.value)}
+                rows={3}
+              />
               {signers.map((signer, idx) => (
                 <div
                   key={idx}

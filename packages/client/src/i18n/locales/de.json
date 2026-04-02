@@ -1619,7 +1619,9 @@
       "manageSigners": "Unterzeichner verwalten",
       "addTag": "Tag hinzufügen",
       "deleteConfirm": "Sind Sie sicher, dass Sie dieses Dokument löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
-      "voidConfirm": "Damit werden alle ausstehenden Unterschriftslinks ungültig. Unterzeichner können dieses Dokument nicht mehr unterschreiben."
+      "voidConfirm": "Damit werden alle ausstehenden Unterschriftslinks ungültig. Unterzeichner können dieses Dokument nicht mehr unterschreiben.",
+      "redirectUrl": "Weiterleitungs-URL",
+      "redirectUrlPlaceholder": "URL zur Weiterleitung nach der Unterzeichnung (optional)"
     },
     "fields": {
       "signature": "Unterschrift",
@@ -1660,7 +1662,11 @@
       "signInOrder": "In Reihenfolge signieren",
       "signInOrderDesc": "Unterzeichner müssen einzeln in der aufgelisteten Reihenfolge signieren",
       "signerExpiry": "Ablauf",
-      "defaultExpiry": "Standard"
+      "defaultExpiry": "Standard",
+      "emailSubject": "E-Mail-Betreff",
+      "emailMessage": "E-Mail-Nachricht",
+      "emailSubjectPlaceholder": "Benutzerdefinierte Betreffzeile (optional)",
+      "emailMessagePlaceholder": "Benutzerdefinierte Nachricht für die Signatureinladung (optional)"
     },
     "reminders": {
       "lastSent": "Letzte Erinnerung gesendet: {{date}}",

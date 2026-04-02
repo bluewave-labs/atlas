@@ -82,7 +82,7 @@ export function useUpdateSignDoc(id: string | undefined) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: Partial<Pick<SignatureDocument, 'title' | 'status' | 'tags' | 'pageCount'>>) => {
+    mutationFn: async (input: Partial<Pick<SignatureDocument, 'title' | 'status' | 'tags' | 'pageCount'>> & { redirectUrl?: string | null }) => {
       const { data } = await api.put(`/sign/${id}`, input);
       return data.data as SignatureDocument;
     },
@@ -151,7 +151,7 @@ export function useCreateSigningLink(docId: string | undefined) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: { email: string; name?: string; expiresInDays?: number; signingOrder?: number; role?: string }) => {
+    mutationFn: async (input: { email: string; name?: string; expiresInDays?: number; signingOrder?: number; role?: string; customSubject?: string; customMessage?: string }) => {
       const { data } = await api.post(`/sign/${docId}/tokens`, input);
       return data.data as SigningToken;
     },
@@ -295,6 +295,7 @@ export function usePublicSignDoc(token: string | undefined) {
           fileName: string;
           pageCount: number;
           status: string;
+          redirectUrl: string | null;
         };
         fields: SignatureField[];
         waitingForPrevious: boolean;

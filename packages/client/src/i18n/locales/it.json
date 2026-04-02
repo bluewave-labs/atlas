@@ -1660,7 +1660,11 @@
       "signInOrder": "Firma in ordine",
       "signInOrderDesc": "I firmatari devono firmare uno alla volta nell'ordine indicato",
       "signerExpiry": "Scadenza",
-      "defaultExpiry": "Predefinito"
+      "defaultExpiry": "Predefinito",
+      "emailSubject": "Oggetto e-mail",
+      "emailMessage": "Messaggio e-mail",
+      "emailSubjectPlaceholder": "Oggetto personalizzato (facoltativo)",
+      "emailMessagePlaceholder": "Messaggio personalizzato per l'invito alla firma (facoltativo)"
     },
     "reminders": {
       "lastSent": "Ultimo promemoria inviato il {{date}}",

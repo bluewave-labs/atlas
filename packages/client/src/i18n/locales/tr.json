@@ -491,6 +491,10 @@
       "h2Desc": "Alt sayfalar oluşturarak yapılandırılmış bir bilgi tabanı oluşturun",
       "h3Title": "Şablonlar",
       "h3Desc": "Toplantı notları, özellikler ve daha fazlası için şablonlardan başlayın"
+    },
+    "slash": {
+      "drawing": "Çizim",
+      "drawingDesc": "Excalidraw çizimi yerleştir"
     }
   },
   "draw": {
@@ -558,6 +562,8 @@
     "blankDrawing": "Boş çizim",
     "saving": "Kaydediliyor...",
     "saved": "Kaydedildi",
+    "present": "Sunum",
+    "exitPresent": "Sunumdan çık",
     "exportPdf": "PDF olarak dışa aktar",
     "insertImage": "Resim ekle",
     "empty": {
@@ -840,6 +846,10 @@
       "h2Desc": "Izgara, kanban, takvim ve galeri arasında geçiş yapın",
       "h3Title": "Sıralama ve filtreleme",
       "h3Desc": "Güçlü filtreleme seçenekleriyle verilerinizi düzenleyin"
+    },
+    "fields": {
+      "linkedRecord": "Bağlı kayıt",
+      "selectTable": "Tablo seçin"
     }
   },
   "crm": {
@@ -1619,7 +1629,9 @@
       "manageSigners": "İmzacıları yönet",
       "addTag": "Etiket ekle",
       "deleteConfirm": "Bu belgeyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
-      "voidConfirm": "Bu işlem tüm bekleyen imza bağlantılarını iptal edecektir. İmzacılar artık bu belgeyi imzalayamaz."
+      "voidConfirm": "Bu işlem tüm bekleyen imza bağlantılarını iptal edecektir. İmzacılar artık bu belgeyi imzalayamaz.",
+      "redirectUrl": "Yönlendirme URL'si",
+      "redirectUrlPlaceholder": "İmzalama sonrası yönlendirilecek URL (isteğe bağlı)"
     },
     "fields": {
       "signature": "İmza",
@@ -1660,7 +1672,11 @@
       "signInOrder": "Sıralı imzalama",
       "signInOrderDesc": "İmzacılar listelenen sırayla tek tek imzalamalıdır",
       "signerExpiry": "Son tarih",
-      "defaultExpiry": "Varsayılan"
+      "defaultExpiry": "Varsayılan",
+      "emailSubject": "E-posta konusu",
+      "emailMessage": "E-posta mesajı",
+      "emailSubjectPlaceholder": "Özel konu satırı (isteğe bağlı)",
+      "emailMessagePlaceholder": "İmza davetiyesine eklenecek özel mesaj (isteğe bağlı)"
     },
     "reminders": {
       "lastSent": "Son hatırlatma gönderildi: {{date}}",
@@ -1723,6 +1739,7 @@
       "waitingForPrevious": "Önceki imzacı bekleniyor",
       "waitingForPreviousDesc": "Bu belge belirli bir sırayla imza gerektirmektedir. İmzalama sırası size geldiğinde bir e-posta alacaksınız.",
       "viewingAs": "{{name}} olarak görüntüleniyor",
+      "redirecting": "Kısa süre içinde yönlendiriliyorsunuz...",
       "startApproving": "Onaylamaya başla",
       "approveThisField": "Bu alanı onayla",
       "approve": "Onayla"

@@ -299,6 +299,16 @@ export function SignPublicPage() {
     );
   }
 
+  // Redirect after signing if redirectUrl is set
+  useEffect(() => {
+    if (completed && data?.document?.redirectUrl) {
+      const timer = setTimeout(() => {
+        window.location.href = data.document.redirectUrl!;
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [completed, data?.document?.redirectUrl]);
+
   if (completed) {
     return (
       <div className="sign-public-container">
@@ -311,6 +321,11 @@ export function SignPublicPage() {
             <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>
               {t('sign.public.signedSuccessDesc')}
             </p>
+            {data?.document?.redirectUrl && (
+              <p style={{ margin: '8px 0 0', fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
+                {t('sign.public.redirecting')}
+              </p>
+            )}
             <Button
               variant="secondary"
               size="sm"

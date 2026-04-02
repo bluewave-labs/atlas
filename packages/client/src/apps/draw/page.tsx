@@ -24,6 +24,8 @@ import {
   Loader2,
   Check,
   ImagePlus,
+  Maximize,
+  Minimize,
 } from 'lucide-react';
 import { AppSidebar } from '../../components/layout/app-sidebar';
 import { Button } from '../../components/ui/button';
@@ -1125,6 +1127,7 @@ function EditableTitle({
   excalidrawApi,
   presenceSlot,
   visibilitySlot,
+  presentSlot,
 }: {
   title: string;
   onChange: (title: string) => void;
@@ -1133,6 +1136,7 @@ function EditableTitle({
   excalidrawApi: ExcalidrawImperativeAPI | null;
   presenceSlot?: React.ReactNode;
   visibilitySlot?: React.ReactNode;
+  presentSlot?: React.ReactNode;
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
@@ -1246,6 +1250,7 @@ function EditableTitle({
       {presenceSlot}
       <InsertImageButton excalidrawApi={excalidrawApi} />
       <ExportMenu excalidrawApi={excalidrawApi} />
+      {presentSlot}
     </div>
   );
 }
@@ -1361,7 +1366,10 @@ function ExcalidrawCanvas({
   onTitleChange: (title: string) => void;
   visibilitySlot?: React.ReactNode;
 }) {
+  const { t } = useTranslation();
   const [excalidrawApi, setExcalidrawApi] = useState<ExcalidrawImperativeAPI | null>(null);
+  const [isPresenting, setIsPresenting] = useState(false);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
   const theme = useSettingsStore((s) => s.theme);
   const { gridMode, snapToGrid, defaultBackground } = useDrawSettingsStore();
   const isInitialLoadRef = useRef(true);
@@ -1418,6 +1426,41 @@ function ExcalidrawCanvas({
     };
   }, []);
 
+  // Presentation mode: listen for fullscreen changes
+  useEffect(() => {
+    const handler = () => {
+      if (!document.fullscreenElement) {
+        setIsPresenting(false);
+      }
+    };
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
+  const handlePresent = useCallback(async () => {
+    try {
+      if (canvasContainerRef.current) {
+        await canvasContainerRef.current.requestFullscreen();
+      } else {
+        await document.documentElement.requestFullscreen();
+      }
+      setIsPresenting(true);
+    } catch {
+      // Fullscreen not supported or denied
+    }
+  }, []);
+
+  const handleExitPresent = useCallback(async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+    } catch {
+      // ignore
+    }
+    setIsPresenting(false);
+  }, []);
+
   const handleChange = useCallback(
     (elements: readonly unknown[], appState: Record<string, unknown>, files: unknown) => {
       // Skip the initial load callback from Excalidraw
@@ -1444,17 +1487,31 @@ function ExcalidrawCanvas({
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-      <EditableTitle
-        title={drawing.title}
-        onChange={onTitleChange}
-        isSaving={isSaving}
-        showSaved={showSaved}
-        excalidrawApi={excalidrawApi}
-        presenceSlot={<PresenceAvatars appId="draw" recordId={drawing.id} />}
-        visibilitySlot={visibilitySlot}
-      />
-      <SmartButtonBar appId="draw" recordId={drawing.id} />
+    <div ref={canvasContainerRef} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', background: isPresenting ? '#fff' : undefined }}>
+      {!isPresenting && (
+        <>
+          <EditableTitle
+            title={drawing.title}
+            onChange={onTitleChange}
+            isSaving={isSaving}
+            showSaved={showSaved}
+            excalidrawApi={excalidrawApi}
+            presenceSlot={<PresenceAvatars appId="draw" recordId={drawing.id} />}
+            visibilitySlot={visibilitySlot}
+            presentSlot={
+              <IconButton
+                icon={<Maximize size={14} />}
+                label={t('draw.present')}
+                tooltip
+                tooltipSide="bottom"
+                size={26}
+                onClick={handlePresent}
+              />
+            }
+          />
+          <SmartButtonBar appId="draw" recordId={drawing.id} />
+        </>
+      )}
       <div style={{ flex: 1, position: 'relative' }}>
         <Excalidraw
           excalidrawAPI={(api: ExcalidrawImperativeAPI) => {
@@ -1469,6 +1526,36 @@ function ExcalidrawCanvas({
             },
           }}
         />
+        {/* Exit presentation button */}
+        {isPresenting && (
+          <button
+            onClick={handleExitPresent}
+            style={{
+              position: 'absolute',
+              top: 12,
+              right: 12,
+              zIndex: 999,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 12px',
+              background: 'rgba(0,0,0,0.6)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 'var(--font-size-sm)',
+              fontFamily: 'var(--font-family)',
+              cursor: 'pointer',
+              opacity: 0.7,
+              transition: 'opacity 0.15s ease',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.7'; }}
+          >
+            <Minimize size={14} />
+            {t('draw.exitPresent')}
+          </button>
+        )}
       </div>
     </div>
   );
