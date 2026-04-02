@@ -1,4 +1,4 @@
-import { useCallback, type MouseEvent as ReactMouseEvent } from 'react';
+import { useCallback, useState, useEffect, type MouseEvent as ReactMouseEvent } from 'react';
 import { Rnd } from 'react-rnd';
 import { Trash2, CheckSquare, ChevronDown, PenTool, Type, Calendar, AlignLeft, User, Mail } from 'lucide-react';
 import type { SignatureField, SignatureFieldType } from '@atlasmail/shared';
@@ -331,11 +331,20 @@ function FieldBox({
     );
   }
 
-  // Editable: use react-rnd for drag + resize
+  // Editable: use react-rnd for drag + resize with local state to prevent flicker
+  const [localPos, setLocalPos] = useState({ x: left, y: top });
+  const [localSize, setLocalSize] = useState({ width, height });
+
+  // Sync from server when field data changes (but not during drag/resize)
+  useEffect(() => {
+    setLocalPos({ x: left, y: top });
+    setLocalSize({ width, height });
+  }, [field.x, field.y, field.width, field.height, pageWidth, pageHeight]);
+
   return (
     <Rnd
-      position={{ x: left, y: top }}
-      size={{ width, height }}
+      position={localPos}
+      size={localSize}
       minWidth={minWidth}
       minHeight={minHeight}
       bounds="parent"
@@ -373,6 +382,9 @@ function FieldBox({
           cursor: 'ew-resize',
         },
       }}
+      onDrag={(_e, d) => {
+        setLocalPos({ x: d.x, y: d.y });
+      }}
       onDragStop={(_e, d) => {
         const newX = (d.x / pageWidth) * 100;
         const newY = (d.y / pageHeight) * 100;
@@ -380,12 +392,15 @@ function FieldBox({
         const maxY = 100 - field.height;
         onMove?.(field.id, Math.max(0, Math.min(maxX, newX)), Math.max(0, Math.min(maxY, newY)));
       }}
+      onResize={(_e, _dir, ref, _delta, pos) => {
+        setLocalPos({ x: pos.x, y: pos.y });
+        setLocalSize({ width: parseFloat(ref.style.width), height: parseFloat(ref.style.height) });
+      }}
       onResizeStop={(_e, _dir, ref, _delta, pos) => {
         const newW = (parseFloat(ref.style.width) / pageWidth) * 100;
         const newH = (parseFloat(ref.style.height) / pageHeight) * 100;
         const newX = (pos.x / pageWidth) * 100;
         const newY = (pos.y / pageHeight) * 100;
-        // Commit both position and size
         onMove?.(field.id, Math.max(0, newX), Math.max(0, newY));
         onResize?.(field.id, Math.max(3, newW), Math.max(2, newH));
       }}
