@@ -1064,7 +1064,9 @@
       "socialMedia": "Soziale Medien",
       "event": "Veranstaltung",
       "other": "Sonstiges",
-      "noLeads": "Noch keine Leads"
+      "noLeads": "Noch keine Leads",
+      "editNotes": "Notizen bearbeiten",
+      "saveNotes": "Speichern"
     },
     "notes": {
       "title": "Notizen",

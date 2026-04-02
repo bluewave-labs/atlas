@@ -1064,7 +1064,9 @@
       "socialMedia": "Sosyal medya",
       "event": "Etkinlik",
       "other": "Diğer",
-      "noLeads": "Henüz müşteri adayı yok"
+      "noLeads": "Henüz müşteri adayı yok",
+      "editNotes": "Notları düzenle",
+      "saveNotes": "Kaydet"
     },
     "notes": {
       "title": "Notlar",

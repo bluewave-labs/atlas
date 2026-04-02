@@ -1091,7 +1091,9 @@
       "socialMedia": "Social media",
       "event": "Event",
       "other": "Other",
-      "noLeads": "No leads yet"
+      "noLeads": "No leads yet",
+      "editNotes": "Edit notes",
+      "saveNotes": "Save"
     },
     "notes": {
       "title": "Notes",

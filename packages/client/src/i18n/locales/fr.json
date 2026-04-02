@@ -1064,7 +1064,9 @@
       "socialMedia": "Réseaux sociaux",
       "event": "Événement",
       "other": "Autre",
-      "noLeads": "Aucun prospect pour le moment"
+      "noLeads": "Aucun prospect pour le moment",
+      "editNotes": "Modifier les notes",
+      "saveNotes": "Enregistrer"
     },
     "notes": {
       "title": "Notes",

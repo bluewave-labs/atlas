@@ -1064,7 +1064,9 @@
       "socialMedia": "Social media",
       "event": "Evento",
       "other": "Altro",
-      "noLeads": "Nessun lead ancora"
+      "noLeads": "Nessun lead ancora",
+      "editNotes": "Modifica note",
+      "saveNotes": "Salva"
     },
     "notes": {
       "title": "Note",

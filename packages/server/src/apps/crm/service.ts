@@ -1104,11 +1104,121 @@ export async function getDashboard(userId: string, accountId: string, recordAcce
 // ─── Seed Sample Data ───────────────────────────────────────────────
 
 export async function seedSampleData(userId: string, accountId: string) {
-  // Seed default pipeline stages only
+  // Seed default pipeline stages
   const stages = await seedDefaultStages(accountId);
 
-  logger.info({ userId, accountId }, 'Seeded CRM default stages');
-  return { stages: stages.length };
+  // Idempotency guard — skip sample data if contacts already exist
+  const existingContacts = await db.select({ id: crmContacts.id }).from(crmContacts)
+    .where(and(eq(crmContacts.accountId, accountId), eq(crmContacts.isArchived, false))).limit(1);
+  if (existingContacts.length > 0) {
+    logger.info({ userId, accountId }, 'Seeded CRM default stages (sample data already exists)');
+    return { stages: stages.length };
+  }
+
+  // Build a stage lookup by name
+  const allStages = await db.select().from(crmDealStages)
+    .where(eq(crmDealStages.accountId, accountId))
+    .orderBy(asc(crmDealStages.sequence));
+  const stageByName: Record<string, string> = {};
+  for (const s of allStages) {
+    stageByName[s.name.toLowerCase()] = s.id;
+  }
+
+  // --- Companies ---
+  const acme = await createCompany(userId, accountId, {
+    name: 'Acme Corp', industry: 'Technology', size: '50', domain: 'acmecorp.com',
+  });
+  const globalTech = await createCompany(userId, accountId, {
+    name: 'GlobalTech Solutions', industry: 'Consulting', size: '200', domain: 'globaltech.io',
+  });
+  const brightStar = await createCompany(userId, accountId, {
+    name: 'BrightStar Media', industry: 'Marketing', size: '25', domain: 'brightstarmedia.com',
+  });
+
+  // --- Contacts (2 per company) ---
+  const johnSmith = await createContact(userId, accountId, {
+    name: 'John Smith', email: 'john@acmecorp.com', position: 'CEO', companyId: acme.id,
+  });
+  const sarahJohnson = await createContact(userId, accountId, {
+    name: 'Sarah Johnson', email: 'sarah@acmecorp.com', position: 'CTO', companyId: acme.id,
+  });
+  const michaelChen = await createContact(userId, accountId, {
+    name: 'Michael Chen', email: 'michael@globaltech.io', position: 'VP Sales', companyId: globalTech.id,
+  });
+  const emilyDavis = await createContact(userId, accountId, {
+    name: 'Emily Davis', email: 'emily@globaltech.io', position: 'Marketing Director', companyId: globalTech.id,
+  });
+  const davidWilson = await createContact(userId, accountId, {
+    name: 'David Wilson', email: 'david@brightstarmedia.com', position: 'Founder', companyId: brightStar.id,
+  });
+  const lisaAnderson = await createContact(userId, accountId, {
+    name: 'Lisa Anderson', email: 'lisa@brightstarmedia.com', position: 'Creative Director', companyId: brightStar.id,
+  });
+
+  // --- Deals ---
+  const proposalStageId = stageByName['proposal'] ?? allStages[2]?.id;
+  const qualifiedStageId = stageByName['qualified'] ?? allStages[1]?.id;
+  const negotiationStageId = stageByName['negotiation'] ?? allStages[3]?.id;
+  const wonStageId = stageByName['closed won'] ?? allStages[4]?.id;
+
+  const deal1 = await createDeal(userId, accountId, {
+    title: 'Acme Enterprise License', value: 45000, stageId: proposalStageId,
+    contactId: johnSmith.id, companyId: acme.id, probability: 60,
+  });
+  await createDeal(userId, accountId, {
+    title: 'GlobalTech Consulting Package', value: 120000, stageId: qualifiedStageId,
+    contactId: michaelChen.id, companyId: globalTech.id, probability: 40,
+  });
+  const deal3 = await createDeal(userId, accountId, {
+    title: 'BrightStar Social Campaign', value: 15000, stageId: negotiationStageId,
+    contactId: davidWilson.id, companyId: brightStar.id, probability: 80,
+  });
+  const deal4 = await createDeal(userId, accountId, {
+    title: 'Acme Support Add-on', value: 8000, stageId: wonStageId,
+    contactId: sarahJohnson.id, companyId: acme.id, probability: 100,
+  });
+  // Mark the won deal
+  await markDealWon(userId, accountId, deal4.id, 'all');
+
+  // --- Leads ---
+  await createLead(userId, accountId, {
+    name: 'TechStart Inc', source: 'website', notes: 'Interested in starter plan',
+  });
+  await createLead(userId, accountId, {
+    name: 'Metro Solutions', source: 'referral', notes: 'Called, scheduling demo',
+  });
+  await createLead(userId, accountId, {
+    name: 'CloudNine Labs', source: 'social_media', notes: 'Budget approved, needs proposal',
+  });
+  await createLead(userId, accountId, {
+    name: 'Peak Performance', source: 'website', notes: 'Filled out lead form',
+  });
+  // Update statuses for non-new leads
+  const allLeads = await listLeads(userId, accountId, {});
+  for (const lead of allLeads) {
+    if (lead.name === 'Metro Solutions') {
+      await updateLead(userId, accountId, lead.id, { status: 'contacted' });
+    } else if (lead.name === 'CloudNine Labs') {
+      await updateLead(userId, accountId, lead.id, { status: 'qualified' });
+    }
+  }
+
+  // --- Activities ---
+  await createActivity(userId, accountId, {
+    type: 'call', body: 'Discussed enterprise requirements', contactId: johnSmith.id, dealId: deal1.id,
+  });
+  await createActivity(userId, accountId, {
+    type: 'meeting', body: 'Product demo scheduled', contactId: michaelChen.id,
+  });
+  await createActivity(userId, accountId, {
+    type: 'note', body: 'Waiting for creative brief', dealId: deal3.id,
+  });
+  await createActivity(userId, accountId, {
+    type: 'email', body: 'Sent proposal deck', contactId: lisaAnderson.id,
+  });
+
+  logger.info({ userId, accountId }, 'Seeded CRM sample data (stages, companies, contacts, deals, leads, activities)');
+  return { stages: stages.length, companies: 3, contacts: 6, deals: 4, leads: 4, activities: 4 };
 }
 
 // ─── Seed Sample Leads (standalone) ──────────────────────────────────

@@ -183,6 +183,22 @@ function LeadDetailPanel({
   const { t } = useTranslation();
   const updateLead = useUpdateLead();
   const STATUS_OPTIONS = getStatusOptions(t);
+  const [editingNotes, setEditingNotes] = useState(lead.notes ?? '');
+  const [notesKey, setNotesKey] = useState(lead.id);
+
+  // Reset notes when selected lead changes
+  if (notesKey !== lead.id) {
+    setNotesKey(lead.id);
+    setEditingNotes(lead.notes ?? '');
+  }
+
+  const handleNotesSave = () => {
+    const trimmed = editingNotes.trim();
+    const current = (lead.notes ?? '').trim();
+    if (trimmed !== current) {
+      updateLead.mutate({ id: lead.id, notes: trimmed || null });
+    }
+  };
 
   return (
     <div className="crm-detail-panel">
@@ -222,12 +238,16 @@ function LeadDetailPanel({
           <span className="crm-detail-label">{t('crm.leads.source')}</span>
           <Badge variant={sourceBadgeVariant(lead.source)}>{lead.source.replace('_', ' ')}</Badge>
         </div>
-        {lead.notes && (
-          <div className="crm-detail-field">
-            <span className="crm-detail-label">{t('crm.leads.notes')}</span>
-            <span className="crm-detail-value" style={{ whiteSpace: 'pre-wrap' }}>{lead.notes}</span>
-          </div>
-        )}
+        <div className="crm-detail-field">
+          <span className="crm-detail-label">{t('crm.leads.notes')}</span>
+          <Textarea
+            value={editingNotes}
+            onChange={(e) => setEditingNotes(e.target.value)}
+            onBlur={handleNotesSave}
+            placeholder={t('crm.leads.editNotes')}
+            style={{ minHeight: 80 }}
+          />
+        </div>
         <div className="crm-detail-field">
           <span className="crm-detail-label">Created</span>
           <span className="crm-detail-value">{formatDate(lead.createdAt)}</span>
