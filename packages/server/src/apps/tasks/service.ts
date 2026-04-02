@@ -755,16 +755,16 @@ export async function deleteAttachment(userId: string, attachmentId: string) {
   if (!attachment) return false;
   if (attachment.userId !== userId) return false;
 
-  // Delete file from disk
+  // Delete DB record first, then clean up file (orphaned file is better than orphaned record)
+  await db.delete(taskAttachments).where(eq(taskAttachments.id, attachmentId));
+
   const uploadsDir = path.join(__dirname, '../../../uploads');
   const filePath = path.join(uploadsDir, attachment.storagePath);
   try {
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    fs.unlinkSync(filePath);
   } catch (err) {
-    logger.error({ err, filePath }, 'Failed to delete attachment file');
+    logger.warn({ err, filePath }, 'Failed to delete attachment file from disk');
   }
-
-  await db.delete(taskAttachments).where(eq(taskAttachments.id, attachmentId));
   return true;
 }
 
