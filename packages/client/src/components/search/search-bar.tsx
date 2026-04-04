@@ -412,7 +412,7 @@ export function SearchBar({
                 border: '1px solid var(--color-border-primary)',
                 borderRadius: '3px',
                 fontFamily: 'var(--font-mono)',
-                fontSize: '11px',
+                fontSize: 'var(--font-size-xs)',
                 color: 'var(--color-text-tertiary)',
                 flexShrink: 0,
               }}
@@ -458,7 +458,7 @@ export function SearchBar({
               >
                 <span
                   style={{
-                    fontSize: '11px',
+                    fontSize: 'var(--font-size-xs)',
                     fontWeight: 600,
                     color: 'var(--color-text-tertiary)',
                     textTransform: 'uppercase',
@@ -474,7 +474,7 @@ export function SearchBar({
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    fontSize: '11px',
+                    fontSize: 'var(--font-size-xs)',
                     color: 'var(--color-text-tertiary)',
                     cursor: 'pointer',
                     fontFamily: 'var(--font-family)',
@@ -539,7 +539,7 @@ export function SearchBar({
           >
             <span
               style={{
-                fontSize: '11px',
+                fontSize: 'var(--font-size-xs)',
                 fontWeight: 600,
                 color: 'var(--color-text-tertiary)',
                 textTransform: 'uppercase',
@@ -604,7 +604,7 @@ export function SearchBar({
                 </div>
                 <span
                   style={{
-                    fontSize: '11px',
+                    fontSize: 'var(--font-size-xs)',
                     color: 'var(--color-text-quaternary, var(--color-text-tertiary))',
                     fontFamily: 'var(--font-mono)',
                     whiteSpace: 'nowrap',
@@ -625,7 +625,7 @@ export function SearchBar({
               gap: 'var(--spacing-md)',
               padding: '6px var(--spacing-md)',
               borderTop: '1px solid var(--color-border-primary)',
-              fontSize: '11px',
+              fontSize: 'var(--font-size-xs)',
               color: 'var(--color-text-tertiary)',
               fontFamily: 'var(--font-family)',
             }}

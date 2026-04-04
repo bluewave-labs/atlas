@@ -190,7 +190,7 @@
   gap: var(--spacing-lg);
   padding: 6px var(--spacing-lg);
   border-top: 1px solid var(--color-border-secondary);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
   font-family: var(--font-family);
 }

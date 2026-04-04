@@ -479,7 +479,7 @@
 }
 
 .tables-selection-float-count {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   background: var(--color-accent-primary);
   color: #fff;
@@ -655,7 +655,7 @@
   gap: 12px;
   padding: 4px 12px;
   border-top: 1px solid var(--color-border-primary);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
   flex-shrink: 0;
 }
@@ -1693,7 +1693,7 @@
 
 .tables-row-number {
   color: var(--color-text-tertiary);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   opacity: 0.45;
   text-align: center;
   line-height: 1;
@@ -1732,7 +1732,7 @@
 
 .tables-row-num-text {
   color: var(--color-text-tertiary);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   opacity: 0.55;
   line-height: 1;
   user-select: none;
@@ -1972,7 +1972,7 @@
 
 .tables-footer-agg {
   margin-left: auto;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--color-text-secondary);
 }
@@ -2022,7 +2022,7 @@
 
 .tables-calendar-weekday {
   padding: 6px 8px;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--color-text-tertiary);
   text-transform: uppercase;
@@ -2088,7 +2088,7 @@
   border: none;
   background: color-mix(in srgb, var(--color-accent-primary) 12%, transparent);
   color: var(--color-accent-primary);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-family: var(--font-family);
   font-weight: 500;
   border-radius: 3px;
@@ -2618,7 +2618,7 @@
   padding: 2px 6px;
   background: var(--color-bg-hover, #f0f2f5);
   border-radius: 4px;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   text-decoration: none;
   max-width: 120px;

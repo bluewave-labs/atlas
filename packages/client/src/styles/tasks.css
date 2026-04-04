@@ -849,7 +849,7 @@
 }
 
 .task-section-count {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 400;
   opacity: 0.7;
   margin-left: auto;
@@ -1284,7 +1284,7 @@
 /* ─── Project emoji in task meta row ─────────────────────────────── */
 
 .task-meta-project-emoji {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   line-height: 1;
 }
 

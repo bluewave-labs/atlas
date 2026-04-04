@@ -367,7 +367,7 @@
 }
 
 .slash-command-item-description {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
   white-space: nowrap;
   overflow: hidden;
@@ -691,7 +691,7 @@
   border: none;
   border-radius: 4px;
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
@@ -924,7 +924,7 @@
 
 /* Category section header */
 .tg-category-label {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1079,7 +1079,7 @@
 }
 
 .tg-card-desc {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
   line-height: 1.4;
   display: -webkit-box;
@@ -1372,7 +1372,7 @@
   align-items: center;
   gap: 6px;
   padding: 4px 16px 8px;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--color-text-tertiary, #98a2b3);
   font-family: var(--font-family);
   letter-spacing: 0.01em;
@@ -1540,7 +1540,7 @@
 }
 
 .search-replace-count {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--color-text-tertiary, #98a2b3);
   white-space: nowrap;
   min-width: 50px;
@@ -1559,7 +1559,7 @@
   color: var(--color-text-secondary);
   cursor: pointer;
   padding: 0 4px;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   font-family: var(--font-family);
   transition: background 0.1s ease;
@@ -1571,7 +1571,7 @@
 
 .search-replace-action {
   padding: 0 8px;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
 }
 
 /* Search match highlights */
@@ -1639,7 +1639,7 @@
 }
 
 .shortcuts-section-title {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1675,7 +1675,7 @@
   background: var(--color-bg-secondary, #f9fafb);
   border: 1px solid var(--color-border-primary);
   border-radius: 4px;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-family: var(--font-family);
   color: var(--color-text-secondary);
   font-weight: 500;
