@@ -117,11 +117,15 @@ function getDomain(email: string | undefined): string | null {
   return domain;
 }
 
+const SKIP_FAVICON_TLDS = ['.test', '.local', '.internal', '.example', '.invalid', '.localhost'];
+
 function getFaviconUrl(email: string | undefined, size: number): string | null {
   const domain = getDomain(email);
   if (!domain) return null;
   // Skip favicon for large avatars — favicons are inherently low-res
   if (size > 40) return null;
+  // Skip fake/test domains
+  if (SKIP_FAVICON_TLDS.some(tld => domain.endsWith(tld))) return null;
   const sz = Math.min(64, Math.max(32, size * 2));
   return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=${sz}`;
 }
