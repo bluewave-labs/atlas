@@ -1943,6 +1943,44 @@ export async function runMigrations() {
       CREATE UNIQUE INDEX IF NOT EXISTS idx_task_deps_unique ON task_dependencies(task_id, blocked_by_task_id);
     `);
 
+    // ─── CRM: Rotting deals + activity assignment ──────────────────────
+    await client.query(`
+      ALTER TABLE crm_deal_stages ADD COLUMN IF NOT EXISTS rotting_days INTEGER;
+      ALTER TABLE crm_deals ADD COLUMN IF NOT EXISTS stage_entered_at TIMESTAMPTZ;
+      ALTER TABLE crm_activities ADD COLUMN IF NOT EXISTS assigned_user_id UUID;
+    `);
+
+    // ─── CRM: Configurable activity types ─────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS crm_activity_types (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        icon VARCHAR(50) NOT NULL DEFAULT 'sticky-note',
+        color VARCHAR(20) NOT NULL DEFAULT '#6b7280',
+        is_default BOOLEAN NOT NULL DEFAULT FALSE,
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_crm_activity_types_account ON crm_activity_types(account_id);
+    `);
+
+    // ─── CRM: Lead enrichment ────────────────────────────────────────
+    await client.query(`
+      ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS enriched_data JSONB;
+      ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS enriched_at TIMESTAMPTZ;
+    `);
+
+    // ─── CRM: Lead detail fields ────────────────────────────────────
+    await client.query(`
+      ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS expected_revenue REAL NOT NULL DEFAULT 0;
+      ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS probability INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS assigned_user_id UUID;
+      ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS expected_close_date TIMESTAMPTZ;
+    `);
+
     logger.info('Database migrations completed');
   } finally {
     await client.end();

@@ -1,0 +1,316 @@
+/* ─── DataTable shared styles ─────────────────────────────────────── */
+
+.dt-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ─── Toolbar ────────────────────────────────────────────────────── */
+
+.dt-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border-secondary);
+  flex-shrink: 0;
+}
+
+.dt-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.dt-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* ─── Column header row ──────────────────────────────────────────── */
+
+.dt-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: 8px var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: var(--font-family);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* ─── Data rows ──────────────────────────────────────────────────── */
+
+.dt-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: 10px var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border-secondary);
+  cursor: pointer;
+  transition: background 0.1s;
+  font-family: var(--font-family);
+}
+
+.dt-row:hover {
+  background: var(--color-surface-hover);
+}
+
+.dt-row.selected {
+  background: var(--color-surface-selected);
+}
+
+.dt-row.focused {
+  background: color-mix(in srgb, var(--color-accent-primary) 6%, transparent);
+  outline: none;
+}
+
+.dt-row.focused.selected {
+  background: color-mix(in srgb, var(--color-accent-primary) 12%, transparent);
+}
+
+/* ─── Checkbox ───────────────────────────────────────────────────── */
+
+.dt-checkbox {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--color-border-primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dt-checkbox:hover {
+  border-color: var(--color-accent-primary);
+}
+
+.dt-checkbox:checked {
+  background: var(--color-accent-primary);
+  border-color: var(--color-accent-primary);
+}
+
+.dt-checkbox:checked::after {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 7px;
+  border: solid #fff;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+  margin-top: -1px;
+}
+
+.dt-checkbox.indeterminate {
+  background: var(--color-accent-primary);
+  border-color: var(--color-accent-primary);
+}
+
+.dt-checkbox.indeterminate::after {
+  content: '';
+  display: block;
+  width: 8px;
+  height: 1.5px;
+  background: #fff;
+}
+
+/* ─── Group header ───────────────────────────────────────────────── */
+
+.dt-group-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 6px var(--spacing-lg);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-family: var(--font-family);
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border-secondary);
+}
+
+/* ─── Add new row ────────────────────────────────────────────────── */
+
+.dt-add-row {
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  padding: 8px var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.1s, color 0.1s;
+}
+
+.dt-add-row:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-secondary);
+}
+
+/* ─── Footer ─────────────────────────────────────────────────────── */
+
+.dt-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: 8px var(--spacing-lg);
+  border-top: 1px solid var(--color-border-secondary);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-family);
+  flex-shrink: 0;
+}
+
+/* ─── Pagination ─────────────────────────────────────────────────── */
+
+.dt-pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-left: auto;
+}
+
+.dt-pagination-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.dt-pagination-btn:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-primary);
+}
+
+.dt-pagination-btn.active {
+  background: var(--color-accent-primary);
+  border-color: var(--color-accent-primary);
+  color: #fff;
+  font-weight: var(--font-weight-medium);
+}
+
+.dt-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.dt-pagination-info {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-family);
+  white-space: nowrap;
+  padding: 0 var(--spacing-xs);
+}
+
+/* ─── Floating bulk action bar ───────────────────────────────────── */
+
+.dt-bulk-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--color-bg-elevated);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  font-family: var(--font-family);
+  animation: dt-bulk-bar-enter 0.15s ease-out;
+}
+
+@keyframes dt-bulk-bar-enter {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.dt-bulk-bar-count {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  padding-right: var(--spacing-sm);
+  border-right: 1px solid var(--color-border-secondary);
+}
+
+/* ─── Empty state ────────────────────────────────────────────────── */
+
+.dt-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xl) var(--spacing-xl);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-family);
+  text-align: center;
+  gap: var(--spacing-sm);
+}
+
+.dt-empty-icon {
+  opacity: 0.3;
+  margin-bottom: var(--spacing-xs);
+}
+
+.dt-empty-title {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.dt-empty-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+}
+
+/* ─── Cell helpers ───────────────────────────────────────────────── */
+
+.dt-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.dt-cell-secondary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+}

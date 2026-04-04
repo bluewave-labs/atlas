@@ -951,7 +951,18 @@
       "noGroup": "Keine Gruppierung",
       "groupByStage": "Phase",
       "groupByContact": "Kontakt",
-      "groupByCompany": "Unternehmen"
+      "groupByCompany": "Unternehmen",
+      "rotting": "Veraltet",
+      "rottingWarning": "Seit {{days}} Tagen in dieser Phase (Limit: {{limit}})",
+      "rottingDays": "Veraltet nach (Tagen)",
+      "rottingDaysHint": "Warnung wenn ein Deal zu lange in dieser Phase bleibt",
+      "noRottingLimit": "Kein Limit"
+    },
+    "kanban": {
+      "collapse": "Phase einklappen",
+      "expand": "Phase ausklappen",
+      "dealsCount": "{{count}} Deals",
+      "totalValue": "Gesamt: {{value}}"
     },
     "fields": {
       "manageFields": "Felder verwalten"
@@ -1007,7 +1018,28 @@
       "deleteActivity": "Aktivität löschen",
       "stageChange": "Phasenänderung",
       "dealWon": "Deal gewonnen",
-      "dealLost": "Deal verloren"
+      "dealLost": "Deal verloren",
+      "dueDate": "Fälligkeitsdatum",
+      "overdue": "Überfällig",
+      "dueToday": "Heute fällig",
+      "dueSoon": "Bald fällig",
+      "noDueDate": "Kein Fälligkeitsdatum",
+      "completed": "Abgeschlossen",
+      "overdueBy": "{{days}} Tage überfällig",
+      "completedOn": "Abgeschlossen {{date}}",
+      "markDone": "Erledigt",
+      "scheduleNext": "Nächsten planen?",
+      "scheduleNextSubtitle": "Folgeaktivität erstellen",
+      "skip": "Überspringen",
+      "schedule": "Planen",
+      "tomorrow": "Morgen",
+      "nextWeek": "Nächste Woche",
+      "pickDate": "Datum wählen",
+      "optionalNote": "Optionale Notiz",
+      "assignedTo": "Zugewiesen an",
+      "assignee": "Zuständig",
+      "unassigned": "Nicht zugewiesen",
+      "assignToMe": "Mir zuweisen"
     },
     "automations": {
       "title": "Automatisierungen",
@@ -1257,7 +1289,8 @@
       "copied": "Kopiert!",
       "codeCopied": "Einbettungscode in Zwischenablage kopiert",
       "deleteForm": "Formular löschen",
-      "deleteFormDesc": "Dieses Lead-Formular wird dauerhaft gelöscht. Bestehende Leads sind nicht betroffen."
+      "deleteFormDesc": "Dieses Lead-Formular wird dauerhaft gelöscht. Bestehende Leads sind nicht betroffen.",
+      "formSaved": "Formular gespeichert"
     }
   },
   "drive": {

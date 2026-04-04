@@ -45,6 +45,7 @@ export interface CrmDealStage {
   probability: number;
   sequence: number;
   isDefault: boolean;
+  rottingDays: number | null;
 }
 
 export interface CrmDeal {
@@ -61,10 +62,12 @@ export interface CrmDeal {
   lostAt: string | null;
   lostReason: string | null;
   tags: string[];
+  stageEnteredAt: string | null;
   isArchived: boolean;
   sortOrder: number;
   stageName: string | null;
   stageColor: string | null;
+  stageRottingDays: number | null;
   contactName: string | null;
   companyName: string | null;
   createdAt: string;
@@ -78,11 +81,13 @@ export interface CrmActivity {
   dealId: string | null;
   contactId: string | null;
   companyId: string | null;
+  assignedUserId: string | null;
   scheduledAt: string | null;
   completedAt: string | null;
   isArchived: boolean;
   createdAt: string;
   updatedAt: string;
+  assignedUserName?: string;
 }
 
 export interface CrmEmail {
@@ -311,7 +316,7 @@ export function useCreateStage() {
 export function useUpdateStage() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...input }: { id: string } & Partial<{ name: string; color: string; probability: number; sequence: number; isDefault: boolean }>) => {
+    mutationFn: async ({ id, ...input }: { id: string } & Partial<{ name: string; color: string; probability: number; sequence: number; isDefault: boolean; rottingDays: number | null }>) => {
       const { data } = await api.patch(`/crm/stages/${id}`, input);
       return data.data as CrmDealStage;
     },
@@ -499,7 +504,7 @@ export function useActivities(filters?: { dealId?: string; contactId?: string; c
 export function useCreateActivity() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { type: string; body: string; dealId?: string | null; contactId?: string | null; companyId?: string | null; scheduledAt?: string | null }) => {
+    mutationFn: async (input: { type: string; body: string; dealId?: string | null; contactId?: string | null; companyId?: string | null; assignedUserId?: string | null; scheduledAt?: string | null }) => {
       const { data } = await api.post('/crm/activities', input);
       return data.data as CrmActivity;
     },
@@ -512,7 +517,7 @@ export function useCreateActivity() {
 export function useUpdateActivity() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...input }: { id: string } & Partial<{ type: string; body: string; dealId: string | null; contactId: string | null; companyId: string | null; scheduledAt: string | null; completedAt: string | null; isArchived: boolean }>) => {
+    mutationFn: async ({ id, ...input }: { id: string } & Partial<{ type: string; body: string; dealId: string | null; contactId: string | null; companyId: string | null; assignedUserId: string | null; scheduledAt: string | null; completedAt: string | null; isArchived: boolean }>) => {
       const { data } = await api.patch(`/crm/activities/${id}`, input);
       return data.data as CrmActivity;
     },
@@ -527,6 +532,108 @@ export function useDeleteActivity() {
   return useMutation({
     mutationFn: async (id: string) => {
       await api.delete(`/crm/activities/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
+    },
+  });
+}
+
+// ─── Activity Types ──────────────────────────────────────────────
+
+export interface CrmActivityTypeConfig {
+  id: string;
+  accountId: string;
+  name: string;
+  icon: string;
+  color: string;
+  isDefault: boolean;
+  isArchived: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function useActivityTypes() {
+  return useQuery({
+    queryKey: queryKeys.crm.activityTypes.all,
+    queryFn: async () => {
+      const { data } = await api.get('/crm/activity-types/list');
+      return data.data as CrmActivityTypeConfig[];
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateActivityType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { name: string; icon?: string; color?: string }) => {
+      const { data } = await api.post('/crm/activity-types', input);
+      return data.data as CrmActivityTypeConfig;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.crm.activityTypes.all });
+    },
+  });
+}
+
+export function useUpdateActivityType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...input }: { id: string } & Partial<{ name: string; icon: string; color: string; sortOrder: number; isArchived: boolean }>) => {
+      const { data } = await api.patch(`/crm/activity-types/${id}`, input);
+      return data.data as CrmActivityTypeConfig;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.crm.activityTypes.all });
+    },
+  });
+}
+
+export function useDeleteActivityType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/crm/activity-types/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.crm.activityTypes.all });
+    },
+  });
+}
+
+export function useReorderActivityTypes() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (typeIds: string[]) => {
+      await api.post('/crm/activity-types/reorder', { typeIds });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.crm.activityTypes.all });
+    },
+  });
+}
+
+export function useSeedActivityTypes() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post('/crm/activity-types/seed');
+      return data.data as CrmActivityTypeConfig[];
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.crm.activityTypes.all });
+    },
+  });
+}
+
+export function useCompleteActivity() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, scheduleNext }: { id: string; scheduleNext?: { type: string; body?: string; scheduledAt: string } }) => {
+      const { data } = await api.post(`/crm/activities/${id}/complete`, { scheduleNext });
+      return data.data as { completed: CrmActivity; next?: CrmActivity };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
@@ -776,9 +883,15 @@ export interface CrmLead {
   source: CrmLeadSource;
   status: CrmLeadStatus;
   notes: string | null;
+  expectedRevenue: number;
+  probability: number;
+  assignedUserId: string | null;
+  expectedCloseDate: string | null;
   convertedContactId: string | null;
   convertedDealId: string | null;
   tags: string[];
+  enrichedData: Record<string, unknown> | null;
+  enrichedAt: string | null;
   isArchived: boolean;
   sortOrder: number;
   createdAt: string;
@@ -832,7 +945,7 @@ export function useCreateLead() {
 export function useUpdateLead() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...input }: { id: string } & Partial<{ name: string; email: string | null; phone: string | null; companyName: string | null; source: string; status: string; notes: string | null; tags: string[]; sortOrder: number; isArchived: boolean }>) => {
+    mutationFn: async ({ id, ...input }: { id: string } & Partial<{ name: string; email: string | null; phone: string | null; companyName: string | null; source: string; status: string; notes: string | null; tags: string[]; expectedRevenue: number; probability: number; assignedUserId: string | null; expectedCloseDate: string | null; sortOrder: number; isArchived: boolean }>) => {
       const { data } = await api.patch(`/crm/leads/${id}`, input);
       return data.data as CrmLead;
     },
@@ -851,6 +964,19 @@ export function useDeleteLead() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
+    },
+  });
+}
+
+export function useEnrichLead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.post(`/crm/leads/${id}/enrich`);
+      return data.data as Record<string, unknown>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
     },
   });
 }
@@ -1208,13 +1334,25 @@ export function useDeleteSavedView() {
 
 // ─── Lead Forms ─────────────────────────────────────────────────────
 
+export type LeadFormFieldType = 'text' | 'email' | 'phone' | 'textarea' | 'select';
+
+export interface LeadFormField {
+  id: string;
+  type: LeadFormFieldType;
+  label: string;
+  placeholder: string;
+  required: boolean;
+  options?: string[]; // for select type
+  mapTo?: string; // maps to lead field: name, email, phone, companyName, message
+}
+
 export interface CrmLeadForm {
   id: string;
   accountId: string;
   userId: string;
   name: string;
   token: string;
-  fields: string[];
+  fields: LeadFormField[];
   isActive: boolean;
   submitCount: number;
   createdAt: string;
@@ -1248,7 +1386,7 @@ export function useCreateLeadForm() {
 export function useUpdateLeadForm() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...input }: { id: string } & Partial<{ name: string; fields: string[]; isActive: boolean }>) => {
+    mutationFn: async ({ id, ...input }: { id: string } & Partial<{ name: string; fields: LeadFormField[]; isActive: boolean }>) => {
       const { data } = await api.patch(`/crm/forms/${id}`, input);
       return data.data as CrmLeadForm;
     },

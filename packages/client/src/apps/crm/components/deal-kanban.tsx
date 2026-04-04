@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DollarSign } from 'lucide-react';
+import { DollarSign, AlertTriangle, ChevronRight } from 'lucide-react';
+import { Tooltip } from '../../../components/ui/tooltip';
 import type { CrmDeal, CrmDealStage } from '../hooks';
 import { formatCurrency, formatCurrencyCompact, formatNumber } from '../../../lib/format';
 import { StatusDot } from '../../../components/ui/status-dot';
@@ -21,11 +22,26 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
+const COLLAPSED_KEY = 'crm-collapsed-stages';
+function loadCollapsed(): Set<string> {
+  try { return new Set(JSON.parse(localStorage.getItem(COLLAPSED_KEY) || '[]')); } catch { return new Set(); }
+}
+
 export function DealKanban({ deals, stages, onMoveDeal, onDealClick }: DealKanbanProps) {
   const { t } = useTranslation();
   const [draggedDealId, setDraggedDealId] = useState<string | null>(null);
   const [dragOverStageId, setDragOverStageId] = useState<string | null>(null);
   const dragCounterRef = useRef<Record<string, number>>({});
+  const [collapsedStages, setCollapsedStages] = useState<Set<string>>(loadCollapsed);
+
+  const toggleCollapse = useCallback((stageId: string) => {
+    setCollapsedStages(prev => {
+      const next = new Set(prev);
+      next.has(stageId) ? next.delete(stageId) : next.add(stageId);
+      localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...next]));
+      return next;
+    });
+  }, []);
 
   const handleDragStart = useCallback((e: React.DragEvent, dealId: string) => {
     setDraggedDealId(dealId);
@@ -98,6 +114,41 @@ export function DealKanban({ deals, stages, onMoveDeal, onDealClick }: DealKanba
         const stageDeals = dealsByStage[stage.id] || [];
         const totalValue = stageDeals.reduce((sum, d) => sum + d.value, 0);
         const isOver = dragOverStageId === stage.id;
+        const isCollapsed = collapsedStages.has(stage.id);
+
+        if (isCollapsed) {
+          return (
+            <div
+              key={stage.id}
+              className="crm-kanban-column crm-kanban-column-collapsed"
+              onClick={() => toggleCollapse(stage.id)}
+              onDragEnter={(e) => handleDragEnter(e, stage.id)}
+              onDragLeave={(e) => handleDragLeave(e, stage.id)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, stage.id)}
+              style={{ minWidth: 48, maxWidth: 48, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-sm)', padding: 'var(--spacing-md) var(--spacing-xs)' }}
+            >
+              <StatusDot color={stage.color} size={8} />
+              <span style={{
+                writingMode: 'vertical-rl', textOrientation: 'mixed',
+                fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)',
+                color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                maxHeight: 120,
+              }}>
+                {stage.name}
+              </span>
+              <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
+                {stageDeals.length}
+              </span>
+              {totalValue > 0 && (
+                <span style={{ fontSize: '10px', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', writingMode: 'vertical-rl' }}>
+                  {formatCurrencyCompact(totalValue)}
+                </span>
+              )}
+            </div>
+          );
+        }
 
         return (
           <div
@@ -110,7 +161,10 @@ export function DealKanban({ deals, stages, onMoveDeal, onDealClick }: DealKanba
           >
             {/* Column header */}
             <div className="crm-kanban-column-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
+                <button onClick={(e) => { e.stopPropagation(); toggleCollapse(stage.id); }} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', color: 'var(--color-text-tertiary)' }}>
+                  <ChevronRight size={12} style={{ transform: 'rotate(90deg)' }} />
+                </button>
                 <StatusDot color={stage.color} size={8} />
                 <span style={{
                   fontSize: 'var(--font-size-sm)',
@@ -149,8 +203,24 @@ export function DealKanban({ deals, stages, onMoveDeal, onDealClick }: DealKanba
                     fontFamily: 'var(--font-family)',
                     marginBottom: 2,
                     lineHeight: 1.3,
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 4,
                   }}>
-                    {deal.title}
+                    <span style={{ flex: 1 }}>{deal.title}</span>
+                    {(() => {
+                      const rottingDays = deal.stageRottingDays;
+                      if (!rottingDays || !deal.stageEnteredAt) return null;
+                      const daysInStage = Math.floor((Date.now() - new Date(deal.stageEnteredAt).getTime()) / 86400000);
+                      if (daysInStage <= rottingDays) return null;
+                      return (
+                        <Tooltip content={t('crm.deals.rottingWarning', { days: daysInStage, limit: rottingDays })}>
+                          <span style={{ color: daysInStage > rottingDays * 1.5 ? '#ef4444' : '#f59e0b', flexShrink: 0, marginTop: 1 }}>
+                            <AlertTriangle size={12} />
+                          </span>
+                        </Tooltip>
+                      );
+                    })()}
                   </div>
                   {deal.value > 0 && (
                     <div style={{

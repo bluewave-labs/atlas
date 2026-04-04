@@ -1,7 +1,7 @@
 import { Briefcase, Settings } from 'lucide-react';
 import type { ClientAppManifest } from '../../config/app-manifest.client';
 import { CrmPage } from './page';
-import { CrmStagesPanel, CrmGeneralPanel, CrmIntegrationsPanel } from './components/crm-settings-modal';
+import { CrmStagesPanel, CrmActivityTypesPanel, CrmGeneralPanel, CrmIntegrationsPanel } from './components/crm-settings-modal';
 import { PipelineWidget } from './widgets/pipeline-widget';
 
 export const crmManifest: ClientAppManifest = {
@@ -37,6 +37,7 @@ export const crmManifest: ClientAppManifest = {
     color: '#f97316',
     panels: [
       { id: 'stages', label: 'Pipeline stages', icon: Settings, component: CrmStagesPanel },
+      { id: 'activity-types', label: 'Activity types', icon: Settings, component: CrmActivityTypesPanel },
       { id: 'general', label: 'General', icon: Settings, component: CrmGeneralPanel },
       { id: 'integrations', label: 'Integrations', icon: Settings, component: CrmIntegrationsPanel },
     ],

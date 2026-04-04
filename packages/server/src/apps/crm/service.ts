@@ -1,5 +1,5 @@
 import { db } from '../../config/database';
-import { crmCompanies, crmContacts, crmDealStages, crmDeals, crmActivities, crmWorkflows, crmLeads, crmNotes, crmSavedViews, crmLeadForms } from '../../db/schema';
+import { crmCompanies, crmContacts, crmDealStages, crmDeals, crmActivities, crmActivityTypes, crmWorkflows, crmLeads, crmNotes, crmSavedViews, crmLeadForms, users } from '../../db/schema';
 import { tasks as tasksTable } from '../../db/schema';
 import { eq, and, or, asc, desc, sql, gte, lte, isNull } from 'drizzle-orm';
 import { logger } from '../../utils/logger';
@@ -46,7 +46,9 @@ interface CreateDealStageInput {
   isDefault?: boolean;
 }
 
-interface UpdateDealStageInput extends Partial<CreateDealStageInput> {}
+interface UpdateDealStageInput extends Partial<CreateDealStageInput> {
+  rottingDays?: number | null;
+}
 
 interface CreateDealInput {
   title: string;
@@ -71,6 +73,7 @@ interface CreateActivityInput {
   dealId?: string | null;
   contactId?: string | null;
   companyId?: string | null;
+  assignedUserId?: string | null;
   scheduledAt?: string | null;
 }
 
@@ -450,6 +453,7 @@ export async function updateDealStage(accountId: string, id: string, input: Upda
   if (input.probability !== undefined) updates.probability = input.probability;
   if (input.sequence !== undefined) updates.sequence = input.sequence;
   if (input.isDefault !== undefined) updates.isDefault = input.isDefault;
+  if (input.rottingDays !== undefined) updates.rottingDays = input.rottingDays;
 
   await db
     .update(crmDealStages)
@@ -559,12 +563,14 @@ export async function listDeals(userId: string, accountId: string, filters?: {
       lostAt: crmDeals.lostAt,
       lostReason: crmDeals.lostReason,
       tags: crmDeals.tags,
+      stageEnteredAt: crmDeals.stageEnteredAt,
       isArchived: crmDeals.isArchived,
       sortOrder: crmDeals.sortOrder,
       createdAt: crmDeals.createdAt,
       updatedAt: crmDeals.updatedAt,
       stageName: crmDealStages.name,
       stageColor: crmDealStages.color,
+      stageRottingDays: crmDealStages.rottingDays,
       contactName: crmContacts.name,
       companyName: crmCompanies.name,
     })
@@ -642,6 +648,7 @@ export async function createDeal(userId: string, accountId: string, input: Creat
       probability: input.probability ?? 0,
       expectedCloseDate: input.expectedCloseDate ? new Date(input.expectedCloseDate) : null,
       tags: input.tags ?? [],
+      stageEnteredAt: now,
       sortOrder,
       createdAt: now,
       updatedAt: now,
@@ -675,7 +682,13 @@ export async function updateDeal(userId: string, accountId: string, id: string, 
 
   if (input.title !== undefined) updates.title = input.title;
   if (input.value !== undefined) updates.value = input.value;
-  if (input.stageId !== undefined) updates.stageId = input.stageId;
+  if (input.stageId !== undefined) {
+    updates.stageId = input.stageId;
+    // Track when deal enters a new stage (for rotting detection)
+    if (oldStageId && oldStageId !== input.stageId) {
+      updates.stageEnteredAt = now;
+    }
+  }
   if (input.contactId !== undefined) updates.contactId = input.contactId;
   if (input.companyId !== undefined) updates.companyId = input.companyId;
   if (input.assignedUserId !== undefined) updates.assignedUserId = input.assignedUserId;
@@ -801,6 +814,9 @@ export async function listActivities(userId: string, accountId: string, filters?
   companyId?: string;
   includeArchived?: boolean;
   recordAccess?: CrmRecordAccess;
+  dueBefore?: string;
+  dueAfter?: string;
+  sortBy?: 'createdAt' | 'scheduledAt';
 }) {
   const conditions = [eq(crmActivities.accountId, accountId)];
   if (!filters?.recordAccess || filters.recordAccess === 'own') {
@@ -819,12 +835,37 @@ export async function listActivities(userId: string, accountId: string, filters?
   if (filters?.companyId) {
     conditions.push(eq(crmActivities.companyId, filters.companyId));
   }
+  if (filters?.dueBefore) {
+    conditions.push(lte(crmActivities.scheduledAt, new Date(filters.dueBefore)));
+  }
+  if (filters?.dueAfter) {
+    conditions.push(gte(crmActivities.scheduledAt, new Date(filters.dueAfter)));
+  }
+
+  const orderCol = filters?.sortBy === 'scheduledAt' ? crmActivities.scheduledAt : crmActivities.createdAt;
 
   return db
-    .select()
+    .select({
+      id: crmActivities.id,
+      accountId: crmActivities.accountId,
+      userId: crmActivities.userId,
+      type: crmActivities.type,
+      body: crmActivities.body,
+      dealId: crmActivities.dealId,
+      contactId: crmActivities.contactId,
+      companyId: crmActivities.companyId,
+      assignedUserId: crmActivities.assignedUserId,
+      scheduledAt: crmActivities.scheduledAt,
+      completedAt: crmActivities.completedAt,
+      isArchived: crmActivities.isArchived,
+      createdAt: crmActivities.createdAt,
+      updatedAt: crmActivities.updatedAt,
+      assignedUserName: users.name,
+    })
     .from(crmActivities)
+    .leftJoin(users, eq(crmActivities.assignedUserId, users.id))
     .where(and(...conditions))
-    .orderBy(desc(crmActivities.createdAt));
+    .orderBy(desc(orderCol));
 }
 
 export async function createActivity(userId: string, accountId: string, input: CreateActivityInput) {
@@ -840,6 +881,7 @@ export async function createActivity(userId: string, accountId: string, input: C
       dealId: input.dealId ?? null,
       contactId: input.contactId ?? null,
       companyId: input.companyId ?? null,
+      assignedUserId: input.assignedUserId ?? null,
       scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
       createdAt: now,
       updatedAt: now,
@@ -868,6 +910,7 @@ export async function updateActivity(userId: string, accountId: string, id: stri
   if (input.dealId !== undefined) updates.dealId = input.dealId;
   if (input.contactId !== undefined) updates.contactId = input.contactId;
   if (input.companyId !== undefined) updates.companyId = input.companyId;
+  if (input.assignedUserId !== undefined) updates.assignedUserId = input.assignedUserId;
   if (input.scheduledAt !== undefined) updates.scheduledAt = input.scheduledAt ? new Date(input.scheduledAt) : null;
   if (input.completedAt !== undefined) updates.completedAt = input.completedAt ? new Date(input.completedAt) : null;
   if (input.isArchived !== undefined) updates.isArchived = input.isArchived;
@@ -893,6 +936,114 @@ export async function updateActivity(userId: string, accountId: string, id: stri
 
 export async function deleteActivity(userId: string, accountId: string, id: string, recordAccess?: CrmRecordAccess) {
   await updateActivity(userId, accountId, id, { isArchived: true }, recordAccess);
+}
+
+export async function completeAndScheduleNext(
+  userId: string,
+  accountId: string,
+  activityId: string,
+  nextInput?: { type: string; body?: string; scheduledAt: string },
+  recordAccess?: CrmRecordAccess,
+) {
+  // Complete the current activity
+  const completed = await updateActivity(userId, accountId, activityId, { completedAt: new Date().toISOString() }, recordAccess);
+  if (!completed) throw new Error('Activity not found');
+
+  let next = null;
+  if (nextInput) {
+    next = await createActivity(userId, accountId, {
+      type: nextInput.type,
+      body: nextInput.body || '',
+      dealId: completed.dealId ?? undefined,
+      contactId: completed.contactId ?? undefined,
+      companyId: completed.companyId ?? undefined,
+      scheduledAt: nextInput.scheduledAt,
+    });
+  }
+
+  return { completed, next };
+}
+
+// ─── Activity Types ─────────────────────────────────────────────────
+
+export async function listActivityTypes(accountId: string) {
+  return db
+    .select()
+    .from(crmActivityTypes)
+    .where(and(eq(crmActivityTypes.accountId, accountId), eq(crmActivityTypes.isArchived, false)))
+    .orderBy(asc(crmActivityTypes.sortOrder));
+}
+
+export async function createActivityType(accountId: string, input: { name: string; icon?: string; color?: string }) {
+  const now = new Date();
+  const [maxSort] = await db
+    .select({ max: sql<number>`COALESCE(MAX(${crmActivityTypes.sortOrder}), -1)` })
+    .from(crmActivityTypes)
+    .where(eq(crmActivityTypes.accountId, accountId));
+
+  const [created] = await db
+    .insert(crmActivityTypes)
+    .values({
+      accountId,
+      name: input.name,
+      icon: input.icon ?? 'sticky-note',
+      color: input.color ?? '#6b7280',
+      sortOrder: (maxSort?.max ?? -1) + 1,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning();
+
+  return created;
+}
+
+export async function updateActivityType(accountId: string, id: string, input: Partial<{ name: string; icon: string; color: string; sortOrder: number; isArchived: boolean }>) {
+  const updates: Record<string, unknown> = { updatedAt: new Date() };
+  if (input.name !== undefined) updates.name = input.name;
+  if (input.icon !== undefined) updates.icon = input.icon;
+  if (input.color !== undefined) updates.color = input.color;
+  if (input.sortOrder !== undefined) updates.sortOrder = input.sortOrder;
+  if (input.isArchived !== undefined) updates.isArchived = input.isArchived;
+
+  await db.update(crmActivityTypes).set(updates)
+    .where(and(eq(crmActivityTypes.id, id), eq(crmActivityTypes.accountId, accountId)));
+
+  const [updated] = await db.select().from(crmActivityTypes)
+    .where(and(eq(crmActivityTypes.id, id), eq(crmActivityTypes.accountId, accountId))).limit(1);
+  return updated || null;
+}
+
+export async function deleteActivityType(accountId: string, id: string) {
+  return updateActivityType(accountId, id, { isArchived: true });
+}
+
+export async function reorderActivityTypes(accountId: string, typeIds: string[]) {
+  for (let i = 0; i < typeIds.length; i++) {
+    await db.update(crmActivityTypes).set({ sortOrder: i })
+      .where(and(eq(crmActivityTypes.id, typeIds[i]), eq(crmActivityTypes.accountId, accountId)));
+  }
+}
+
+const DEFAULT_ACTIVITY_TYPES = [
+  { name: 'note', icon: 'sticky-note', color: '#6b7280' },
+  { name: 'call', icon: 'phone-call', color: '#3b82f6' },
+  { name: 'email', icon: 'mail', color: '#8b5cf6' },
+  { name: 'meeting', icon: 'calendar-days', color: '#f59e0b' },
+];
+
+export async function seedDefaultActivityTypes(accountId: string) {
+  const existing = await listActivityTypes(accountId);
+  if (existing.length > 0) return existing;
+
+  const now = new Date();
+  for (let i = 0; i < DEFAULT_ACTIVITY_TYPES.length; i++) {
+    const t = DEFAULT_ACTIVITY_TYPES[i];
+    await db.insert(crmActivityTypes).values({
+      accountId, name: t.name, icon: t.icon, color: t.color,
+      isDefault: true, sortOrder: i, createdAt: now, updatedAt: now,
+    });
+  }
+  return listActivityTypes(accountId);
 }
 
 // ─── Dashboard ─────────────────────────────────────────────────────
@@ -1182,16 +1333,16 @@ export async function seedSampleData(userId: string, accountId: string) {
 
   // --- Leads ---
   await createLead(userId, accountId, {
-    name: 'TechStart Inc', source: 'website', notes: 'Interested in starter plan',
+    name: 'TechStart Inc', email: 'info@techstart.io', phone: '+1-555-0201', source: 'website', companyName: 'TechStart Inc', notes: 'Interested in starter plan',
   });
   await createLead(userId, accountId, {
-    name: 'Metro Solutions', source: 'referral', notes: 'Called, scheduling demo',
+    name: 'Metro Solutions', email: 'sales@metrosolutions.com', phone: '+1-555-0202', source: 'referral', companyName: 'Metro Solutions', notes: 'Called, scheduling demo',
   });
   await createLead(userId, accountId, {
-    name: 'CloudNine Labs', source: 'social_media', notes: 'Budget approved, needs proposal',
+    name: 'CloudNine Labs', email: 'hello@cloudninelabs.io', phone: '+1-555-0203', source: 'social_media', companyName: 'CloudNine Labs', notes: 'Budget approved, needs proposal',
   });
   await createLead(userId, accountId, {
-    name: 'Peak Performance', source: 'website', notes: 'Filled out lead form',
+    name: 'Peak Performance', email: 'contact@peakperf.com', source: 'website', companyName: 'Peak Performance', notes: 'Filled out lead form',
   });
   // Update statuses for non-new leads
   const allLeads = await listLeads(userId, accountId, {});
@@ -1224,7 +1375,25 @@ export async function seedSampleData(userId: string, accountId: string) {
 // ─── Seed Sample Leads (standalone) ──────────────────────────────────
 
 export async function seedSampleLeads(userId: string, accountId: string) {
-  return { skipped: true };
+  // Idempotency guard
+  const existing = await db.select({ id: crmLeads.id }).from(crmLeads)
+    .where(and(eq(crmLeads.accountId, accountId), eq(crmLeads.isArchived, false))).limit(1);
+  if (existing.length > 0) return { skipped: true, leads: 0 };
+
+  await createLead(userId, accountId, {
+    name: 'TechStart Inc', email: 'info@techstart.io', phone: '+1-555-0201', source: 'website', companyName: 'TechStart Inc', notes: 'Interested in starter plan',
+  });
+  const metro = await createLead(userId, accountId, {
+    name: 'Metro Solutions', email: 'sales@metrosolutions.com', phone: '+1-555-0202', source: 'referral', companyName: 'Metro Solutions', notes: 'Called, scheduling demo',
+  });
+  const cloud = await createLead(userId, accountId, {
+    name: 'CloudNine Labs', email: 'hello@cloudninelabs.io', phone: '+1-555-0203', source: 'social_media', companyName: 'CloudNine Labs', notes: 'Budget approved, needs proposal',
+  });
+
+  await updateLead(userId, accountId, metro.id, { status: 'contacted' });
+  await updateLead(userId, accountId, cloud.id, { status: 'qualified' });
+
+  return { leads: 3 };
 }
 
 // ─── Seed Example Workflows ──────────────────────────────────────────
@@ -1781,6 +1950,10 @@ interface UpdateLeadInput extends Partial<CreateLeadInput> {
   sortOrder?: number;
   isArchived?: boolean;
   tags?: string[];
+  expectedRevenue?: number;
+  probability?: number;
+  assignedUserId?: string | null;
+  expectedCloseDate?: string | null;
 }
 
 export async function listLeads(userId: string, accountId: string, filters?: {
@@ -1861,6 +2034,10 @@ export async function updateLead(userId: string, accountId: string, id: string, 
   if (input.status !== undefined) updates.status = input.status;
   if (input.notes !== undefined) updates.notes = input.notes;
   if (input.tags !== undefined) updates.tags = input.tags;
+  if (input.expectedRevenue !== undefined) updates.expectedRevenue = input.expectedRevenue;
+  if (input.probability !== undefined) updates.probability = input.probability;
+  if (input.assignedUserId !== undefined) updates.assignedUserId = input.assignedUserId;
+  if (input.expectedCloseDate !== undefined) updates.expectedCloseDate = input.expectedCloseDate ? new Date(input.expectedCloseDate) : null;
   if (input.sortOrder !== undefined) updates.sortOrder = input.sortOrder;
   if (input.isArchived !== undefined) updates.isArchived = input.isArchived;
 
@@ -1876,6 +2053,41 @@ export async function updateLead(userId: string, accountId: string, id: string, 
 
 export async function deleteLead(userId: string, accountId: string, id: string, recordAccess?: CrmRecordAccess) {
   await updateLead(userId, accountId, id, { isArchived: true }, recordAccess);
+}
+
+export async function enrichLead(userId: string, accountId: string, leadId: string) {
+  const { getProviderKeyForAccount, enrichLeadWithAI } = await import('../../services/ai.service');
+
+  const lead = await getLead(userId, accountId, leadId, 'all');
+  if (!lead) throw new Error('Lead not found');
+
+  const config = await getProviderKeyForAccount(accountId);
+  const enriched = await enrichLeadWithAI(config, {
+    name: lead.name,
+    email: lead.email,
+    phone: lead.phone,
+    companyName: lead.companyName,
+    source: lead.source,
+  });
+
+  const now = new Date();
+  await db.update(crmLeads).set({ enrichedData: enriched, enrichedAt: now, updatedAt: now })
+    .where(and(eq(crmLeads.id, leadId), eq(crmLeads.accountId, accountId)));
+
+  // Log enrichment as an activity
+  const summaryParts = [];
+  if (enriched.companyIndustry) summaryParts.push(`Industry: ${enriched.companyIndustry}`);
+  if (enriched.companySize) summaryParts.push(`Size: ${enriched.companySize}`);
+  if (enriched.leadScore) summaryParts.push(`Score: ${enriched.leadScore}/100`);
+  if (enriched.companyDescription) summaryParts.push(enriched.companyDescription);
+
+  await createActivity(userId, accountId, {
+    type: 'note',
+    body: `Lead enriched via AI\n${summaryParts.join('\n')}`,
+  });
+
+  logger.info({ userId, leadId }, 'CRM lead enriched via AI');
+  return enriched;
 }
 
 export async function convertLead(userId: string, accountId: string, leadId: string, options: {
@@ -2392,9 +2604,27 @@ interface CreateLeadFormInput {
   name: string;
 }
 
+interface LeadFormFieldDef {
+  id: string;
+  type: string;
+  label: string;
+  placeholder: string;
+  required: boolean;
+  options?: string[];
+  mapTo?: string;
+}
+
+const DEFAULT_LEAD_FORM_FIELDS: LeadFormFieldDef[] = [
+  { id: 'f1', type: 'text', label: 'Name', placeholder: 'Your name', required: true, mapTo: 'name' },
+  { id: 'f2', type: 'email', label: 'Email', placeholder: 'your@email.com', required: true, mapTo: 'email' },
+  { id: 'f3', type: 'phone', label: 'Phone', placeholder: '+1 (555) 000-0000', required: false, mapTo: 'phone' },
+  { id: 'f4', type: 'text', label: 'Company', placeholder: 'Company name', required: false, mapTo: 'companyName' },
+  { id: 'f5', type: 'textarea', label: 'Message', placeholder: 'How can we help?', required: false, mapTo: 'message' },
+];
+
 interface UpdateLeadFormInput {
   name?: string;
-  fields?: string[];
+  fields?: LeadFormFieldDef[];
   isActive?: boolean;
 }
 
@@ -2413,6 +2643,7 @@ export async function createLeadForm(userId: string, accountId: string, name: st
     userId,
     name,
     token,
+    fields: DEFAULT_LEAD_FORM_FIELDS,
     createdAt: now,
     updatedAt: now,
   }).returning();
@@ -2444,13 +2675,7 @@ export async function deleteLeadForm(userId: string, accountId: string, id: stri
     .where(and(eq(crmLeadForms.id, id), eq(crmLeadForms.accountId, accountId)));
 }
 
-export async function submitLeadForm(token: string, formData: {
-  name?: string;
-  email?: string;
-  phone?: string;
-  companyName?: string;
-  message?: string;
-}) {
+export async function submitLeadForm(token: string, formData: Record<string, string>) {
   // Find form by token
   const [form] = await db.select().from(crmLeadForms)
     .where(and(eq(crmLeadForms.token, token), eq(crmLeadForms.isActive, true)))
@@ -2458,14 +2683,29 @@ export async function submitLeadForm(token: string, formData: {
 
   if (!form) return null;
 
+  // Map form fields to lead fields using mapTo
+  const mapped: Record<string, string> = {};
+  const fields = form.fields as LeadFormFieldDef[];
+  for (const field of fields) {
+    if (field.mapTo && formData[field.id]) {
+      mapped[field.mapTo] = formData[field.id];
+    }
+  }
+  // Also support direct field name submission (backward compat)
+  if (!mapped.name && formData.name) mapped.name = formData.name;
+  if (!mapped.email && formData.email) mapped.email = formData.email;
+  if (!mapped.phone && formData.phone) mapped.phone = formData.phone;
+  if (!mapped.companyName && formData.companyName) mapped.companyName = formData.companyName;
+  if (!mapped.message && formData.message) mapped.message = formData.message;
+
   // Create lead using existing createLead function
   const lead = await createLead(form.userId, form.accountId, {
-    name: formData.name || 'Web form submission',
-    email: formData.email ?? null,
-    phone: formData.phone ?? null,
-    companyName: formData.companyName ?? null,
+    name: mapped.name || 'Web form submission',
+    email: mapped.email ?? null,
+    phone: mapped.phone ?? null,
+    companyName: mapped.companyName ?? null,
     source: 'website',
-    notes: formData.message ?? null,
+    notes: mapped.message ?? null,
   });
 
   // Increment submit count

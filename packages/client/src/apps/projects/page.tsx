@@ -5,7 +5,7 @@ import { formatDate, formatRelativeDate, formatCurrency, formatNumber } from '..
 import { StatCard } from '../../components/ui/stat-card';
 import {
   LayoutDashboard, Clock, FolderKanban, Users, FileText, BarChart3, Settings2,
-  Plus, Search, X, ChevronRight, Trash2, Copy, ExternalLink,
+  Plus, Search, X, Trash2, Copy, ExternalLink,
   DollarSign, Calendar, Mail, Phone, MapPin, Hash, Percent, Activity,
   AlertCircle, Pencil, Check, Send, CheckCircle2,
 } from 'lucide-react';
@@ -31,11 +31,10 @@ import { Textarea } from '../../components/ui/textarea';
 import { Modal } from '../../components/ui/modal';
 import { IconButton } from '../../components/ui/icon-button';
 import { Badge } from '../../components/ui/badge';
-import { ColumnHeader } from '../../components/ui/column-header';
+import { DataTable, type DataTableColumn } from '../../components/ui/data-table';
 import { FeatureEmptyState } from '../../components/ui/feature-empty-state';
 import { StatusDot } from '../../components/ui/status-dot';
 import { ContentArea } from '../../components/ui/content-area';
-import { ListToolbar } from '../../components/ui/list-toolbar';
 import { SmartButtonBar } from '../../components/shared/SmartButtonBar';
 import { CustomFieldsRenderer } from '../../components/shared/custom-fields-renderer';
 import { ConfirmDialog } from '../../components/ui/confirm-dialog';
@@ -47,13 +46,6 @@ import '../../styles/projects.css';
 // ─── Types ────────────────────────────────────────────────────────
 
 type ActiveView = 'dashboard' | 'timeTracking' | 'projects' | 'clients' | 'invoices' | 'reports' | 'settings';
-
-type SortDirection = 'asc' | 'desc';
-
-interface SortState {
-  column: string;
-  direction: SortDirection;
-}
 
 // ─── Status helpers ───────────────────────────────────────────────
 
@@ -448,7 +440,7 @@ function CreateClientModal({ open, onClose }: { open: boolean; onClose: () => vo
 
 // ─── Projects List View ───────────────────────────────────────────
 
-function ProjectsListView({ projects, searchQuery, onSelect, selectedId, onAdd, clients }: {
+function ProjectsListView({ projects, searchQuery, onSelect, selectedId, onAdd }: {
   projects: Project[];
   searchQuery: string;
   onSelect: (id: string) => void;
@@ -457,7 +449,6 @@ function ProjectsListView({ projects, searchQuery, onSelect, selectedId, onAdd, 
   clients: ProjectClient[];
 }) {
   const { t } = useTranslation();
-  const [sort, setSort] = useState<SortState | null>(null);
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return projects;
@@ -465,34 +456,7 @@ function ProjectsListView({ projects, searchQuery, onSelect, selectedId, onAdd, 
     return projects.filter((p) => p.name.toLowerCase().includes(q) || (p.clientName?.toLowerCase().includes(q)));
   }, [projects, searchQuery]);
 
-  const sorted = useMemo(() => {
-    if (!sort) return filtered;
-    const arr = [...filtered];
-    arr.sort((a, b) => {
-      let aVal: string | number = '';
-      let bVal: string | number = '';
-      switch (sort.column) {
-        case 'name': aVal = a.name.toLowerCase(); bVal = b.name.toLowerCase(); break;
-        case 'client': aVal = (a.clientName || '').toLowerCase(); bVal = (b.clientName || '').toLowerCase(); break;
-        case 'status': aVal = a.status; bVal = b.status; break;
-        case 'hours': aVal = a.totalHours; bVal = b.totalHours; break;
-        case 'budget': aVal = a.budgetAmount ?? 0; bVal = b.budgetAmount ?? 0; break;
-      }
-      if (aVal < bVal) return sort.direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sort.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-    return arr;
-  }, [filtered, sort]);
-
-  const handleSort = useCallback((col: string) => {
-    setSort((prev) =>
-      !prev || prev.column !== col ? { column: col, direction: 'asc' }
-        : prev.direction === 'asc' ? { column: col, direction: 'desc' } : null,
-    );
-  }, []);
-
-  if (sorted.length === 0 && !searchQuery) {
+  if (filtered.length === 0 && !searchQuery) {
     return (
       <FeatureEmptyState
         illustration="pipeline"
@@ -510,96 +474,103 @@ function ProjectsListView({ projects, searchQuery, onSelect, selectedId, onAdd, 
     );
   }
 
-  if (sorted.length === 0 && searchQuery) {
-    return (
-      <div className="projects-empty-state">
-        <FolderKanban size={48} className="projects-empty-state-icon" />
-        <div className="projects-empty-state-title">{t('projects.empty.noMatchingProjects')}</div>
-        <div className="projects-empty-state-desc">{t('projects.empty.tryDifferentSearch')}</div>
-      </div>
-    );
-  }
-
-  const hdrStyle: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: '8px var(--spacing-lg)',
-    borderBottom: '1px solid var(--color-border-secondary)', fontSize: 'var(--font-size-xs)',
-    fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-tertiary)',
-    textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'var(--font-family)', flexShrink: 0,
-  };
+  const columns: DataTableColumn<Project>[] = [
+    {
+      key: 'name',
+      label: t('projects.projects.name'),
+      icon: <FolderKanban size={12} />,
+      width: 200,
+      sortable: true,
+      render: (project) => (
+        <span style={{ fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <StatusDot color={project.color} size={8} />
+          {project.name}
+        </span>
+      ),
+    },
+    {
+      key: 'clientName',
+      label: t('projects.invoices.client'),
+      icon: <Users size={12} />,
+      width: 140,
+      sortable: true,
+      render: (project) => (
+        <span className="dt-cell-secondary" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {project.clientName || '-'}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      label: t('projects.projects.status'),
+      width: 100,
+      sortable: true,
+      render: (project) => (
+        <Badge variant={project.status === 'active' ? 'success' : project.status === 'paused' ? 'warning' : project.status === 'completed' ? 'primary' : 'default'}>
+          {t(`projects.status.${project.status}`)}
+        </Badge>
+      ),
+    },
+    {
+      key: 'totalHours',
+      label: t('projects.reports.hours'),
+      icon: <Clock size={12} />,
+      width: 80,
+      sortable: true,
+      align: 'right',
+      render: (project) => (
+        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatNumber(project.totalHours, 1)}h</span>
+      ),
+    },
+    {
+      key: 'budgetAmount',
+      label: t('projects.projects.budget'),
+      icon: <DollarSign size={12} />,
+      sortable: true,
+      render: (project) => {
+        const budgetPct = project.budgetHours ? Math.min((project.totalHours / project.budgetHours) * 100, 100) : 0;
+        return (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', overflow: 'hidden' }}>
+            {project.budgetHours ? (
+              <>
+                <div style={{ flex: 1, height: 6, background: 'var(--color-bg-tertiary)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${budgetPct}%`, background: budgetPct > 90 ? 'var(--color-error)' : budgetPct > 70 ? 'var(--color-warning)' : 'var(--color-success)', borderRadius: 3, transition: 'width 0.3s' }} />
+                </div>
+                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
+                  {formatNumber(budgetPct, 0)}%
+                </span>
+              </>
+            ) : (
+              <span className="dt-cell-secondary">-</span>
+            )}
+            {project.unbilledHours > 0 && (
+              <span style={{ marginLeft: 'var(--spacing-sm)' }}>
+                <Badge variant="warning">{formatNumber(project.unbilledHours, 1)}h {t('projects.dashboard.unbilled')}</Badge>
+              </span>
+            )}
+            {project.totalAmount > 0 && (
+              <span style={{ marginLeft: 'var(--spacing-xs)' }}>
+                <Badge variant="success">{formatCurrency(project.totalAmount)}</Badge>
+              </span>
+            )}
+          </span>
+        );
+      },
+    },
+  ];
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        <div style={hdrStyle}>
-          <ColumnHeader label={t('projects.projects.name')} icon={<FolderKanban size={12} />} sortable columnKey="name" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 200, flexShrink: 0 }} />
-          <ColumnHeader label={t('projects.invoices.client')} icon={<Users size={12} />} sortable columnKey="client" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 140, flexShrink: 0 }} />
-          <ColumnHeader label={t('projects.projects.status')} sortable columnKey="status" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 100, flexShrink: 0 }} />
-          <ColumnHeader label={t('projects.reports.hours')} icon={<Clock size={12} />} sortable columnKey="hours" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 80, flexShrink: 0, textAlign: 'right' }} />
-          <ColumnHeader label={t('projects.projects.budget')} icon={<DollarSign size={12} />} sortable columnKey="budget" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ flex: 1 }} />
-        </div>
-        {sorted.map((project) => {
-          const budgetPct = project.budgetHours ? Math.min((project.totalHours / project.budgetHours) * 100, 100) : 0;
-          return (
-            <div
-              key={project.id}
-              className={`projects-row${selectedId === project.id ? ' selected' : ''}`}
-              onClick={() => onSelect(project.id)}
-            >
-              <span style={{ width: 200, flexShrink: 0, fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <StatusDot color={project.color} size={8} />
-                {project.name}
-              </span>
-              <span style={{ width: 140, flexShrink: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {project.clientName || '-'}
-              </span>
-              <span style={{ width: 100, flexShrink: 0 }}>
-                <Badge variant={project.status === 'active' ? 'success' : project.status === 'paused' ? 'warning' : project.status === 'completed' ? 'primary' : 'default'}>
-                  {t(`projects.status.${project.status}`)}
-                </Badge>
-              </span>
-              <span style={{ width: 80, flexShrink: 0, textAlign: 'right', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums', color: 'var(--color-text-primary)' }}>
-                {formatNumber(project.totalHours, 1)}h
-              </span>
-              <span style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-                {project.budgetHours ? (
-                  <>
-                    <div style={{ flex: 1, height: 6, background: 'var(--color-bg-tertiary)', borderRadius: 3, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${budgetPct}%`, background: budgetPct > 90 ? 'var(--color-error)' : budgetPct > 70 ? 'var(--color-warning)' : 'var(--color-success)', borderRadius: 3, transition: 'width 0.3s' }} />
-                    </div>
-                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
-                      {formatNumber(budgetPct, 0)}%
-                    </span>
-                  </>
-                ) : (
-                  <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>-</span>
-                )}
-                {project.unbilledHours > 0 && (
-                  <span style={{ marginLeft: 'var(--spacing-sm)' }}>
-                    <Badge variant="warning">
-                      {formatNumber(project.unbilledHours, 1)}h {t('projects.dashboard.unbilled')}
-                    </Badge>
-                  </span>
-                )}
-                {project.totalAmount > 0 && (
-                  <span style={{ marginLeft: 'var(--spacing-xs)' }}>
-                    <Badge variant="success">
-                      {formatCurrency(project.totalAmount)}
-                    </Badge>
-                  </span>
-                )}
-              </span>
-              {selectedId === project.id && <ChevronRight size={14} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />}
-            </div>
-          );
-        })}
-        <div className="projects-add-row" onClick={onAdd}>
-          <Plus size={14} /> {t('projects.actions.addNew')}
-        </div>
-      </div>
-      <div className="projects-table-footer">
-        <span>{sorted.length} {t('projects.sidebar.projects').toLowerCase()}</span>
-      </div>
-    </div>
+    <DataTable
+      data={filtered}
+      columns={columns}
+      activeRowId={selectedId}
+      onRowClick={(project) => onSelect(project.id)}
+      onAddRow={onAdd}
+      addRowLabel={t('projects.actions.addNew')}
+      emptyTitle={t('projects.empty.noMatchingProjects')}
+      emptyDescription={t('projects.empty.tryDifferentSearch')}
+      emptyIcon={<FolderKanban size={48} />}
+    />
   );
 }
 
@@ -842,7 +813,6 @@ function ClientsListView({ clients, searchQuery, onSelect, selectedId, onAdd }: 
   onAdd: () => void;
 }) {
   const { t } = useTranslation();
-  const [sort, setSort] = useState<SortState | null>(null);
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return clients;
@@ -850,34 +820,7 @@ function ClientsListView({ clients, searchQuery, onSelect, selectedId, onAdd }: 
     return clients.filter((c) => c.name.toLowerCase().includes(q) || (c.email?.toLowerCase().includes(q)));
   }, [clients, searchQuery]);
 
-  const sorted = useMemo(() => {
-    if (!sort) return filtered;
-    const arr = [...filtered];
-    arr.sort((a, b) => {
-      let aVal: string | number = '';
-      let bVal: string | number = '';
-      switch (sort.column) {
-        case 'name': aVal = a.name.toLowerCase(); bVal = b.name.toLowerCase(); break;
-        case 'email': aVal = (a.email || '').toLowerCase(); bVal = (b.email || '').toLowerCase(); break;
-        case 'projects': aVal = a.projectCount; bVal = b.projectCount; break;
-        case 'billed': aVal = a.totalBilled; bVal = b.totalBilled; break;
-        case 'outstanding': aVal = a.outstandingAmount; bVal = b.outstandingAmount; break;
-      }
-      if (aVal < bVal) return sort.direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sort.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-    return arr;
-  }, [filtered, sort]);
-
-  const handleSort = useCallback((col: string) => {
-    setSort((prev) =>
-      !prev || prev.column !== col ? { column: col, direction: 'asc' }
-        : prev.direction === 'asc' ? { column: col, direction: 'desc' } : null,
-    );
-  }, []);
-
-  if (sorted.length === 0 && !searchQuery) {
+  if (filtered.length === 0 && !searchQuery) {
     return (
       <FeatureEmptyState
         illustration="contacts"
@@ -895,65 +838,81 @@ function ClientsListView({ clients, searchQuery, onSelect, selectedId, onAdd }: 
     );
   }
 
-  if (sorted.length === 0 && searchQuery) {
-    return (
-      <div className="projects-empty-state">
-        <Users size={48} className="projects-empty-state-icon" />
-        <div className="projects-empty-state-title">{t('projects.empty.noMatchingClients')}</div>
-        <div className="projects-empty-state-desc">{t('projects.empty.tryDifferentSearch')}</div>
-      </div>
-    );
-  }
-
-  const hdrStyle: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: '8px var(--spacing-lg)',
-    borderBottom: '1px solid var(--color-border-secondary)', fontSize: 'var(--font-size-xs)',
-    fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-tertiary)',
-    textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'var(--font-family)', flexShrink: 0,
-  };
+  const columns: DataTableColumn<ProjectClient>[] = [
+    {
+      key: 'name',
+      label: t('projects.clients.name'),
+      icon: <Users size={12} />,
+      width: 180,
+      sortable: true,
+      render: (client) => (
+        <span style={{ fontWeight: 'var(--font-weight-medium)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {client.name}
+        </span>
+      ),
+    },
+    {
+      key: 'email',
+      label: t('projects.clients.email'),
+      icon: <Mail size={12} />,
+      width: 180,
+      sortable: true,
+      render: (client) => (
+        <span className="dt-cell-secondary" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {client.email || '-'}
+        </span>
+      ),
+    },
+    {
+      key: 'projectCount',
+      label: t('projects.sidebar.projects'),
+      icon: <FolderKanban size={12} />,
+      width: 70,
+      sortable: true,
+      align: 'right',
+      render: (client) => (
+        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{client.projectCount}</span>
+      ),
+    },
+    {
+      key: 'totalBilled',
+      label: t('projects.dashboard.totalBilled'),
+      icon: <DollarSign size={12} />,
+      width: 110,
+      sortable: true,
+      align: 'right',
+      render: (client) => (
+        <span className="dt-cell-secondary" style={{ fontVariantNumeric: 'tabular-nums' }}>
+          {formatCurrency(client.totalBilled)}
+        </span>
+      ),
+    },
+    {
+      key: 'outstandingAmount',
+      label: t('projects.reports.outstanding'),
+      icon: <DollarSign size={12} />,
+      sortable: true,
+      align: 'right',
+      render: (client) => (
+        <span style={{ fontWeight: 'var(--font-weight-medium)', fontVariantNumeric: 'tabular-nums', color: client.outstandingAmount > 0 ? 'var(--color-warning)' : 'var(--color-text-tertiary)' }}>
+          {formatCurrency(client.outstandingAmount)}
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        <div style={hdrStyle}>
-          <ColumnHeader label={t('projects.clients.name')} icon={<Users size={12} />} sortable columnKey="name" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 180, flexShrink: 0 }} />
-          <ColumnHeader label={t('projects.clients.email')} icon={<Mail size={12} />} sortable columnKey="email" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 180, flexShrink: 0 }} />
-          <ColumnHeader label={t('projects.sidebar.projects')} icon={<FolderKanban size={12} />} sortable columnKey="projects" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 70, flexShrink: 0, textAlign: 'right' }} />
-          <ColumnHeader label={t('projects.dashboard.totalBilled')} icon={<DollarSign size={12} />} sortable columnKey="billed" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 110, flexShrink: 0, textAlign: 'right' }} />
-          <ColumnHeader label={t('projects.reports.outstanding')} icon={<DollarSign size={12} />} sortable columnKey="outstanding" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ flex: 1, textAlign: 'right' }} />
-        </div>
-        {sorted.map((client) => (
-          <div
-            key={client.id}
-            className={`projects-row${selectedId === client.id ? ' selected' : ''}`}
-            onClick={() => onSelect(client.id)}
-          >
-            <span style={{ width: 180, flexShrink: 0, fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {client.name}
-            </span>
-            <span style={{ width: 180, flexShrink: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {client.email || '-'}
-            </span>
-            <span style={{ width: 70, flexShrink: 0, textAlign: 'right', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums', color: 'var(--color-text-primary)' }}>
-              {client.projectCount}
-            </span>
-            <span style={{ width: 110, flexShrink: 0, textAlign: 'right', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums', color: 'var(--color-text-tertiary)' }}>
-              {formatCurrency(client.totalBilled)}
-            </span>
-            <span style={{ flex: 1, textAlign: 'right', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums', color: client.outstandingAmount > 0 ? 'var(--color-warning)' : 'var(--color-text-tertiary)' }}>
-              {formatCurrency(client.outstandingAmount)}
-            </span>
-            {selectedId === client.id && <ChevronRight size={14} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />}
-          </div>
-        ))}
-        <div className="projects-add-row" onClick={onAdd}>
-          <Plus size={14} /> {t('projects.actions.addNew')}
-        </div>
-      </div>
-      <div className="projects-table-footer">
-        <span>{sorted.length} {t('projects.sidebar.clients').toLowerCase()}</span>
-      </div>
-    </div>
+    <DataTable
+      data={filtered}
+      columns={columns}
+      activeRowId={selectedId}
+      onRowClick={(client) => onSelect(client.id)}
+      onAddRow={onAdd}
+      addRowLabel={t('projects.actions.addNew')}
+      emptyTitle={t('projects.empty.noMatchingClients')}
+      emptyDescription={t('projects.empty.tryDifferentSearch')}
+      emptyIcon={<Users size={48} />}
+    />
   );
 }
 
@@ -1146,7 +1105,6 @@ function InvoicesListView({ invoices, searchQuery, onSelect, selectedId, onAdd }
   onAdd: () => void;
 }) {
   const { t } = useTranslation();
-  const [sort, setSort] = useState<SortState | null>(null);
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return invoices;
@@ -1157,35 +1115,7 @@ function InvoicesListView({ invoices, searchQuery, onSelect, selectedId, onAdd }
     );
   }, [invoices, searchQuery]);
 
-  const sorted = useMemo(() => {
-    if (!sort) return filtered;
-    const arr = [...filtered];
-    arr.sort((a, b) => {
-      let aVal: string | number = '';
-      let bVal: string | number = '';
-      switch (sort.column) {
-        case 'number': aVal = a.invoiceNumber; bVal = b.invoiceNumber; break;
-        case 'client': aVal = (a.clientName || '').toLowerCase(); bVal = (b.clientName || '').toLowerCase(); break;
-        case 'amount': aVal = a.total; bVal = b.total; break;
-        case 'items': aVal = a.lineItemCount ?? a.lineItems?.length ?? 0; bVal = b.lineItemCount ?? b.lineItems?.length ?? 0; break;
-        case 'status': aVal = a.status; bVal = b.status; break;
-        case 'date': aVal = a.issueDate; bVal = b.issueDate; break;
-      }
-      if (aVal < bVal) return sort.direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sort.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-    return arr;
-  }, [filtered, sort]);
-
-  const handleSort = useCallback((col: string) => {
-    setSort((prev) =>
-      !prev || prev.column !== col ? { column: col, direction: 'asc' }
-        : prev.direction === 'asc' ? { column: col, direction: 'desc' } : null,
-    );
-  }, []);
-
-  if (sorted.length === 0 && !searchQuery) {
+  if (filtered.length === 0 && !searchQuery) {
     return (
       <FeatureEmptyState
         illustration="documents"
@@ -1203,74 +1133,97 @@ function InvoicesListView({ invoices, searchQuery, onSelect, selectedId, onAdd }
     );
   }
 
-  if (sorted.length === 0 && searchQuery) {
-    return (
-      <div className="projects-empty-state">
-        <FileText size={48} className="projects-empty-state-icon" />
-        <div className="projects-empty-state-title">{t('projects.empty.noMatchingInvoices')}</div>
-        <div className="projects-empty-state-desc">{t('projects.empty.tryDifferentSearch')}</div>
-      </div>
-    );
-  }
+  const totalAmount = filtered.reduce((sum, inv) => sum + inv.total, 0);
 
-  const hdrStyle: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: '8px var(--spacing-lg)',
-    borderBottom: '1px solid var(--color-border-secondary)', fontSize: 'var(--font-size-xs)',
-    fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-tertiary)',
-    textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'var(--font-family)', flexShrink: 0,
-  };
-
-  const totalAmount = sorted.reduce((sum, inv) => sum + inv.total, 0);
+  const columns: DataTableColumn<Invoice>[] = [
+    {
+      key: 'invoiceNumber',
+      label: t('projects.invoices.number'),
+      icon: <Hash size={12} />,
+      width: 120,
+      sortable: true,
+      render: (invoice) => (
+        <span style={{ fontWeight: 'var(--font-weight-medium)' }}>{invoice.invoiceNumber}</span>
+      ),
+    },
+    {
+      key: 'clientName',
+      label: t('projects.invoices.client'),
+      icon: <Users size={12} />,
+      width: 160,
+      sortable: true,
+      render: (invoice) => (
+        <span className="dt-cell-secondary" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {invoice.clientName || '-'}
+        </span>
+      ),
+    },
+    {
+      key: 'total',
+      label: t('projects.invoices.amount'),
+      icon: <DollarSign size={12} />,
+      width: 110,
+      sortable: true,
+      align: 'right',
+      render: (invoice) => (
+        <span style={{ fontWeight: 'var(--font-weight-semibold)', fontVariantNumeric: 'tabular-nums' }}>
+          {formatCurrency(invoice.total)}
+        </span>
+      ),
+    },
+    {
+      key: 'lineItemCount',
+      label: t('projects.invoices.lineItems'),
+      icon: <Hash size={12} />,
+      width: 60,
+      sortable: true,
+      align: 'right',
+      render: (invoice) => (
+        <span className="dt-cell-secondary" style={{ fontVariantNumeric: 'tabular-nums' }}>
+          {invoice.lineItemCount ?? invoice.lineItems?.length ?? 0}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      label: t('projects.projects.status'),
+      width: 100,
+      sortable: true,
+      render: (invoice) => (
+        <Badge variant={getInvoiceStatusVariant(invoice.status)}>
+          {t(`projects.status.${invoice.status}`)}
+        </Badge>
+      ),
+    },
+    {
+      key: 'issueDate',
+      label: t('projects.invoices.issueDate'),
+      icon: <Calendar size={12} />,
+      sortable: true,
+      render: (invoice) => (
+        <span className="dt-cell-secondary">{formatDate(invoice.issueDate)}</span>
+      ),
+    },
+  ];
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        <div style={hdrStyle}>
-          <ColumnHeader label={t('projects.invoices.number')} icon={<Hash size={12} />} sortable columnKey="number" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 120, flexShrink: 0 }} />
-          <ColumnHeader label={t('projects.invoices.client')} icon={<Users size={12} />} sortable columnKey="client" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 160, flexShrink: 0 }} />
-          <ColumnHeader label={t('projects.invoices.amount')} icon={<DollarSign size={12} />} sortable columnKey="amount" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 110, flexShrink: 0, textAlign: 'right' }} />
-          <ColumnHeader label={t('projects.invoices.lineItems')} icon={<Hash size={12} />} sortable columnKey="items" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 60, flexShrink: 0, textAlign: 'right' }} />
-          <ColumnHeader label={t('projects.projects.status')} sortable columnKey="status" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 100, flexShrink: 0 }} />
-          <ColumnHeader label={t('projects.invoices.issueDate')} icon={<Calendar size={12} />} sortable columnKey="date" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ flex: 1 }} />
-        </div>
-        {sorted.map((invoice) => (
-          <div
-            key={invoice.id}
-            className={`projects-row${selectedId === invoice.id ? ' selected' : ''}`}
-            onClick={() => onSelect(invoice.id)}
-          >
-            <span style={{ width: 120, flexShrink: 0, fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)' }}>
-              {invoice.invoiceNumber}
-            </span>
-            <span style={{ width: 160, flexShrink: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {invoice.clientName || '-'}
-            </span>
-            <span style={{ width: 110, flexShrink: 0, textAlign: 'right', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums', color: 'var(--color-text-primary)' }}>
-              {formatCurrency(invoice.total)}
-            </span>
-            <span style={{ width: 60, flexShrink: 0, textAlign: 'right', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums', color: 'var(--color-text-tertiary)' }}>
-              {invoice.lineItemCount ?? invoice.lineItems?.length ?? 0}
-            </span>
-            <span style={{ width: 100, flexShrink: 0 }}>
-              <Badge variant={getInvoiceStatusVariant(invoice.status)}>
-                {t(`projects.status.${invoice.status}`)}
-              </Badge>
-            </span>
-            <span style={{ flex: 1, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
-              {formatDate(invoice.issueDate)}
-            </span>
-            {selectedId === invoice.id && <ChevronRight size={14} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />}
-          </div>
-        ))}
-        <div className="projects-add-row" onClick={onAdd}>
-          <Plus size={14} /> {t('projects.actions.addNew')}
-        </div>
-      </div>
-      <div className="projects-table-footer">
-        <span>{sorted.length} {t('projects.sidebar.invoices').toLowerCase()}</span>
-        <span style={{ marginLeft: 'auto' }}>{t('projects.invoices.total')}: {formatCurrency(totalAmount)}</span>
-      </div>
-    </div>
+    <DataTable
+      data={filtered}
+      columns={columns}
+      activeRowId={selectedId}
+      onRowClick={(invoice) => onSelect(invoice.id)}
+      onAddRow={onAdd}
+      addRowLabel={t('projects.actions.addNew')}
+      emptyTitle={t('projects.empty.noMatchingInvoices')}
+      emptyDescription={t('projects.empty.tryDifferentSearch')}
+      emptyIcon={<FileText size={48} />}
+      aggregations={[
+        {
+          label: t('projects.invoices.total'),
+          compute: () => formatCurrency(totalAmount),
+        },
+      ]}
+    />
   );
 }
 

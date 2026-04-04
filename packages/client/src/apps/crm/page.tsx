@@ -10,7 +10,7 @@ import {
   Download, Upload, BarChart3, Zap, Shield, FileSpreadsheet,
   UserPlus, TrendingUp, Merge, Sliders, RotateCcw,
   DollarSign, Calendar, Globe, Tag, User, Target, Eye, FileText, EyeOff,
-  Layers,
+  Layers, Check, CalendarPlus,
 } from 'lucide-react';
 import {
   useCompanies, useCreateCompany, useUpdateCompany, useDeleteCompany,
@@ -18,10 +18,12 @@ import {
   useStages, useCreateStage,
   useDeals, useCreateDeal, useUpdateDeal, useDeleteDeal,
   useMarkDealWon, useMarkDealLost,
-  useActivities, useCreateActivity, useUpdateActivity, useDeleteActivity,
+  useActivities, useCreateActivity, useUpdateActivity, useDeleteActivity, useCompleteActivity,
+  useActivityTypes, useSeedActivityTypes,
   useSeedCrmData,
-  useMyCrmPermission, canAccess,
+  useMyCrmPermission, useCrmPermissions, canAccess,
   type CrmCompany, type CrmContact, type CrmDealStage, type CrmDeal, type CrmActivity,
+  type CrmActivityTypeConfig,
 } from './hooks';
 import { DealKanban } from './components/deal-kanban';
 import { FilterBar, applyFilters, type CrmFilter, type FilterColumn } from './components/filter-bar';
@@ -32,6 +34,8 @@ import { DashboardCharts } from './components/dashboard-charts';
 import { AutomationsView } from './components/automations-view';
 import { PermissionsView } from './components/permissions-view';
 import { LeadsView } from './components/leads-view';
+import { LeadDetailPage } from './components/lead-detail-page';
+import { DealDetailPage } from './components/deal-detail-page';
 import { LeadFormsView } from './components/lead-forms-view';
 import { ForecastView } from './components/forecast-view';
 import { MergeContactsModal, MergeCompaniesModal } from './components/merge-modal';
@@ -45,9 +49,11 @@ import { Modal } from '../../components/ui/modal';
 import { Textarea } from '../../components/ui/textarea';
 import { IconButton } from '../../components/ui/icon-button';
 import { Badge } from '../../components/ui/badge';
+import { Chip } from '../../components/ui/chip';
 import { SmartButtonBar } from '../../components/shared/SmartButtonBar';
 import { PresenceAvatars } from '../../components/shared/presence-avatars';
 import { CustomFieldsRenderer } from '../../components/shared/custom-fields-renderer';
+import { DataTable, type DataTableColumn, type SortState as DTSortState } from '../../components/ui/data-table';
 import { ConfirmDialog } from '../../components/ui/confirm-dialog';
 import { ColumnHeader } from '../../components/ui/column-header';
 import { FeatureEmptyState } from '../../components/ui/feature-empty-state';
@@ -58,6 +64,17 @@ import { ContentArea } from '../../components/ui/content-area';
 import { Popover, PopoverTrigger, PopoverContent } from '../../components/ui/popover';
 import { useUIStore } from '../../stores/ui-store';
 import '../../styles/crm.css';
+
+// ─── Activity type icon mapping ──────────────────────────────
+const ACTIVITY_TYPE_ICONS: Record<string, React.ComponentType<{ size?: number }>> = {
+  'sticky-note': StickyNote,
+  'phone-call': PhoneCall,
+  'mail': Mail,
+  'calendar-days': CalendarDays,
+  'target': Target,
+  'trophy': Trophy,
+  'x-circle': XCircle,
+};
 
 // ─── Table interaction types ──────────────────────────────────
 
@@ -105,6 +122,12 @@ function InlineEditInput({
         if (e.key === 'Escape') onCancel();
       }}
       onBlur={() => onSave(val)}
+      style={{
+        width: '100%', padding: '4px 6px', border: '1px solid var(--color-border-primary)',
+        borderRadius: 'var(--radius-sm)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)',
+        background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', outline: 'none',
+        boxSizing: 'border-box',
+      }}
     />
   );
 }
@@ -133,6 +156,11 @@ function InlineSelectCell({
         if (e.key === 'Escape') onCancel();
       }}
       onBlur={() => onCancel()}
+      style={{
+        width: '100%', padding: '4px 6px', border: '1px solid var(--color-border-primary)',
+        borderRadius: 'var(--radius-sm)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)',
+        background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', outline: 'none',
+      }}
     >
       {options.map((o) => (
         <option key={o.value} value={o.value}>{o.label}</option>
@@ -143,7 +171,7 @@ function InlineSelectCell({
 
 // ─── Types ─────────────────────────────────────────────────────────
 
-type ActiveView = 'dashboard' | 'leads' | 'pipeline' | 'deals' | 'contacts' | 'companies' | 'activities' | 'automations' | 'permissions' | 'forecast' | 'leadForms';
+type ActiveView = 'dashboard' | 'leads' | 'lead-detail' | 'pipeline' | 'deals' | 'deal-detail' | 'contacts' | 'companies' | 'activities' | 'automations' | 'permissions' | 'forecast' | 'leadForms';
 
 // ─── Column definitions for filtering ─────────────────────────────
 
@@ -300,6 +328,48 @@ function getActivityLabel(type: string, t: (key: string) => string): string {
     case 'deal_lost': return t('crm.activities.dealLost');
     default: return t('crm.activities.note');
   }
+}
+
+type ActivityDueStatus = 'overdue' | 'due-today' | 'due-future' | 'no-date' | 'completed';
+
+function getActivityDueStatus(activity: CrmActivity): ActivityDueStatus {
+  if (activity.completedAt) return 'completed';
+  if (!activity.scheduledAt) return 'no-date';
+  const now = new Date();
+  const due = new Date(activity.scheduledAt);
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfToday = new Date(startOfToday.getTime() + 86400000);
+  if (due < startOfToday) return 'overdue';
+  if (due < endOfToday) return 'due-today';
+  return 'due-future';
+}
+
+const DUE_STATUS_COLORS: Record<ActivityDueStatus, string> = {
+  'overdue': '#ef4444',
+  'due-today': '#f59e0b',
+  'due-future': '#10b981',
+  'no-date': '#6b7280',
+  'completed': '#6b7280',
+};
+
+function getActivityDueLabel(activity: CrmActivity, t: (key: string, opts?: Record<string, unknown>) => string): string | null {
+  const status = getActivityDueStatus(activity);
+  if (status === 'completed') return null;
+  if (status === 'no-date') return null;
+  if (status === 'overdue') {
+    const days = Math.ceil((Date.now() - new Date(activity.scheduledAt!).getTime()) / 86400000);
+    return t('crm.activities.overdueBy', { days });
+  }
+  if (status === 'due-today') return t('crm.activities.dueToday');
+  const due = new Date(activity.scheduledAt!);
+  return t('crm.activities.dueDate') + ': ' + due.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function getDealRottingInfo(deal: CrmDeal): { isRotting: boolean; daysInStage: number; rottingDays: number | null } {
+  const rottingDays = deal.stageRottingDays ?? null;
+  if (!rottingDays || !deal.stageEnteredAt) return { isRotting: false, daysInStage: 0, rottingDays };
+  const daysInStage = Math.floor((Date.now() - new Date(deal.stageEnteredAt).getTime()) / 86400000);
+  return { isRotting: daysInStage > rottingDays, daysInStage, rottingDays };
 }
 
 // ─── Create Deal Modal ─────────────────────────────────────────────
@@ -565,10 +635,14 @@ function LogActivityModal({
   const { t } = useTranslation();
   const [type, setType] = useState('note');
   const [body, setBody] = useState('');
+  const [scheduledAt, setScheduledAt] = useState('');
+  const [assignedUserId, setAssignedUserId] = useState('');
   const [dealId, setDealId] = useState(defaultDealId || '');
   const [contactId, setContactId] = useState(defaultContactId || '');
   const [companyId, setCompanyId] = useState(defaultCompanyId || '');
   const createActivity = useCreateActivity();
+  const { data: permData } = useCrmPermissions();
+  const teamMembers = permData?.permissions ?? [];
 
   useEffect(() => {
     setDealId(defaultDealId || '');
@@ -576,7 +650,7 @@ function LogActivityModal({
     setCompanyId(defaultCompanyId || '');
   }, [defaultDealId, defaultContactId, defaultCompanyId]);
 
-  const reset = () => { setType('note'); setBody(''); setDealId(''); setContactId(''); setCompanyId(''); };
+  const reset = () => { setType('note'); setBody(''); setScheduledAt(''); setAssignedUserId(''); setDealId(''); setContactId(''); setCompanyId(''); };
 
   const handleSubmit = () => {
     if (!body.trim()) return;
@@ -586,6 +660,8 @@ function LogActivityModal({
       dealId: dealId || null,
       contactId: contactId || null,
       companyId: companyId || null,
+      assignedUserId: assignedUserId || null,
+      scheduledAt: scheduledAt || null,
     }, {
       onSuccess: () => { reset(); onClose(); },
     });
@@ -612,6 +688,16 @@ function LogActivityModal({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
             <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>{t('crm.activities.details')}</label>
             <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder={t('crm.activities.whatHappened')} rows={3} autoFocus />
+          </div>
+          <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+              <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>{t('crm.activities.dueDate')}</label>
+              <Input type="date" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} size="sm" />
+            </div>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+              <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)' }}>{t('crm.activities.assignee')}</label>
+              <Select value={assignedUserId} onChange={setAssignedUserId} options={[{ value: '', label: t('crm.activities.unassigned') }, ...teamMembers.map((m) => ({ value: m.userId, label: m.userName || m.userEmail }))]} size="sm" />
+            </div>
           </div>
           <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
@@ -672,9 +758,14 @@ function ActivityTimeline({ activities }: { activities: CrmActivity[] }) {
   const { t } = useTranslation();
   const updateActivity = useUpdateActivity();
   const deleteActivity = useDeleteActivity();
+  const completeActivity = useCompleteActivity();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editType, setEditType] = useState('');
   const [editBody, setEditBody] = useState('');
+  const [scheduleNextId, setScheduleNextId] = useState<string | null>(null);
+  const [nextType, setNextType] = useState('call');
+  const [nextDate, setNextDate] = useState('');
+  const [nextNote, setNextNote] = useState('');
 
   const startEdit = (activity: CrmActivity) => {
     setEditingId(activity.id);
@@ -693,6 +784,32 @@ function ActivityTimeline({ activities }: { activities: CrmActivity[] }) {
     updateActivity.mutate({ id: editingId, type: editType, body: editBody.trim() }, {
       onSuccess: () => cancelEdit(),
     });
+  };
+
+  const handleMarkDone = (activityId: string) => {
+    setScheduleNextId(activityId);
+    setNextType('call');
+    setNextDate('');
+    setNextNote('');
+  };
+
+  const handleScheduleNext = () => {
+    if (!scheduleNextId || !nextDate) return;
+    completeActivity.mutate({
+      id: scheduleNextId,
+      scheduleNext: { type: nextType, body: nextNote.trim() || undefined, scheduledAt: new Date(nextDate).toISOString() },
+    }, { onSuccess: () => setScheduleNextId(null) });
+  };
+
+  const handleSkipSchedule = () => {
+    if (!scheduleNextId) return;
+    completeActivity.mutate({ id: scheduleNextId }, { onSuccess: () => setScheduleNextId(null) });
+  };
+
+  const setQuickDate = (daysFromNow: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + daysFromNow);
+    setNextDate(d.toISOString().split('T')[0]);
   };
 
   if (activities.length === 0) {
@@ -731,14 +848,61 @@ function ActivityTimeline({ activities }: { activities: CrmActivity[] }) {
             </div>
           ) : (
             <div className="crm-activity-body" style={{ flex: 1 }}>
-              <div className="crm-activity-text">{activity.body}</div>
-              <div className="crm-activity-meta">
-                {getActivityLabel(activity.type, t)} &middot; {formatDate(activity.createdAt)}
+              <div className="crm-activity-text" style={activity.completedAt ? { textDecoration: 'line-through', opacity: 0.6 } : undefined}>{activity.body}</div>
+              <div className="crm-activity-meta" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', flexWrap: 'wrap' }}>
+                <span>{getActivityLabel(activity.type, t)} &middot; {formatDate(activity.createdAt)}{activity.assignedUserName ? ` · ${activity.assignedUserName}` : ''}</span>
+                {(() => {
+                  const dueStatus = getActivityDueStatus(activity);
+                  const dueLabel = getActivityDueLabel(activity, t);
+                  if (!dueLabel) return null;
+                  return (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 'var(--font-size-xs)', color: DUE_STATUS_COLORS[dueStatus], fontWeight: 'var(--font-weight-medium)' }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: DUE_STATUS_COLORS[dueStatus], flexShrink: 0 }} />
+                      {dueLabel}
+                    </span>
+                  );
+                })()}
+                {activity.completedAt && (
+                  <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
+                    &middot; {t('crm.activities.completedOn', { date: formatDate(activity.completedAt) })}
+                  </span>
+                )}
               </div>
             </div>
           )}
           {editingId !== activity.id && (
-            <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: 2, flexShrink: 0, alignItems: 'center' }}>
+              {!activity.completedAt && (
+                <Popover open={scheduleNextId === activity.id} onOpenChange={(o) => { if (!o) setScheduleNextId(null); }}>
+                  <PopoverTrigger asChild>
+                    <span><IconButton icon={<Check size={12} />} label={t('crm.activities.markDone')} size={24} onClick={() => handleMarkDone(activity.id)} /></span>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" style={{ width: 280, padding: 'var(--spacing-md)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+                    <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
+                      {t('crm.activities.scheduleNext')}
+                    </div>
+                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
+                      {t('crm.activities.scheduleNextSubtitle')}
+                    </div>
+                    <Select value={nextType} onChange={setNextType} options={[
+                      { value: 'call', label: t('crm.activities.call') },
+                      { value: 'email', label: t('crm.activities.email') },
+                      { value: 'meeting', label: t('crm.activities.meeting') },
+                      { value: 'note', label: t('crm.activities.note') },
+                    ]} size="sm" />
+                    <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
+                      <Button variant={nextDate === new Date(Date.now() + 86400000).toISOString().split('T')[0] ? 'primary' : 'secondary'} size="sm" onClick={() => setQuickDate(1)} style={{ flex: 1 }}>{t('crm.activities.tomorrow')}</Button>
+                      <Button variant={nextDate === new Date(Date.now() + 604800000).toISOString().split('T')[0] ? 'primary' : 'secondary'} size="sm" onClick={() => setQuickDate(7)} style={{ flex: 1 }}>{t('crm.activities.nextWeek')}</Button>
+                    </div>
+                    <Input type="date" value={nextDate} onChange={(e) => setNextDate(e.target.value)} size="sm" />
+                    <Input value={nextNote} onChange={(e) => setNextNote(e.target.value)} placeholder={t('crm.activities.optionalNote')} size="sm" />
+                    <div style={{ display: 'flex', gap: 'var(--spacing-xs)', justifyContent: 'flex-end' }}>
+                      <Button variant="ghost" size="sm" onClick={handleSkipSchedule}>{t('crm.activities.skip')}</Button>
+                      <Button variant="primary" size="sm" onClick={handleScheduleNext} disabled={!nextDate}>{t('crm.activities.schedule')}</Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
               <IconButton icon={<Pencil size={12} />} label={t('crm.activities.editActivity')} size={24} onClick={() => startEdit(activity)} />
               <IconButton icon={<Trash2 size={12} />} label={t('crm.activities.deleteActivity')} size={24} destructive onClick={() => deleteActivity.mutate(activity.id)} />
             </div>
@@ -1016,7 +1180,7 @@ function ContactDetailPanel({
           {contact.source && (
             <div className="crm-detail-field">
               <span className="crm-detail-field-label">{t('crm.contacts.source')}</span>
-              <Badge variant="default">{contact.source}</Badge>
+              <Chip>{contact.source}</Chip>
             </div>
           )}
         </div>
@@ -1135,7 +1299,7 @@ function CompanyDetailPanel({
           {company.industry && (
             <div className="crm-detail-field">
               <span className="crm-detail-field-label">{t('crm.companies.industry')}</span>
-              <Badge variant="default">{company.industry}</Badge>
+              <Chip>{company.industry}</Chip>
             </div>
           )}
 
@@ -1261,8 +1425,6 @@ function DealsListView({
 }) {
   const { t } = useTranslation();
   const updateDeal = useUpdateDeal();
-  const openSettings = useUIStore((s) => s.openSettings);
-  const lastSelectedIndex = useRef<number | null>(null);
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return deals;
@@ -1274,59 +1436,11 @@ function DealsListView({
     );
   }, [deals, searchQuery]);
 
-  const sorted = useMemo(() => {
-    if (!sort) return filtered;
-    const arr = [...filtered];
-    arr.sort((a, b) => {
-      let aVal: string | number = '';
-      let bVal: string | number = '';
-      switch (sort.column) {
-        case 'title': aVal = a.title.toLowerCase(); bVal = b.title.toLowerCase(); break;
-        case 'company': aVal = (a.companyName || '').toLowerCase(); bVal = (b.companyName || '').toLowerCase(); break;
-        case 'contact': aVal = (a.contactName || '').toLowerCase(); bVal = (b.contactName || '').toLowerCase(); break;
-        case 'value': aVal = a.value; bVal = b.value; break;
-        case 'stage': aVal = (a.stageName || '').toLowerCase(); bVal = (b.stageName || '').toLowerCase(); break;
-        case 'closeDate': aVal = a.expectedCloseDate || ''; bVal = b.expectedCloseDate || ''; break;
-      }
-      if (aVal < bVal) return sort.direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sort.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-    return arr;
-  }, [filtered, sort]);
-
-  const handleSort = useCallback((col: string) => {
-    onSortChange(
-      !sort || sort.column !== col
-        ? { column: col, direction: 'asc' }
-        : sort.direction === 'asc'
-          ? { column: col, direction: 'desc' }
-          : null,
-    );
-  }, [sort, onSortChange]);
-
-  const allChecked = sorted.length > 0 && sorted.every((d) => selectedIds.has(d.id));
-  const someChecked = sorted.some((d) => selectedIds.has(d.id));
-
-  const handleHeaderCheckbox = () => {
-    if (allChecked) onSelectionChange(new Set());
-    else onSelectionChange(new Set(sorted.map((d) => d.id)));
-  };
-
-  const handleRowCheckbox = (index: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const deal = sorted[index];
-    const newSet = new Set(selectedIds);
-    if (e.shiftKey && lastSelectedIndex.current !== null) {
-      const start = Math.min(lastSelectedIndex.current, index);
-      const end = Math.max(lastSelectedIndex.current, index);
-      for (let i = start; i <= end; i++) newSet.add(sorted[i].id);
-    } else {
-      if (newSet.has(deal.id)) newSet.delete(deal.id); else newSet.add(deal.id);
-    }
-    lastSelectedIndex.current = index;
-    onSelectionChange(newSet);
-  };
+  const companyDomainMap = useMemo(() => {
+    const map = new Map<string, string>();
+    companies.forEach((c) => { if (c.domain) map.set(c.id, c.domain); });
+    return map;
+  }, [companies]);
 
   const handleCellClick = (rowId: string, column: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -1345,65 +1459,6 @@ function DealsListView({
     updateDeal.mutate(updates as Parameters<typeof updateDeal.mutate>[0]);
     onEditingCellChange(null);
   };
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (editingCell) return;
-    const target = e.target as HTMLElement;
-    if (target.tagName === 'INPUT' || target.tagName === 'SELECT') return;
-    if (e.key === 'ArrowDown') { e.preventDefault(); onFocusedIndexChange(Math.min((focusedIndex ?? -1) + 1, sorted.length - 1)); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); onFocusedIndexChange(Math.max((focusedIndex ?? 1) - 1, 0)); }
-    else if (e.key === 'Enter' && focusedIndex !== null && sorted[focusedIndex]) { e.preventDefault(); onSelect(sorted[focusedIndex].id); }
-    else if (e.key === 'Escape') { onFocusedIndexChange(null); onSelectionChange(new Set()); }
-    else if (e.key === ' ' && focusedIndex !== null && sorted[focusedIndex]) {
-      e.preventDefault();
-      const id = sorted[focusedIndex].id;
-      const ns = new Set(selectedIds);
-      if (ns.has(id)) ns.delete(id); else ns.add(id);
-      onSelectionChange(ns);
-    }
-  }, [editingCell, focusedIndex, sorted, selectedIds, onFocusedIndexChange, onSelectionChange, onSelect]);
-
-  // Company domain lookup for logos
-  const companyDomainMap = useMemo(() => {
-    const map = new Map<string, string>();
-    companies.forEach((c) => { if (c.domain) map.set(c.id, c.domain); });
-    return map;
-  }, [companies]);
-
-  // Grouping
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
-
-  const groups = useMemo(() => {
-    if (!groupBy) return null;
-    const map = new Map<string, CrmDeal[]>();
-    for (const deal of sorted) {
-      let key = '';
-      switch (groupBy) {
-        case 'stage': key = deal.stageName || 'No stage'; break;
-        case 'contact': key = deal.contactName || 'No contact'; break;
-        case 'company': key = deal.companyName || 'No company'; break;
-        default: key = 'Other';
-      }
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(deal);
-    }
-    return Array.from(map.entries()).map(([label, items]) => ({ label, items }));
-  }, [sorted, groupBy]);
-
-  const toggleGroup = useCallback((label: string) => {
-    setCollapsedGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(label)) next.delete(label); else next.add(label);
-      return next;
-    });
-  }, []);
-
-  const totalValue = useMemo(() => sorted.reduce((sum, d) => sum + d.value, 0), [sorted]);
-  const avgValue = sorted.length > 0 ? totalValue / sorted.length : 0;
-  const avgProbability = useMemo(() => {
-    if (sorted.length === 0) return 0;
-    return Math.round(sorted.reduce((sum, d) => sum + (d.probability ?? 0), 0) / sorted.length);
-  }, [sorted]);
 
   if (filtered.length === 0) {
     if (searchQuery) {
@@ -1432,101 +1487,97 @@ function DealsListView({
     );
   }
 
-  const hdrStyle: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: '8px var(--spacing-lg)',
-    borderBottom: '1px solid var(--color-border-secondary)', fontSize: 'var(--font-size-xs)',
-    fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-tertiary)',
-    textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'var(--font-family)', flexShrink: 0,
-  };
+  const isEd = (dealId: string, col: string) => editingCell?.rowId === dealId && editingCell?.column === col;
+
+  const dealColumns: DataTableColumn<CrmDeal>[] = [
+    {
+      key: 'title', label: t('crm.deals.title'), icon: <Briefcase size={12} />, width: 180, sortable: true,
+      render: (deal) => isEd(deal.id, 'title') ? (
+        <InlineEditInput value={deal.title} type="text" onSave={(v) => handleSave(deal.id, 'title', v)} onCancel={() => onEditingCellChange(null)} />
+      ) : (
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontSize: 'var(--font-size-sm)', cursor: 'text' }} onClick={(e) => handleCellClick(deal.id, 'title', e)}>
+          <NameAvatar name={deal.title} />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{deal.title}</span>
+        </span>
+      ),
+      compare: (a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase()),
+    },
+    {
+      key: 'company', label: t('crm.deals.company'), icon: <Building2 size={12} />, width: 130, sortable: true,
+      render: (deal) => (
+        <span className="dt-cell-secondary" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {deal.companyId && <CompanyLogo domain={companyDomainMap.get(deal.companyId)} />}
+          {deal.companyName || '-'}
+        </span>
+      ),
+      compare: (a, b) => (a.companyName || '').localeCompare(b.companyName || ''),
+    },
+    {
+      key: 'contact', label: t('crm.deals.contact'), icon: <Users size={12} />, width: 110, sortable: true,
+      render: (deal) => <span className="dt-cell-secondary">{deal.contactName || '-'}</span>,
+      compare: (a, b) => (a.contactName || '').localeCompare(b.contactName || ''),
+    },
+    {
+      key: 'value', label: t('crm.deals.value'), icon: <DollarSign size={12} />, width: 100, sortable: true, align: 'right',
+      render: (deal) => isEd(deal.id, 'value') ? (
+        <InlineEditInput value={String(deal.value)} type="number" onSave={(v) => handleSave(deal.id, 'value', v)} onCancel={() => onEditingCellChange(null)} />
+      ) : (
+        <span style={{ fontWeight: 'var(--font-weight-medium)', fontSize: 'var(--font-size-sm)', fontVariantNumeric: 'tabular-nums', cursor: 'text' }} onClick={(e) => handleCellClick(deal.id, 'value', e)}>
+          {formatCurrency(deal.value)}
+        </span>
+      ),
+    },
+    {
+      key: 'stage', label: t('crm.deals.stage'), icon: <LayoutGrid size={12} />, width: 100, sortable: true,
+      render: (deal) => isEd(deal.id, 'stage') ? (
+        <InlineSelectCell value={deal.stageId} options={stages.map((s) => ({ value: s.id, label: s.name }))} onSave={(v) => handleSave(deal.id, 'stage', v)} onCancel={() => onEditingCellChange(null)} />
+      ) : (
+        <span style={{ cursor: 'pointer' }} onClick={(e) => handleCellClick(deal.id, 'stage', e)}>
+          {deal.stageName && <Badge variant="default"><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><StatusDot color={deal.stageColor || '#6b7280'} size={6} />{deal.stageName}</span></Badge>}
+        </span>
+      ),
+      compare: (a, b) => (a.stageName || '').localeCompare(b.stageName || ''),
+    },
+    {
+      key: 'closeDate', label: t('crm.deals.closeDate'), icon: <Calendar size={12} />, width: 100, sortable: true,
+      render: (deal) => isEd(deal.id, 'closeDate') ? (
+        <InlineEditInput value={deal.expectedCloseDate || ''} type="date" onSave={(v) => handleSave(deal.id, 'closeDate', v)} onCancel={() => onEditingCellChange(null)} />
+      ) : (
+        <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', cursor: 'text' }} onClick={(e) => handleCellClick(deal.id, 'closeDate', e)}>
+          {deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : '-'}
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }} tabIndex={0} onKeyDown={handleKeyDown}>
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        <div style={hdrStyle}>
-          <input type="checkbox" className={`crm-checkbox${!allChecked && someChecked ? ' indeterminate' : ''}`} checked={allChecked} onChange={handleHeaderCheckbox} />
-          <ColumnHeader label={t('crm.deals.title')} icon={<Briefcase size={12} />} sortable columnKey="title" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 180, flexShrink: 0 }} />
-          <ColumnHeader label={t('crm.deals.company')} icon={<Building2 size={12} />} sortable columnKey="company" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 130, flexShrink: 0 }} />
-          <ColumnHeader label={t('crm.deals.contact')} icon={<Users size={12} />} sortable columnKey="contact" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 110, flexShrink: 0 }} />
-          <ColumnHeader label={t('crm.deals.value')} icon={<DollarSign size={12} />} sortable columnKey="value" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 100, flexShrink: 0, textAlign: 'right' }} />
-          <ColumnHeader label={t('crm.deals.stage')} icon={<LayoutGrid size={12} />} sortable columnKey="stage" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 100, flexShrink: 0 }} />
-          <ColumnHeader label={t('crm.deals.closeDate')} icon={<Calendar size={12} />} sortable columnKey="closeDate" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ flex: 1 }} />
-          <IconButton icon={<Plus size={12} />} label={t('crm.fields.manageFields')} size={22} onClick={(e) => { e.stopPropagation(); openSettings('crm', 'data-model'); }} />
-        </div>
-        {sorted.map((deal, idx) => {
-          const isEd = (col: string) => editingCell?.rowId === deal.id && editingCell?.column === col;
-          return (
-            <div
-              key={deal.id}
-              className={`crm-row${selectedId === deal.id ? ' selected' : ''}${focusedIndex === idx ? ' focused' : ''}`}
-              onClick={() => { onFocusedIndexChange(idx); if (!editingCell) onSelect(deal.id); }}
-            >
-              <input type="checkbox" className="crm-checkbox" checked={selectedIds.has(deal.id)} onClick={(e) => handleRowCheckbox(idx, e)} readOnly />
-              {isEd('title') ? (
-                <span className="crm-cell-editing" style={{ width: 180, flexShrink: 0 }}>
-                  <InlineEditInput value={deal.title} type="text" onSave={(v) => handleSave(deal.id, 'title', v)} onCancel={() => onEditingCellChange(null)} />
-                </span>
-              ) : (
-                <span style={{ width: 180, flexShrink: 0, fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'text', display: 'flex', alignItems: 'center', gap: 8 }} onClick={(e) => handleCellClick(deal.id, 'title', e)}>
-                  <NameAvatar name={deal.title} />
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{deal.title}</span>
-                </span>
-              )}
-              <span style={{ width: 130, flexShrink: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
-                {deal.companyId && <CompanyLogo domain={companyDomainMap.get(deal.companyId)} />}
-                {deal.companyName || '-'}
-              </span>
-              <span style={{ width: 110, flexShrink: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {deal.contactName || '-'}
-              </span>
-              {isEd('value') ? (
-                <span className="crm-cell-editing" style={{ width: 100, flexShrink: 0 }}>
-                  <InlineEditInput value={String(deal.value)} type="number" onSave={(v) => handleSave(deal.id, 'value', v)} onCancel={() => onEditingCellChange(null)} />
-                </span>
-              ) : (
-                <span style={{ width: 100, flexShrink: 0, fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)', textAlign: 'right', fontVariantNumeric: 'tabular-nums', cursor: 'text' }} onClick={(e) => handleCellClick(deal.id, 'value', e)}>
-                  {formatCurrency(deal.value)}
-                </span>
-              )}
-              {isEd('stage') ? (
-                <span className="crm-cell-editing" style={{ width: 100, flexShrink: 0 }}>
-                  <InlineSelectCell value={deal.stageId} options={stages.map((s) => ({ value: s.id, label: s.name }))} onSave={(v) => handleSave(deal.id, 'stage', v)} onCancel={() => onEditingCellChange(null)} />
-                </span>
-              ) : (
-                <span style={{ width: 100, flexShrink: 0, cursor: 'pointer' }} onClick={(e) => handleCellClick(deal.id, 'stage', e)}>
-                  {deal.stageName && (
-                    <Badge variant="default">
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                        <StatusDot color={deal.stageColor || '#6b7280'} size={6} />
-                        {deal.stageName}
-                      </span>
-                    </Badge>
-                  )}
-                </span>
-              )}
-              {isEd('closeDate') ? (
-                <span className="crm-cell-editing" style={{ flex: 1 }}>
-                  <InlineEditInput value={deal.expectedCloseDate || ''} type="date" onSave={(v) => handleSave(deal.id, 'closeDate', v)} onCancel={() => onEditingCellChange(null)} />
-                </span>
-              ) : (
-                <span style={{ flex: 1, fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', cursor: 'text' }} onClick={(e) => handleCellClick(deal.id, 'closeDate', e)}>
-                  {deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : '-'}
-                </span>
-              )}
-              {selectedId === deal.id && <ChevronRight size={14} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />}
-            </div>
-          );
-        })}
-        <div className="crm-add-row" onClick={onAdd}>
-          <Plus size={14} /> {t('crm.actions.addNew')}
-        </div>
-      </div>
-      <div className="crm-table-footer">
-        <span>{sorted.length} {sorted.length !== 1 ? t('crm.sidebar.deals').toLowerCase() : t('crm.deals.deal')}</span>
-        <span style={{ marginLeft: 'auto' }}>{t('crm.deals.total')}: {formatCurrency(totalValue)}</span>
-        <span style={{ color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-normal)' }}>{t('crm.deals.avg')}: {formatCurrency(Math.round(avgValue))}</span>
-        <span style={{ color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-normal)' }}>{t('crm.deals.avgProbability')}: {avgProbability}%</span>
-      </div>
-    </div>
+    <DataTable
+      data={filtered}
+      columns={dealColumns}
+      selectable
+      selectedIds={selectedIds}
+      onSelectionChange={onSelectionChange}
+      sort={sort}
+      onSortChange={onSortChange}
+      activeRowId={selectedId}
+      onRowClick={(deal) => { if (!editingCell) onSelect(deal.id); }}
+      onAddRow={onAdd}
+      addRowLabel={t('crm.actions.addNew')}
+      aggregations={[
+        { label: t('crm.deals.total'), compute: (rows) => formatCurrency(rows.reduce((s, d) => s + d.value, 0)) },
+        { label: t('crm.deals.avg'), compute: (rows) => formatCurrency(Math.round(rows.reduce((s, d) => s + d.value, 0) / (rows.length || 1))), style: { color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-normal)' } },
+        { label: t('crm.deals.avgProbability'), compute: (rows) => `${rows.length ? Math.round(rows.reduce((s, d) => s + (d.probability ?? 0), 0) / rows.length) : 0}%`, style: { color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-normal)' } },
+      ]}
+      groupBy={groupBy ? (deal) => {
+        switch (groupBy) {
+          case 'stage': return deal.stageName || 'No stage';
+          case 'contact': return deal.contactName || 'No contact';
+          case 'company': return deal.companyName || 'No company';
+          default: return 'Other';
+        }
+      } : undefined}
+      emptyTitle={t('crm.empty.noMatchingDeals')}
+    />
   );
 }
 
@@ -1557,8 +1608,6 @@ function ContactsListView({
 }) {
   const { t } = useTranslation();
   const updateContact = useUpdateContact();
-  const openSettings = useUIStore((s) => s.openSettings);
-  const lastSelectedIndex = useRef<number | null>(null);
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return contacts;
@@ -1570,54 +1619,11 @@ function ContactsListView({
     );
   }, [contacts, searchQuery]);
 
-  const sorted = useMemo(() => {
-    if (!sort) return filtered;
-    const arr = [...filtered];
-    arr.sort((a, b) => {
-      let aVal = '', bVal = '';
-      switch (sort.column) {
-        case 'name': aVal = a.name.toLowerCase(); bVal = b.name.toLowerCase(); break;
-        case 'email': aVal = (a.email || '').toLowerCase(); bVal = (b.email || '').toLowerCase(); break;
-        case 'phone': aVal = (a.phone || '').toLowerCase(); bVal = (b.phone || '').toLowerCase(); break;
-        case 'company': aVal = (a.companyName || '').toLowerCase(); bVal = (b.companyName || '').toLowerCase(); break;
-        case 'position': aVal = (a.position || '').toLowerCase(); bVal = (b.position || '').toLowerCase(); break;
-      }
-      if (aVal < bVal) return sort.direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sort.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-    return arr;
-  }, [filtered, sort]);
-
-  const handleSort = useCallback((col: string) => {
-    onSortChange(
-      !sort || sort.column !== col ? { column: col, direction: 'asc' }
-        : sort.direction === 'asc' ? { column: col, direction: 'desc' } : null,
-    );
-  }, [sort, onSortChange]);
-
-  const allChecked = sorted.length > 0 && sorted.every((c) => selectedIds.has(c.id));
-  const someChecked = sorted.some((c) => selectedIds.has(c.id));
-
-  const handleHeaderCheckbox = () => {
-    if (allChecked) onSelectionChange(new Set());
-    else onSelectionChange(new Set(sorted.map((c) => c.id)));
-  };
-
-  const handleRowCheckbox = (index: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const contact = sorted[index];
-    const newSet = new Set(selectedIds);
-    if (e.shiftKey && lastSelectedIndex.current !== null) {
-      const start = Math.min(lastSelectedIndex.current, index);
-      const end = Math.max(lastSelectedIndex.current, index);
-      for (let i = start; i <= end; i++) newSet.add(sorted[i].id);
-    } else {
-      if (newSet.has(contact.id)) newSet.delete(contact.id); else newSet.add(contact.id);
-    }
-    lastSelectedIndex.current = index;
-    onSelectionChange(newSet);
-  };
+  const companyDomainMap = useMemo(() => {
+    const map = new Map<string, string>();
+    companies.forEach((c) => { if (c.domain) map.set(c.id, c.domain); });
+    return map;
+  }, [companies]);
 
   const handleCellClick = (rowId: string, column: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -1636,30 +1642,6 @@ function ContactsListView({
     updateContact.mutate(updates as Parameters<typeof updateContact.mutate>[0]);
     onEditingCellChange(null);
   };
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (editingCell) return;
-    const target = e.target as HTMLElement;
-    if (target.tagName === 'INPUT' || target.tagName === 'SELECT') return;
-    if (e.key === 'ArrowDown') { e.preventDefault(); onFocusedIndexChange(Math.min((focusedIndex ?? -1) + 1, sorted.length - 1)); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); onFocusedIndexChange(Math.max((focusedIndex ?? 1) - 1, 0)); }
-    else if (e.key === 'Enter' && focusedIndex !== null && sorted[focusedIndex]) { e.preventDefault(); onSelect(sorted[focusedIndex].id); }
-    else if (e.key === 'Escape') { onFocusedIndexChange(null); onSelectionChange(new Set()); }
-    else if (e.key === ' ' && focusedIndex !== null && sorted[focusedIndex]) {
-      e.preventDefault();
-      const id = sorted[focusedIndex].id;
-      const ns = new Set(selectedIds);
-      if (ns.has(id)) ns.delete(id); else ns.add(id);
-      onSelectionChange(ns);
-    }
-  }, [editingCell, focusedIndex, sorted, selectedIds, onFocusedIndexChange, onSelectionChange, onSelect]);
-
-  // Company domain lookup for logos
-  const companyDomainMap = useMemo(() => {
-    const map = new Map<string, string>();
-    companies.forEach((c) => { if (c.domain) map.set(c.id, c.domain); });
-    return map;
-  }, [companies]);
 
   if (filtered.length === 0) {
     if (searchQuery) {
@@ -1688,87 +1670,71 @@ function ContactsListView({
     );
   }
 
-  const hdrStyle: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: '8px var(--spacing-lg)',
-    borderBottom: '1px solid var(--color-border-secondary)', fontSize: 'var(--font-size-xs)',
-    fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-tertiary)',
-    textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'var(--font-family)', flexShrink: 0,
-  };
+  const isEd = (cId: string, col: string) => editingCell?.rowId === cId && editingCell?.column === col;
+
+  const contactColumns: DataTableColumn<CrmContact>[] = [
+    {
+      key: 'name', label: t('crm.contacts.name'), icon: <User size={12} />, width: 160, sortable: true,
+      render: (c) => isEd(c.id, 'name') ? (
+        <InlineEditInput value={c.name} type="text" onSave={(v) => handleSave(c.id, 'name', v)} onCancel={() => onEditingCellChange(null)} />
+      ) : (
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontSize: 'var(--font-size-sm)', cursor: 'text' }} onClick={(e) => handleCellClick(c.id, 'name', e)}>
+          <NameAvatar name={c.name} />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+        </span>
+      ),
+    },
+    {
+      key: 'email', label: t('crm.contacts.email'), icon: <Mail size={12} />, width: 170, sortable: true,
+      render: (c) => isEd(c.id, 'email') ? (
+        <InlineEditInput value={c.email || ''} type="text" onSave={(v) => handleSave(c.id, 'email', v)} onCancel={() => onEditingCellChange(null)} />
+      ) : (
+        <span className="dt-cell-secondary" style={{ cursor: 'text' }} onClick={(e) => handleCellClick(c.id, 'email', e)}>{c.email || '-'}</span>
+      ),
+    },
+    {
+      key: 'phone', label: t('crm.contacts.phone'), icon: <PhoneIcon size={12} />, width: 120, sortable: true,
+      render: (c) => isEd(c.id, 'phone') ? (
+        <InlineEditInput value={c.phone || ''} type="text" onSave={(v) => handleSave(c.id, 'phone', v)} onCancel={() => onEditingCellChange(null)} />
+      ) : (
+        <span className="dt-cell-secondary" style={{ cursor: 'text' }} onClick={(e) => handleCellClick(c.id, 'phone', e)}>{c.phone || '-'}</span>
+      ),
+    },
+    {
+      key: 'company', label: t('crm.deals.company'), icon: <Building2 size={12} />, width: 130, sortable: true,
+      render: (c) => (
+        <span className="dt-cell-secondary" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {c.companyId && <CompanyLogo domain={companyDomainMap.get(c.companyId)} />}
+          {c.companyName || '-'}
+        </span>
+      ),
+      compare: (a, b) => (a.companyName || '').localeCompare(b.companyName || ''),
+    },
+    {
+      key: 'position', label: t('crm.contacts.position'), icon: <Briefcase size={12} />, width: 130, sortable: true,
+      render: (c) => isEd(c.id, 'position') ? (
+        <InlineEditInput value={c.position || ''} type="text" onSave={(v) => handleSave(c.id, 'position', v)} onCancel={() => onEditingCellChange(null)} />
+      ) : (
+        <span className="dt-cell-secondary" style={{ cursor: 'text' }} onClick={(e) => handleCellClick(c.id, 'position', e)}>{c.position || '-'}</span>
+      ),
+    },
+  ];
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }} tabIndex={0} onKeyDown={handleKeyDown}>
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        <div style={hdrStyle}>
-          <input type="checkbox" className={`crm-checkbox${!allChecked && someChecked ? ' indeterminate' : ''}`} checked={allChecked} onChange={handleHeaderCheckbox} />
-          <ColumnHeader label={t('crm.contacts.name')} icon={<User size={12} />} sortable columnKey="name" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 160, flexShrink: 0 }} />
-          <ColumnHeader label={t('crm.contacts.email')} icon={<Mail size={12} />} sortable columnKey="email" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 170, flexShrink: 0 }} />
-          <ColumnHeader label={t('crm.contacts.phone')} icon={<PhoneIcon size={12} />} sortable columnKey="phone" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 120, flexShrink: 0 }} />
-          <ColumnHeader label={t('crm.deals.company')} icon={<Building2 size={12} />} sortable columnKey="company" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 130, flexShrink: 0 }} />
-          <ColumnHeader label={t('crm.contacts.position')} icon={<Briefcase size={12} />} sortable columnKey="position" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ flex: 1 }} />
-          <IconButton icon={<Plus size={12} />} label={t('crm.fields.manageFields')} size={22} onClick={(e) => { e.stopPropagation(); openSettings('crm', 'data-model'); }} />
-        </div>
-        {sorted.map((contact, idx) => {
-          const isEd = (col: string) => editingCell?.rowId === contact.id && editingCell?.column === col;
-          return (
-            <div
-              key={contact.id}
-              className={`crm-row${selectedId === contact.id ? ' selected' : ''}${focusedIndex === idx ? ' focused' : ''}`}
-              onClick={() => { onFocusedIndexChange(idx); if (!editingCell) onSelect(contact.id); }}
-            >
-              <input type="checkbox" className="crm-checkbox" checked={selectedIds.has(contact.id)} onClick={(e) => handleRowCheckbox(idx, e)} readOnly />
-              {isEd('name') ? (
-                <span className="crm-cell-editing" style={{ width: 160, flexShrink: 0 }}>
-                  <InlineEditInput value={contact.name} type="text" onSave={(v) => handleSave(contact.id, 'name', v)} onCancel={() => onEditingCellChange(null)} />
-                </span>
-              ) : (
-                <span style={{ width: 160, flexShrink: 0, fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'text', display: 'flex', alignItems: 'center', gap: 8 }} onClick={(e) => handleCellClick(contact.id, 'name', e)}>
-                  <NameAvatar name={contact.name} />
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{contact.name}</span>
-                </span>
-              )}
-              {isEd('email') ? (
-                <span className="crm-cell-editing" style={{ width: 170, flexShrink: 0 }}>
-                  <InlineEditInput value={contact.email || ''} type="text" onSave={(v) => handleSave(contact.id, 'email', v)} onCancel={() => onEditingCellChange(null)} />
-                </span>
-              ) : (
-                <span style={{ width: 170, flexShrink: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'text' }} onClick={(e) => handleCellClick(contact.id, 'email', e)}>
-                  {contact.email || '-'}
-                </span>
-              )}
-              {isEd('phone') ? (
-                <span className="crm-cell-editing" style={{ width: 120, flexShrink: 0 }}>
-                  <InlineEditInput value={contact.phone || ''} type="text" onSave={(v) => handleSave(contact.id, 'phone', v)} onCancel={() => onEditingCellChange(null)} />
-                </span>
-              ) : (
-                <span style={{ width: 120, flexShrink: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'text' }} onClick={(e) => handleCellClick(contact.id, 'phone', e)}>
-                  {contact.phone || '-'}
-                </span>
-              )}
-              <span style={{ width: 130, flexShrink: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
-                {contact.companyId && <CompanyLogo domain={companyDomainMap.get(contact.companyId)} />}
-                {contact.companyName || '-'}
-              </span>
-              {isEd('position') ? (
-                <span className="crm-cell-editing" style={{ flex: 1 }}>
-                  <InlineEditInput value={contact.position || ''} type="text" onSave={(v) => handleSave(contact.id, 'position', v)} onCancel={() => onEditingCellChange(null)} />
-                </span>
-              ) : (
-                <span style={{ flex: 1, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'text' }} onClick={(e) => handleCellClick(contact.id, 'position', e)}>
-                  {contact.position || '-'}
-                </span>
-              )}
-              {selectedId === contact.id && <ChevronRight size={14} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />}
-            </div>
-          );
-        })}
-        <div className="crm-add-row" onClick={onAdd}>
-          <Plus size={14} /> {t('crm.actions.addNew')}
-        </div>
-      </div>
-      <div className="crm-table-footer">
-        <span>{sorted.length} {sorted.length !== 1 ? t('crm.sidebar.contacts').toLowerCase() : t('crm.contacts.name').toLowerCase()}</span>
-      </div>
-    </div>
+    <DataTable
+      data={filtered}
+      columns={contactColumns}
+      selectable
+      selectedIds={selectedIds}
+      onSelectionChange={onSelectionChange}
+      sort={sort}
+      onSortChange={onSortChange}
+      activeRowId={selectedId}
+      onRowClick={(c) => { if (!editingCell) onSelect(c.id); }}
+      onAddRow={onAdd}
+      addRowLabel={t('crm.actions.addNew')}
+      emptyTitle={t('crm.empty.noMatchingContacts')}
+    />
   );
 }
 
@@ -1798,8 +1764,6 @@ function CompaniesListView({
 }) {
   const { t } = useTranslation();
   const updateCompany = useUpdateCompany();
-  const openSettings = useUIStore((s) => s.openSettings);
-  const lastSelectedIndex = useRef<number | null>(null);
 
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return companies;
@@ -1810,54 +1774,6 @@ function CompaniesListView({
       (c.industry?.toLowerCase().includes(q)),
     );
   }, [companies, searchQuery]);
-
-  const sorted = useMemo(() => {
-    if (!sort) return filtered;
-    const arr = [...filtered];
-    arr.sort((a, b) => {
-      let aVal = '', bVal = '';
-      switch (sort.column) {
-        case 'name': aVal = a.name.toLowerCase(); bVal = b.name.toLowerCase(); break;
-        case 'domain': aVal = (a.domain || '').toLowerCase(); bVal = (b.domain || '').toLowerCase(); break;
-        case 'industry': aVal = (a.industry || '').toLowerCase(); bVal = (b.industry || '').toLowerCase(); break;
-        case 'size': aVal = (a.size || '').toLowerCase(); bVal = (b.size || '').toLowerCase(); break;
-      }
-      if (aVal < bVal) return sort.direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sort.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-    return arr;
-  }, [filtered, sort]);
-
-  const handleSort = useCallback((col: string) => {
-    onSortChange(
-      !sort || sort.column !== col ? { column: col, direction: 'asc' }
-        : sort.direction === 'asc' ? { column: col, direction: 'desc' } : null,
-    );
-  }, [sort, onSortChange]);
-
-  const allChecked = sorted.length > 0 && sorted.every((c) => selectedIds.has(c.id));
-  const someChecked = sorted.some((c) => selectedIds.has(c.id));
-
-  const handleHeaderCheckbox = () => {
-    if (allChecked) onSelectionChange(new Set());
-    else onSelectionChange(new Set(sorted.map((c) => c.id)));
-  };
-
-  const handleRowCheckbox = (index: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const company = sorted[index];
-    const newSet = new Set(selectedIds);
-    if (e.shiftKey && lastSelectedIndex.current !== null) {
-      const start = Math.min(lastSelectedIndex.current, index);
-      const end = Math.max(lastSelectedIndex.current, index);
-      for (let i = start; i <= end; i++) newSet.add(sorted[i].id);
-    } else {
-      if (newSet.has(company.id)) newSet.delete(company.id); else newSet.add(company.id);
-    }
-    lastSelectedIndex.current = index;
-    onSelectionChange(newSet);
-  };
 
   const handleCellClick = (rowId: string, column: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -1875,23 +1791,6 @@ function CompaniesListView({
     updateCompany.mutate(updates as Parameters<typeof updateCompany.mutate>[0]);
     onEditingCellChange(null);
   };
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (editingCell) return;
-    const target = e.target as HTMLElement;
-    if (target.tagName === 'INPUT' || target.tagName === 'SELECT') return;
-    if (e.key === 'ArrowDown') { e.preventDefault(); onFocusedIndexChange(Math.min((focusedIndex ?? -1) + 1, sorted.length - 1)); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); onFocusedIndexChange(Math.max((focusedIndex ?? 1) - 1, 0)); }
-    else if (e.key === 'Enter' && focusedIndex !== null && sorted[focusedIndex]) { e.preventDefault(); onSelect(sorted[focusedIndex].id); }
-    else if (e.key === 'Escape') { onFocusedIndexChange(null); onSelectionChange(new Set()); }
-    else if (e.key === ' ' && focusedIndex !== null && sorted[focusedIndex]) {
-      e.preventDefault();
-      const id = sorted[focusedIndex].id;
-      const ns = new Set(selectedIds);
-      if (ns.has(id)) ns.delete(id); else ns.add(id);
-      onSelectionChange(ns);
-    }
-  }, [editingCell, focusedIndex, sorted, selectedIds, onFocusedIndexChange, onSelectionChange, onSelect]);
 
   if (filtered.length === 0) {
     if (searchQuery) {
@@ -1920,80 +1819,67 @@ function CompaniesListView({
     );
   }
 
-  const hdrStyle: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: '8px var(--spacing-lg)',
-    borderBottom: '1px solid var(--color-border-secondary)', fontSize: 'var(--font-size-xs)',
-    fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-tertiary)',
-    textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'var(--font-family)', flexShrink: 0,
-  };
+  const isEd = (cId: string, col: string) => editingCell?.rowId === cId && editingCell?.column === col;
+
+  const companyColumns: DataTableColumn<CrmCompany>[] = [
+    {
+      key: 'name', label: t('crm.companies.name'), icon: <Building2 size={12} />, width: 160, sortable: true,
+      render: (c) => isEd(c.id, 'name') ? (
+        <InlineEditInput value={c.name} type="text" onSave={(v) => handleSave(c.id, 'name', v)} onCancel={() => onEditingCellChange(null)} />
+      ) : (
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontSize: 'var(--font-size-sm)', cursor: 'text' }} onClick={(e) => handleCellClick(c.id, 'name', e)}>
+          <CompanyLogo domain={c.domain} />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+        </span>
+      ),
+    },
+    {
+      key: 'domain', label: t('crm.companies.domain'), icon: <Globe size={12} />, width: 150, sortable: true,
+      render: (c) => isEd(c.id, 'domain') ? (
+        <InlineEditInput value={c.domain || ''} type="text" onSave={(v) => handleSave(c.id, 'domain', v)} onCancel={() => onEditingCellChange(null)} />
+      ) : (
+        <span className="dt-cell-secondary" style={{ cursor: 'text' }} onClick={(e) => handleCellClick(c.id, 'domain', e)}>{c.domain || '-'}</span>
+      ),
+    },
+    {
+      key: 'industry', label: t('crm.companies.industry'), icon: <Tag size={12} />, width: 120, sortable: true,
+      render: (c) => isEd(c.id, 'industry') ? (
+        <InlineEditInput value={c.industry || ''} type="text" onSave={(v) => handleSave(c.id, 'industry', v)} onCancel={() => onEditingCellChange(null)} />
+      ) : (
+        <span style={{ cursor: 'text' }} onClick={(e) => handleCellClick(c.id, 'industry', e)}>
+          {c.industry ? <Chip>{c.industry}</Chip> : <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>-</span>}
+        </span>
+      ),
+    },
+    {
+      key: 'size', label: t('crm.companies.size'), icon: <Users size={12} />, width: 80, sortable: true,
+      render: (c) => <span className="dt-cell-secondary">{c.size || '-'}</span>,
+    },
+    {
+      key: 'stats', label: t('crm.companies.contactsDeals'),
+      render: (c) => (
+        <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontVariantNumeric: 'tabular-nums' }}>
+          {c.contactCount} {t('crm.sidebar.contacts').toLowerCase()} &middot; {c.dealCount} {t('crm.sidebar.deals').toLowerCase()}
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }} tabIndex={0} onKeyDown={handleKeyDown}>
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        <div style={hdrStyle}>
-          <input type="checkbox" className={`crm-checkbox${!allChecked && someChecked ? ' indeterminate' : ''}`} checked={allChecked} onChange={handleHeaderCheckbox} />
-          <ColumnHeader label={t('crm.companies.name')} icon={<Building2 size={12} />} sortable columnKey="name" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 160, flexShrink: 0 }} />
-          <ColumnHeader label={t('crm.companies.domain')} icon={<Globe size={12} />} sortable columnKey="domain" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 150, flexShrink: 0 }} />
-          <ColumnHeader label={t('crm.companies.industry')} icon={<Tag size={12} />} sortable columnKey="industry" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 120, flexShrink: 0 }} />
-          <ColumnHeader label={t('crm.companies.size')} icon={<Users size={12} />} sortable columnKey="size" sortColumn={sort?.column} sortDirection={sort?.direction} onSort={handleSort} style={{ width: 80, flexShrink: 0 }} />
-          <span style={{ flex: 1 }}>{t('crm.companies.contactsDeals')}</span>
-          <IconButton icon={<Plus size={12} />} label={t('crm.fields.manageFields')} size={22} onClick={(e) => { e.stopPropagation(); openSettings('crm', 'data-model'); }} />
-        </div>
-        {sorted.map((company, idx) => {
-          const isEd = (col: string) => editingCell?.rowId === company.id && editingCell?.column === col;
-          return (
-            <div
-              key={company.id}
-              className={`crm-row${selectedId === company.id ? ' selected' : ''}${focusedIndex === idx ? ' focused' : ''}`}
-              onClick={() => { onFocusedIndexChange(idx); if (!editingCell) onSelect(company.id); }}
-            >
-              <input type="checkbox" className="crm-checkbox" checked={selectedIds.has(company.id)} onClick={(e) => handleRowCheckbox(idx, e)} readOnly />
-              {isEd('name') ? (
-                <span className="crm-cell-editing" style={{ width: 160, flexShrink: 0 }}>
-                  <InlineEditInput value={company.name} type="text" onSave={(v) => handleSave(company.id, 'name', v)} onCancel={() => onEditingCellChange(null)} />
-                </span>
-              ) : (
-                <span style={{ width: 160, flexShrink: 0, fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'text', display: 'flex', alignItems: 'center', gap: 8 }} onClick={(e) => handleCellClick(company.id, 'name', e)}>
-                  <CompanyLogo domain={company.domain} />
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{company.name}</span>
-                </span>
-              )}
-              {isEd('domain') ? (
-                <span className="crm-cell-editing" style={{ width: 150, flexShrink: 0 }}>
-                  <InlineEditInput value={company.domain || ''} type="text" onSave={(v) => handleSave(company.id, 'domain', v)} onCancel={() => onEditingCellChange(null)} />
-                </span>
-              ) : (
-                <span style={{ width: 150, flexShrink: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'text' }} onClick={(e) => handleCellClick(company.id, 'domain', e)}>
-                  {company.domain || '-'}
-                </span>
-              )}
-              {isEd('industry') ? (
-                <span className="crm-cell-editing" style={{ width: 120, flexShrink: 0 }}>
-                  <InlineEditInput value={company.industry || ''} type="text" onSave={(v) => handleSave(company.id, 'industry', v)} onCancel={() => onEditingCellChange(null)} />
-                </span>
-              ) : (
-                <span style={{ width: 120, flexShrink: 0, cursor: 'text' }} onClick={(e) => handleCellClick(company.id, 'industry', e)}>
-                  {company.industry ? <Badge variant="default">{company.industry}</Badge> : <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>-</span>}
-                </span>
-              )}
-              <span style={{ width: 80, flexShrink: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
-                {company.size || '-'}
-              </span>
-              <span style={{ flex: 1, fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', fontVariantNumeric: 'tabular-nums' }}>
-                {company.contactCount} {t('crm.sidebar.contacts').toLowerCase()} &middot; {company.dealCount} {t('crm.sidebar.deals').toLowerCase()}
-              </span>
-              {selectedId === company.id && <ChevronRight size={14} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />}
-            </div>
-          );
-        })}
-        <div className="crm-add-row" onClick={onAdd}>
-          <Plus size={14} /> {t('crm.actions.addNew')}
-        </div>
-      </div>
-      <div className="crm-table-footer">
-        <span>{sorted.length} {sorted.length !== 1 ? t('crm.sidebar.companies').toLowerCase() : t('crm.companies.name').toLowerCase()}</span>
-      </div>
-    </div>
+    <DataTable
+      data={filtered}
+      columns={companyColumns}
+      selectable
+      selectedIds={selectedIds}
+      onSelectionChange={onSelectionChange}
+      sort={sort}
+      onSortChange={onSortChange}
+      activeRowId={selectedId}
+      onRowClick={(c) => { if (!editingCell) onSelect(c.id); }}
+      onAddRow={onAdd}
+      addRowLabel={t('crm.actions.addNew')}
+      emptyTitle={t('crm.empty.noMatchingCompanies')}
+    />
   );
 }
 
@@ -2351,10 +2237,8 @@ export function CrmPage() {
   }, [stages, updateDeal]);
 
   const handleDealClick = useCallback((dealId: string) => {
-    setSelectedDealId(dealId);
-    setSelectedContactId(null);
-    setSelectedCompanyId(null);
-  }, []);
+    setSearchParams({ view: 'deal-detail', dealId }, { replace: true });
+  }, [setSearchParams]);
 
   // Bulk actions
   const handleBulkDelete = useCallback(() => {
@@ -2410,7 +2294,7 @@ export function CrmPage() {
             label="Leads"
             icon={<UserPlus size={14} />}
             iconColor="#ec4899"
-            isActive={activeView === 'leads'}
+            isActive={activeView === 'leads' || activeView === 'lead-detail'}
             onClick={() => setActiveView('leads')}
           />
           <SidebarItem
@@ -2424,7 +2308,7 @@ export function CrmPage() {
             label={t('crm.sidebar.deals')}
             icon={<List size={14} />}
             iconColor="#3b82f6"
-            isActive={activeView === 'deals'}
+            isActive={activeView === 'deals' || activeView === 'deal-detail'}
             count={deals.length}
             onClick={() => setActiveView('deals')}
           />
@@ -2702,6 +2586,22 @@ export function CrmPage() {
 
             {activeView === 'leads' && (
               <LeadsView />
+            )}
+
+            {activeView === 'lead-detail' && searchParams.get('leadId') && (
+              <LeadDetailPage
+                leadId={searchParams.get('leadId')!}
+                onBack={() => setActiveView('leads')}
+                onNavigate={(leadId) => setSearchParams({ view: 'lead-detail', leadId }, { replace: true })}
+              />
+            )}
+
+            {activeView === 'deal-detail' && searchParams.get('dealId') && (
+              <DealDetailPage
+                dealId={searchParams.get('dealId')!}
+                onBack={() => setActiveView('deals')}
+                onNavigate={(dealId) => setSearchParams({ view: 'deal-detail', dealId }, { replace: true })}
+              />
             )}
 
             {activeView === 'leadForms' && (

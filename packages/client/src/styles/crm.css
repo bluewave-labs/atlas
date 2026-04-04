@@ -98,6 +98,8 @@
   background: var(--color-bg-secondary);
   border-left: 1px solid var(--color-border-primary);
   height: 100%;
+  width: 100%;
+  flex-shrink: 0;
 }
 
 .crm-detail-body {
@@ -642,6 +644,7 @@
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: var(--shadow-lg);
   will-change: transform;
+  background: var(--color-bg-secondary);
 }
 
 .crm-drawer-container.open {

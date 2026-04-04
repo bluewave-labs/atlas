@@ -951,7 +951,18 @@
       "noGroup": "Gruplama yok",
       "groupByStage": "Aşama",
       "groupByContact": "Kişi",
-      "groupByCompany": "Şirket"
+      "groupByCompany": "Şirket",
+      "rotting": "Süresi dolmak üzere",
+      "rottingWarning": "{{days}} gündür bu aşamada (limit: {{limit}})",
+      "rottingDays": "Çürüme süresi (gün)",
+      "rottingDaysHint": "Anlaşma bu aşamada çok kalınca uyar",
+      "noRottingLimit": "Limit yok"
+    },
+    "kanban": {
+      "collapse": "Aşamayı daralt",
+      "expand": "Aşamayı genişlet",
+      "dealsCount": "{{count}} anlaşma",
+      "totalValue": "Toplam: {{value}}"
     },
     "fields": {
       "manageFields": "Alanları yönet"
@@ -1007,7 +1018,28 @@
       "deleteActivity": "Aktiviteyi sil",
       "stageChange": "Aşama değişikliği",
       "dealWon": "Anlaşma kazanıldı",
-      "dealLost": "Anlaşma kaybedildi"
+      "dealLost": "Anlaşma kaybedildi",
+      "dueDate": "Teslim tarihi",
+      "overdue": "Gecikmiş",
+      "dueToday": "Bugün teslim",
+      "dueSoon": "Yakında teslim",
+      "noDueDate": "Tarih belirtilmedi",
+      "completed": "Tamamlandı",
+      "overdueBy": "{{days}} gün gecikmiş",
+      "completedOn": "Tamamlandı {{date}}",
+      "markDone": "Tamamla",
+      "scheduleNext": "Sonrakini planla?",
+      "scheduleNextSubtitle": "Takip aktivitesi oluştur",
+      "skip": "Atla",
+      "schedule": "Planla",
+      "tomorrow": "Yarın",
+      "nextWeek": "Gelecek hafta",
+      "pickDate": "Tarih seç",
+      "optionalNote": "İsteğe bağlı not",
+      "assignedTo": "Atanan kişi",
+      "assignee": "Sorumlu",
+      "unassigned": "Atanmamış",
+      "assignToMe": "Bana ata"
     },
     "automations": {
       "title": "Otomasyonlar",
@@ -1257,7 +1289,8 @@
       "copied": "Kopyalandı!",
       "codeCopied": "Gömme kodu panoya kopyalandı",
       "deleteForm": "Formu sil",
-      "deleteFormDesc": "Bu potansiyel formu kalıcı olarak silinecektir. Mevcut potansiyel müşteriler etkilenmeyecektir."
+      "deleteFormDesc": "Bu potansiyel formu kalıcı olarak silinecektir. Mevcut potansiyel müşteriler etkilenmeyecektir.",
+      "formSaved": "Form kaydedildi"
     }
   },
   "drive": {

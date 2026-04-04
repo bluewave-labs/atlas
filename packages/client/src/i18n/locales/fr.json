@@ -951,7 +951,18 @@
       "noGroup": "Pas de groupement",
       "groupByStage": "Étape",
       "groupByContact": "Contact",
-      "groupByCompany": "Entreprise"
+      "groupByCompany": "Entreprise",
+      "rotting": "En stagnation",
+      "rottingWarning": "En étape depuis {{days}} jours (limite : {{limit}})",
+      "rottingDays": "Stagnation après (jours)",
+      "rottingDaysHint": "Alerter quand un deal reste trop longtemps dans cette étape",
+      "noRottingLimit": "Pas de limite"
+    },
+    "kanban": {
+      "collapse": "Réduire l'étape",
+      "expand": "Développer l'étape",
+      "dealsCount": "{{count}} deals",
+      "totalValue": "Total : {{value}}"
     },
     "fields": {
       "manageFields": "Gérer les champs"
@@ -1007,7 +1018,28 @@
       "deleteActivity": "Supprimer l'activité",
       "stageChange": "Changement d'étape",
       "dealWon": "Affaire gagnée",
-      "dealLost": "Affaire perdue"
+      "dealLost": "Affaire perdue",
+      "dueDate": "Date d'échéance",
+      "overdue": "En retard",
+      "dueToday": "Échéance aujourd'hui",
+      "dueSoon": "Bientôt dû",
+      "noDueDate": "Pas de date d'échéance",
+      "completed": "Terminé",
+      "overdueBy": "En retard de {{days}} jours",
+      "completedOn": "Terminé le {{date}}",
+      "markDone": "Terminer",
+      "scheduleNext": "Planifier le prochain ?",
+      "scheduleNextSubtitle": "Créer une activité de suivi",
+      "skip": "Passer",
+      "schedule": "Planifier",
+      "tomorrow": "Demain",
+      "nextWeek": "Semaine prochaine",
+      "pickDate": "Choisir une date",
+      "optionalNote": "Note optionnelle",
+      "assignedTo": "Assigné à",
+      "assignee": "Responsable",
+      "unassigned": "Non assigné",
+      "assignToMe": "M'assigner"
     },
     "automations": {
       "title": "Automatisations",
@@ -1257,7 +1289,8 @@
       "copied": "Copié !",
       "codeCopied": "Code d'intégration copié dans le presse-papiers",
       "deleteForm": "Supprimer le formulaire",
-      "deleteFormDesc": "Ce formulaire de prospects sera définitivement supprimé. Les prospects existants ne seront pas affectés."
+      "deleteFormDesc": "Ce formulaire de prospects sera définitivement supprimé. Les prospects existants ne seront pas affectés.",
+      "formSaved": "Formulaire enregistré"
     }
   },
   "drive": {

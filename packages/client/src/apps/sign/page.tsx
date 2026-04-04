@@ -36,7 +36,7 @@ import {
   Mail,
   ExternalLink,
 } from 'lucide-react';
-import { ColumnHeader } from '../../components/ui/column-header';
+import { DataTable, type DataTableColumn } from '../../components/ui/data-table';
 import { AppSidebar, SidebarSection, SidebarItem } from '../../components/layout/app-sidebar';
 import { ContentArea } from '../../components/ui/content-area';
 import { ListToolbar } from '../../components/ui/list-toolbar';
@@ -703,90 +703,118 @@ export function SignPage() {
                   onAction={handleUpload}
                 />
               ) : (
-                <table className="sign-doc-table">
-                  <thead>
-                    <tr>
-                      <th><ColumnHeader label={t('sign.list.title')} icon={<FileText size={12} />} sortable columnKey="title" sortColumn={sortField} sortDirection={sortDir} onSort={handleSort} /></th>
-                      <th><ColumnHeader label={t('sign.list.status')} icon={<Tag size={12} />} sortable columnKey="status" sortColumn={sortField} sortDirection={sortDir} onSort={handleSort} /></th>
-                      <th><ColumnHeader label={t('sign.list.signers')} icon={<Users size={12} />} /></th>
-                      <th><ColumnHeader label={t('sign.list.created')} icon={<Calendar size={12} />} sortable columnKey="createdAt" sortColumn={sortField} sortDirection={sortDir} onSort={handleSort} /></th>
-                      <th style={{ width: 80 }}><ColumnHeader label={t('sign.list.actions')} /></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredDocs.map((doc) => {
-                      const docAny = doc as SignatureDocument & { signerCount?: number; signedCount?: number; signers?: Array<{ email: string; name: string | null; status: string }> };
-                      const borderColor = STATUS_BORDER_COLORS[doc.status] ?? 'var(--color-border-primary)';
-                      return (
-                      <tr key={doc.id} onClick={() => handleOpenDoc(doc)} className="sign-doc-row" style={{ borderLeft: `3px solid ${borderColor}` }}>
-                        <td style={{ fontWeight: 'var(--font-weight-medium)' as CSSProperties['fontWeight'] }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                            <span>{doc.title}</span>
-                            {(doc.tags ?? []).map((tag) => (
-                              <Chip key={tag} color="#8b5cf6" height={18} style={{ fontSize: 10 }}>
-                                {tag}
-                              </Chip>
-                            ))}
-                          </div>
-                        </td>
-                        <td>
-                          <Badge variant={STATUS_BADGE_MAP[doc.status] ?? 'default'}>
-                            {doc.status}
-                          </Badge>
-                        </td>
-                        <td>
-                          {docAny.signerCount && docAny.signerCount > 0 ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <div style={{ display: 'flex', gap: 3 }}>
-                                {(docAny.signers ?? []).map((signer, sIdx) => (
-                                  <StatusDot
-                                    key={sIdx}
-                                    color={
-                                      signer.status === 'signed' ? 'var(--color-success)'
-                                        : signer.status === 'declined' || signer.status === 'expired' ? 'var(--color-error)'
-                                        : 'var(--color-warning)'
-                                    }
-                                    size={8}
-                                    glow={signer.status === 'signed'}
-                                    label={`${signer.email}: ${signer.status}`}
-                                  />
-                                ))}
-                              </div>
-                              <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>
-                                {docAny.signedCount}/{docAny.signerCount}
-                              </span>
+                <DataTable<SignatureDocument & { signerCount?: number; signedCount?: number; signers?: Array<{ email: string; name: string | null; status: string }> }>
+                  data={filteredDocs as Array<SignatureDocument & { signerCount?: number; signedCount?: number; signers?: Array<{ email: string; name: string | null; status: string }> }>}
+                  columns={[
+                    {
+                      key: 'title',
+                      label: t('sign.list.title'),
+                      icon: <FileText size={12} />,
+                      sortable: true,
+                      render: (doc) => (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', fontWeight: 'var(--font-weight-medium)' as CSSProperties['fontWeight'] }}>
+                          <span>{doc.title}</span>
+                          {(doc.tags ?? []).map((tag) => (
+                            <Chip key={tag} color="#8b5cf6" height={18} style={{ fontSize: 10 }}>
+                              {tag}
+                            </Chip>
+                          ))}
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'status',
+                      label: t('sign.list.status'),
+                      icon: <Tag size={12} />,
+                      sortable: true,
+                      width: 110,
+                      render: (doc) => (
+                        <Badge variant={STATUS_BADGE_MAP[doc.status] ?? 'default'}>
+                          {doc.status}
+                        </Badge>
+                      ),
+                    },
+                    {
+                      key: 'signers',
+                      label: t('sign.list.signers'),
+                      icon: <Users size={12} />,
+                      width: 140,
+                      render: (doc) =>
+                        doc.signerCount && doc.signerCount > 0 ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <div style={{ display: 'flex', gap: 3 }}>
+                              {(doc.signers ?? []).map((signer, sIdx) => (
+                                <StatusDot
+                                  key={sIdx}
+                                  color={
+                                    signer.status === 'signed' ? 'var(--color-success)'
+                                      : signer.status === 'declined' || signer.status === 'expired' ? 'var(--color-error)'
+                                      : 'var(--color-warning)'
+                                  }
+                                  size={8}
+                                  glow={signer.status === 'signed'}
+                                  label={`${signer.email}: ${signer.status}`}
+                                />
+                              ))}
                             </div>
-                          ) : (
-                            <span style={{ color: 'var(--color-text-tertiary)' }}>&mdash;</span>
-                          )}
-                        </td>
-                        <td style={{ color: 'var(--color-text-secondary)' }}>
-                          {formatDate(doc.createdAt)}
-                        </td>
-                        <td onClick={(e) => e.stopPropagation()}>
-                          <div style={{ display: 'flex', gap: 2 }}>
-                            {doc.status === 'signed' && (
-                              <IconButton
-                                icon={<Download size={14} />}
-                                label={t('sign.editor.downloadPdf')}
-                                size={26}
-                                onClick={() => handleDownload(doc.id)}
-                              />
-                            )}
-                            <IconButton
-                              icon={<Trash2 size={14} />}
-                              label={t('sign.editor.deleteDocument')}
-                              size={26}
-                              destructive
-                              onClick={() => handleRequestDelete(doc.id)}
-                            />
+                            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>
+                              {doc.signedCount}/{doc.signerCount}
+                            </span>
                           </div>
-                        </td>
-                      </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                        ) : (
+                          <span style={{ color: 'var(--color-text-tertiary)' }}>&mdash;</span>
+                        ),
+                    },
+                    {
+                      key: 'createdAt',
+                      label: t('sign.list.created'),
+                      icon: <Calendar size={12} />,
+                      sortable: true,
+                      width: 130,
+                      render: (doc) => (
+                        <span style={{ color: 'var(--color-text-secondary)' }}>{formatDate(doc.createdAt)}</span>
+                      ),
+                    },
+                    {
+                      key: 'actions',
+                      label: t('sign.list.actions'),
+                      width: 80,
+                      render: (doc) => (
+                        <div
+                          style={{ display: 'flex', gap: 2 }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {doc.status === 'signed' && (
+                            <IconButton
+                              icon={<Download size={14} />}
+                              label={t('sign.editor.downloadPdf')}
+                              size={26}
+                              onClick={() => handleDownload(doc.id)}
+                            />
+                          )}
+                          <IconButton
+                            icon={<Trash2 size={14} />}
+                            label={t('sign.editor.deleteDocument')}
+                            size={26}
+                            destructive
+                            onClick={() => handleRequestDelete(doc.id)}
+                          />
+                        </div>
+                      ),
+                    },
+                  ] as DataTableColumn<SignatureDocument & { signerCount?: number; signedCount?: number; signers?: Array<{ email: string; name: string | null; status: string }> }>[]}
+                  onRowClick={handleOpenDoc}
+                  activeRowId={selectedDocId}
+                  sort={{ column: sortField, direction: sortDir }}
+                  onSortChange={(s) => {
+                    if (!s) return;
+                    handleSort(s.column);
+                  }}
+                  rowClassName={(doc) => `sign-doc-row-dt`}
+                  paginated={false}
+                  hideFooter={false}
+                  emptyTitle={t('sign.empty.title')}
+                />
               )}
             </div>
           </>

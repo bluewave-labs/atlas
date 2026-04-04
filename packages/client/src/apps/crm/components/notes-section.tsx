@@ -40,8 +40,7 @@ function NoteEditor({
   isSaving: boolean;
 }) {
   const { t } = useTranslation();
-  const [title, setTitle] = useState(note?.title ?? '');
-  const titleRef = useRef<HTMLInputElement>(null);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
 
   const editor = useEditor({
     extensions: [
@@ -60,14 +59,14 @@ function NoteEditor({
   });
 
   useEffect(() => {
-    if (!note) titleRef.current?.focus();
-  }, [note]);
+    if (!note && editor) editor.commands.focus();
+  }, [note, editor]);
 
   const handleSave = useCallback(() => {
     if (!editor) return;
     const content = editor.getJSON();
-    onSave(title.trim(), content as Record<string, unknown>);
-  }, [editor, title, onSave]);
+    onSave('', content as Record<string, unknown>);
+  }, [editor, onSave]);
 
   return (
     <div style={{
@@ -76,14 +75,6 @@ function NoteEditor({
       overflow: 'hidden',
       background: 'var(--color-bg-primary)',
     }}>
-      <Input
-        ref={titleRef}
-        placeholder="Title (optional)"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        size="sm"
-        style={{ border: 'none', borderBottom: '1px solid var(--color-border-secondary)', borderRadius: 0 }}
-      />
       <EditorContent editor={editor} />
       <div style={{
         display: 'flex', justifyContent: 'flex-end', gap: 'var(--spacing-sm)',
@@ -146,11 +137,6 @@ function NoteCard({ note }: { note: CrmNote }) {
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          {note.title && (
-            <div style={{ fontWeight: 'var(--font-weight-medium)', fontSize: 'var(--font-size-sm)', marginBottom: 2 }}>
-              {note.title}
-            </div>
-          )}
           <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {textContent || t('crm.notes.noNotes')}
           </div>

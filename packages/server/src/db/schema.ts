@@ -1396,6 +1396,7 @@ export const crmDealStages = pgTable('crm_deal_stages', {
   probability: integer('probability').notNull().default(0),
   sequence: integer('sequence').notNull().default(0),
   isDefault: boolean('is_default').notNull().default(false),
+  rottingDays: integer('rotting_days'),
 }, (table) => ({
   accountIdx: index('idx_crm_stages_account').on(table.accountId),
 }));
@@ -1417,6 +1418,7 @@ export const crmDeals = pgTable('crm_deals', {
   lostAt: timestamp('lost_at', { withTimezone: true }),
   lostReason: text('lost_reason'),
   tags: jsonb('tags').$type<string[]>().notNull().default([]),
+  stageEnteredAt: timestamp('stage_entered_at', { withTimezone: true }),
   isArchived: boolean('is_archived').notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -1426,6 +1428,22 @@ export const crmDeals = pgTable('crm_deals', {
   stageIdx: index('idx_crm_deals_stage').on(table.stageId),
   contactIdx: index('idx_crm_deals_contact').on(table.contactId),
   companyIdx: index('idx_crm_deals_company').on(table.companyId),
+}));
+
+// ─── CRM: Activity Types ──────────────────────────────────────────
+export const crmActivityTypes = pgTable('crm_activity_types', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull(),
+  name: varchar('name', { length: 100 }).notNull(),
+  icon: varchar('icon', { length: 50 }).notNull().default('sticky-note'),
+  color: varchar('color', { length: 20 }).notNull().default('#6b7280'),
+  isDefault: boolean('is_default').notNull().default(false),
+  isArchived: boolean('is_archived').notNull().default(false),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  accountIdx: index('idx_crm_activity_types_account').on(table.accountId),
 }));
 
 // ─── CRM: Activities ───────────────────────────────────────────────
@@ -1438,6 +1456,7 @@ export const crmActivities = pgTable('crm_activities', {
   dealId: uuid('deal_id').references(() => crmDeals.id, { onDelete: 'cascade' }),
   contactId: uuid('contact_id').references(() => crmContacts.id, { onDelete: 'cascade' }),
   companyId: uuid('company_id').references(() => crmCompanies.id, { onDelete: 'cascade' }),
+  assignedUserId: uuid('assigned_user_id'),
   scheduledAt: timestamp('scheduled_at', { withTimezone: true }),
   completedAt: timestamp('completed_at', { withTimezone: true }),
   isArchived: boolean('is_archived').notNull().default(false),
@@ -1497,6 +1516,12 @@ export const crmLeads = pgTable('crm_leads', {
   convertedContactId: uuid('converted_contact_id'),
   convertedDealId: uuid('converted_deal_id'),
   tags: jsonb('tags').$type<string[]>().notNull().default([]),
+  expectedRevenue: real('expected_revenue').notNull().default(0),
+  probability: integer('probability').notNull().default(0),
+  assignedUserId: uuid('assigned_user_id'),
+  expectedCloseDate: timestamp('expected_close_date', { withTimezone: true }),
+  enrichedData: jsonb('enriched_data').$type<Record<string, unknown>>(),
+  enrichedAt: timestamp('enriched_at', { withTimezone: true }),
   isArchived: boolean('is_archived').notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -1551,7 +1576,7 @@ export const crmLeadForms = pgTable('crm_lead_forms', {
   userId: uuid('user_id').notNull(),
   name: varchar('name', { length: 255 }).notNull().default('Default Lead Form'),
   token: varchar('token', { length: 64 }).notNull().unique(),
-  fields: jsonb('fields').$type<string[]>().notNull().default(['name', 'email', 'phone', 'companyName', 'message']),
+  fields: jsonb('fields').$type<Array<{ id: string; type: string; label: string; placeholder: string; required: boolean; options?: string[]; mapTo?: string }>>().notNull().default([]),
   isActive: boolean('is_active').notNull().default(true),
   submitCount: integer('submit_count').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

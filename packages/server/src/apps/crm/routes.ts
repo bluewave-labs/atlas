@@ -52,9 +52,18 @@ router.delete('/deals/:id', crmController.deleteDeal);
 router.post('/deals/:id/won', crmController.markDealWon);
 router.post('/deals/:id/lost', crmController.markDealLost);
 
+// Activity Types
+router.get('/activity-types/list', crmController.listActivityTypes);
+router.post('/activity-types', crmController.createActivityType);
+router.post('/activity-types/seed', crmController.seedActivityTypes);
+router.post('/activity-types/reorder', crmController.reorderActivityTypes);
+router.patch('/activity-types/:id', crmController.updateActivityType);
+router.delete('/activity-types/:id', crmController.deleteActivityType);
+
 // Activities
 router.get('/activities/list', crmController.listActivities);
 router.post('/activities', crmController.createActivity);
+router.post('/activities/:id/complete', crmController.completeActivity);
 router.patch('/activities/:id', crmController.updateActivity);
 router.delete('/activities/:id', crmController.deleteActivity);
 
@@ -78,6 +87,7 @@ router.get('/leads/:id', crmController.getLead);
 router.patch('/leads/:id', crmController.updateLead);
 router.delete('/leads/:id', crmController.deleteLead);
 router.post('/leads/:id/convert', crmController.convertLead);
+router.post('/leads/:id/enrich', crmController.enrichLead);
 
 // Notes (rich text)
 router.get('/notes/list', crmController.listNotes);

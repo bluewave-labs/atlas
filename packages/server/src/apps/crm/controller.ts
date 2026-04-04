@@ -777,6 +777,87 @@ export async function getDashboard(req: Request, res: Response) {
   }
 }
 
+// ─── Activity Types ───────────────────────────────────────────────
+
+export async function listActivityTypes(req: Request, res: Response) {
+  try {
+    const data = await crmService.listActivityTypes(req.auth!.accountId);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to list CRM activity types');
+    res.status(500).json({ success: false, error: 'Failed to list activity types' });
+  }
+}
+
+export async function createActivityType(req: Request, res: Response) {
+  try {
+    const data = await crmService.createActivityType(req.auth!.accountId, req.body);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to create CRM activity type');
+    res.status(500).json({ success: false, error: 'Failed to create activity type' });
+  }
+}
+
+export async function updateActivityType(req: Request, res: Response) {
+  try {
+    const id = req.params.id as string;
+    const data = await crmService.updateActivityType(req.auth!.accountId, id, req.body);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to update CRM activity type');
+    res.status(500).json({ success: false, error: 'Failed to update activity type' });
+  }
+}
+
+export async function deleteActivityType(req: Request, res: Response) {
+  try {
+    const id = req.params.id as string;
+    await crmService.deleteActivityType(req.auth!.accountId, id);
+    res.json({ success: true });
+  } catch (error) {
+    logger.error({ error }, 'Failed to delete CRM activity type');
+    res.status(500).json({ success: false, error: 'Failed to delete activity type' });
+  }
+}
+
+export async function reorderActivityTypes(req: Request, res: Response) {
+  try {
+    await crmService.reorderActivityTypes(req.auth!.accountId, req.body.typeIds);
+    res.json({ success: true });
+  } catch (error) {
+    logger.error({ error }, 'Failed to reorder CRM activity types');
+    res.status(500).json({ success: false, error: 'Failed to reorder activity types' });
+  }
+}
+
+export async function seedActivityTypes(req: Request, res: Response) {
+  try {
+    const data = await crmService.seedDefaultActivityTypes(req.auth!.accountId);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to seed CRM activity types');
+    res.status(500).json({ success: false, error: 'Failed to seed activity types' });
+  }
+}
+
+// ─── Complete Activity + Schedule Next ──────────────────────────────
+
+export async function completeActivity(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const accountId = req.auth!.accountId;
+    const { id } = req.params;
+    const { scheduleNext } = req.body;
+
+    const result = await crmService.completeAndScheduleNext(userId, accountId, id as string, scheduleNext);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error({ error }, 'Failed to complete CRM activity');
+    res.status(500).json({ success: false, error: 'Failed to complete activity' });
+  }
+}
+
 // ─── Bulk Import ────────────────────────────────────────────────────
 
 export async function importContacts(req: Request, res: Response) {
@@ -1185,6 +1266,22 @@ export async function deleteLead(req: Request, res: Response) {
   } catch (error) {
     logger.error({ error }, 'Failed to delete CRM lead');
     res.status(500).json({ success: false, error: 'Failed to delete lead' });
+  }
+}
+
+export async function enrichLead(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const accountId = req.auth!.accountId;
+    const id = req.params.id as string;
+
+    const data = await crmService.enrichLead(userId, accountId, id);
+    res.json({ success: true, data });
+  } catch (error: any) {
+    const message = error?.message || 'Failed to enrich lead';
+    logger.error({ error }, 'Failed to enrich CRM lead');
+    res.status(error?.message?.includes('not enabled') || error?.message?.includes('No API key') ? 400 : 500)
+      .json({ success: false, error: message });
   }
 }
 

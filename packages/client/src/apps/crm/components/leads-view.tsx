@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { UserPlus, Search, ChevronRight, Trash2, ArrowRightLeft, User, Mail, Building2, Globe, Tag, Plus } from 'lucide-react';
+import { UserPlus, Search, ChevronRight, Trash2, ArrowRightLeft, User, Mail, Building2, Globe, Tag, Plus, Phone, X } from 'lucide-react';
 import {
   useLeads, useCreateLead, useUpdateLead, useDeleteLead, useConvertLead, useStages,
   type CrmLead, type CrmLeadStatus, type CrmLeadSource,
@@ -13,7 +14,7 @@ import { Textarea } from '../../../components/ui/textarea';
 import { Badge } from '../../../components/ui/badge';
 import { IconButton } from '../../../components/ui/icon-button';
 import { ConfirmDialog } from '../../../components/ui/confirm-dialog';
-import { ColumnHeader } from '../../../components/ui/column-header';
+import { DataTable, type DataTableColumn } from '../../../components/ui/data-table';
 import { formatDate } from '../../../lib/format';
 import { useToastStore } from '../../../stores/toast-store';
 
@@ -117,7 +118,7 @@ function CreateLeadModal({ open, onClose }: { open: boolean; onClose: () => void
 
 // ─── Convert lead modal ─────────────────────────────────────────
 
-function ConvertLeadModal({
+export function ConvertLeadModal({
   open, onClose, lead,
 }: { open: boolean; onClose: () => void; lead: CrmLead | null }) {
   const { t } = useTranslation();
@@ -213,15 +214,48 @@ function LeadDetailPanel({
     }
   };
 
+  const fieldLabelStyle: React.CSSProperties = {
+    fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)',
+    fontWeight: 'var(--font-weight-medium)', textTransform: 'uppercase',
+    letterSpacing: '0.04em', fontFamily: 'var(--font-family)',
+  };
+  const fieldValueStyle: React.CSSProperties = {
+    fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)',
+    fontFamily: 'var(--font-family)', display: 'flex', alignItems: 'center', gap: 6,
+  };
+
   return (
     <div className="crm-detail-panel">
-      <div className="crm-detail-panel-header">
-        <span className="crm-detail-panel-title">{lead.name}</span>
-        <IconButton icon={<ChevronRight size={14} />} label="Close" onClick={onClose} />
+      {/* Header */}
+      <div style={{
+        padding: '12px var(--spacing-lg)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        borderBottom: '1px solid var(--color-border-secondary)', flexShrink: 0,
+      }}>
+        <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-family)' }}>
+          {t('crm.leads.title')}
+        </span>
+        <IconButton icon={<X size={14} />} label={t('common.close')} size={28} onClick={onClose} />
       </div>
-      <div className="crm-detail-panel-body">
+
+      {/* Body */}
+      <div className="crm-detail-body">
+        {/* Name + status */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-xs)' }}>
+          <span style={{ width: 36, height: 36, borderRadius: '50%', background: getAvatarColor(lead.name), color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>
+            {lead.name.charAt(0).toUpperCase()}
+          </span>
+          <div>
+            <div style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
+              {lead.name}
+            </div>
+            <Badge variant={statusBadgeVariant(lead.status)}>{lead.status}</Badge>
+          </div>
+        </div>
+
+        {/* Status selector */}
         <div className="crm-detail-field">
-          <span className="crm-detail-label">{t('crm.leads.status')}</span>
+          <span style={fieldLabelStyle}>{t('crm.leads.status')}</span>
           <Select
             value={lead.status}
             onChange={(v) => updateLead.mutate({ id: lead.id, status: v })}
@@ -229,30 +263,31 @@ function LeadDetailPanel({
             size="sm"
           />
         </div>
+
         {lead.email && (
           <div className="crm-detail-field">
-            <span className="crm-detail-label">{t('crm.leads.email')}</span>
-            <span className="crm-detail-value">{lead.email}</span>
+            <span style={fieldLabelStyle}>{t('crm.leads.email')}</span>
+            <span style={fieldValueStyle}><Mail size={14} style={{ color: 'var(--color-text-tertiary)' }} />{lead.email}</span>
           </div>
         )}
         {lead.phone && (
           <div className="crm-detail-field">
-            <span className="crm-detail-label">{t('crm.leads.phone')}</span>
-            <span className="crm-detail-value">{lead.phone}</span>
+            <span style={fieldLabelStyle}>{t('crm.leads.phone')}</span>
+            <span style={fieldValueStyle}><Phone size={14} style={{ color: 'var(--color-text-tertiary)' }} />{lead.phone}</span>
           </div>
         )}
         {lead.companyName && (
           <div className="crm-detail-field">
-            <span className="crm-detail-label">{t('crm.leads.companyName')}</span>
-            <span className="crm-detail-value">{lead.companyName}</span>
+            <span style={fieldLabelStyle}>{t('crm.leads.companyName')}</span>
+            <span style={fieldValueStyle}><Building2 size={14} style={{ color: 'var(--color-text-tertiary)' }} />{lead.companyName}</span>
           </div>
         )}
         <div className="crm-detail-field">
-          <span className="crm-detail-label">{t('crm.leads.source')}</span>
+          <span style={fieldLabelStyle}>{t('crm.leads.source')}</span>
           <Badge variant={sourceBadgeVariant(lead.source)}>{lead.source.replace('_', ' ')}</Badge>
         </div>
         <div className="crm-detail-field">
-          <span className="crm-detail-label">{t('crm.leads.notes')}</span>
+          <span style={fieldLabelStyle}>{t('crm.leads.notes')}</span>
           <Textarea
             value={editingNotes}
             onChange={(e) => setEditingNotes(e.target.value)}
@@ -262,8 +297,8 @@ function LeadDetailPanel({
           />
         </div>
         <div className="crm-detail-field">
-          <span className="crm-detail-label">Created</span>
-          <span className="crm-detail-value">{formatDate(lead.createdAt)}</span>
+          <span style={fieldLabelStyle}>{t('crm.leads.createdAt')}</span>
+          <span style={fieldValueStyle}>{formatDate(lead.createdAt)}</span>
         </div>
 
         {lead.status !== 'converted' && (
@@ -288,6 +323,7 @@ function LeadDetailPanel({
 
 export function LeadsView() {
   const { t } = useTranslation();
+  const [, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
@@ -301,12 +337,95 @@ export function LeadsView() {
   const leads = leadsData?.leads ?? [];
   const deleteLead = useDeleteLead();
 
+  const updateLead = useUpdateLead();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  const [editingCell, setEditingCell] = useState<{ rowId: string; column: string } | null>(null);
   const [convertingLead, setConvertingLead] = useState<CrmLead | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const selectedLead = selectedLeadId ? leads.find((l) => l.id === selectedLeadId) ?? null : null;
+
+  const handleCellClick = (rowId: string, column: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingCell({ rowId, column });
+  };
+
+  const handleSave = (leadId: string, column: string, value: string) => {
+    const updates: Record<string, unknown> = { id: leadId };
+    switch (column) {
+      case 'name': updates.name = value; break;
+      case 'email': updates.email = value || null; break;
+      case 'companyName': updates.companyName = value || null; break;
+    }
+    updateLead.mutate(updates as Parameters<typeof updateLead.mutate>[0]);
+    setEditingCell(null);
+  };
+
+  const isEd = (id: string, col: string) => editingCell?.rowId === id && editingCell?.column === col;
+
+  const InlineInput = ({ value, onSave, onCancel }: { value: string; onSave: (v: string) => void; onCancel: () => void }) => {
+    const [val, setVal] = useState(value);
+    const ref = useRef<HTMLInputElement>(null);
+    useEffect(() => { ref.current?.focus(); ref.current?.select(); }, []);
+    return (
+      <input ref={ref} type="text" value={val} onChange={(e) => setVal(e.target.value)}
+        onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter') onSave(val); if (e.key === 'Escape') onCancel(); }}
+        onBlur={() => onSave(val)}
+        style={{ width: '100%', padding: '4px 6px', border: '1px solid var(--color-border-primary)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', outline: 'none', boxSizing: 'border-box' }}
+      />
+    );
+  };
+
+  const leadColumns: DataTableColumn<CrmLead>[] = [
+    {
+      key: 'name', label: t('crm.leads.name'), icon: <User size={12} />, width: 180, sortable: true,
+      render: (lead) => isEd(lead.id, 'name') ? (
+        <InlineInput value={lead.name} onSave={(v) => handleSave(lead.id, 'name', v)} onCancel={() => setEditingCell(null)} />
+      ) : (
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontSize: 'var(--font-size-sm)', cursor: 'text' }} onClick={(e) => handleCellClick(lead.id, 'name', e)}>
+          <span style={{ width: 24, height: 24, borderRadius: '50%', background: getAvatarColor(lead.name), color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, flexShrink: 0 }}>
+            {lead.name.charAt(0).toUpperCase()}
+          </span>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lead.name}</span>
+        </span>
+      ),
+    },
+    {
+      key: 'email', label: t('crm.leads.email'), icon: <Mail size={12} />, width: 180,
+      render: (lead) => isEd(lead.id, 'email') ? (
+        <InlineInput value={lead.email || ''} onSave={(v) => handleSave(lead.id, 'email', v)} onCancel={() => setEditingCell(null)} />
+      ) : (
+        <span className="dt-cell-secondary" style={{ cursor: 'text' }} onClick={(e) => handleCellClick(lead.id, 'email', e)}>{lead.email || '-'}</span>
+      ),
+    },
+    {
+      key: 'companyName', label: t('crm.leads.companyName'), icon: <Building2 size={12} />, width: 140,
+      render: (lead) => isEd(lead.id, 'companyName') ? (
+        <InlineInput value={lead.companyName || ''} onSave={(v) => handleSave(lead.id, 'companyName', v)} onCancel={() => setEditingCell(null)} />
+      ) : (
+        <span className="dt-cell-secondary" style={{ cursor: 'text' }} onClick={(e) => handleCellClick(lead.id, 'companyName', e)}>{lead.companyName || '-'}</span>
+      ),
+    },
+    {
+      key: 'source', label: t('crm.leads.source'), icon: <Globe size={12} />, width: 110,
+      render: (lead) => <Badge variant={sourceBadgeVariant(lead.source)}>{lead.source.replace('_', ' ')}</Badge>,
+    },
+    {
+      key: 'status', label: t('crm.leads.status'), icon: <Tag size={12} />, width: 100,
+      render: (lead) => <Badge variant={statusBadgeVariant(lead.status)}>{lead.status}</Badge>,
+    },
+    {
+      key: 'createdAt', label: t('crm.leads.createdAt'), icon: <Plus size={12} />, width: 100, sortable: true,
+      render: (lead) => <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>{formatDate(lead.createdAt)}</span>,
+    },
+    {
+      key: 'actions', label: '', width: 36,
+      render: (lead) => (
+        <IconButton icon={<Trash2 size={13} />} label={t('crm.actions.delete')} size={24} destructive onClick={(e) => { e.stopPropagation(); setDeletingId(lead.id); }} />
+      ),
+    },
+  ];
 
   return (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -351,81 +470,23 @@ export function LeadsView() {
         </div>
 
         {/* Table */}
-        <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-lg)' }}>
-          {isLoading ? (
-            <div style={{ color: 'var(--color-text-tertiary)', textAlign: 'center', padding: 40 }}>{t('common.loading')}</div>
-          ) : leads.length === 0 ? (
-            <div style={{ color: 'var(--color-text-tertiary)', textAlign: 'center', padding: 40 }}>
-              {t('crm.leads.noLeads')}
-            </div>
-          ) : (
-            <table className="crm-table">
-              <thead>
-                <tr>
-                  <th><ColumnHeader label={t('crm.leads.name')} icon={<User size={12} />} /></th>
-                  <th><ColumnHeader label={t('crm.leads.email')} icon={<Mail size={12} />} /></th>
-                  <th><ColumnHeader label={t('crm.leads.companyName')} icon={<Building2 size={12} />} /></th>
-                  <th><ColumnHeader label={t('crm.leads.source')} icon={<Globe size={12} />} /></th>
-                  <th><ColumnHeader label={t('crm.leads.status')} icon={<Tag size={12} />} /></th>
-                  <th>{t('crm.deals.closeDate')}</th>
-                  <th style={{ width: 60 }}>{t('crm.actions.delete')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leads.map((lead) => (
-                  <tr
-                    key={lead.id}
-                    className={selectedLeadId === lead.id ? 'crm-row-selected' : ''}
-                    onClick={() => setSelectedLeadId(lead.id)}
-                    style={{ cursor: 'pointer' }}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={t('crm.leads.name') + ': ' + lead.name}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedLeadId(lead.id); } }}
-                  >
-                    <td className="crm-cell-primary">
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ width: 24, height: 24, borderRadius: '50%', background: getAvatarColor(lead.name), color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, flexShrink: 0 }}>
-                          {lead.name.charAt(0).toUpperCase()}
-                        </span>
-                        {lead.name}
-                      </span>
-                    </td>
-                    <td>{lead.email || '--'}</td>
-                    <td>{lead.companyName || '--'}</td>
-                    <td><Badge variant={sourceBadgeVariant(lead.source)}>{lead.source.replace('_', ' ')}</Badge></td>
-                    <td><Badge variant={statusBadgeVariant(lead.status)}>{lead.status}</Badge></td>
-                    <td>{formatDate(lead.createdAt)}</td>
-                    <td>
-                      <IconButton
-                        icon={<Trash2 size={13} />}
-                        label={t('crm.actions.delete')}
-                        destructive
-                        aria-label={t('crm.actions.delete') + ' ' + lead.name}
-                        onClick={(e) => { e.stopPropagation(); setDeletingId(lead.id); }}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-          {!isLoading && (
-            <div className="crm-add-row" onClick={() => setShowCreateModal(true)}>
-              <Plus size={14} /> {t('crm.actions.addNew')}
-            </div>
-          )}
-        </div>
+        {isLoading ? (
+          <div style={{ color: 'var(--color-text-tertiary)', textAlign: 'center', padding: 40, fontFamily: 'var(--font-family)' }}>{t('common.loading')}</div>
+        ) : (
+          <DataTable
+            data={leads}
+            columns={leadColumns}
+            activeRowId={selectedLeadId}
+            onRowClick={(lead) => setSearchParams({ view: 'lead-detail', leadId: lead.id })}
+            onAddRow={() => setShowCreateModal(true)}
+            addRowLabel={t('crm.actions.addNew')}
+            emptyTitle={t('crm.leads.noLeads')}
+            paginated={false}
+          />
+        )}
       </div>
 
-      {/* Detail panel */}
-      {selectedLead && (
-        <LeadDetailPanel
-          lead={selectedLead}
-          onClose={() => setSelectedLeadId(null)}
-          onConvert={() => setConvertingLead(selectedLead)}
-        />
-      )}
+      {/* Detail panel removed — now uses full-page LeadDetailPage */}
 
       {/* Modals */}
       <CreateLeadModal open={showCreateModal} onClose={() => setShowCreateModal(false)} />

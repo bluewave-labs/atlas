@@ -951,7 +951,18 @@
       "noGroup": "Nessun raggruppamento",
       "groupByStage": "Fase",
       "groupByContact": "Contatto",
-      "groupByCompany": "Azienda"
+      "groupByCompany": "Azienda",
+      "rotting": "In stallo",
+      "rottingWarning": "In questa fase da {{days}} giorni (limite: {{limit}})",
+      "rottingDays": "Stallo dopo (giorni)",
+      "rottingDaysHint": "Avvisa quando un deal resta troppo a lungo in questa fase",
+      "noRottingLimit": "Nessun limite"
+    },
+    "kanban": {
+      "collapse": "Comprimi fase",
+      "expand": "Espandi fase",
+      "dealsCount": "{{count}} deal",
+      "totalValue": "Totale: {{value}}"
     },
     "fields": {
       "manageFields": "Gestisci campi"
@@ -1007,7 +1018,28 @@
       "deleteActivity": "Elimina attività",
       "stageChange": "Cambio fase",
       "dealWon": "Affare vinto",
-      "dealLost": "Affare perso"
+      "dealLost": "Affare perso",
+      "dueDate": "Data di scadenza",
+      "overdue": "In ritardo",
+      "dueToday": "Scade oggi",
+      "dueSoon": "In scadenza",
+      "noDueDate": "Nessuna scadenza",
+      "completed": "Completato",
+      "overdueBy": "In ritardo di {{days}} giorni",
+      "completedOn": "Completato il {{date}}",
+      "markDone": "Completa",
+      "scheduleNext": "Programma il prossimo?",
+      "scheduleNextSubtitle": "Crea un'attività di follow-up",
+      "skip": "Salta",
+      "schedule": "Programma",
+      "tomorrow": "Domani",
+      "nextWeek": "Settimana prossima",
+      "pickDate": "Scegli data",
+      "optionalNote": "Nota opzionale",
+      "assignedTo": "Assegnato a",
+      "assignee": "Responsabile",
+      "unassigned": "Non assegnato",
+      "assignToMe": "Assegna a me"
     },
     "automations": {
       "title": "Automazioni",
@@ -1257,7 +1289,8 @@
       "copied": "Copiato!",
       "codeCopied": "Codice di incorporamento copiato negli appunti",
       "deleteForm": "Elimina modulo",
-      "deleteFormDesc": "Questo modulo lead verrà eliminato definitivamente. I lead esistenti non saranno interessati."
+      "deleteFormDesc": "Questo modulo lead verrà eliminato definitivamente. I lead esistenti non saranno interessati.",
+      "formSaved": "Modulo salvato"
     }
   },
   "drive": {

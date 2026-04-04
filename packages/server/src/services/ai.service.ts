@@ -198,6 +198,70 @@ Keep it concise.`;
 // Test API key — simple validity check
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Server-side key retrieval — reads encrypted key from user settings
+// ---------------------------------------------------------------------------
+
+import { db } from '../config/database';
+import { userSettings } from '../db/schema';
+import { eq } from 'drizzle-orm';
+import { decrypt } from '../utils/crypto';
+
+export async function getProviderKeyForAccount(accountId: string): Promise<ProviderConfig> {
+  const [settings] = await db.select().from(userSettings)
+    .where(eq(userSettings.accountId, accountId)).limit(1);
+
+  if (!settings?.aiEnabled) throw new Error('AI is not enabled. Configure it in Settings.');
+  const provider = settings.aiProvider || 'openai';
+  const keys = (settings.aiApiKeys as Record<string, string>) || {};
+  const encryptedKey = keys[provider];
+  if (!encryptedKey) throw new Error(`No API key configured for ${provider}. Add one in Settings > AI.`);
+
+  return { provider, apiKey: decrypt(encryptedKey) };
+}
+
+// ---------------------------------------------------------------------------
+// Lead enrichment via LLM
+// ---------------------------------------------------------------------------
+
+const enrichmentSchema = z.object({
+  companyIndustry: z.string().nullable().describe('Industry of the company, e.g. "Technology", "Healthcare"'),
+  companySize: z.string().nullable().describe('Estimated company size, e.g. "10-50 employees", "500+"'),
+  companyDescription: z.string().nullable().describe('1-2 sentence description of the company'),
+  linkedinUrl: z.string().nullable().describe('Likely LinkedIn URL for the person or company, or null'),
+  leadScore: z.number().min(1).max(100).describe('Lead quality score from 1 to 100'),
+  scoreReason: z.string().describe('1-2 sentence explanation of the lead score'),
+  suggestedTags: z.array(z.string()).describe('3-5 relevant tags like "SaaS", "B2B", "Enterprise"'),
+});
+
+export type EnrichedLeadData = z.infer<typeof enrichmentSchema>;
+
+export async function enrichLeadWithAI(
+  config: ProviderConfig,
+  lead: { name: string; email?: string | null; phone?: string | null; companyName?: string | null; source?: string },
+): Promise<EnrichedLeadData> {
+  const model = createModel(config);
+
+  const leadInfo = [
+    `Name: ${lead.name}`,
+    lead.email ? `Email: ${lead.email}` : null,
+    lead.phone ? `Phone: ${lead.phone}` : null,
+    lead.companyName ? `Company: ${lead.companyName}` : null,
+    lead.source ? `Source: ${lead.source}` : null,
+  ].filter(Boolean).join('\n');
+
+  // @ts-expect-error AI SDK type instantiation depth issue
+  const { object } = await generateObject({
+    model,
+    system: `You are a sales intelligence researcher. Given limited information about a sales lead, research and return structured data about them and their company. Use your knowledge to make educated inferences. If you cannot determine something, return null for that field. Be realistic with the lead score — consider company size, industry fit, and source quality.`,
+    prompt: `Research this sales lead and provide enrichment data:\n\n${leadInfo}`,
+    schema: enrichmentSchema,
+    maxOutputTokens: 500,
+  });
+
+  return object;
+}
+
 export async function testApiKey(config: ProviderConfig): Promise<{ valid: boolean; error?: string }> {
   try {
     const model = createModel(config);

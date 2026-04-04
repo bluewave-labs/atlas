@@ -25,6 +25,7 @@ export interface CrmDealStage {
   id: string; accountId: string;
   name: string; color: string; probability: number;
   sequence: number; isDefault: boolean;
+  rottingDays: number | null;
 }
 
 export interface CrmDeal {
@@ -34,10 +35,12 @@ export interface CrmDeal {
   assignedUserId: string | null;
   probability: number; expectedCloseDate: string | null;
   wonAt: string | null; lostAt: string | null; lostReason: string | null;
-  tags: string[]; isArchived: boolean; sortOrder: number;
+  tags: string[];
+  stageEnteredAt: string | null;
+  isArchived: boolean; sortOrder: number;
   createdAt: string; updatedAt: string;
   // Joined
-  stageName?: string; stageColor?: string;
+  stageName?: string; stageColor?: string; stageRottingDays?: number | null;
   contactName?: string; companyName?: string;
 }
 
@@ -45,16 +48,33 @@ export interface CrmActivity {
   id: string; accountId: string; userId: string;
   type: CrmActivityType; body: string;
   dealId: string | null; contactId: string | null; companyId: string | null;
+  assignedUserId: string | null;
   scheduledAt: string | null; completedAt: string | null;
   isArchived: boolean;
   createdAt: string; updatedAt: string;
+  // Joined
+  assignedUserName?: string;
 }
 
 // Input types for create/update
 export interface CreateCrmContactInput { name: string; email?: string; phone?: string; companyId?: string; position?: string; source?: string; }
 export interface CreateCrmCompanyInput { name: string; domain?: string; industry?: string; size?: string; address?: string; phone?: string; }
 export interface CreateCrmDealInput { title: string; value: number; stageId: string; contactId?: string; companyId?: string; expectedCloseDate?: string; }
-export interface CreateCrmActivityInput { type: CrmActivityType; body: string; dealId?: string; contactId?: string; companyId?: string; scheduledAt?: string; }
+export interface CreateCrmActivityInput { type: CrmActivityType; body: string; dealId?: string; contactId?: string; companyId?: string; assignedUserId?: string; scheduledAt?: string; }
+
+// ─── Activity Type Config ────────────────────────────────────────
+
+export interface CrmActivityTypeConfig {
+  id: string; accountId: string;
+  name: string; icon: string; color: string;
+  isDefault: boolean; isArchived: boolean;
+  sortOrder: number;
+  createdAt: string; updatedAt: string;
+}
+
+export interface CreateCrmActivityTypeInput {
+  name: string; icon?: string; color?: string;
+}
 
 // ─── Workflow Automations ──────────────────────────────────────────
 
@@ -118,8 +138,15 @@ export interface CrmLead {
   name: string; email: string | null; phone: string | null;
   companyName: string | null; source: CrmLeadSource;
   status: CrmLeadStatus; notes: string | null;
+  expectedRevenue: number;
+  probability: number;
+  assignedUserId: string | null;
+  expectedCloseDate: string | null;
   convertedContactId: string | null; convertedDealId: string | null;
-  tags: string[]; isArchived: boolean; sortOrder: number;
+  tags: string[];
+  enrichedData: Record<string, unknown> | null;
+  enrichedAt: string | null;
+  isArchived: boolean; sortOrder: number;
   createdAt: string; updatedAt: string;
 }
 

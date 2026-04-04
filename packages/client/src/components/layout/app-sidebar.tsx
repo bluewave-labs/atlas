@@ -211,7 +211,7 @@ export interface SidebarSectionProps {
 
 export function SidebarSection({ title, children }: SidebarSectionProps) {
   return (
-    <div style={{ marginBottom: 8 }}>
+    <div style={{ marginBottom: 2, paddingTop: 2, borderTop: '1px solid var(--color-border-secondary)' }}>
       {title && (
         <div
           style={{

@@ -309,6 +309,7 @@ Atlas uses `react-i18next` for internationalization. 5 languages: EN, TR, DE, FR
 - Sidebar labels, view titles, button labels, form labels, empty states, error messages
 - Keys are namespaced by app: `crm.sidebar.dashboard`, `sign.actions.upload`
 - Add keys to ALL 5 locale files in the same commit
+- **Every feature with a UI MUST include translations for all 5 languages (EN, TR, DE, FR, IT).** Do not merge or consider a feature complete if any locale file is missing the new keys. Add translations as part of the feature implementation, not as a follow-up task.
 
 ---
 

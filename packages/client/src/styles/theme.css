@@ -8,7 +8,7 @@
   --color-surface-primary: #ffffff;
   --color-surface-hover: #ebedf1;
   --color-surface-active: #e2e5ea;
-  --color-surface-selected: #dce1e9;
+  --color-surface-selected: #e9ecf0;
   --color-text-primary: #111318;
   --color-text-secondary: #3b4253;
   --color-text-tertiary: #5f6b7a;
@@ -82,7 +82,7 @@
   --color-surface-primary: #181a1e;
   --color-surface-hover: #2e323c;
   --color-surface-active: #363b47;
-  --color-surface-selected: color-mix(in srgb, var(--color-accent-primary) 10%, var(--color-bg-primary));
+  --color-surface-selected: #2a2f38;
   --color-text-primary: #f0f1f4;
   --color-text-secondary: #adb4c2;
   --color-text-tertiary: #8e96a8;

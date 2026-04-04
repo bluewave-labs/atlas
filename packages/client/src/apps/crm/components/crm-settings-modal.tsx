@@ -26,7 +26,8 @@ import { Input } from '../../../components/ui/input';
 import { IconButton } from '../../../components/ui/icon-button';
 import { Badge } from '../../../components/ui/badge';
 import { StatusDot } from '../../../components/ui/status-dot';
-import { useStages, useCreateStage, useUpdateStage, useDeleteStage, useReorderStages, useGoogleSyncStatus, useStartGoogleSync, useStopGoogleSync } from '../hooks';
+import { useStages, useCreateStage, useUpdateStage, useDeleteStage, useReorderStages, useActivityTypes, useCreateActivityType, useUpdateActivityType, useDeleteActivityType, useReorderActivityTypes, useSeedActivityTypes, useGoogleSyncStatus, useStartGoogleSync, useStopGoogleSync } from '../hooks';
+import type { CrmActivityTypeConfig } from '../hooks';
 import { api } from '../../../lib/api-client';
 import { formatRelativeDate } from '../../../lib/format';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
@@ -44,9 +45,11 @@ function SortableStageRow({
   isEditing,
   editName,
   editColor,
+  editRottingDays,
   onStartEdit,
   onEditNameChange,
   onEditColorChange,
+  onEditRottingDaysChange,
   onSaveEdit,
   onCancelEdit,
   onDelete,
@@ -55,9 +58,11 @@ function SortableStageRow({
   isEditing: boolean;
   editName: string;
   editColor: string;
+  editRottingDays: string;
   onStartEdit: () => void;
   onEditNameChange: (v: string) => void;
   onEditColorChange: (v: string) => void;
+  onEditRottingDaysChange: (v: string) => void;
   onSaveEdit: () => void;
   onCancelEdit: () => void;
   onDelete: () => void;
@@ -95,31 +100,43 @@ function SortableStageRow({
       <StatusDot color={isEditing ? editColor : stage.color} size={12} />
 
       {isEditing ? (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-          <Input
-            value={editName}
-            onChange={(e) => onEditNameChange(e.target.value)}
-            size="sm"
-            style={{ flex: 1 }}
-            autoFocus
-            onKeyDown={(e) => e.key === 'Enter' && onSaveEdit()}
-          />
-          <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            {STAGE_COLORS.map((c) => (
-              <button
-                key={c}
-                aria-label={`Select color ${c}`}
-                onClick={() => onEditColorChange(c)}
-                style={{
-                  width: 16, height: 16, borderRadius: '50%', background: c,
-                  border: editColor === c ? '2px solid var(--color-text-primary)' : '2px solid transparent',
-                  cursor: 'pointer', padding: 0,
-                }}
-              />
-            ))}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+            <Input
+              value={editName}
+              onChange={(e) => onEditNameChange(e.target.value)}
+              size="sm"
+              style={{ flex: 1 }}
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && onSaveEdit()}
+            />
+            <Input
+              value={editRottingDays}
+              onChange={(e) => onEditRottingDaysChange(e.target.value)}
+              size="sm"
+              type="number"
+              placeholder="Rotting days"
+              style={{ width: 90 }}
+            />
           </div>
-          <Button variant="primary" size="sm" onClick={onSaveEdit}>Save</Button>
-          <Button variant="ghost" size="sm" onClick={onCancelEdit}>Cancel</Button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+            <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap', flex: 1 }}>
+              {STAGE_COLORS.map((c) => (
+                <button
+                  key={c}
+                  aria-label={`Select color ${c}`}
+                  onClick={() => onEditColorChange(c)}
+                  style={{
+                    width: 16, height: 16, borderRadius: '50%', background: c,
+                    border: editColor === c ? '2px solid var(--color-text-primary)' : '2px solid transparent',
+                    cursor: 'pointer', padding: 0,
+                  }}
+                />
+              ))}
+            </div>
+            <Button variant="primary" size="sm" onClick={onSaveEdit}>Save</Button>
+            <Button variant="ghost" size="sm" onClick={onCancelEdit}>Cancel</Button>
+          </div>
         </div>
       ) : (
         <>
@@ -132,6 +149,11 @@ function SortableStageRow({
           <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', minWidth: 30, textAlign: 'right' }}>
             {stage.probability}%
           </span>
+          {stage.rottingDays != null && (
+            <span style={{ fontSize: 'var(--font-size-xs)', color: '#f59e0b', fontFamily: 'var(--font-family)', whiteSpace: 'nowrap' }}>
+              {stage.rottingDays}d
+            </span>
+          )}
           <IconButton icon={<Trash2 size={12} />} label="Delete stage" size={24} destructive onClick={onDelete} />
         </>
       )}
@@ -152,6 +174,7 @@ export function CrmStagesPanel() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState('#6b7280');
+  const [editRottingDays, setEditRottingDays] = useState<string>('');
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState('#6b7280');
@@ -164,11 +187,13 @@ export function CrmStagesPanel() {
     setEditingId(stage.id);
     setEditName(stage.name);
     setEditColor(stage.color);
+    setEditRottingDays(stage.rottingDays != null ? String(stage.rottingDays) : '');
   };
 
   const saveEdit = () => {
     if (editingId && editName.trim()) {
-      updateStage.mutate({ id: editingId, name: editName.trim(), color: editColor });
+      const rottingDays = editRottingDays.trim() ? parseInt(editRottingDays, 10) : null;
+      updateStage.mutate({ id: editingId, name: editName.trim(), color: editColor, rottingDays: isNaN(rottingDays as number) ? null : rottingDays });
       setEditingId(null);
     }
   };
@@ -209,9 +234,11 @@ export function CrmStagesPanel() {
                   isEditing={editingId === stage.id}
                   editName={editName}
                   editColor={editColor}
+                  editRottingDays={editRottingDays}
                   onStartEdit={() => startEdit(stage)}
                   onEditNameChange={setEditName}
                   onEditColorChange={setEditColor}
+                  onEditRottingDaysChange={setEditRottingDays}
                   onSaveEdit={saveEdit}
                   onCancelEdit={() => setEditingId(null)}
                   onDelete={() => deleteStage.mutate(stage.id)}
@@ -253,6 +280,130 @@ export function CrmStagesPanel() {
         ) : (
           <Button variant="ghost" size="sm" icon={<Plus size={14} />} onClick={() => setShowAdd(true)} style={{ alignSelf: 'flex-start', marginTop: 'var(--spacing-xs)' }}>
             Add stage
+          </Button>
+        )}
+      </SettingsSection>
+    </div>
+  );
+}
+
+// ─── Activity Types Panel ──────────────────────────────────────────
+
+const TYPE_ICONS = ['sticky-note', 'phone-call', 'mail', 'calendar-days', 'target', 'trophy'];
+
+export function CrmActivityTypesPanel() {
+  const { data: types } = useActivityTypes();
+  const activityTypes = types ?? [];
+  const createType = useCreateActivityType();
+  const updateType = useUpdateActivityType();
+  const deleteType = useDeleteActivityType();
+  const reorderTypes = useReorderActivityTypes();
+  const seedTypes = useSeedActivityTypes();
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editColor, setEditColor] = useState('#6b7280');
+  const [editIcon, setEditIcon] = useState('sticky-note');
+  const [showAdd, setShowAdd] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newColor, setNewColor] = useState('#6b7280');
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const startEdit = (at: CrmActivityTypeConfig) => {
+    setEditingId(at.id);
+    setEditName(at.name);
+    setEditColor(at.color);
+    setEditIcon(at.icon);
+  };
+
+  const saveEdit = () => {
+    if (editingId && editName.trim()) {
+      updateType.mutate({ id: editingId, name: editName.trim(), color: editColor, icon: editIcon });
+      setEditingId(null);
+    }
+  };
+
+  const handleAdd = () => {
+    if (!newName.trim()) return;
+    createType.mutate({ name: newName.trim(), color: newColor }, {
+      onSuccess: () => { setNewName(''); setNewColor('#6b7280'); setShowAdd(false); },
+    });
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = activityTypes.findIndex((t) => t.id === active.id);
+    const newIndex = activityTypes.findIndex((t) => t.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const reordered = arrayMove(activityTypes, oldIndex, newIndex);
+    reorderTypes.mutate(reordered.map((t) => t.id));
+  };
+
+  return (
+    <div>
+      <SettingsSection title="Activity types" description="Customize the types of activities you can log.">
+        {activityTypes.length === 0 && (
+          <div style={{ padding: 'var(--spacing-md)', textAlign: 'center' }}>
+            <Button variant="secondary" size="sm" onClick={() => seedTypes.mutate()}>
+              Create default types
+            </Button>
+          </div>
+        )}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={activityTypes.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+              {activityTypes.map((at) => {
+                const isEditing = editingId === at.id;
+                return (
+                  <div key={at.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)',
+                    padding: '8px var(--spacing-sm)', borderRadius: 'var(--radius-md)',
+                    background: isEditing ? 'var(--color-bg-tertiary)' : 'transparent',
+                  }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: isEditing ? editColor : at.color, flexShrink: 0 }} />
+                    {isEditing ? (
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+                        <Input value={editName} onChange={(e) => setEditName(e.target.value)} size="sm" style={{ flex: 1 }} autoFocus onKeyDown={(e) => e.key === 'Enter' && saveEdit()} />
+                        <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                          {STAGE_COLORS.map((c) => (
+                            <button key={c} onClick={() => setEditColor(c)} style={{
+                              width: 14, height: 14, borderRadius: '50%', background: c,
+                              border: editColor === c ? '2px solid var(--color-text-primary)' : '2px solid transparent',
+                              cursor: 'pointer', padding: 0,
+                            }} />
+                          ))}
+                        </div>
+                        <Button variant="primary" size="sm" onClick={saveEdit}>Save</Button>
+                        <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>Cancel</Button>
+                      </div>
+                    ) : (
+                      <>
+                        <span style={{ flex: 1, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)', color: 'var(--color-text-primary)', cursor: 'pointer' }} onClick={() => startEdit(at)}>
+                          {at.name}
+                        </span>
+                        <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
+                          {at.icon}
+                        </span>
+                        <IconButton icon={<Trash2 size={12} />} label="Delete type" size={24} destructive onClick={() => deleteType.mutate(at.id)} />
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </SortableContext>
+        </DndContext>
+        {showAdd ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', padding: '8px var(--spacing-sm)' }}>
+            <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Type name" size="sm" style={{ flex: 1 }} autoFocus onKeyDown={(e) => e.key === 'Enter' && handleAdd()} />
+            <Button variant="primary" size="sm" onClick={handleAdd} disabled={!newName.trim()}>Add</Button>
+            <Button variant="ghost" size="sm" onClick={() => setShowAdd(false)}>Cancel</Button>
+          </div>
+        ) : (
+          <Button variant="ghost" size="sm" icon={<Plus size={14} />} onClick={() => setShowAdd(true)} style={{ marginTop: 'var(--spacing-xs)' }}>
+            Add activity type
           </Button>
         )}
       </SettingsSection>

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo, type Dispatch, type SetStateAction, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -10,6 +10,7 @@ import {
   ExternalLink, Table2, File, Clipboard, Users, UserX, MessageSquare, Activity, Lock, Send,
 } from 'lucide-react';
 import { ColumnHeader } from '../../components/ui/column-header';
+import { DataTable, type DataTableColumn, type SortState } from '../../components/ui/data-table';
 import { AppSidebar } from '../../components/layout/app-sidebar';
 import { ListToolbar } from '../../components/ui/list-toolbar';
 import { Button } from '../../components/ui/button';
@@ -482,6 +483,250 @@ function DrawingPreviewThumbnail({ content }: { content: Record<string, unknown>
   }
 
   return <div ref={containerRef} style={{ padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 100 }} />;
+}
+
+// ─── Drive list view using DataTable ────────────────────────────────
+
+interface DriveDataTableListProps {
+  displayItems: DriveItem[];
+  sortBy: SortBy;
+  setSortBy: (v: SortBy) => void;
+  selectedIds: Set<string>;
+  setSelectedIds: Dispatch<SetStateAction<Set<string>>>;
+  renameId: string | null;
+  setRenameId: (id: string | null) => void;
+  renameValue: string;
+  setRenameValue: (v: string) => void;
+  handleRenameSubmit: () => void;
+  setPreviewItem: (item: DriveItem | null) => void;
+  handleItemDoubleClick: (item: DriveItem) => void;
+  handleContextMenu: (e: React.MouseEvent, item: DriveItem) => void;
+  handleItemDragStart: (e: React.DragEvent, item: DriveItem) => void;
+  handleItemDragEnd: () => void;
+  handleFolderDragOver: (e: React.DragEvent, folderId: string) => void;
+  handleFolderDragLeave: (e: React.DragEvent) => void;
+  handleFolderDrop: (e: React.DragEvent, targetFolderId: string) => void;
+  dragOverFolderId: string | null;
+  sidebarView: SidebarView;
+  tenantUsersData: import('@atlasmail/shared').TenantUser[];
+  driveSettings: { showPreviewPanel: boolean; showFileExtensions: boolean; compactMode: boolean };
+  renderTags: (item: DriveItem) => ReactNode;
+}
+
+function DriveDataTableList({
+  displayItems,
+  sortBy,
+  setSortBy,
+  selectedIds,
+  setSelectedIds,
+  renameId,
+  setRenameId,
+  renameValue,
+  setRenameValue,
+  handleRenameSubmit,
+  setPreviewItem,
+  handleItemDoubleClick,
+  handleContextMenu,
+  handleItemDragStart,
+  handleItemDragEnd,
+  handleFolderDragOver,
+  handleFolderDragLeave,
+  handleFolderDrop,
+  dragOverFolderId,
+  sidebarView,
+  tenantUsersData,
+  driveSettings,
+  renderTags,
+}: DriveDataTableListProps) {
+  // Map SortBy <-> DataTable SortState
+  const dtSort: SortState | null = sortBy === 'default' ? null : {
+    column: sortBy === 'date' ? 'date' : sortBy,
+    direction: sortBy === 'size' || sortBy === 'date' ? 'desc' : 'asc',
+  };
+
+  const handleDtSortChange = useCallback((next: SortState | null) => {
+    if (!next) { setSortBy('default'); return; }
+    if (next.column === 'name') setSortBy('name');
+    else if (next.column === 'size') setSortBy('size');
+    else if (next.column === 'date') setSortBy('date');
+    else setSortBy('default');
+  }, [setSortBy]);
+
+  const handleSelectionChange = useCallback((ids: Set<string>) => {
+    setSelectedIds(ids);
+  }, [setSelectedIds]);
+
+  // Event delegation: context menu on the wrapping div using data-drive-id
+  const handleContainerContextMenu = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    let target = e.target as HTMLElement | null;
+    while (target && target !== e.currentTarget) {
+      const itemId = target.dataset.driveId;
+      if (itemId) {
+        const item = displayItems.find((i) => i.id === itemId);
+        if (item) { handleContextMenu(e, item); return; }
+      }
+      target = target.parentElement;
+    }
+  }, [displayItems, handleContextMenu]);
+
+  const handleContainerDoubleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    let target = e.target as HTMLElement | null;
+    while (target && target !== e.currentTarget) {
+      const itemId = target.dataset.driveId;
+      if (itemId) {
+        const item = displayItems.find((i) => i.id === itemId);
+        if (item) { handleItemDoubleClick(item); return; }
+      }
+      target = target.parentElement;
+    }
+  }, [displayItems, handleItemDoubleClick]);
+
+  const columns: DataTableColumn<DriveItem>[] = [
+    {
+      key: 'name',
+      label: 'Name',
+      icon: <File size={12} />,
+      sortable: true,
+      render: (item) => {
+        const Icon = getFileTypeIcon(item.mimeType, item.type, item.linkedResourceType);
+        const isRenaming = renameId === item.id;
+        return (
+          <div
+            className="drive-list-name"
+            data-drive-id={item.id}
+            draggable={!isRenaming}
+            onDragStart={(e) => { e.stopPropagation(); handleItemDragStart(e, item); }}
+            onDragEnd={(e) => { e.stopPropagation(); handleItemDragEnd(); }}
+            onDragOver={item.type === 'folder' ? (e) => { e.stopPropagation(); handleFolderDragOver(e, item.id); } : undefined}
+            onDragLeave={item.type === 'folder' ? (e) => { e.stopPropagation(); handleFolderDragLeave(e); } : undefined}
+            onDrop={item.type === 'folder' ? (e) => { e.stopPropagation(); handleFolderDrop(e, item.id); } : undefined}
+          >
+            {item.icon ? (
+              <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>{item.icon}</span>
+            ) : (
+              <Icon size={22} />
+            )}
+            {isRenaming ? (
+              <input
+                className="drive-rename-input"
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onBlur={handleRenameSubmit}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleRenameSubmit();
+                  if (e.key === 'Escape') setRenameId(null);
+                }}
+                autoFocus
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <span>{driveSettings.showFileExtensions ? item.name : stripExtension(item.name, item.type)}</span>
+            )}
+            {item.isFavourite && (
+              <Star size={12} fill="var(--color-star, #f59e0b)" color="var(--color-star, #f59e0b)" />
+            )}
+            {((item as any).shareCount > 0 || (item as any).hasShareLink) && (
+              <Tooltip content="Shared">
+                <span style={{ display: 'inline-flex', color: 'var(--color-text-tertiary)' }}>
+                  <Users size={12} />
+                </span>
+              </Tooltip>
+            )}
+            {renderTags(item)}
+          </div>
+        );
+      },
+    },
+    ...(sidebarView === 'shared' ? [{
+      key: 'sharedBy',
+      label: 'Shared by',
+      width: 160,
+      sortable: false,
+      render: (item: DriveItem) => {
+        const sharedItem = item as DriveItem & { sharePermission?: string; sharedBy?: string };
+        const sharer = tenantUsersData.find((u) => u.userId === sharedItem.sharedBy);
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
+            {sharer && (
+              <Tooltip content={sharer.name || sharer.email}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
+                  <Avatar name={sharer.name || null} email={sharer.email} size={18} />
+                  <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {sharer.name || sharer.email}
+                  </span>
+                </span>
+              </Tooltip>
+            )}
+            <Badge variant={sharedItem.sharePermission === 'edit' ? 'primary' : 'default'}>
+              {sharedItem.sharePermission === 'edit' ? 'Edit' : 'View'}
+            </Badge>
+          </div>
+        );
+      },
+    } as DataTableColumn<DriveItem>] : []),
+    {
+      key: 'size',
+      label: 'Size',
+      icon: <HardDrive size={12} />,
+      width: 100,
+      sortable: true,
+      align: 'right' as const,
+      render: (item) => (
+        <span className="drive-list-size">
+          {item.type === 'file' ? formatBytes(item.size) : '—'}
+        </span>
+      ),
+      compare: (a, b) => (a.size ?? 0) - (b.size ?? 0),
+    },
+    {
+      key: 'date',
+      label: 'Modified',
+      icon: <Clock size={12} />,
+      width: 140,
+      sortable: true,
+      render: (item) => (
+        <span className="drive-list-modified">
+          {formatRelativeDate(item.updatedAt)}
+        </span>
+      ),
+      compare: (a, b) => new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime(),
+    },
+  ];
+
+  return (
+    <div
+      onContextMenu={handleContainerContextMenu}
+      onDoubleClick={handleContainerDoubleClick}
+      style={{ display: 'contents' }}
+    >
+      <DataTable<DriveItem>
+        data={displayItems}
+        columns={columns}
+        selectable
+        selectedIds={selectedIds}
+        onSelectionChange={handleSelectionChange}
+        sort={dtSort}
+        onSortChange={handleDtSortChange}
+        onRowClick={(item) => {
+          // DataTable manages multi-select; open preview panel on single click
+          if (driveSettings.showPreviewPanel && (item.type === 'file' || item.linkedResourceType)) {
+            setPreviewItem(item);
+          }
+        }}
+        activeRowId={null}
+        paginated={false}
+        hideFooter={false}
+        keyboardNavigation
+        rowClassName={(item) =>
+          [
+            dragOverFolderId === item.id ? 'drive-drag-over' : '',
+            driveSettings.compactMode ? 'compact' : '',
+          ].filter(Boolean).join(' ')
+        }
+        className="drive-data-table"
+      />
+    </div>
+  );
 }
 
 // ─── Drive page ──────────────────────────────────────────────────────
@@ -1953,139 +2198,31 @@ export function DrivePage() {
               )}
             </div>
           ) : viewMode === 'list' ? (
-            <>
-              {/* List header */}
-              <div className="drive-list-header">
-                <ColumnHeader
-                  label="Name"
-                  icon={<File size={12} />}
-                  sortable
-                  columnKey="name"
-                  sortColumn={sortBy === 'name' ? 'name' : null}
-                  sortDirection="asc"
-                  onSort={() => setSortBy(sortBy === 'name' ? 'default' : 'name')}
-                />
-                <ColumnHeader
-                  label="Size"
-                  icon={<HardDrive size={12} />}
-                  sortable
-                  columnKey="size"
-                  sortColumn={sortBy === 'size' ? 'size' : null}
-                  sortDirection="desc"
-                  onSort={() => setSortBy(sortBy === 'size' ? 'default' : 'size')}
-                />
-                <ColumnHeader
-                  label="Modified"
-                  icon={<Clock size={12} />}
-                  sortable
-                  columnKey="date"
-                  sortColumn={sortBy === 'date' ? 'date' : null}
-                  sortDirection="desc"
-                  onSort={() => setSortBy(sortBy === 'date' ? 'default' : 'date')}
-                />
-              </div>
-              {displayItems.map((item) => {
-                const Icon = getFileTypeIcon(item.mimeType, item.type, item.linkedResourceType);
-
-                const isRenaming = renameId === item.id;
-                const isSelected = selectedIds.has(item.id);
-                const isDragTarget = dragOverFolderId === item.id;
-
-                return (
-                  <div
-                    key={item.id}
-                    className={`drive-list-row ${isSelected ? 'selected' : ''} ${isDragTarget ? 'drive-drag-over' : ''} ${driveSettings.compactMode ? 'compact' : ''}`}
-                    onClick={(e) => { e.stopPropagation(); handleItemClick(item, e); }}
-                    onContextMenu={(e) => handleContextMenu(e, item)}
-                    onDoubleClick={() => handleItemDoubleClick(item)}
-                    draggable={!isRenaming}
-                    onDragStart={(e) => handleItemDragStart(e, item)}
-                    onDragEnd={handleItemDragEnd}
-                    onDragOver={item.type === 'folder' ? (e) => handleFolderDragOver(e, item.id) : undefined}
-                    onDragLeave={item.type === 'folder' ? handleFolderDragLeave : undefined}
-                    onDrop={item.type === 'folder' ? (e) => handleFolderDrop(e, item.id) : undefined}
-                  >
-                    <div className="drive-list-name">
-                      <input
-                        type="checkbox"
-                        className="drive-checkbox"
-                        aria-label={`Select ${item.name}`}
-                        checked={isSelected}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          setSelectedIds((prev) => {
-                            const next = new Set(prev);
-                            if (next.has(item.id)) next.delete(item.id);
-                            else next.add(item.id);
-                            return next;
-                          });
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      {item.icon ? (
-                        <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>{item.icon}</span>
-                      ) : (
-                        <Icon size={22} />
-                      )}
-                      {isRenaming ? (
-                        <input
-                          className="drive-rename-input"
-                          value={renameValue}
-                          onChange={(e) => setRenameValue(e.target.value)}
-                          onBlur={handleRenameSubmit}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleRenameSubmit();
-                            if (e.key === 'Escape') setRenameId(null);
-                          }}
-                          autoFocus
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      ) : (
-                        <span>{driveSettings.showFileExtensions ? item.name : stripExtension(item.name, item.type)}</span>
-                      )}
-                      {item.isFavourite && (
-                        <Star size={12} fill="var(--color-star, #f59e0b)" color="var(--color-star, #f59e0b)" />
-                      )}
-                      {((item as any).shareCount > 0 || (item as any).hasShareLink) && (
-                        <Tooltip content={t('drive.sharing.shared')}>
-                          <span style={{ display: 'inline-flex', color: 'var(--color-text-tertiary)' }}>
-                            <Users size={12} />
-                          </span>
-                        </Tooltip>
-                      )}
-                      {renderTags(item)}
-                    </div>
-                    {sidebarView === 'shared' && (() => {
-                      const sharedItem = item as DriveItem & { sharePermission?: string; sharedBy?: string };
-                      const sharer = (tenantUsersData ?? []).find((u) => u.userId === sharedItem.sharedBy);
-                      return (
-                        <div className="drive-list-shared-info" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', minWidth: 140 }}>
-                          {sharer && (
-                            <Tooltip content={sharer.name || sharer.email}>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
-                                <Avatar name={sharer.name || null} email={sharer.email} size={18} />
-                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {sharer.name || sharer.email}
-                                </span>
-                              </span>
-                            </Tooltip>
-                          )}
-                          <Badge variant={sharedItem.sharePermission === 'edit' ? 'primary' : 'default'}>
-                            {sharedItem.sharePermission === 'edit' ? t('drive.sharing.shareEdit') : t('drive.sharing.shareView')}
-                          </Badge>
-                        </div>
-                      );
-                    })()}
-                    <span className="drive-list-size">
-                      {item.type === 'file' ? formatBytes(item.size) : '—'}
-                    </span>
-                    <span className="drive-list-modified">
-                      {formatRelativeDate(item.updatedAt)}
-                    </span>
-                  </div>
-                );
-              })}
-            </>
+            <DriveDataTableList
+              displayItems={displayItems}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              selectedIds={selectedIds}
+              setSelectedIds={setSelectedIds}
+              renameId={renameId}
+              setRenameId={setRenameId}
+              renameValue={renameValue}
+              setRenameValue={setRenameValue}
+              handleRenameSubmit={handleRenameSubmit}
+              setPreviewItem={setPreviewItem}
+              handleItemDoubleClick={handleItemDoubleClick}
+              handleContextMenu={handleContextMenu}
+              handleItemDragStart={handleItemDragStart}
+              handleItemDragEnd={handleItemDragEnd}
+              handleFolderDragOver={handleFolderDragOver}
+              handleFolderDragLeave={handleFolderDragLeave}
+              handleFolderDrop={handleFolderDrop}
+              dragOverFolderId={dragOverFolderId}
+              sidebarView={sidebarView}
+              tenantUsersData={tenantUsersData ?? []}
+              driveSettings={driveSettings}
+              renderTags={renderTags}
+            />
           ) : (
             /* Grid view */
             <div className="drive-grid">

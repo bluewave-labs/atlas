@@ -979,7 +979,18 @@
       "noGroup": "No grouping",
       "groupByStage": "Stage",
       "groupByContact": "Contact",
-      "groupByCompany": "Company"
+      "groupByCompany": "Company",
+      "rotting": "Rotting",
+      "rottingWarning": "In stage for {{days}} days (limit: {{limit}})",
+      "rottingDays": "Rotting after (days)",
+      "rottingDaysHint": "Alert when a deal stays in this stage too long",
+      "noRottingLimit": "No limit"
+    },
+    "kanban": {
+      "collapse": "Collapse stage",
+      "expand": "Expand stage",
+      "dealsCount": "{{count}} deals",
+      "totalValue": "Total: {{value}}"
     },
     "fields": {
       "manageFields": "Manage fields"
@@ -1035,7 +1046,28 @@
       "deleteActivity": "Delete activity",
       "stageChange": "Stage change",
       "dealWon": "Deal won",
-      "dealLost": "Deal lost"
+      "dealLost": "Deal lost",
+      "dueDate": "Due date",
+      "overdue": "Overdue",
+      "dueToday": "Due today",
+      "dueSoon": "Due soon",
+      "noDueDate": "No due date",
+      "completed": "Completed",
+      "overdueBy": "Overdue by {{days}} days",
+      "completedOn": "Completed {{date}}",
+      "markDone": "Mark done",
+      "scheduleNext": "Schedule next?",
+      "scheduleNextSubtitle": "Create a follow-up activity",
+      "skip": "Skip",
+      "schedule": "Schedule",
+      "tomorrow": "Tomorrow",
+      "nextWeek": "Next week",
+      "pickDate": "Pick date",
+      "optionalNote": "Optional note",
+      "assignedTo": "Assigned to",
+      "assignee": "Assignee",
+      "unassigned": "Unassigned",
+      "assignToMe": "Assign to me"
     },
     "automations": {
       "title": "Automations",
@@ -1164,7 +1196,9 @@
       "other": "Other",
       "noLeads": "No leads yet",
       "editNotes": "Edit notes",
-      "saveNotes": "Save"
+      "saveNotes": "Save",
+      "createdAt": "Created",
+      "lead": "lead"
     },
     "notes": {
       "title": "Notes",
@@ -1285,7 +1319,8 @@
       "copied": "Copied!",
       "codeCopied": "Embed code copied to clipboard",
       "deleteForm": "Delete form",
-      "deleteFormDesc": "This will permanently delete this lead form. Existing leads will not be affected."
+      "deleteFormDesc": "This will permanently delete this lead form. Existing leads will not be affected.",
+      "formSaved": "Form saved"
     }
   },
   "drive": {
