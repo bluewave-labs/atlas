@@ -33,6 +33,7 @@ export interface CrmDeal {
   title: string; value: number; stageId: string;
   contactId: string | null; companyId: string | null;
   assignedUserId: string | null;
+  teamId: string | null;
   probability: number; expectedCloseDate: string | null;
   wonAt: string | null; lostAt: string | null; lostReason: string | null;
   tags: string[];
@@ -108,7 +109,23 @@ export interface CreateCrmWorkflowInput {
 // ─── CRM Permissions ─────────────────────────────────────────────
 
 export type CrmRole = 'admin' | 'manager' | 'sales' | 'viewer';
-export type CrmRecordAccess = 'all' | 'own';
+export type CrmRecordAccess = 'all' | 'team' | 'own';
+
+// ─── Sales Teams ────────────────────────────────────────────────
+
+export interface CrmTeam {
+  id: string; accountId: string;
+  name: string; color: string;
+  leaderUserId: string | null;
+  isArchived: boolean;
+  createdAt: string; updatedAt: string;
+}
+
+export interface CrmTeamMember {
+  id: string; teamId: string; userId: string;
+  userName?: string; userEmail?: string;
+  createdAt: string;
+}
 
 export type CrmEntity = 'deals' | 'contacts' | 'companies' | 'activities' | 'workflows' | 'dashboard';
 export type CrmOperation = 'view' | 'create' | 'update' | 'delete';

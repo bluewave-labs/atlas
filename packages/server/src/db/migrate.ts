@@ -1981,6 +1981,34 @@ export async function runMigrations() {
       ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS expected_close_date TIMESTAMPTZ;
     `);
 
+    // ─── CRM: Sales Teams ──────────────────────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS crm_teams (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        account_id UUID NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        color VARCHAR(20) NOT NULL DEFAULT '#3b82f6',
+        leader_user_id UUID,
+        is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_crm_teams_account ON crm_teams(account_id);
+
+      CREATE TABLE IF NOT EXISTS crm_team_members (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL REFERENCES crm_teams(id) ON DELETE CASCADE,
+        user_id UUID NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_crm_team_members_unique ON crm_team_members(team_id, user_id);
+
+      ALTER TABLE crm_deals ADD COLUMN IF NOT EXISTS team_id UUID;
+      ALTER TABLE crm_contacts ADD COLUMN IF NOT EXISTS team_id UUID;
+      ALTER TABLE crm_companies ADD COLUMN IF NOT EXISTS team_id UUID;
+      ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS team_id UUID;
+    `);
+
     // ─── Index: employees.email for permission-based filtering ────────
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_employees_email ON employees(account_id, email);

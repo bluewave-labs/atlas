@@ -52,6 +52,15 @@ router.delete('/deals/:id', crmController.deleteDeal);
 router.post('/deals/:id/won', crmController.markDealWon);
 router.post('/deals/:id/lost', crmController.markDealLost);
 
+// Sales Teams
+router.get('/teams/list', crmController.listTeams);
+router.post('/teams', crmController.createTeam);
+router.patch('/teams/:id', crmController.updateTeam);
+router.delete('/teams/:id', crmController.deleteTeam);
+router.get('/teams/:id/members', crmController.listTeamMembers);
+router.post('/teams/:id/members', crmController.addTeamMember);
+router.delete('/teams/:id/members/:userId', crmController.removeTeamMember);
+
 // Activity Types
 router.get('/activity-types/list', crmController.listActivityTypes);
 router.post('/activity-types', crmController.createActivityType);

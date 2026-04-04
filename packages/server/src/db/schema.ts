@@ -1357,6 +1357,7 @@ export const crmCompanies = pgTable('crm_companies', {
   size: varchar('size', { length: 50 }),
   address: text('address'),
   phone: varchar('phone', { length: 50 }),
+  teamId: uuid('team_id'),
   tags: jsonb('tags').$type<string[]>().notNull().default([]),
   isArchived: boolean('is_archived').notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),
@@ -1375,6 +1376,7 @@ export const crmContacts = pgTable('crm_contacts', {
   email: varchar('email', { length: 255 }),
   phone: varchar('phone', { length: 50 }),
   companyId: uuid('company_id').references(() => crmCompanies.id, { onDelete: 'set null' }),
+  teamId: uuid('team_id'),
   position: varchar('position', { length: 255 }),
   source: varchar('source', { length: 100 }),
   tags: jsonb('tags').$type<string[]>().notNull().default([]),
@@ -1412,6 +1414,7 @@ export const crmDeals = pgTable('crm_deals', {
   contactId: uuid('contact_id').references(() => crmContacts.id, { onDelete: 'set null' }),
   companyId: uuid('company_id').references(() => crmCompanies.id, { onDelete: 'set null' }),
   assignedUserId: uuid('assigned_user_id'),
+  teamId: uuid('team_id'),
   probability: integer('probability').notNull().default(0),
   expectedCloseDate: timestamp('expected_close_date', { withTimezone: true }),
   wonAt: timestamp('won_at', { withTimezone: true }),
@@ -1488,6 +1491,29 @@ export const crmWorkflows = pgTable('crm_workflows', {
   triggerIdx: index('idx_crm_workflows_trigger').on(table.trigger),
 }));
 
+// ─── CRM: Sales Teams ────────────────────────────────────────────
+export const crmTeams = pgTable('crm_teams', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull(),
+  name: varchar('name', { length: 100 }).notNull(),
+  color: varchar('color', { length: 20 }).notNull().default('#3b82f6'),
+  leaderUserId: uuid('leader_user_id'),
+  isArchived: boolean('is_archived').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  accountIdx: index('idx_crm_teams_account').on(table.accountId),
+}));
+
+export const crmTeamMembers = pgTable('crm_team_members', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  teamId: uuid('team_id').notNull().references(() => crmTeams.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  uniqueIdx: uniqueIndex('idx_crm_team_members_unique').on(table.teamId, table.userId),
+}));
+
 // ─── CRM: Permissions ─────────────────────────────────────────────
 export const crmPermissions = pgTable('crm_permissions', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -1519,6 +1545,7 @@ export const crmLeads = pgTable('crm_leads', {
   expectedRevenue: real('expected_revenue').notNull().default(0),
   probability: integer('probability').notNull().default(0),
   assignedUserId: uuid('assigned_user_id'),
+  teamId: uuid('team_id'),
   expectedCloseDate: timestamp('expected_close_date', { withTimezone: true }),
   enrichedData: jsonb('enriched_data').$type<Record<string, unknown>>(),
   enrichedAt: timestamp('enriched_at', { withTimezone: true }),

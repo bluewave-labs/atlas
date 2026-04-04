@@ -777,6 +777,85 @@ export async function getDashboard(req: Request, res: Response) {
   }
 }
 
+// ─── Sales Teams ──────────────────────────────────────────────────
+
+export async function listTeams(req: Request, res: Response) {
+  try {
+    const data = await crmService.listTeams(req.auth!.accountId);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to list CRM teams');
+    res.status(500).json({ success: false, error: 'Failed to list teams' });
+  }
+}
+
+export async function createTeam(req: Request, res: Response) {
+  try {
+    const data = await crmService.createTeam(req.auth!.accountId, req.body);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to create CRM team');
+    res.status(500).json({ success: false, error: 'Failed to create team' });
+  }
+}
+
+export async function updateTeam(req: Request, res: Response) {
+  try {
+    const id = req.params.id as string;
+    const data = await crmService.updateTeam(req.auth!.accountId, id, req.body);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to update CRM team');
+    res.status(500).json({ success: false, error: 'Failed to update team' });
+  }
+}
+
+export async function deleteTeam(req: Request, res: Response) {
+  try {
+    const id = req.params.id as string;
+    await crmService.deleteTeam(req.auth!.accountId, id);
+    res.json({ success: true });
+  } catch (error) {
+    logger.error({ error }, 'Failed to delete CRM team');
+    res.status(500).json({ success: false, error: 'Failed to delete team' });
+  }
+}
+
+export async function listTeamMembers(req: Request, res: Response) {
+  try {
+    const teamId = req.params.id as string;
+    const data = await crmService.listTeamMembers(teamId);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to list team members');
+    res.status(500).json({ success: false, error: 'Failed to list team members' });
+  }
+}
+
+export async function addTeamMember(req: Request, res: Response) {
+  try {
+    const teamId = req.params.id as string;
+    const { userId } = req.body;
+    const data = await crmService.addTeamMember(teamId, userId);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to add team member');
+    res.status(500).json({ success: false, error: 'Failed to add team member' });
+  }
+}
+
+export async function removeTeamMember(req: Request, res: Response) {
+  try {
+    const teamId = req.params.id as string;
+    const userId = req.params.userId as string;
+    await crmService.removeTeamMember(teamId, userId);
+    res.json({ success: true });
+  } catch (error) {
+    logger.error({ error }, 'Failed to remove team member');
+    res.status(500).json({ success: false, error: 'Failed to remove team member' });
+  }
+}
+
 // ─── Activity Types ───────────────────────────────────────────────
 
 export async function listActivityTypes(req: Request, res: Response) {
