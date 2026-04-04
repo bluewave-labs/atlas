@@ -92,7 +92,7 @@ export function ContentArea({ title, breadcrumbs, actions, children }: ContentAr
           <span
             style={{
               fontSize: 'var(--font-size-sm)',
-              fontWeight: 'var(--font-weight-medium)' as CSSProperties['fontWeight'],
+              fontWeight: 'var(--font-weight-normal)' as CSSProperties['fontWeight'],
               color: 'var(--color-text-primary)',
               fontFamily: 'var(--font-family)',
             }}

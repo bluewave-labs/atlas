@@ -60,6 +60,7 @@
   cursor: pointer;
   transition: background 0.1s;
   font-family: var(--font-family);
+  font-size: var(--font-size-sm);
 }
 
 .dt-row:hover {
