@@ -6,7 +6,7 @@ import { hashPassword } from '../../utils/password';
 import * as authService from '../auth.service';
 import { logger } from '../../utils/logger';
 import { getTenantById } from './tenant.service';
-import { setAppPermission } from '../app-permissions.service';
+import { setAppPermission, type AppRole, type AppRecordAccess } from '../app-permissions.service';
 import type { TenantMemberRole } from '@atlasmail/shared';
 import { env } from '../../config/env';
 import { sendEmail } from '../email.service';
@@ -16,10 +16,10 @@ const DEFAULT_MEMBER_APPS = ['hr', 'tasks', 'drive', 'docs', 'draw', 'tables', '
 
 async function grantDefaultPermissions(tenantId: string, userId: string) {
   for (const appId of DEFAULT_MEMBER_APPS) {
-    const role = appId === 'hr' ? 'viewer' : 'editor';
-    const recordAccess = appId === 'hr' ? 'own' : 'all';
+    const role: AppRole = appId === 'hr' ? 'viewer' : 'editor';
+    const recordAccess: AppRecordAccess = appId === 'hr' ? 'own' : 'all';
     try {
-      await setAppPermission(tenantId, userId, appId, role as any, recordAccess as any);
+      await setAppPermission(tenantId, userId, appId, role, recordAccess);
     } catch { /* ignore duplicates */ }
   }
   logger.info({ tenantId, userId }, 'Default app permissions granted for new member');

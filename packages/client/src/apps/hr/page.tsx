@@ -65,6 +65,8 @@ type NavSection = 'dashboard' | 'employees' | 'departments' | 'org-chart' | 'tim
   | 'attendance' | 'my-leave' | 'my-profile' | 'team-calendar' | 'leave-types' | 'holidays' | 'policies'
   | `dept:${string}`;
 
+const PORTAL_VIEWS = new Set<string>(['my-profile', 'my-leave', 'team-calendar', 'holidays']);
+
 // ─── Status helpers ────────────────────────────────────────────────
 
 function getStatusBadge(status: HrEmployee['status'], t: (k: string) => string) {
@@ -2445,9 +2447,8 @@ export function HrPage() {
   }, [selectedEmployeeId, showSearch]);
 
   // Portal users can only access portal views — redirect if they try admin views via URL
-  const portalViews = new Set<NavSection>(['my-profile', 'my-leave', 'team-calendar', 'holidays']);
   useEffect(() => {
-    if (isPortalUser && !portalViews.has(activeNav as NavSection)) {
+    if (isPortalUser && !PORTAL_VIEWS.has(activeNav)) {
       setActiveNav('my-profile');
     }
   }, [isPortalUser, activeNav]);

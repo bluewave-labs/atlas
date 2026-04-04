@@ -11,7 +11,7 @@ import { accounts } from '../../db/schema';
 import { eq } from 'drizzle-orm';
 import { logger } from '../../utils/logger';
 import { emitAppEvent, getTenantMemberUserIds } from '../../services/event.service';
-import { getAppPermission, canAccessEntity } from '../../services/app-permissions.service';
+import { getAppPermission, canAccess, canAccessEntity } from '../../services/app-permissions.service';
 import type { CrmRole, CrmRecordAccess } from '@atlasmail/shared';
 
 // ─── Widget ─────────────────────────────────────────────────────────
@@ -781,6 +781,8 @@ export async function getDashboard(req: Request, res: Response) {
 
 export async function listTeams(req: Request, res: Response) {
   try {
+    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'crm');
+    if (!canAccess(perm.role, 'view')) { res.status(403).json({ success: false, error: 'No permission' }); return; }
     const data = await crmService.listTeams(req.auth!.accountId);
     res.json({ success: true, data });
   } catch (error) {
@@ -791,7 +793,10 @@ export async function listTeams(req: Request, res: Response) {
 
 export async function createTeam(req: Request, res: Response) {
   try {
-    const data = await crmService.createTeam(req.auth!.accountId, req.body);
+    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'crm');
+    if (!canAccess(perm.role, 'create')) { res.status(403).json({ success: false, error: 'No permission' }); return; }
+    const { name, color, leaderUserId } = req.body;
+    const data = await crmService.createTeam(req.auth!.accountId, { name, color, leaderUserId });
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to create CRM team');
@@ -801,8 +806,11 @@ export async function createTeam(req: Request, res: Response) {
 
 export async function updateTeam(req: Request, res: Response) {
   try {
+    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'crm');
+    if (!canAccess(perm.role, 'update')) { res.status(403).json({ success: false, error: 'No permission' }); return; }
     const id = req.params.id as string;
-    const data = await crmService.updateTeam(req.auth!.accountId, id, req.body);
+    const { name, color, leaderUserId, isArchived } = req.body;
+    const data = await crmService.updateTeam(req.auth!.accountId, id, { name, color, leaderUserId, isArchived });
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to update CRM team');
@@ -812,6 +820,8 @@ export async function updateTeam(req: Request, res: Response) {
 
 export async function deleteTeam(req: Request, res: Response) {
   try {
+    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'crm');
+    if (!canAccess(perm.role, 'delete')) { res.status(403).json({ success: false, error: 'No permission' }); return; }
     const id = req.params.id as string;
     await crmService.deleteTeam(req.auth!.accountId, id);
     res.json({ success: true });
@@ -823,6 +833,8 @@ export async function deleteTeam(req: Request, res: Response) {
 
 export async function listTeamMembers(req: Request, res: Response) {
   try {
+    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'crm');
+    if (!canAccess(perm.role, 'view')) { res.status(403).json({ success: false, error: 'No permission' }); return; }
     const teamId = req.params.id as string;
     const data = await crmService.listTeamMembers(teamId, req.auth!.accountId);
     res.json({ success: true, data });
@@ -834,6 +846,8 @@ export async function listTeamMembers(req: Request, res: Response) {
 
 export async function addTeamMember(req: Request, res: Response) {
   try {
+    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'crm');
+    if (!canAccess(perm.role, 'update')) { res.status(403).json({ success: false, error: 'No permission' }); return; }
     const teamId = req.params.id as string;
     const { userId } = req.body;
     const data = await crmService.addTeamMember(teamId, userId, req.auth!.accountId);
@@ -846,6 +860,8 @@ export async function addTeamMember(req: Request, res: Response) {
 
 export async function removeTeamMember(req: Request, res: Response) {
   try {
+    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'crm');
+    if (!canAccess(perm.role, 'update')) { res.status(403).json({ success: false, error: 'No permission' }); return; }
     const teamId = req.params.id as string;
     const userId = req.params.userId as string;
     await crmService.removeTeamMember(teamId, userId, req.auth!.accountId);
