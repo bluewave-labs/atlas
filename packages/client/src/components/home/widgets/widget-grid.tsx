@@ -93,8 +93,8 @@ export function WidgetGrid() {
   const visibleWidgets = enabledWidgets.slice(0, 10);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: GAP, marginTop: 16 }}>
-      {visibleWidgets.length > 0 && (
+    <div style={{ marginTop: 16 }}>
+      {hasWidgets && (
         <div
           style={{
             display: 'grid',
@@ -105,6 +105,7 @@ export function WidgetGrid() {
             maxWidth: '90vw',
           }}
         >
+          {/* Home widgets */}
           {visibleWidgets.map((widget) => (
             <div
               key={widget.id}
@@ -122,20 +123,8 @@ export function WidgetGrid() {
               <widget.component width={WIDGET_W} height={WIDGET_H} />
             </div>
           ))}
-        </div>
-      )}
 
-      {filteredAppWidgets.length > 0 && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(auto-fill, ${WIDGET_W}px)`,
-            gap: GAP,
-            justifyContent: 'center',
-            width: '100%',
-            maxWidth: '90vw',
-          }}
-        >
+          {/* App widgets — merged into the same grid */}
           {filteredAppWidgets.map((widget) => {
             const wKey = `${widget.appId}:${widget.id}`;
             const isHovered = hoveredWidget === wKey;
