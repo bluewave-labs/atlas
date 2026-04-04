@@ -305,6 +305,7 @@ Atlas uses `react-i18next` for internationalization. 5 languages: EN, TR, DE, FR
 5. For interpolation: `t('key', { count: 5 })` → `"{{count}} items"`
 
 ### Rules
+- Every git tag MUST have a corresponding GitHub Release with release notes. They must always be in sync.
 - Every user-visible string MUST use `t()` — no hardcoded English text
 - Sidebar labels, view titles, button labels, form labels, empty states, error messages
 - Keys are namespaced by app: `crm.sidebar.dashboard`, `sign.actions.upload`
