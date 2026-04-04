@@ -6,9 +6,24 @@ import { hashPassword } from '../../utils/password';
 import * as authService from '../auth.service';
 import { logger } from '../../utils/logger';
 import { getTenantById } from './tenant.service';
+import { setAppPermission } from '../app-permissions.service';
 import type { TenantMemberRole } from '@atlasmail/shared';
 import { env } from '../../config/env';
 import { sendEmail } from '../email.service';
+
+// Default app permissions for new members — everything except CRM and Projects
+const DEFAULT_MEMBER_APPS = ['hr', 'tasks', 'drive', 'docs', 'draw', 'tables', 'sign'];
+
+async function grantDefaultPermissions(tenantId: string, userId: string) {
+  for (const appId of DEFAULT_MEMBER_APPS) {
+    const role = appId === 'hr' ? 'viewer' : 'editor';
+    const recordAccess = appId === 'hr' ? 'own' : 'all';
+    try {
+      await setAppPermission(tenantId, userId, appId, role as any, recordAccess as any);
+    } catch { /* ignore duplicates */ }
+  }
+  logger.info({ tenantId, userId }, 'Default app permissions granted for new member');
+}
 
 export async function createTenantUser(
   tenantId: string,
@@ -26,6 +41,11 @@ export async function createTenantUser(
     userId: user.id,
     role: input.role ?? 'member',
   });
+
+  // Grant default app permissions for new members
+  if ((input.role ?? 'member') === 'member') {
+    await grantDefaultPermissions(tenantId, user.id);
+  }
 
   logger.info({ tenantId, userId: user.id, email: input.email }, 'Tenant user created');
 
@@ -179,6 +199,11 @@ export async function acceptInvitation(token: string, input: { name: string; pas
     userId: user.id,
     role: invitation.role,
   });
+
+  // Grant default app permissions for new members
+  if (invitation.role === 'member') {
+    await grantDefaultPermissions(invitation.tenantId, user.id);
+  }
 
   // Mark invitation as accepted
   await db
