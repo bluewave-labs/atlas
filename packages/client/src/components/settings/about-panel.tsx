@@ -1,5 +1,4 @@
 import { type CSSProperties } from 'react';
-import { LayoutGrid } from 'lucide-react';
 import {
   SettingsSection,
   SettingsRow,
@@ -11,9 +10,6 @@ export function AboutPanel() {
       <SettingsSection title="About Atlas">
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--spacing-xl)',
             padding: 'var(--spacing-xl)',
             background: 'var(--color-bg-tertiary)',
             borderRadius: 'var(--radius-lg)',
@@ -23,39 +19,23 @@ export function AboutPanel() {
         >
           <div
             style={{
-              width: 56,
-              height: 56,
-              borderRadius: 'var(--radius-lg)',
-              background: 'var(--color-accent-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
+              fontSize: 'var(--font-size-2xl)',
+              fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'],
+              color: 'var(--color-text-primary)',
+              fontFamily: 'var(--font-family)',
             }}
           >
-            <LayoutGrid size={28} color="#ffffff" />
+            Atlas
           </div>
-          <div>
-            <div
-              style={{
-                fontSize: 'var(--font-size-2xl)',
-                fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'],
-                color: 'var(--color-text-primary)',
-                fontFamily: 'var(--font-family)',
-              }}
-            >
-              Atlas
-            </div>
-            <div
-              style={{
-                marginTop: 4,
-                fontSize: 'var(--font-size-md)',
-                color: 'var(--color-text-tertiary)',
-                fontFamily: 'var(--font-family)',
-              }}
-            >
-              All-in-one business platform
-            </div>
+          <div
+            style={{
+              marginTop: 4,
+              fontSize: 'var(--font-size-md)',
+              color: 'var(--color-text-tertiary)',
+              fontFamily: 'var(--font-family)',
+            }}
+          >
+            All-in-one business platform
           </div>
         </div>
 
@@ -71,7 +51,7 @@ export function AboutPanel() {
               border: '1px solid var(--color-border-secondary)',
             }}
           >
-            1.3.0
+            1.4.2
           </span>
         </SettingsRow>
 

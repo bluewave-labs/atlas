@@ -306,6 +306,7 @@ Atlas uses `react-i18next` for internationalization. 5 languages: EN, TR, DE, FR
 
 ### Rules
 - Every git tag MUST have a corresponding GitHub Release with release notes. They must always be in sync.
+- When tagging and making a release, always update the version number in Settings > About Atlas (next to "Current application version").
 - Every user-visible string MUST use `t()` — no hardcoded English text
 - Sidebar labels, view titles, button labels, form labels, empty states, error messages
 - Keys are namespaced by app: `crm.sidebar.dashboard`, `sign.actions.upload`
