@@ -10,7 +10,7 @@ interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'>
 const sizeStyles: Record<NonNullable<InputProps['size']>, { height: string; fontSize: string }> = {
   sm: { height: '28px', fontSize: 'var(--font-size-sm)' },
   md: { height: '34px', fontSize: 'var(--font-size-md)' },
-  lg: { height: '40px', fontSize: 'var(--font-size-md)' },
+  lg: { height: '40px', fontSize: 'var(--font-size-lg)' },
 };
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(

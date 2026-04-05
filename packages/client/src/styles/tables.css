@@ -2143,7 +2143,7 @@
 }
 
 .tables-gallery-card-title {
-  font-size: 14px;
+  font-size: var(--font-size-md);
   font-weight: 600;
   color: var(--color-text-primary);
   line-height: 1.3;
