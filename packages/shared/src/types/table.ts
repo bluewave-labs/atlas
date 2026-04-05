@@ -46,12 +46,12 @@ export interface TableAttachment {
 }
 
 export interface TableViewTab {
-  key: 'grid' | 'kanban' | 'calendar' | 'gallery' | 'gantt';
+  key: 'grid' | 'kanban' | 'calendar' | 'gallery';
   label: string;
 }
 
 export interface TableViewConfig {
-  activeView: 'grid' | 'kanban' | 'calendar' | 'gallery' | 'gantt';
+  activeView: 'grid' | 'kanban' | 'calendar' | 'gallery';
   kanbanGroupByColumnId?: string;
   calendarDateColumnId?: string;
   sorts?: Array<{ columnId: string; direction: 'asc' | 'desc' }>;
@@ -63,9 +63,6 @@ export interface TableViewConfig {
   rowColorColumnId?: string;
   setFilters?: Record<string, string[]>;
   groupByColumnId?: string | null;
-  ganttStartColumnId?: string;
-  ganttEndColumnId?: string;
-  ganttLabelColumnId?: string;
   views?: TableViewTab[];
 }
 

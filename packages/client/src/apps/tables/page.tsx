@@ -29,7 +29,6 @@ import {
   Download,
   Group,
   Ungroup,
-  GanttChart,
   Upload,
   Loader2,
   Check,
@@ -39,7 +38,6 @@ import type { TableRow } from '@atlasmail/shared';
 import { isGroupHeaderRow } from './hooks/use-row-grouping';
 import type { MaybeGroupedRow } from './hooks/use-row-grouping';
 import { isFormulaValue } from '../../lib/formula-engine';
-import { GanttView } from './components/gantt-view';
 import { Button } from '../../components/ui/button';
 import { IconButton } from '../../components/ui/icon-button';
 import { Select } from '../../components/ui/select';
@@ -94,7 +92,7 @@ export function TablesPage() {
     localColor, setLocalColor, localIcon, setLocalIcon, localGuide, setLocalGuide,
     canUndo, canRedo,
     filteredRows, sortedRows, rowData, isGrouped,
-    footerAgg, ganttColumns, gridRef,
+    footerAgg, gridRef,
     rangeContext, handleRangeCellMouseDown,
     clearRange, rangeVersion, getSelectedCellCount,
     findReplace, fillHandle,
@@ -248,7 +246,6 @@ export function TablesPage() {
             {localViewConfig.activeView === 'kanban' && <KanbanView columns={localColumns} rows={localRows} viewConfig={localViewConfig} onViewConfigUpdate={(updated) => setLocalViewConfig(updated)} triggerAutoSave={(updates) => { if (updates.rows) state.setLocalRows(updates.rows); triggerAutoSave(updates); }} />}
             {localViewConfig.activeView === 'calendar' && <CalendarView columns={localColumns} rows={sortedRows} viewConfig={localViewConfig} onViewConfigUpdate={(updated) => setLocalViewConfig(updated)} triggerAutoSave={triggerAutoSave} onExpandRow={(rowId) => setExpandedRowId(rowId)} />}
             {localViewConfig.activeView === 'gallery' && <GalleryView columns={localColumns} rows={sortedRows} onExpandRow={(rowId) => setExpandedRowId(rowId)} />}
-            {localViewConfig.activeView === 'gantt' && <GanttView columns={localColumns} rows={sortedRows as TableRow[]} startColumnId={ganttColumns.start} endColumnId={ganttColumns.end} labelColumnId={ganttColumns.label} />}
           </>
         )}
       </div>
@@ -286,7 +283,7 @@ function AppSidebar({ state }: { state: ReturnType<typeof useTablesPageState> })
     <AppSidebarLayout storageKey="atlas_tables_sidebar" title={t('tables.title')}
       headerAction={<div style={{ display: 'flex', gap: 2 }}><IconButton icon={<LayoutTemplate size={14} />} label={t('tables.browseTemplates')} onClick={() => setShowTemplates(true)} size={28} /><IconButton icon={<Plus size={14} />} label={t('tables.newTable')} onClick={handleCreateTable} size={28} /></div>}
       search={<div className="tables-sidebar-search"><input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t('tables.searchTables')} /></div>}
-      footer={<><div className="tables-sidebar-views">{[{ key: 'grid' as const, icon: LayoutGrid, label: t('tables.gridView', 'Grid view') }, { key: 'kanban' as const, icon: Kanban, label: t('tables.kanbanView', 'Kanban') }, { key: 'calendar' as const, icon: Calendar, label: t('tables.calendarView', 'Calendar') }, { key: 'gallery' as const, icon: GalleryHorizontalEnd, label: t('tables.galleryView', 'Gallery') }, { key: 'gantt' as const, icon: GanttChart, label: t('tables.ganttView', 'Gantt') }].map((v) => (<button key={v.key} className={`tables-sidebar-view-item${localViewConfig.activeView === v.key ? ' active' : ''}`} onClick={() => handleViewToggle(v.key)}><v.icon size={14} /><span>{v.label}</span></button>))}</div><button className="tables-sidebar-view-item" onClick={() => openSettings('tables')} title="Tables settings"><Settings2 size={14} /><span>Settings</span></button></>}>
+      footer={<><div className="tables-sidebar-views">{[{ key: 'grid' as const, icon: LayoutGrid, label: t('tables.gridView', 'Grid view') }, { key: 'kanban' as const, icon: Kanban, label: t('tables.kanbanView', 'Kanban') }, { key: 'calendar' as const, icon: Calendar, label: t('tables.calendarView', 'Calendar') }, { key: 'gallery' as const, icon: GalleryHorizontalEnd, label: t('tables.galleryView', 'Gallery') }].map((v) => (<button key={v.key} className={`tables-sidebar-view-item${localViewConfig.activeView === v.key ? ' active' : ''}`} onClick={() => handleViewToggle(v.key)}><v.icon size={14} /><span>{v.label}</span></button>))}</div><button className="tables-sidebar-view-item" onClick={() => openSettings('tables')} title="Tables settings"><Settings2 size={14} /><span>Settings</span></button></>}>
       <div className="tables-sidebar-list">
         {filteredTables.length === 0 && !listLoading && <div className="tables-sidebar-empty">{t('tables.noTables')}</div>}
         {filteredTables.map((table) => { const SidebarIcon = getTableIcon(table.icon); return (<div key={table.id} role="button" tabIndex={0} className={`tables-sidebar-item${selectedId === table.id ? ' active' : ''}`} onClick={() => handleSelectTable(table.id)} onKeyDown={(e) => { if (e.key === 'Enter') handleSelectTable(table.id); }}><SidebarIcon size={14} style={table.color ? { color: table.color } : undefined} /><span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{table.title}</span><IconButton icon={<Trash2 size={12} />} label={t('tables.delete')} onClick={(e) => { e.stopPropagation(); handleDeleteTable(table.id); }} size={22} destructive tooltip={false} className="tables-sidebar-delete-btn" style={{ opacity: 0, transition: 'opacity 100ms' }} /></div>); })}
@@ -337,7 +334,7 @@ function TopBar({ state }: { state: ReturnType<typeof useTablesPageState> }) {
         <button ref={addViewBtnRef} className="tables-topbar-view-tab tables-topbar-view-add" onClick={() => setShowAddViewDropdown(!showAddViewDropdown)} title="Add view"><Plus size={13} /></button>
         {showAddViewDropdown && (() => {
           const rect = addViewBtnRef.current?.getBoundingClientRect();
-          return createPortal(<div ref={addViewDropdownRef} className="tables-add-view-dropdown" style={{ position: 'fixed', top: rect ? rect.bottom + 4 : 0, left: rect ? rect.left : 0 }}>{[{ key: 'grid' as const, icon: LayoutGrid, label: 'Grid view' }, { key: 'kanban' as const, icon: Kanban, label: 'Kanban' }, { key: 'calendar' as const, icon: Calendar, label: 'Calendar' }, { key: 'gallery' as const, icon: GalleryHorizontalEnd, label: 'Gallery' }, { key: 'gantt' as const, icon: GanttChart, label: 'Gantt' }].map((v) => (<button key={v.key} className="tables-add-view-option" onClick={() => handleAddView(v.key, v.label)}><v.icon size={14} /><span>{v.label}</span></button>))}</div>, document.body);
+          return createPortal(<div ref={addViewDropdownRef} className="tables-add-view-dropdown" style={{ position: 'fixed', top: rect ? rect.bottom + 4 : 0, left: rect ? rect.left : 0 }}>{[{ key: 'grid' as const, icon: LayoutGrid, label: 'Grid view' }, { key: 'kanban' as const, icon: Kanban, label: 'Kanban' }, { key: 'calendar' as const, icon: Calendar, label: 'Calendar' }, { key: 'gallery' as const, icon: GalleryHorizontalEnd, label: 'Gallery' }].map((v) => (<button key={v.key} className="tables-add-view-option" onClick={() => handleAddView(v.key, v.label)}><v.icon size={14} /><span>{v.label}</span></button>))}</div>, document.body);
         })()}
       </div>
     </div>

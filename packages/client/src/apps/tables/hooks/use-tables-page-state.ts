@@ -384,17 +384,6 @@ export function useTablesPageState() {
     };
   }, [localColumns, sortedRows, tablesSettings.currencySymbol]);
 
-  // Gantt column auto-detection
-  const ganttColumns = useMemo(() => {
-    const dateColumns = localColumns.filter((c) => c.type === 'date');
-    const textColumns = localColumns.filter((c) => c.type === 'text');
-    return {
-      start: localViewConfig.ganttStartColumnId || dateColumns[0]?.id || null,
-      end: localViewConfig.ganttEndColumnId || dateColumns[1]?.id || dateColumns[0]?.id || null,
-      label: localViewConfig.ganttLabelColumnId || textColumns[0]?.id || null,
-    };
-  }, [localColumns, localViewConfig.ganttStartColumnId, localViewConfig.ganttEndColumnId, localViewConfig.ganttLabelColumnId]);
-
   // AG Grid ref
   const gridRef = useRef<AgGridReact>(null);
 
@@ -1030,7 +1019,7 @@ export function useTablesPageState() {
     localColor, setLocalColor, localIcon, setLocalIcon, localGuide, setLocalGuide,
     canUndo, canRedo,
     filteredRows, sortedRows, rowData, isGrouped,
-    footerAgg, ganttColumns, gridRef,
+    footerAgg, gridRef,
     rangeContext, handleRangeCellMouseDown, handleRangeHeaderClicked,
     clearRange, rangeVersion, getSelectedCellCount,
     findReplace, fillHandle,
