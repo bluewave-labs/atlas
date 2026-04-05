@@ -3,8 +3,10 @@
 #   docker compose -f docker-compose.production.yml up -d
 #   Open http://localhost:3001 and create your admin account.
 #
-# Pin a version: IMAGE_TAG=1.3.2 docker compose -f docker-compose.production.yml up -d
+# Pin a version: IMAGE_TAG=1.5.0 docker compose -f docker-compose.production.yml up -d
 # Custom .env:   Create a .env file to override any variable below.
+
+name: atlas
 
 services:
   atlas:

@@ -33,7 +33,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
 
       # ── Buildx ──────────────────────────────────────────────────
       - name: Set up Docker Buildx
@@ -75,7 +75,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -105,7 +105,7 @@ jobs:
           echo "## Docker Image Published" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "**Registry:** \`$REGISTRY/$IMAGE_NAME\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Platforms:** linux/amd64" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Platforms:** linux/amd64, linux/arm64" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "### Tags" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"

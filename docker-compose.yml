@@ -1,6 +1,8 @@
 # Atlas — Development
 # Usage: docker compose up -d
 
+name: atlas
+
 services:
   postgres:
     image: postgres:16-alpine
