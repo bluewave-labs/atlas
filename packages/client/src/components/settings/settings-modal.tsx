@@ -41,7 +41,7 @@ export function SidebarNavButton({
             : 'transparent',
         border: 'none',
         borderRadius: 'var(--radius-md)',
-        color: isActive ? 'var(--color-accent-primary)' : 'var(--color-text-secondary)',
+        color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
         fontSize: 'var(--font-size-sm)',
         fontFamily: 'var(--font-family)',
         fontWeight: isActive
@@ -59,7 +59,7 @@ export function SidebarNavButton({
           display: 'inline-flex',
           alignItems: 'center',
           flexShrink: 0,
-          color: isActive ? 'var(--color-accent-primary)' : 'currentColor',
+          color: 'currentColor',
         }}
       >
         {icon}

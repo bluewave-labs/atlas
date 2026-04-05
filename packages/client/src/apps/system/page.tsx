@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Cpu, MemoryStick, HardDrive, Clock, Server, Globe, Activity, LayoutDashboard, Mail, Send, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Cpu, MemoryStick, HardDrive, Clock, Server, Globe, Activity, LayoutDashboard, Mail, Send, CheckCircle2 } from 'lucide-react';
+import { AlertBanner } from '../../components/ui/alert-banner';
 import { StatCard, InfoCard } from '../../components/ui/stat-card';
 import { AppSidebar, SidebarSection, SidebarItem } from '../../components/layout/app-sidebar';
 import { Skeleton } from '../../components/ui/skeleton';
@@ -619,20 +620,9 @@ function EmailSettingsView() {
           </div>
         )}
         {testResult && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--spacing-sm)',
-            padding: 'var(--spacing-sm) var(--spacing-md)',
-            borderRadius: 'var(--radius-md)',
-            background: testResult.success ? 'color-mix(in srgb, var(--color-success) 10%, transparent)' : 'color-mix(in srgb, var(--color-error) 10%, transparent)',
-            fontSize: 'var(--font-size-sm)',
-            fontFamily: 'var(--font-family)',
-            color: testResult.success ? 'var(--color-success)' : 'var(--color-error)',
-          }}>
-            {testResult.success ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+          <AlertBanner variant={testResult.success ? 'success' : 'error'}>
             {testResult.success ? t('system.email.testSuccess') : testResult.error}
-          </div>
+          </AlertBanner>
         )}
       </SettingsSection>
     </div>

@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '../../../components/ui/badge';
 import { Skeleton } from '../../../components/ui/skeleton';
-import { AlertTriangle } from 'lucide-react';
+import { AlertBanner } from '../../../components/ui/alert-banner';
 
 // ─── Icon Map ────────────────────────────────────────────────────
 
@@ -210,18 +210,7 @@ export function CatalogSkeleton() {
 
 export function DockerUnavailableBanner({ t }: { t: (key: string) => string }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--spacing-md)',
-        padding: 'var(--spacing-lg) var(--spacing-xl)',
-        background: 'color-mix(in srgb, var(--color-warning) 8%, transparent)',
-        border: '1px solid color-mix(in srgb, var(--color-warning) 20%, transparent)',
-        borderRadius: 'var(--radius-lg)',
-      }}
-    >
-      <AlertTriangle size={20} style={{ color: 'var(--color-warning)', flexShrink: 0 }} />
+    <AlertBanner variant="warning">
       <div>
         <div
           style={{
@@ -244,6 +233,6 @@ export function DockerUnavailableBanner({ t }: { t: (key: string) => string }) {
           {t('marketplace.dockerUnavailableDesc')}
         </div>
       </div>
-    </div>
+    </AlertBanner>
   );
 }

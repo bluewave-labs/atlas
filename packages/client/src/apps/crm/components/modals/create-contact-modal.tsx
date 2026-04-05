@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle } from 'lucide-react';
 import {
   useCreateContact,
   type CrmCompany, type CrmContact,
@@ -9,6 +8,7 @@ import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Select } from '../../../../components/ui/select';
 import { Modal } from '../../../../components/ui/modal';
+import { AlertBanner } from '../../../../components/ui/alert-banner';
 
 export function CreateContactModal({
   open, onClose, companies, contacts: existingContacts,
@@ -57,12 +57,9 @@ export function CreateContactModal({
           <div>
             <Input label={t('crm.contacts.email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@company.com" />
             {duplicateContact && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', marginTop: 'var(--spacing-xs)', padding: 'var(--spacing-xs) var(--spacing-sm)', borderRadius: 'var(--radius-sm)', background: 'var(--color-warning-bg, rgba(245, 158, 11, 0.1))' }}>
-                <AlertTriangle size={13} style={{ color: 'var(--color-warning)', flexShrink: 0 }} />
-                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-warning)', fontFamily: 'var(--font-family)' }}>
-                  {t('crm.contacts.duplicateEmail', { name: duplicateContact.name })}
-                </span>
-              </div>
+              <AlertBanner variant="warning" style={{ marginTop: 'var(--spacing-xs)' }}>
+                {t('crm.contacts.duplicateEmail', { name: duplicateContact.name })}
+              </AlertBanner>
             )}
           </div>
           <Input label={t('crm.contacts.phone')} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1-555-0100" />

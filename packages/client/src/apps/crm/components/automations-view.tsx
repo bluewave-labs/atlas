@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Trash2, Zap, Sparkles, Info } from 'lucide-react';
+import { Plus, Trash2, Zap, Sparkles } from 'lucide-react';
 import {
   useWorkflows, useCreateWorkflow, useDeleteWorkflow, useToggleWorkflow,
   useSeedExampleWorkflows,
@@ -12,6 +12,7 @@ import { Select } from '../../../components/ui/select';
 import { Modal } from '../../../components/ui/modal';
 import { Badge } from '../../../components/ui/badge';
 import { ConfirmDialog } from '../../../components/ui/confirm-dialog';
+import { AlertBanner } from '../../../components/ui/alert-banner';
 
 // ─── Constants ────────────────────────────────────────────────────
 
@@ -456,21 +457,9 @@ export function AutomationsView({ stages }: { stages: CrmDealStage[] }) {
 
       {/* Automation status info */}
       {workflows.length > 0 && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--spacing-sm)',
-          padding: 'var(--spacing-sm) var(--spacing-md)',
-          borderRadius: 'var(--radius-md)',
-          background: 'var(--color-bg-secondary)',
-          marginBottom: 'var(--spacing-md)',
-          border: '1px solid var(--color-border-secondary)',
-        }}>
-          <Info size={14} style={{ color: 'var(--color-accent-primary)', flexShrink: 0 }} />
-          <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)' }}>
-            {t('crm.automations.executionNote')}
-          </span>
-        </div>
+        <AlertBanner variant="info" style={{ marginBottom: 'var(--spacing-md)' }}>
+          {t('crm.automations.executionNote')}
+        </AlertBanner>
       )}
 
       {/* Workflow list */}
