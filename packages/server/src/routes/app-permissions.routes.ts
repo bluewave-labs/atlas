@@ -31,11 +31,15 @@ router.get('/my-apps', async (req: Request, res: Response) => {
       return;
     }
 
-    // Check tenant role
-    const [member] = await db.select().from(tenantMembers)
-      .where(and(eq(tenantMembers.tenantId, tenantId), eq(tenantMembers.userId, userId)))
-      .limit(1);
+    // Run both queries in parallel — discard perms if user is privileged
+    const [memberResult, perms] = await Promise.all([
+      db.select().from(tenantMembers)
+        .where(and(eq(tenantMembers.tenantId, tenantId), eq(tenantMembers.userId, userId)))
+        .limit(1),
+      appPermissionsService.listUserPermissions(tenantId, userId),
+    ]);
 
+    const member = memberResult[0];
     if (!member) {
       res.json({ success: true, data: { appIds: [], role: null } });
       return;
@@ -43,13 +47,10 @@ router.get('/my-apps', async (req: Request, res: Response) => {
 
     const isPrivileged = member.role === 'owner' || member.role === 'admin';
     if (isPrivileged) {
-      // Owners/admins see all apps
       res.json({ success: true, data: { appIds: '__all__', role: member.role } });
       return;
     }
 
-    // Members only see apps they have explicit permissions for
-    const perms = await appPermissionsService.listUserPermissions(tenantId, userId);
     const appIds = perms.map(p => p.appId);
     res.json({ success: true, data: { appIds, role: member.role } });
   } catch (err) {

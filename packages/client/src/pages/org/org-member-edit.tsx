@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
@@ -70,7 +70,7 @@ export function OrgMemberEditPage() {
   const [draftRole, setDraftRole] = useState<TenantMemberRole>('member');
   const [draftPerms, setDraftPerms] = useState<Record<string, { role: AppRole; recordAccess: AppRecordAccess }>>({});
   const [draftCrmTeamId, setDraftCrmTeamId] = useState<string>('');
-  const [initialCrmTeamId, setInitialCrmTeamId] = useState<string>('');
+  const initialCrmTeamId = useRef<string>('');
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
@@ -89,7 +89,7 @@ export function OrgMemberEditPage() {
       const teamIds = data.data as string[];
       const tid = teamIds[0] ?? '';
       setDraftCrmTeamId(tid);
-      setInitialCrmTeamId(tid);
+      initialCrmTeamId.current = tid;
     }).catch(() => {});
   }, [userId]);
 
@@ -148,7 +148,7 @@ export function OrgMemberEditPage() {
   const hasChanges = useMemo(() => {
     if (!member) return false;
     if (draftRole !== member.role) return true;
-    if (draftCrmTeamId !== initialCrmTeamId) return true;
+    if (draftCrmTeamId !== initialCrmTeamId.current) return true;
     const sKeys = Object.keys(serverPermissions);
     const dKeys = Object.keys(draftPerms);
     if (sKeys.length !== dKeys.length) return true;
@@ -161,7 +161,7 @@ export function OrgMemberEditPage() {
       if (!draftPerms[k]) return true;
     }
     return false;
-  }, [draftRole, draftPerms, draftCrmTeamId, initialCrmTeamId, member, serverPermissions]);
+  }, [draftRole, draftPerms, draftCrmTeamId, member, serverPermissions]);
 
   async function handleSave() {
     if (!member || !tenantId) return;
@@ -189,9 +189,9 @@ export function OrgMemberEditPage() {
         }
       }
 
-      if (draftCrmTeamId !== initialCrmTeamId) {
-        if (initialCrmTeamId) {
-          promises.push(api.delete(`/crm/teams/${initialCrmTeamId}/members/${member.userId}`));
+      if (draftCrmTeamId !== initialCrmTeamId.current) {
+        if (initialCrmTeamId.current) {
+          promises.push(api.delete(`/crm/teams/${initialCrmTeamId.current}/members/${member.userId}`));
         }
         if (draftCrmTeamId) {
           promises.push(api.post(`/crm/teams/${draftCrmTeamId}/members`, { userId: member.userId }));
