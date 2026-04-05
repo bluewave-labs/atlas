@@ -111,7 +111,7 @@ export function DrivePreviewPanel({
         <PresenceAvatars appId="drive" recordId={previewItem?.id} />
         <IconButton
           icon={<X size={16} />}
-          label="Close preview"
+          label={t('drive.preview.closePreview')}
           size={28}
           onClick={() => setPreviewItem(null)}
         />
@@ -150,7 +150,7 @@ export function DrivePreviewPanel({
             {getFileExtension(previewItem.name) === 'csv' ? (
               (() => {
                 const rows = parseCsvToRows(filePreviewData.content);
-                if (rows.length === 0) return <pre className="drive-preview-pre">(empty)</pre>;
+                if (rows.length === 0) return <pre className="drive-preview-pre">{t('drive.preview.emptyContent')}</pre>;
                 const header = rows[0];
                 const body = rows.slice(1);
                 return (
@@ -166,7 +166,7 @@ export function DrivePreviewPanel({
                       </tbody>
                     </table>
                     {filePreviewData.truncated && (
-                      <div className="drive-preview-truncated">File truncated — showing first 512 KB</div>
+                      <div className="drive-preview-truncated">{t('drive.preview.fileTruncated')}</div>
                     )}
                   </div>
                 );
@@ -208,12 +208,12 @@ export function DrivePreviewPanel({
           </div>
         ) : previewFileId && previewLoading ? (
           <div className="drive-preview-icon">
-            <span style={{ color: 'var(--color-text-tertiary)', fontSize: 13 }}>Loading preview…</span>
+            <span style={{ color: 'var(--color-text-tertiary)', fontSize: 13 }}>{t('drive.preview.loadingPreview')}</span>
           </div>
         ) : previewItem.linkedResourceType === 'document' && linkedDocData ? (
           <div className="drive-preview-text-content">
             <pre className="drive-preview-pre" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-              {extractTextFromContent(linkedDocData.content) || '(empty document)'}
+              {extractTextFromContent(linkedDocData.content) || t('drive.preview.emptyDocument')}
             </pre>
             <div style={{ padding: '12px 16px', borderTop: '1px solid var(--color-border-secondary)' }}>
               <Button
@@ -223,7 +223,7 @@ export function DrivePreviewPanel({
                 onClick={() => navigate(`/docs/${previewItem.linkedResourceId}`)}
                 style={{ width: '100%' }}
               >
-                Open in editor
+                {t('drive.preview.openInEditor')}
               </Button>
             </div>
           </div>
@@ -238,7 +238,7 @@ export function DrivePreviewPanel({
                 onClick={() => navigate(`/draw/${previewItem.linkedResourceId}`)}
                 style={{ width: '100%' }}
               >
-                Open in editor
+                {t('drive.preview.openInEditor')}
               </Button>
             </div>
           </div>
@@ -249,7 +249,7 @@ export function DrivePreviewPanel({
               const rows = linkedTableData.rows || [];
               if (cols.length === 0) return (
                 <div className="drive-preview-icon" style={{ gap: 8, padding: 24 }}>
-                  <span style={{ fontSize: 13, color: 'var(--color-text-tertiary)' }}>(empty spreadsheet)</span>
+                  <span style={{ fontSize: 13, color: 'var(--color-text-tertiary)' }}>{t('drive.preview.emptySpreadsheet')}</span>
                 </div>
               );
               const previewRows = rows.slice(0, 10);
@@ -257,7 +257,7 @@ export function DrivePreviewPanel({
               return (
                 <div style={{ padding: 16 }}>
                   <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginBottom: 8 }}>
-                    {cols.length} column{cols.length !== 1 ? 's' : ''}, {rows.length} row{rows.length !== 1 ? 's' : ''}
+                    {t('drive.preview.columnsSummary', { columns: cols.length, rows: rows.length })}
                   </div>
                   <div className="drive-preview-table-wrap">
                     <table className="drive-preview-table">
@@ -279,7 +279,7 @@ export function DrivePreviewPanel({
                       </tbody>
                     </table>
                     {rows.length > 10 && (
-                      <div className="drive-preview-truncated">Showing first 10 of {rows.length} rows</div>
+                      <div className="drive-preview-truncated">{t('drive.preview.showingRows', { shown: 10, total: rows.length })}</div>
                     )}
                   </div>
                 </div>
@@ -293,13 +293,13 @@ export function DrivePreviewPanel({
                 onClick={() => navigate(`/tables/${previewItem.linkedResourceId}`)}
                 style={{ width: '100%' }}
               >
-                Open in editor
+                {t('drive.preview.openInEditor')}
               </Button>
             </div>
           </div>
         ) : previewItem.linkedResourceType && previewItem.linkedResourceId ? (
           <div className="drive-preview-icon">
-            <span style={{ color: 'var(--color-text-tertiary)', fontSize: 13 }}>Loading preview…</span>
+            <span style={{ color: 'var(--color-text-tertiary)', fontSize: 13 }}>{t('drive.preview.loadingPreview')}</span>
           </div>
         ) : (
           <div className="drive-preview-icon">
@@ -309,7 +309,7 @@ export function DrivePreviewPanel({
             })()}
             {previewItem.type === 'file' && !previewItem.storagePath && !previewItem.linkedResourceType && (
               <span style={{ color: 'var(--color-text-tertiary)', fontSize: 12, marginTop: 8 }}>
-                No preview available
+                {t('drive.preview.noPreview')}
               </span>
             )}
           </div>
@@ -318,22 +318,22 @@ export function DrivePreviewPanel({
 
       <div className="drive-preview-meta">
         <div className="drive-preview-meta-row">
-          <span className="drive-preview-meta-label">Size</span>
+          <span className="drive-preview-meta-label">{t('drive.preview.size')}</span>
           <span>{formatBytes(previewItem.size)}</span>
         </div>
         <div className="drive-preview-meta-row">
-          <span className="drive-preview-meta-label">Modified</span>
+          <span className="drive-preview-meta-label">{t('drive.preview.modified')}</span>
           <span>{formatRelativeDate(previewItem.updatedAt)}</span>
         </div>
         {previewItem.mimeType && (
           <div className="drive-preview-meta-row">
-            <span className="drive-preview-meta-label">Type</span>
+            <span className="drive-preview-meta-label">{t('drive.preview.type')}</span>
             <span>{getFriendlyTypeName(previewItem.mimeType, previewItem.name)}</span>
           </div>
         )}
         {previewItem.tags && previewItem.tags.length > 0 && (
           <div className="drive-preview-meta-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
-            <span className="drive-preview-meta-label">Tags</span>
+            <span className="drive-preview-meta-label">{t('drive.preview.tags')}</span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
               {previewItem.tags.map((tag, i) => {
                 const { color, label } = parseTag(tag);
@@ -359,13 +359,13 @@ export function DrivePreviewPanel({
               onClick={() => setVersionHistoryOpen(!versionHistoryOpen)}
               style={{ width: '100%', justifyContent: 'flex-start', padding: '4px 0', height: 'auto' }}
             >
-              Version history
+              {t('drive.preview.versionHistory')}
               <ChevronDown size={12} style={{ marginLeft: 'auto', transform: versionHistoryOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
             </Button>
             {versionHistoryOpen && versionsData && (
               <div className="drive-version-list">
                 {versionsData.versions.length === 0 ? (
-                  <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)', padding: '4px 0' }}>No previous versions</span>
+                  <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)', padding: '4px 0' }}>{t('drive.preview.noPreviousVersions')}</span>
                 ) : (
                   versionsData.versions.map((v) => (
                     <div key={v.id} className="drive-version-row">
@@ -378,18 +378,18 @@ export function DrivePreviewPanel({
                       <div style={{ display: 'flex', gap: 4 }}>
                         <IconButton
                           icon={<RotateCcw size={12} />}
-                          label="Restore this version"
+                          label={t('drive.preview.restoreVersion')}
                           size={20}
                           tooltip={false}
                           onClick={() => {
                             restoreVersion.mutate({ itemId: previewItem.id, versionId: v.id }, {
-                              onSuccess: () => addToast({ type: 'success', message: 'Version restored' }),
+                              onSuccess: () => addToast({ type: 'success', message: t('drive.actions.versionRestored') }),
                             });
                           }}
                         />
                         <a
                           href={`/api/v1/drive/${previewItem.id}/versions/${v.id}/download${getTokenParam()}`}
-                          title="Download this version"
+                          title={t('drive.preview.downloadVersion')}
                           style={{ padding: 2, color: 'var(--color-text-tertiary)', display: 'flex', alignItems: 'center' }}
                         >
                           <Download size={12} />

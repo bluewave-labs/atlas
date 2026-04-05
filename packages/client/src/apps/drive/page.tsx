@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Plus, Search, Upload, FolderPlus, Trash2,
   Star, ChevronRight, LayoutGrid, LayoutList, Clock, Heart,
@@ -24,10 +25,11 @@ import { DriveGridView } from './components/drive-grid-view';
 import { DrivePreviewPanel } from './components/drive-preview-panel';
 import { DriveContextMenuView } from './components/drive-context-menu';
 import { NewFolderModal, MoveModal, TagModal, ShareModal } from './components/modals';
-import { SORT_OPTIONS, TYPE_FILTER_OPTIONS, getModifiedFilterOptions, parseTag } from './lib/helpers';
+import { getSortOptions, getTypeFilterOptions, getModifiedFilterOptions, parseTag } from './lib/helpers';
 import { useDrivePage } from './use-drive-page';
 
 export function DrivePage() {
+  const { t } = useTranslation();
   const d = useDrivePage();
 
   const renderTags = (item: DriveItem) => {
@@ -58,15 +60,15 @@ export function DrivePage() {
               </Button>
               {d.newDropdownOpen && (
                 <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, background: 'var(--color-bg-primary)', border: '1px solid var(--color-border-primary)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', zIndex: 50, padding: '4px 0', minWidth: 180 }}>
-                  <button onClick={() => { d.setNewDropdownOpen(false); d.setNewFolderOpen(true); }} className="drive-new-dropdown-item"><FolderPlus size={14} /> New folder</button>
+                  <button onClick={() => { d.setNewDropdownOpen(false); d.setNewFolderOpen(true); }} className="drive-new-dropdown-item"><FolderPlus size={14} /> {t('drive.actions.newFolder')}</button>
                   <div style={{ height: 1, background: 'var(--color-border-primary)', margin: '4px 0' }} />
-                  <button onClick={() => { d.setNewDropdownOpen(false); d.createLinkedDocument.mutate({ parentId: d.currentParentId }, { onSuccess: (data) => d.navigate(`/docs/${data.resourceId}`), onError: () => d.addToast({ type: 'error', message: 'Failed to create document' }) }); }} className="drive-new-dropdown-item"><FileText size={14} /> New document</button>
-                  <button onClick={() => { d.setNewDropdownOpen(false); d.createLinkedDrawing.mutate({ parentId: d.currentParentId }, { onSuccess: (data) => d.navigate(`/draw/${data.resourceId}`), onError: () => d.addToast({ type: 'error', message: 'Failed to create drawing' }) }); }} className="drive-new-dropdown-item"><Pencil size={14} /> New drawing</button>
-                  <button onClick={() => { d.setNewDropdownOpen(false); d.createLinkedSpreadsheet.mutate({ parentId: d.currentParentId }, { onSuccess: (data) => d.navigate(`/tables/${data.resourceId}`), onError: () => d.addToast({ type: 'error', message: 'Failed to create spreadsheet' }) }); }} className="drive-new-dropdown-item"><Table2 size={14} /> New spreadsheet</button>
+                  <button onClick={() => { d.setNewDropdownOpen(false); d.createLinkedDocument.mutate({ parentId: d.currentParentId }, { onSuccess: (data) => d.navigate(`/docs/${data.resourceId}`), onError: () => d.addToast({ type: 'error', message: t('drive.actions.failedToCreateDocument') }) }); }} className="drive-new-dropdown-item"><FileText size={14} /> {t('drive.actions.newDocument')}</button>
+                  <button onClick={() => { d.setNewDropdownOpen(false); d.createLinkedDrawing.mutate({ parentId: d.currentParentId }, { onSuccess: (data) => d.navigate(`/draw/${data.resourceId}`), onError: () => d.addToast({ type: 'error', message: t('drive.actions.failedToCreateDrawing') }) }); }} className="drive-new-dropdown-item"><Pencil size={14} /> {t('drive.actions.newDrawing')}</button>
+                  <button onClick={() => { d.setNewDropdownOpen(false); d.createLinkedSpreadsheet.mutate({ parentId: d.currentParentId }, { onSuccess: (data) => d.navigate(`/tables/${data.resourceId}`), onError: () => d.addToast({ type: 'error', message: t('drive.actions.failedToCreateSpreadsheet') }) }); }} className="drive-new-dropdown-item"><Table2 size={14} /> {t('drive.actions.newSpreadsheet')}</button>
                 </div>
               )}
             </div>
-            <Button variant="primary" size="sm" icon={<Upload size={14} />} onClick={() => d.fileInputRef.current?.click()} style={{ flex: 1 }}>Upload</Button>
+            <Button variant="primary" size="sm" icon={<Upload size={14} />} onClick={() => d.fileInputRef.current?.click()} style={{ flex: 1 }}>{t('drive.actions.upload')}</Button>
           </div>
         }
         footer={d.storageData ? (() => {
@@ -84,17 +86,17 @@ export function DrivePage() {
         })() : undefined}
       >
         <nav className="drive-sidebar-nav">
-          <button className={`drive-nav-item ${d.sidebarView === 'files' && !d.folderId ? 'active' : ''}`} onClick={() => { d.setSidebarView('files'); d.setSearchQuery(''); d.navigate(ROUTES.DRIVE); }} onDragOver={(e) => { if (d.dragItemId) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }} onDrop={d.handleSidebarRootDrop}><HardDrive size={16} style={{ color: '#3b82f6' }} /> My drive</button>
-          <button className={`drive-nav-item ${d.sidebarView === 'favourites' ? 'active' : ''}`} onClick={() => { d.setSidebarView('favourites'); d.setSearchQuery(''); }}><Heart size={16} style={{ color: '#ef4444' }} /> Favourites</button>
-          <button className={`drive-nav-item ${d.sidebarView === 'recent' ? 'active' : ''}`} onClick={() => { d.setSidebarView('recent'); d.setSearchQuery(''); }}><Clock size={16} style={{ color: '#f59e0b' }} /> Recent</button>
-          <button className={`drive-nav-item ${d.sidebarView === 'trash' ? 'active' : ''}`} onClick={() => { d.setSidebarView('trash'); d.setSearchQuery(''); }} onDragOver={(e) => { if (d.dragItemId) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }} onDrop={d.handleSidebarTrashDrop}><Trash2 size={16} style={{ color: '#78716c' }} /> Trash</button>
+          <button className={`drive-nav-item ${d.sidebarView === 'files' && !d.folderId ? 'active' : ''}`} onClick={() => { d.setSidebarView('files'); d.setSearchQuery(''); d.navigate(ROUTES.DRIVE); }} onDragOver={(e) => { if (d.dragItemId) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }} onDrop={d.handleSidebarRootDrop}><HardDrive size={16} style={{ color: '#3b82f6' }} /> {t('drive.sidebar.myDrive')}</button>
+          <button className={`drive-nav-item ${d.sidebarView === 'favourites' ? 'active' : ''}`} onClick={() => { d.setSidebarView('favourites'); d.setSearchQuery(''); }}><Heart size={16} style={{ color: '#ef4444' }} /> {t('drive.sidebar.favourites')}</button>
+          <button className={`drive-nav-item ${d.sidebarView === 'recent' ? 'active' : ''}`} onClick={() => { d.setSidebarView('recent'); d.setSearchQuery(''); }}><Clock size={16} style={{ color: '#f59e0b' }} /> {t('drive.sidebar.recent')}</button>
+          <button className={`drive-nav-item ${d.sidebarView === 'trash' ? 'active' : ''}`} onClick={() => { d.setSidebarView('trash'); d.setSearchQuery(''); }} onDragOver={(e) => { if (d.dragItemId) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }} onDrop={d.handleSidebarTrashDrop}><Trash2 size={16} style={{ color: '#78716c' }} /> {t('drive.sidebar.trash')}</button>
           <button className={`drive-nav-item ${d.sidebarView === 'shared' ? 'active' : ''}`} onClick={() => { d.setSidebarView('shared'); d.setSearchQuery(''); }}><Users size={16} style={{ color: '#8b5cf6' }} /> {d.t('drive.sidebar.sharedWithMe')}</button>
           <div className="drive-nav-divider" />
-          <div className="drive-nav-section-label">File types</div>
-          <button className={`drive-nav-item ${d.sidebarView === 'images' ? 'active' : ''}`} onClick={() => { d.setSidebarView('images'); d.setSearchQuery(''); }}><FileImage size={16} style={{ color: '#e06c9f' }} /> Images</button>
-          <button className={`drive-nav-item ${d.sidebarView === 'documents' ? 'active' : ''}`} onClick={() => { d.setSidebarView('documents'); d.setSearchQuery(''); }}><FileText size={16} style={{ color: '#3b82f6' }} /> Documents</button>
-          <button className={`drive-nav-item ${d.sidebarView === 'videos' ? 'active' : ''}`} onClick={() => { d.setSidebarView('videos'); d.setSearchQuery(''); }}><FileVideo size={16} style={{ color: '#8b5cf6' }} /> Videos</button>
-          <button className={`drive-nav-item ${d.sidebarView === 'audio' ? 'active' : ''}`} onClick={() => { d.setSidebarView('audio'); d.setSearchQuery(''); }}><Music size={16} style={{ color: '#f59e0b' }} /> Audio</button>
+          <div className="drive-nav-section-label">{t('drive.sidebar.fileTypes')}</div>
+          <button className={`drive-nav-item ${d.sidebarView === 'images' ? 'active' : ''}`} onClick={() => { d.setSidebarView('images'); d.setSearchQuery(''); }}><FileImage size={16} style={{ color: '#e06c9f' }} /> {t('drive.sidebar.images')}</button>
+          <button className={`drive-nav-item ${d.sidebarView === 'documents' ? 'active' : ''}`} onClick={() => { d.setSidebarView('documents'); d.setSearchQuery(''); }}><FileText size={16} style={{ color: '#3b82f6' }} /> {t('drive.sidebar.documents')}</button>
+          <button className={`drive-nav-item ${d.sidebarView === 'videos' ? 'active' : ''}`} onClick={() => { d.setSidebarView('videos'); d.setSearchQuery(''); }}><FileVideo size={16} style={{ color: '#8b5cf6' }} /> {t('drive.sidebar.videos')}</button>
+          <button className={`drive-nav-item ${d.sidebarView === 'audio' ? 'active' : ''}`} onClick={() => { d.setSidebarView('audio'); d.setSearchQuery(''); }}><Music size={16} style={{ color: '#f59e0b' }} /> {t('drive.sidebar.audio')}</button>
         </nav>
       </AppSidebar>
 
@@ -102,7 +104,7 @@ export function DrivePage() {
       <div className="drive-main" style={{ flex: d.previewItem ? undefined : 1 }}>
         {d.uploadProgress && (
           <div className="drive-upload-progress">
-            <div className="drive-upload-progress-info"><span>Uploading...</span><span>{Math.round((d.uploadProgress.loaded / d.uploadProgress.total) * 100)}%</span></div>
+            <div className="drive-upload-progress-info"><span>{t('drive.actions.uploading')}</span><span>{Math.round((d.uploadProgress.loaded / d.uploadProgress.total) * 100)}%</span></div>
             <div className="drive-upload-progress-bar"><div className="drive-upload-progress-fill" style={{ width: `${Math.round((d.uploadProgress.loaded / d.uploadProgress.total) * 100)}%` }} /></div>
           </div>
         )}
@@ -112,7 +114,7 @@ export function DrivePage() {
           <div className="drive-toolbar-left">
             {d.sidebarView === 'files' && !d.searchQuery.trim() ? (
               <div className="drive-breadcrumbs">
-                <button className={`drive-breadcrumb-item ${!d.folderId ? 'current' : ''}`} onClick={() => { if (d.folderId) d.navigate(ROUTES.DRIVE); }}>My drive</button>
+                <button className={`drive-breadcrumb-item ${!d.folderId ? 'current' : ''}`} onClick={() => { if (d.folderId) d.navigate(ROUTES.DRIVE); }}>{t('drive.sidebar.myDrive')}</button>
                 {d.breadcrumbs.map((crumb, i) => (
                   <span key={crumb.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <ChevronRight size={12} className="drive-breadcrumb-separator" />
@@ -130,40 +132,40 @@ export function DrivePage() {
             )}
             <div ref={d.typeDropdownRef} style={{ position: 'relative' }}>
               <Button variant="secondary" size="sm" onClick={() => d.setTypeDropdownOpen(!d.typeDropdownOpen)} style={{ minWidth: 90, background: d.typeFilter !== 'all' ? 'color-mix(in srgb, var(--color-accent-primary) 8%, var(--color-bg-primary))' : undefined, color: d.typeFilter !== 'all' ? 'var(--color-accent-primary)' : 'var(--color-text-primary)' }}>
-                {TYPE_FILTER_OPTIONS.find((o) => o.value === d.typeFilter)?.label || 'Type'} <ChevronDown size={12} />
+                {getTypeFilterOptions(t).find((o) => o.value === d.typeFilter)?.label || t('drive.preview.type')} <ChevronDown size={12} />
               </Button>
-              {d.typeDropdownOpen && (<div className="drive-sort-dropdown" style={{ minWidth: 180 }}>{TYPE_FILTER_OPTIONS.map((opt) => (<button key={opt.value} className={`drive-sort-option ${d.typeFilter === opt.value ? 'active' : ''}`} onClick={() => { d.setTypeFilter(opt.value); d.setTypeDropdownOpen(false); }}>{opt.label}{d.typeFilter === opt.value && <Check size={12} />}</button>))}</div>)}
+              {d.typeDropdownOpen && (<div className="drive-sort-dropdown" style={{ minWidth: 180 }}>{getTypeFilterOptions(t).map((opt) => (<button key={opt.value} className={`drive-sort-option ${d.typeFilter === opt.value ? 'active' : ''}`} onClick={() => { d.setTypeFilter(opt.value); d.setTypeDropdownOpen(false); }}>{opt.label}{d.typeFilter === opt.value && <Check size={12} />}</button>))}</div>)}
             </div>
             <div ref={d.modifiedDropdownRef} style={{ position: 'relative' }}>
               <Button variant="secondary" size="sm" onClick={() => d.setModifiedDropdownOpen(!d.modifiedDropdownOpen)} style={{ minWidth: 90, background: d.modifiedFilter !== 'any' ? 'color-mix(in srgb, var(--color-accent-primary) 8%, var(--color-bg-primary))' : undefined, color: d.modifiedFilter !== 'any' ? 'var(--color-accent-primary)' : 'var(--color-text-primary)' }}>
-                {getModifiedFilterOptions().find((o) => o.value === d.modifiedFilter)?.label || 'Modified'} <ChevronDown size={12} />
+                {getModifiedFilterOptions(t).find((o) => o.value === d.modifiedFilter)?.label || t('drive.preview.modified')} <ChevronDown size={12} />
               </Button>
-              {d.modifiedDropdownOpen && (<div className="drive-sort-dropdown" style={{ minWidth: 180 }}>{getModifiedFilterOptions().map((opt) => (<button key={opt.value} className={`drive-sort-option ${d.modifiedFilter === opt.value ? 'active' : ''}`} onClick={() => { d.setModifiedFilter(opt.value); d.setModifiedDropdownOpen(false); }}>{opt.label}{d.modifiedFilter === opt.value && <Check size={12} />}</button>))}</div>)}
+              {d.modifiedDropdownOpen && (<div className="drive-sort-dropdown" style={{ minWidth: 180 }}>{getModifiedFilterOptions(t).map((opt) => (<button key={opt.value} className={`drive-sort-option ${d.modifiedFilter === opt.value ? 'active' : ''}`} onClick={() => { d.setModifiedFilter(opt.value); d.setModifiedDropdownOpen(false); }}>{opt.label}{d.modifiedFilter === opt.value && <Check size={12} />}</button>))}</div>)}
             </div>
             <div ref={d.sortDropdownRef} style={{ position: 'relative' }}>
-              <Button variant="secondary" size="sm" onClick={() => d.setSortDropdownOpen(!d.sortDropdownOpen)}>{SORT_OPTIONS.find((s) => s.value === d.sortBy)?.label || 'Sort'} <ChevronDown size={12} /></Button>
-              {d.sortDropdownOpen && (<div className="drive-sort-dropdown">{SORT_OPTIONS.map((opt) => (<button key={opt.value} className={`drive-sort-option ${d.sortBy === opt.value ? 'active' : ''}`} onClick={() => { d.setSortBy(opt.value); d.setSortDropdownOpen(false); }}>{opt.label}{d.sortBy === opt.value && <Check size={12} />}</button>))}</div>)}
+              <Button variant="secondary" size="sm" onClick={() => d.setSortDropdownOpen(!d.sortDropdownOpen)}>{getSortOptions(t).find((s) => s.value === d.sortBy)?.label || t('drive.sort.default')} <ChevronDown size={12} /></Button>
+              {d.sortDropdownOpen && (<div className="drive-sort-dropdown">{getSortOptions(t).map((opt) => (<button key={opt.value} className={`drive-sort-option ${d.sortBy === opt.value ? 'active' : ''}`} onClick={() => { d.setSortBy(opt.value); d.setSortDropdownOpen(false); }}>{opt.label}{d.sortBy === opt.value && <Check size={12} />}</button>))}</div>)}
             </div>
             <div style={{ position: 'relative' }}>
               <Search size={14} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-tertiary)' }} />
-              <input className="drive-search-input" placeholder="Search files..." value={d.searchQuery} onChange={(e) => d.setSearchQuery(e.target.value)} />
+              <input className="drive-search-input" placeholder={t('drive.toolbar.searchFiles')} value={d.searchQuery} onChange={(e) => d.setSearchQuery(e.target.value)} />
             </div>
-            <IconButton icon={d.viewMode === 'list' ? <LayoutGrid size={16} /> : <LayoutList size={16} />} label={d.viewMode === 'list' ? 'Grid view' : 'List view'} size={32} onClick={() => d.setViewMode(d.viewMode === 'list' ? 'grid' : 'list')} style={{ border: '1px solid var(--color-border-primary)' }} />
-            <IconButton icon={<Settings size={16} />} label="Drive settings" size={32} onClick={() => d.openSettings('drive')} style={{ border: '1px solid var(--color-border-primary)' }} />
+            <IconButton icon={d.viewMode === 'list' ? <LayoutGrid size={16} /> : <LayoutList size={16} />} label={d.viewMode === 'list' ? t('drive.toolbar.gridView') : t('drive.toolbar.listView')} size={32} onClick={() => d.setViewMode(d.viewMode === 'list' ? 'grid' : 'list')} style={{ border: '1px solid var(--color-border-primary)' }} />
+            <IconButton icon={<Settings size={16} />} label={t('drive.toolbar.driveSettings')} size={32} onClick={() => d.openSettings('drive')} style={{ border: '1px solid var(--color-border-primary)' }} />
           </div>
         </div>
 
         {/* Content area */}
         <div className="drive-content" onDragEnter={d.handleDragEnter} onDragLeave={d.handleDragLeave} onDragOver={d.handleDragOver} onDrop={d.handleDrop} onClick={() => { if (!d.hasSelection) d.setSelectedIds(new Set()); d.setContextMenu(null); }}>
-          {d.isDraggingOver && (<div className="drive-dropzone-overlay"><div className="drive-dropzone-label"><UploadIcon size={32} /> Drop files to upload</div></div>)}
+          {d.isDraggingOver && (<div className="drive-dropzone-overlay"><div className="drive-dropzone-label"><UploadIcon size={32} /> {t('drive.dropzone.dropToUpload')}</div></div>)}
           {d.isLoading ? (
-            <div style={{ padding: 32, textAlign: 'center', color: 'var(--color-text-tertiary)' }}>Loading...</div>
+            <div style={{ padding: 32, textAlign: 'center', color: 'var(--color-text-tertiary)' }}>{t('drive.loading')}</div>
           ) : d.displayItems.length === 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12, color: 'var(--color-text-tertiary)', padding: 32 }}>
-              {d.sidebarView === 'trash' ? (<><Trash2 size={40} strokeWidth={1.2} /><span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500, color: 'var(--color-text-secondary)' }}>Trash is empty</span><span style={{ fontSize: 'var(--font-size-sm)' }}>Deleted files will appear here</span></>)
-              : d.sidebarView === 'shared' ? (<><Users size={40} strokeWidth={1.2} /><span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500, color: 'var(--color-text-secondary)' }}>{d.t('drive.sharing.sharedEmpty')}</span><span style={{ fontSize: 'var(--font-size-sm)' }}>{d.t('drive.sharing.sharedEmptyDesc')}</span></>)
-              : d.sidebarView === 'favourites' ? (<><Heart size={40} strokeWidth={1.2} /><span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500, color: 'var(--color-text-secondary)' }}>No favourites</span><span style={{ fontSize: 'var(--font-size-sm)' }}>Star files and folders to find them here</span></>)
-              : d.searchQuery.trim() ? (<><Search size={40} strokeWidth={1.2} /><span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500, color: 'var(--color-text-secondary)' }}>No results</span><span style={{ fontSize: 'var(--font-size-sm)' }}>Try a different search term</span></>)
+              {d.sidebarView === 'trash' ? (<><Trash2 size={40} strokeWidth={1.2} /><span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500, color: 'var(--color-text-secondary)' }}>{t('drive.emptyState.trashEmpty')}</span><span style={{ fontSize: 'var(--font-size-sm)' }}>{t('drive.emptyState.trashEmptyDesc')}</span></>)
+              : d.sidebarView === 'shared' ? (<><Users size={40} strokeWidth={1.2} /><span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500, color: 'var(--color-text-secondary)' }}>{t('drive.sharing.sharedEmpty')}</span><span style={{ fontSize: 'var(--font-size-sm)' }}>{t('drive.sharing.sharedEmptyDesc')}</span></>)
+              : d.sidebarView === 'favourites' ? (<><Heart size={40} strokeWidth={1.2} /><span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500, color: 'var(--color-text-secondary)' }}>{t('drive.emptyState.noFavourites')}</span><span style={{ fontSize: 'var(--font-size-sm)' }}>{t('drive.emptyState.noFavouritesDesc')}</span></>)
+              : d.searchQuery.trim() ? (<><Search size={40} strokeWidth={1.2} /><span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500, color: 'var(--color-text-secondary)' }}>{t('drive.emptyState.noResults')}</span><span style={{ fontSize: 'var(--font-size-sm)' }}>{t('drive.emptyState.noResultsDesc')}</span></>)
               : (<FeatureEmptyState illustration="files" title={d.t('drive.empty.title')} description={d.t('drive.empty.desc')} highlights={[{ icon: <Upload size={14} />, title: d.t('drive.empty.h1Title'), description: d.t('drive.empty.h1Desc') }, { icon: <FolderPlus size={14} />, title: d.t('drive.empty.h2Title'), description: d.t('drive.empty.h2Desc') }, { icon: <Share2 size={14} />, title: d.t('drive.empty.h3Title'), description: d.t('drive.empty.h3Desc') }]} actionLabel={d.t('drive.empty.uploadFiles')} actionIcon={<Upload size={14} />} onAction={() => d.fileInputRef.current?.click()} />)}
             </div>
           ) : d.viewMode === 'list' ? (
@@ -186,34 +188,34 @@ export function DrivePage() {
 
       {/* Modals */}
       <NewFolderModal open={d.newFolderOpen} onOpenChange={d.setNewFolderOpen} folderName={d.newFolderName} setFolderName={d.setNewFolderName} onSubmit={d.handleCreateFolder} />
-      <MoveModal open={d.moveModalOpen} onOpenChange={d.setMoveModalOpen} title="Move to..." folderTree={d.folderTree} targetId={d.moveTargetId} setTargetId={d.setMoveTargetId} onSubmit={d.handleMoveSubmit} />
-      <MoveModal open={d.batchMoveOpen} onOpenChange={d.setBatchMoveOpen} title={`Move ${d.selectedIds.size} items to...`} folderTree={d.batchFolderTree} targetId={d.batchMoveTargetId} setTargetId={d.setBatchMoveTargetId} onSubmit={d.handleBulkMoveSubmit} />
+      <MoveModal open={d.moveModalOpen} onOpenChange={d.setMoveModalOpen} title={t('drive.modals.moveTo')} folderTree={d.folderTree} targetId={d.moveTargetId} setTargetId={d.setMoveTargetId} onSubmit={d.handleMoveSubmit} />
+      <MoveModal open={d.batchMoveOpen} onOpenChange={d.setBatchMoveOpen} title={t('drive.modals.moveItemsTo', { count: d.selectedIds.size })} folderTree={d.batchFolderTree} targetId={d.batchMoveTargetId} setTargetId={d.setBatchMoveTargetId} onSubmit={d.handleBulkMoveSubmit} />
       <TagModal tagModalItem={d.tagModalItem} setTagModalItem={d.setTagModalItem} tagLabel={d.tagLabel} setTagLabel={d.setTagLabel} tagColor={d.tagColor} setTagColor={d.setTagColor} handleTagSubmit={d.handleTagSubmit} />
       <ShareModal shareModalItem={d.shareModalItem} setShareModalItem={d.setShareModalItem} tenantUsersData={d.tenantUsersData ?? []} itemSharesData={d.itemSharesData} shareLinksData={d.shareLinksData} shareItem={d.shareItem} revokeShare={d.revokeShare} createShareLink={d.createShareLink} deleteShareLink={d.deleteShareLink} addToast={d.addToast} defaultExpiry={d.driveSettings.shareDefaultExpiry || 'never'} />
 
       {/* Hidden replace file input */}
-      <input type="file" ref={d.replaceFileInputRef} style={{ display: 'none' }} onChange={(e) => { const file = e.target.files?.[0]; if (file && d.replaceTargetId) { d.replaceFile.mutate({ itemId: d.replaceTargetId, file }, { onSuccess: () => { d.addToast({ type: 'success', message: 'New version uploaded' }); d.setReplaceTargetId(null); } }); } e.target.value = ''; }} />
+      <input type="file" ref={d.replaceFileInputRef} style={{ display: 'none' }} onChange={(e) => { const file = e.target.files?.[0]; if (file && d.replaceTargetId) { d.replaceFile.mutate({ itemId: d.replaceTargetId, file }, { onSuccess: () => { d.addToast({ type: 'success', message: t('drive.actions.newVersionUploaded') }); d.setReplaceTargetId(null); } }); } e.target.value = ''; }} />
 
       {/* Floating bulk action bar */}
       {d.hasSelection && (
         <div className="drive-bulk-bar">
-          <span className="drive-bulk-count">{d.selectedIds.size} selected</span>
-          <Button variant="ghost" size="sm" icon={<Check size={14} />} onClick={d.handleSelectAll}>Select all</Button>
-          <Button variant="ghost" size="sm" icon={<X size={14} />} onClick={d.handleClearSelection}>Clear</Button>
+          <span className="drive-bulk-count">{t('drive.selected', { count: d.selectedIds.size })}</span>
+          <Button variant="ghost" size="sm" icon={<Check size={14} />} onClick={d.handleSelectAll}>{t('drive.actions.selectAll')}</Button>
+          <Button variant="ghost" size="sm" icon={<X size={14} />} onClick={d.handleClearSelection}>{t('drive.actions.clear')}</Button>
           <div style={{ width: 1, height: 20, background: 'var(--color-border-primary)' }} />
-          <Button variant="ghost" size="sm" icon={<FolderInput size={14} />} onClick={() => { d.setBatchMoveTargetId(null); d.setBatchMoveOpen(true); }}>Move</Button>
-          <Button variant="ghost" size="sm" icon={<Star size={14} />} onClick={d.handleBulkFavourite}>Favourite</Button>
-          <Button variant="danger" size="sm" icon={<Trash2 size={14} />} onClick={d.handleBulkDelete}>Delete</Button>
+          <Button variant="ghost" size="sm" icon={<FolderInput size={14} />} onClick={() => { d.setBatchMoveTargetId(null); d.setBatchMoveOpen(true); }}>{t('drive.actions.move')}</Button>
+          <Button variant="ghost" size="sm" icon={<Star size={14} />} onClick={d.handleBulkFavourite}>{t('drive.actions.favourite')}</Button>
+          <Button variant="danger" size="sm" icon={<Trash2 size={14} />} onClick={d.handleBulkDelete}>{t('drive.actions.delete')}</Button>
         </div>
       )}
 
       {/* Confirm dialogs */}
-      <ConfirmDialog open={!!d.confirmDelete} onOpenChange={() => d.setConfirmDelete(null)} title="Move to trash" description={`"${d.confirmDelete?.name}" will be moved to trash. You can restore it later.`} confirmLabel="Move to trash" onConfirm={d.confirmMoveToTrash} destructive />
-      <ConfirmDialog open={!!d.confirmPermanent} onOpenChange={() => d.setConfirmPermanent(null)} title="Delete permanently" description={`"${d.confirmPermanent?.name}" will be permanently deleted. This action cannot be undone.`} confirmLabel="Delete permanently" onConfirm={d.confirmPermanentDelete} destructive />
+      <ConfirmDialog open={!!d.confirmDelete} onOpenChange={() => d.setConfirmDelete(null)} title={t('drive.confirm.moveToTrashTitle')} description={t('drive.confirm.moveToTrashDesc', { name: d.confirmDelete?.name })} confirmLabel={t('drive.confirm.moveToTrashConfirm')} onConfirm={d.confirmMoveToTrash} destructive />
+      <ConfirmDialog open={!!d.confirmPermanent} onOpenChange={() => d.setConfirmPermanent(null)} title={t('drive.confirm.deletePermanentlyTitle')} description={t('drive.confirm.deletePermanentlyDesc', { name: d.confirmPermanent?.name })} confirmLabel={t('drive.confirm.deletePermanentlyConfirm')} onConfirm={d.confirmPermanentDelete} destructive />
 
       {d.iconPickerItem && (
-        <Modal open onOpenChange={() => d.setIconPickerItem(null)} title="Choose icon" width={320}>
-          <Modal.Header title="Choose icon" />
+        <Modal open onOpenChange={() => d.setIconPickerItem(null)} title={t('drive.modals.chooseIcon')} width={320}>
+          <Modal.Header title={t('drive.modals.chooseIcon')} />
           <Modal.Body>
             <EmojiPicker inline onSelect={d.handleIconSelect} onRemove={d.iconPickerItem.icon ? d.handleIconRemove : undefined} onClose={() => d.setIconPickerItem(null)} />
           </Modal.Body>

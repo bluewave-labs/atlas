@@ -59,7 +59,7 @@ export function ShareModal({
         setSharePasswordEnabled(false);
       }}
       width={480}
-      title={`Share "${shareModalItem?.name || ''}"`}
+      title={t('drive.sharing.shareTitle', { name: shareModalItem?.name || '' })}
     >
       <div style={{ padding: 'var(--spacing-xl)' }}>
         {/* Share with team member section */}
@@ -202,7 +202,7 @@ export function ShareModal({
                 password: sharePasswordEnabled && sharePassword ? sharePassword : undefined,
               }, {
                 onSuccess: () => {
-                  addToast({ type: 'success', message: 'Share link created' });
+                  addToast({ type: 'success', message: t('drive.actions.shareLinkCreated') });
                   setSharePassword('');
                   setSharePasswordEnabled(false);
                 },

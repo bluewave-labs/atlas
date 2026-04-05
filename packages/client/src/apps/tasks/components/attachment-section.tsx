@@ -112,7 +112,7 @@ export function AttachmentSection({ taskId }: { taskId: string }) {
             </div>
             <IconButton
               icon={<Download size={12} />}
-              label="Download"
+              label={t('tasks.download')}
               size={22}
               tooltip={false}
               onClick={() => {

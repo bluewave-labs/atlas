@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   useDriveSettingsStore,
   type DriveDefaultView,
@@ -20,6 +21,7 @@ import {
 // ---------------------------------------------------------------------------
 
 export function DriveGeneralPanel() {
+  const { t } = useTranslation();
   const {
     defaultView, setDefaultView,
     defaultSort, setDefaultSort,
@@ -29,49 +31,49 @@ export function DriveGeneralPanel() {
   } = useDriveSettingsStore();
 
   const viewOptions: Array<{ value: DriveDefaultView; label: string }> = [
-    { value: 'list', label: 'List' },
-    { value: 'grid', label: 'Grid' },
+    { value: 'list', label: t('drive.settings.viewList') },
+    { value: 'grid', label: t('drive.settings.viewGrid') },
   ];
 
   const sortOptions: Array<{ value: DriveDefaultSort; label: string }> = [
-    { value: 'default', label: 'Default' },
-    { value: 'name', label: 'Name' },
-    { value: 'size', label: 'Size' },
-    { value: 'date', label: 'Date modified' },
-    { value: 'type', label: 'Type' },
+    { value: 'default', label: t('drive.settings.sortDefault') },
+    { value: 'name', label: t('drive.settings.sortName') },
+    { value: 'size', label: t('drive.settings.sortSize') },
+    { value: 'date', label: t('drive.settings.sortDate') },
+    { value: 'type', label: t('drive.settings.sortType') },
   ];
 
   const sidebarOptions: Array<{ value: DriveSidebarDefault; label: string }> = [
-    { value: 'files', label: 'My drive' },
-    { value: 'favourites', label: 'Favourites' },
-    { value: 'recent', label: 'Recent' },
+    { value: 'files', label: t('drive.settings.sidebarMyDrive') },
+    { value: 'favourites', label: t('drive.settings.sidebarFavourites') },
+    { value: 'recent', label: t('drive.settings.sidebarRecent') },
   ];
 
   const sortOrderOptions: Array<{ value: DriveSortOrder; label: string }> = [
-    { value: 'asc', label: 'Ascending' },
-    { value: 'desc', label: 'Descending' },
+    { value: 'asc', label: t('drive.settings.ascending') },
+    { value: 'desc', label: t('drive.settings.descending') },
   ];
 
   return (
     <div>
-      <SettingsSection title="View & layout" description="Configure default view mode and sorting">
-        <SettingsRow label="Default view" description="How files are displayed when opening Drive">
+      <SettingsSection title={t('drive.settings.viewLayout')} description={t('drive.settings.viewLayoutDesc')}>
+        <SettingsRow label={t('drive.settings.defaultView')} description={t('drive.settings.defaultViewDesc')}>
           <SettingsSelect value={defaultView} options={viewOptions} onChange={setDefaultView} />
         </SettingsRow>
-        <SettingsRow label="Default sort" description="Default column to sort files by">
+        <SettingsRow label={t('drive.settings.defaultSort')} description={t('drive.settings.defaultSortDesc')}>
           <SettingsSelect value={defaultSort} options={sortOptions} onChange={setDefaultSort} />
         </SettingsRow>
-        <SettingsRow label="Sort direction" description="Sort ascending or descending">
+        <SettingsRow label={t('drive.settings.sortDirection')} description={t('drive.settings.sortDirectionDesc')}>
           <SettingsSelect value={sortOrder} options={sortOrderOptions} onChange={setSortOrder} />
         </SettingsRow>
-        <SettingsRow label="Sidebar default" description="Which section opens by default">
+        <SettingsRow label={t('drive.settings.sidebarDefault')} description={t('drive.settings.sidebarDefaultDesc')}>
           <SettingsSelect value={sidebarDefault} options={sidebarOptions} onChange={setSidebarDefault} />
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection title="Safety" description="Deletion and safety settings">
-        <SettingsRow label="Confirm before delete" description="Show confirmation dialog before moving items to trash">
-          <SettingsToggle checked={confirmDelete} onChange={setConfirmDelete} label="Confirm before delete" />
+      <SettingsSection title={t('drive.settings.safety')} description={t('drive.settings.safetyDesc')}>
+        <SettingsRow label={t('drive.settings.confirmBeforeDelete')} description={t('drive.settings.confirmBeforeDeleteDesc')}>
+          <SettingsToggle checked={confirmDelete} onChange={setConfirmDelete} label={t('drive.settings.confirmBeforeDelete')} />
         </SettingsRow>
       </SettingsSection>
     </div>
@@ -83,6 +85,7 @@ export function DriveGeneralPanel() {
 // ---------------------------------------------------------------------------
 
 export function DriveDisplayPanel() {
+  const { t } = useTranslation();
   const {
     showPreviewPanel, setShowPreviewPanel,
     compactMode, setCompactMode,
@@ -92,18 +95,18 @@ export function DriveDisplayPanel() {
 
   return (
     <div>
-      <SettingsSection title="Display options" description="Control how files and folders appear">
-        <SettingsRow label="Preview panel" description="Automatically show file preview when selecting a file">
-          <SettingsToggle checked={showPreviewPanel} onChange={setShowPreviewPanel} label="Preview panel" />
+      <SettingsSection title={t('drive.settings.displayOptions')} description={t('drive.settings.displayOptionsDesc')}>
+        <SettingsRow label={t('drive.settings.previewPanel')} description={t('drive.settings.previewPanelDesc')}>
+          <SettingsToggle checked={showPreviewPanel} onChange={setShowPreviewPanel} label={t('drive.settings.previewPanel')} />
         </SettingsRow>
-        <SettingsRow label="Compact mode" description="Reduce row height in list view for denser display">
-          <SettingsToggle checked={compactMode} onChange={setCompactMode} label="Compact mode" />
+        <SettingsRow label={t('drive.settings.compactMode')} description={t('drive.settings.compactModeDesc')}>
+          <SettingsToggle checked={compactMode} onChange={setCompactMode} label={t('drive.settings.compactMode')} />
         </SettingsRow>
-        <SettingsRow label="Show thumbnails" description="Display image thumbnails in grid and list views">
-          <SettingsToggle checked={showThumbnails} onChange={setShowThumbnails} label="Show thumbnails" />
+        <SettingsRow label={t('drive.settings.showThumbnails')} description={t('drive.settings.showThumbnailsDesc')}>
+          <SettingsToggle checked={showThumbnails} onChange={setShowThumbnails} label={t('drive.settings.showThumbnails')} />
         </SettingsRow>
-        <SettingsRow label="Show file extensions" description="Display file extensions in file names">
-          <SettingsToggle checked={showFileExtensions} onChange={setShowFileExtensions} label="Show file extensions" />
+        <SettingsRow label={t('drive.settings.showFileExtensions')} description={t('drive.settings.showFileExtensionsDesc')}>
+          <SettingsToggle checked={showFileExtensions} onChange={setShowFileExtensions} label={t('drive.settings.showFileExtensions')} />
         </SettingsRow>
       </SettingsSection>
     </div>
@@ -115,6 +118,7 @@ export function DriveDisplayPanel() {
 // ---------------------------------------------------------------------------
 
 export function DriveFilesPanel() {
+  const { t } = useTranslation();
   const {
     autoVersionOnReplace, setAutoVersionOnReplace,
     maxVersions, setMaxVersions,
@@ -123,44 +127,44 @@ export function DriveFilesPanel() {
   } = useDriveSettingsStore();
 
   const maxVersionOptions: Array<{ value: DriveMaxVersions; label: string }> = [
-    { value: 5, label: '5 versions' },
-    { value: 10, label: '10 versions' },
-    { value: 20, label: '20 versions' },
-    { value: 50, label: '50 versions' },
+    { value: 5, label: t('drive.settings.versions5') },
+    { value: 10, label: t('drive.settings.versions10') },
+    { value: 20, label: t('drive.settings.versions20') },
+    { value: 50, label: t('drive.settings.versions50') },
   ];
 
   const expiryOptions: Array<{ value: DriveShareDefaultExpiry; label: string }> = [
-    { value: 'never', label: 'Never' },
-    { value: '1', label: '1 day' },
-    { value: '7', label: '7 days' },
-    { value: '30', label: '30 days' },
+    { value: 'never', label: t('drive.settings.expiryNever') },
+    { value: '1', label: t('drive.settings.expiry1Day') },
+    { value: '7', label: t('drive.settings.expiry7Days') },
+    { value: '30', label: t('drive.settings.expiry30Days') },
   ];
 
   const duplicateOptions: Array<{ value: DriveDuplicateHandling; label: string }> = [
-    { value: 'rename', label: 'Rename with suffix' },
-    { value: 'replace', label: 'Replace existing' },
-    { value: 'ask', label: 'Ask each time' },
+    { value: 'rename', label: t('drive.settings.duplicateRename') },
+    { value: 'replace', label: t('drive.settings.duplicateReplace') },
+    { value: 'ask', label: t('drive.settings.duplicateAsk') },
   ];
 
   return (
     <div>
-      <SettingsSection title="Versioning" description="Configure file version history">
-        <SettingsRow label="Auto-version on replace" description="Automatically save the previous version when uploading a replacement file">
-          <SettingsToggle checked={autoVersionOnReplace} onChange={setAutoVersionOnReplace} label="Auto-version on replace" />
+      <SettingsSection title={t('drive.settings.versioning')} description={t('drive.settings.versioningDesc')}>
+        <SettingsRow label={t('drive.settings.autoVersion')} description={t('drive.settings.autoVersionDesc')}>
+          <SettingsToggle checked={autoVersionOnReplace} onChange={setAutoVersionOnReplace} label={t('drive.settings.autoVersion')} />
         </SettingsRow>
-        <SettingsRow label="Max versions" description="Maximum number of versions to keep per file">
+        <SettingsRow label={t('drive.settings.maxVersions')} description={t('drive.settings.maxVersionsDesc')}>
           <SettingsSelect value={maxVersions} options={maxVersionOptions} onChange={setMaxVersions} />
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection title="Sharing" description="Default sharing behavior">
-        <SettingsRow label="Default link expiry" description="Default expiration for newly created share links">
+      <SettingsSection title={t('drive.settings.sharingSection')} description={t('drive.settings.sharingSectionDesc')}>
+        <SettingsRow label={t('drive.settings.defaultLinkExpiry')} description={t('drive.settings.defaultLinkExpiryDesc')}>
           <SettingsSelect value={shareDefaultExpiry} options={expiryOptions} onChange={setShareDefaultExpiry} />
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection title="Uploads" description="How duplicate file names are handled">
-        <SettingsRow label="Duplicate handling" description="What happens when uploading a file with the same name">
+      <SettingsSection title={t('drive.settings.uploads')} description={t('drive.settings.uploadsDesc')}>
+        <SettingsRow label={t('drive.settings.duplicateHandling')} description={t('drive.settings.duplicateHandlingDesc')}>
           <SettingsSelect value={duplicateHandling} options={duplicateOptions} onChange={setDuplicateHandling} />
         </SettingsRow>
       </SettingsSection>

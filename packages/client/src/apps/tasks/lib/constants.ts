@@ -27,18 +27,18 @@ export const NAV_ITEMS: NavItem[] = [
 // ─── Priority selector ──────────────────────────────────────────────
 
 export const PRIORITY_OPTIONS = [
-  { value: 'high', label: 'High', color: '#ef4444' },
-  { value: 'medium', label: 'Medium', color: '#f59e0b' },
-  { value: 'low', label: 'Low', color: '#3b82f6' },
-  { value: 'none', label: 'None', color: 'transparent' },
+  { value: 'high', labelKey: 'tasks.priority.high', color: '#ef4444' },
+  { value: 'medium', labelKey: 'tasks.priority.medium', color: '#f59e0b' },
+  { value: 'low', labelKey: 'tasks.priority.low', color: '#3b82f6' },
+  { value: 'none', labelKey: 'tasks.priority.none', color: 'transparent' },
 ] as const;
 
-export const WHEN_OPTIONS: { value: TaskWhen; label: string; icon: typeof Inbox }[] = [
-  { value: 'inbox', label: 'Inbox', icon: Inbox },
-  { value: 'today', label: 'Today', icon: Star },
-  { value: 'evening', label: 'This evening', icon: Moon },
-  { value: 'anytime', label: 'Anytime', icon: CircleDot },
-  { value: 'someday', label: 'Someday', icon: Coffee },
+export const WHEN_OPTIONS: { value: TaskWhen; labelKey: string; icon: typeof Inbox }[] = [
+  { value: 'inbox', labelKey: 'tasks.whenOptions.inbox', icon: Inbox },
+  { value: 'today', labelKey: 'tasks.whenOptions.today', icon: Star },
+  { value: 'evening', labelKey: 'tasks.whenOptions.evening', icon: Moon },
+  { value: 'anytime', labelKey: 'tasks.whenOptions.anytime', icon: CircleDot },
+  { value: 'someday', labelKey: 'tasks.whenOptions.someday', icon: Coffee },
 ];
 
 export const RECURRENCE_OPTIONS: { value: RecurrenceRule | ''; labelKey: string }[] = [

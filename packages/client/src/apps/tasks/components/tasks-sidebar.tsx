@@ -65,7 +65,7 @@ export function TasksSidebar({
   };
 
   return (
-    <AppSidebar storageKey="atlas_tasks_sidebar" title="Tasks">
+    <AppSidebar storageKey="atlas_tasks_sidebar" title={t('tasks.title')}>
       {/* Nav items */}
       <div className="tasks-nav-section">
         {NAV_ITEMS.map(item => (
@@ -109,10 +109,10 @@ export function TasksSidebar({
       {/* Projects section */}
       <div style={{ marginTop: 16, padding: '0 8px' }}>
         <div className="tasks-projects-header">
-          <span className="tasks-projects-label">Projects</span>
+          <span className="tasks-projects-label">{t('tasks.projectsLabel')}</span>
           <IconButton
             icon={<Plus size={14} />}
-            label="New project"
+            label={t('tasks.newProject')}
             size={24}
             onClick={onNewProject}
           />
@@ -136,7 +136,7 @@ export function TasksSidebar({
               </button>
               <IconButton
                 icon={<MoreHorizontal size={14} />}
-                label="Project options"
+                label={t('tasks.projectOptions')}
                 size={24}
                 tooltip={false}
                 className="tasks-project-more-btn"
@@ -155,7 +155,7 @@ export function TasksSidebar({
                       onClick={() => handleDeleteProject(proj.id)}
                       style={{ width: '100%', justifyContent: 'flex-start' }}
                     >
-                      Delete project
+                      {t('tasks.deleteProject')}
                     </Button>
                   )}
                 </div>
@@ -169,7 +169,7 @@ export function TasksSidebar({
               style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}
             >
               <ChevronDown size={13} />
-              <span>{hiddenProjectCount} more</span>
+              <span>{t('tasks.moreCount', { count: hiddenProjectCount })}</span>
             </button>
           )}
           {showAllProjects && projects.length > MAX_VISIBLE + 1 && (
@@ -189,7 +189,7 @@ export function TasksSidebar({
       {allTags.length > 0 && (
         <div style={{ marginTop: 16, padding: '0 8px' }}>
           <div className="tasks-projects-header">
-            <span className="tasks-projects-label">Tags</span>
+            <span className="tasks-projects-label">{t('tasks.tagsLabel')}</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {visibleTags.map(tag => (
@@ -209,7 +209,7 @@ export function TasksSidebar({
                 style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}
               >
                 <ChevronDown size={13} />
-                <span>{hiddenTagCount} more</span>
+                <span>{t('tasks.moreCount', { count: hiddenTagCount })}</span>
               </button>
             )}
             {showAllTags && allTags.length > MAX_VISIBLE + 1 && (

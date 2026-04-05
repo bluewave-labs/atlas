@@ -22,7 +22,7 @@ function normalizeContent(raw: string): string {
   return trimmed;
 }
 
-export function TaskNotesEditor({ content, onChange, placeholder = 'Add notes...' }: TaskNotesEditorProps) {
+export function TaskNotesEditor({ content, onChange, placeholder }: TaskNotesEditorProps) {
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 

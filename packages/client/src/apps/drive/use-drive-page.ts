@@ -284,7 +284,7 @@ export function useDrivePage() {
   const handleCreateFolder = useCallback(() => {
     if (!newFolderName.trim()) return;
     createFolder.mutate({ name: newFolderName.trim(), parentId: currentParentId }, {
-      onSuccess: () => { setNewFolderOpen(false); setNewFolderName(''); addToast({ type: 'success', message: 'Folder created' }); },
+      onSuccess: () => { setNewFolderOpen(false); setNewFolderName(''); addToast({ type: 'success', message: t('drive.actions.folderCreated') }); },
     });
   }, [newFolderName, currentParentId, createFolder, addToast]);
 
@@ -293,8 +293,8 @@ export function useDrivePage() {
     if (files.length === 0) return;
     setUploadProgress({ loaded: 0, total: 1 });
     uploadFiles.mutate({ files, parentId: currentParentId, onProgress: (progress) => setUploadProgress(progress) }, {
-      onSuccess: (data) => { setUploadProgress(null); addToast({ type: 'success', message: `${data.items.length} file${data.items.length > 1 ? 's' : ''} uploaded` }); },
-      onError: () => { addToast({ type: 'error', message: 'Upload failed' }); setUploadProgress(null); },
+      onSuccess: (data) => { setUploadProgress(null); addToast({ type: 'success', message: t('drive.actions.filesUploaded', { count: data.items.length }) }); },
+      onError: () => { addToast({ type: 'error', message: t('drive.actions.uploadFailed') }); setUploadProgress(null); },
     });
   }, [currentParentId, uploadFiles, addToast]);
 
@@ -310,7 +310,7 @@ export function useDrivePage() {
     const item = displayItems.find((i) => i.id === renameId);
     updateItem.mutate({ id: renameId, name: trimmedName }, {
       onSuccess: () => {
-        setRenameId(null); addToast({ type: 'success', message: 'Renamed' });
+        setRenameId(null); addToast({ type: 'success', message: t('drive.actions.renamed') });
         if (item?.linkedResourceType && item?.linkedResourceId) {
           if (item.linkedResourceType === 'document') api.patch(`/docs/${item.linkedResourceId}`, { title: trimmedName }).catch(() => {});
           else if (item.linkedResourceType === 'drawing') api.patch(`/drawings/${item.linkedResourceId}`, { title: trimmedName }).catch(() => {});
@@ -327,18 +327,18 @@ export function useDrivePage() {
 
   const handleMoveToTrash = useCallback((item: DriveItem) => {
     if (driveSettings.confirmDelete) { setConfirmDelete(item); }
-    else { deleteItem.mutate(item.id, { onSuccess: () => { addToast({ type: 'success', message: `"${item.name}" moved to trash` }); if (previewItem?.id === item.id) setPreviewItem(null); } }); }
+    else { deleteItem.mutate(item.id, { onSuccess: () => { addToast({ type: 'success', message: t('drive.actions.movedToTrashName', { name: item.name }) }); if (previewItem?.id === item.id) setPreviewItem(null); } }); }
     setContextMenu(null);
   }, [driveSettings.confirmDelete, deleteItem, addToast, previewItem]);
 
   const confirmMoveToTrash = useCallback(() => {
     if (!confirmDelete) return;
-    deleteItem.mutate(confirmDelete.id, { onSuccess: () => { addToast({ type: 'success', message: 'Moved to trash' }); setConfirmDelete(null); setSelectedIds((prev) => { const n = new Set(prev); n.delete(confirmDelete.id); return n; }); } });
+    deleteItem.mutate(confirmDelete.id, { onSuccess: () => { addToast({ type: 'success', message: t('drive.actions.movedToTrash') }); setConfirmDelete(null); setSelectedIds((prev) => { const n = new Set(prev); n.delete(confirmDelete.id); return n; }); } });
   }, [confirmDelete, deleteItem, addToast]);
 
-  const handleRestore = useCallback((item: DriveItem) => { restoreItem.mutate(item.id, { onSuccess: () => addToast({ type: 'success', message: 'Restored' }) }); setContextMenu(null); }, [restoreItem, addToast]);
+  const handleRestore = useCallback((item: DriveItem) => { restoreItem.mutate(item.id, { onSuccess: () => addToast({ type: 'success', message: t('drive.actions.restored') }) }); setContextMenu(null); }, [restoreItem, addToast, t]);
   const handlePermanentDelete = useCallback((item: DriveItem) => { setConfirmPermanent(item); setContextMenu(null); }, []);
-  const confirmPermanentDelete = useCallback(() => { if (!confirmPermanent) return; permanentDelete.mutate(confirmPermanent.id, { onSuccess: () => { addToast({ type: 'success', message: 'Permanently deleted' }); setConfirmPermanent(null); } }); }, [confirmPermanent, permanentDelete, addToast]);
+  const confirmPermanentDelete = useCallback(() => { if (!confirmPermanent) return; permanentDelete.mutate(confirmPermanent.id, { onSuccess: () => { addToast({ type: 'success', message: t('drive.actions.permanentlyDeleted') }); setConfirmPermanent(null); } }); }, [confirmPermanent, permanentDelete, addToast, t]);
 
   const handleDownload = useCallback((item: DriveItem) => {
     if (item.type !== 'file') return;
@@ -355,7 +355,7 @@ export function useDrivePage() {
   }, []);
 
   const handleMove = useCallback((item: DriveItem) => { setMoveItem(item); setMoveTargetId(null); setMoveModalOpen(true); setContextMenu(null); }, []);
-  const handleMoveSubmit = useCallback(() => { if (!moveItem) return; updateItem.mutate({ id: moveItem.id, parentId: moveTargetId }, { onSuccess: () => { addToast({ type: 'success', message: 'Moved' }); setMoveModalOpen(false); setMoveItem(null); } }); }, [moveItem, moveTargetId, updateItem, addToast]);
+  const handleMoveSubmit = useCallback(() => { if (!moveItem) return; updateItem.mutate({ id: moveItem.id, parentId: moveTargetId }, { onSuccess: () => { addToast({ type: 'success', message: t('drive.actions.moved') }); setMoveModalOpen(false); setMoveItem(null); } }); }, [moveItem, moveTargetId, updateItem, addToast, t]);
   const handleDuplicate = useCallback((item: DriveItem) => { duplicateItem.mutate(item.id, { onSuccess: () => addToast({ type: 'success', message: t('drive.actions.duplicated') }) }); setContextMenu(null); }, [duplicateItem, addToast, t]);
   const handleClipboardCopy = useCallback(() => { if (selectedIds.size === 1) { setClipboardItemId(Array.from(selectedIds)[0]); addToast({ type: 'success', message: t('drive.actions.copiedToClipboard') }); } }, [selectedIds, addToast, t]);
   const handleClipboardPaste = useCallback(() => { if (!clipboardItemId) return; copyItem.mutate({ id: clipboardItemId, targetParentId: currentParentId }, { onSuccess: () => addToast({ type: 'success', message: t('drive.actions.pasted') }) }); }, [clipboardItemId, currentParentId, copyItem, addToast, t]);
@@ -363,18 +363,18 @@ export function useDrivePage() {
 
   // ─── Folder icon ───────────────────────────────────────────────────
   const handleSetIcon = useCallback((item: DriveItem) => { setIconPickerItem(item); setContextMenu(null); }, []);
-  const handleIconSelect = useCallback((emoji: string) => { if (!iconPickerItem) return; updateItem.mutate({ id: iconPickerItem.id, icon: emoji }, { onSuccess: () => { addToast({ type: 'success', message: 'Icon updated' }); setIconPickerItem(null); } }); }, [iconPickerItem, updateItem, addToast]);
-  const handleIconRemove = useCallback(() => { if (!iconPickerItem) return; updateItem.mutate({ id: iconPickerItem.id, icon: null }, { onSuccess: () => { addToast({ type: 'success', message: 'Icon removed' }); setIconPickerItem(null); } }); }, [iconPickerItem, updateItem, addToast]);
+  const handleIconSelect = useCallback((emoji: string) => { if (!iconPickerItem) return; updateItem.mutate({ id: iconPickerItem.id, icon: emoji }, { onSuccess: () => { addToast({ type: 'success', message: t('drive.actions.iconUpdated') }); setIconPickerItem(null); } }); }, [iconPickerItem, updateItem, addToast, t]);
+  const handleIconRemove = useCallback(() => { if (!iconPickerItem) return; updateItem.mutate({ id: iconPickerItem.id, icon: null }, { onSuccess: () => { addToast({ type: 'success', message: t('drive.actions.iconRemoved') }); setIconPickerItem(null); } }); }, [iconPickerItem, updateItem, addToast, t]);
 
   // ─── Tags ──────────────────────────────────────────────────────────
   const handleAddTag = useCallback((item: DriveItem) => { setTagModalItem(item); setTagLabel(''); setTagColor(TAG_COLORS[0].hex); setContextMenu(null); }, []);
-  const handleTagSubmit = useCallback(() => { if (!tagModalItem || !tagLabel.trim()) return; const tag = `${tagColor}:${tagLabel.trim()}`; updateItem.mutate({ id: tagModalItem.id, tags: [...(tagModalItem.tags || []), tag] }, { onSuccess: () => { addToast({ type: 'success', message: 'Tag added' }); setTagModalItem(null); } }); }, [tagModalItem, tagLabel, tagColor, updateItem, addToast]);
+  const handleTagSubmit = useCallback(() => { if (!tagModalItem || !tagLabel.trim()) return; const tag = `${tagColor}:${tagLabel.trim()}`; updateItem.mutate({ id: tagModalItem.id, tags: [...(tagModalItem.tags || []), tag] }, { onSuccess: () => { addToast({ type: 'success', message: t('drive.actions.tagAdded') }); setTagModalItem(null); } }); }, [tagModalItem, tagLabel, tagColor, updateItem, addToast, t]);
   const handleRemoveTag = useCallback((item: DriveItem, tagIndex: number) => { updateItem.mutate({ id: item.id, tags: item.tags.filter((_, i) => i !== tagIndex) }); }, [updateItem]);
 
   // ─── Bulk operations ──────────────────────────────────────────────
-  const handleBulkDelete = useCallback(() => { const ids = Array.from(selectedIds); batchDelete.mutate(ids, { onSuccess: () => { addToast({ type: 'success', message: `${ids.length} item${ids.length > 1 ? 's' : ''} moved to trash` }); setSelectedIds(new Set()); } }); }, [selectedIds, batchDelete, addToast]);
+  const handleBulkDelete = useCallback(() => { const ids = Array.from(selectedIds); batchDelete.mutate(ids, { onSuccess: () => { addToast({ type: 'success', message: t('drive.actions.itemsMovedToTrash', { count: ids.length }) }); setSelectedIds(new Set()); } }); }, [selectedIds, batchDelete, addToast, t]);
   const handleBulkFavourite = useCallback(() => { const ids = Array.from(selectedIds); batchFavourite.mutate({ itemIds: ids, isFavourite: true }, { onSuccess: () => { addToast({ type: 'success', message: t('drive.actions.addedToFavourites') }); setSelectedIds(new Set()); } }); }, [selectedIds, batchFavourite, addToast]);
-  const handleBulkMoveSubmit = useCallback(() => { const ids = Array.from(selectedIds); batchMove.mutate({ itemIds: ids, parentId: batchMoveTargetId }, { onSuccess: () => { addToast({ type: 'success', message: 'Moved' }); setBatchMoveOpen(false); setSelectedIds(new Set()); } }); }, [selectedIds, batchMoveTargetId, batchMove, addToast]);
+  const handleBulkMoveSubmit = useCallback(() => { const ids = Array.from(selectedIds); batchMove.mutate({ itemIds: ids, parentId: batchMoveTargetId }, { onSuccess: () => { addToast({ type: 'success', message: t('drive.actions.moved') }); setBatchMoveOpen(false); setSelectedIds(new Set()); } }); }, [selectedIds, batchMoveTargetId, batchMove, addToast, t]);
   const handleSelectAll = useCallback(() => { setSelectedIds(new Set(displayItems.map((i) => i.id))); }, [displayItems]);
   const handleClearSelection = useCallback(() => { setSelectedIds(new Set()); }, []);
 
@@ -395,33 +395,33 @@ export function useDrivePage() {
     const itemId = e.dataTransfer.getData('text/plain');
     if (!itemId || itemId === targetFolderId) return;
     if (selectedIds.has(itemId) && selectedIds.size > 1) {
-      batchMove.mutate({ itemIds: Array.from(selectedIds), parentId: targetFolderId }, { onSuccess: () => { addToast({ type: 'success', message: `${selectedIds.size} items moved` }); setSelectedIds(new Set()); } });
+      batchMove.mutate({ itemIds: Array.from(selectedIds), parentId: targetFolderId }, { onSuccess: () => { addToast({ type: 'success', message: t('drive.actions.itemsMoved', { count: selectedIds.size }) }); setSelectedIds(new Set()); } });
     } else {
-      updateItem.mutate({ id: itemId, parentId: targetFolderId }, { onSuccess: () => addToast({ type: 'success', message: 'Moved' }) });
+      updateItem.mutate({ id: itemId, parentId: targetFolderId }, { onSuccess: () => addToast({ type: 'success', message: t('drive.actions.moved') }) });
     }
     setDragItemId(null); setDragOverFolderId(null);
   }, [selectedIds, batchMove, updateItem, addToast]);
 
   const handleSidebarTrashDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault(); const itemId = e.dataTransfer.getData('text/plain'); if (!itemId) return;
-    if (selectedIds.has(itemId) && selectedIds.size > 1) { batchDelete.mutate(Array.from(selectedIds), { onSuccess: () => { addToast({ type: 'success', message: `${selectedIds.size} items moved to trash` }); setSelectedIds(new Set()); } }); }
-    else { deleteItem.mutate(itemId, { onSuccess: () => addToast({ type: 'success', message: 'Moved to trash' }) }); }
+    if (selectedIds.has(itemId) && selectedIds.size > 1) { batchDelete.mutate(Array.from(selectedIds), { onSuccess: () => { addToast({ type: 'success', message: t('drive.actions.itemsMovedToTrash', { count: selectedIds.size }) }); setSelectedIds(new Set()); } }); }
+    else { deleteItem.mutate(itemId, { onSuccess: () => addToast({ type: 'success', message: t('drive.actions.movedToTrash') }) }); }
     setDragItemId(null); setDragOverFolderId(null);
   }, [selectedIds, batchDelete, deleteItem, addToast]);
 
   const handleSidebarRootDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault(); const itemId = e.dataTransfer.getData('text/plain'); if (!itemId) return;
-    if (selectedIds.has(itemId) && selectedIds.size > 1) { batchMove.mutate({ itemIds: Array.from(selectedIds), parentId: null }, { onSuccess: () => { addToast({ type: 'success', message: 'Moved to root' }); setSelectedIds(new Set()); } }); }
-    else { updateItem.mutate({ id: itemId, parentId: null }, { onSuccess: () => addToast({ type: 'success', message: 'Moved to root' }) }); }
+    if (selectedIds.has(itemId) && selectedIds.size > 1) { batchMove.mutate({ itemIds: Array.from(selectedIds), parentId: null }, { onSuccess: () => { addToast({ type: 'success', message: t('drive.actions.movedToRoot') }); setSelectedIds(new Set()); } }); }
+    else { updateItem.mutate({ id: itemId, parentId: null }, { onSuccess: () => addToast({ type: 'success', message: t('drive.actions.movedToRoot') }) }); }
     setDragItemId(null); setDragOverFolderId(null);
   }, [selectedIds, batchMove, updateItem, addToast]);
 
   // ─── Title for the view ────────────────────────────────────────────
   const viewTitle = useMemo(() => {
-    if (searchQuery.trim()) return `Search: "${searchQuery}"`;
-    if (sidebarView === 'favourites') return 'Favourites';
-    if (sidebarView === 'recent') return 'Recent';
-    if (sidebarView === 'trash') return 'Trash';
+    if (searchQuery.trim()) return t('drive.search', { query: searchQuery });
+    if (sidebarView === 'favourites') return t('drive.sidebar.favourites');
+    if (sidebarView === 'recent') return t('drive.sidebar.recent');
+    if (sidebarView === 'trash') return t('drive.sidebar.trash');
     if (sidebarView === 'shared') return t('drive.sidebar.sharedWithMe');
     return '';
   }, [sidebarView, searchQuery]);

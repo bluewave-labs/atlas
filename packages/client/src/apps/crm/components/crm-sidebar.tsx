@@ -55,7 +55,7 @@ export function CrmSidebar({
           onClick={() => setActiveView('dashboard')}
         />
         <SidebarItem
-          label="Leads"
+          label={t('crm.leads.title')}
           icon={<UserPlus size={14} />}
           iconColor="#ec4899"
           isActive={activeView === 'leads' || activeView === 'lead-detail'}
@@ -150,7 +150,7 @@ export function CrmSidebar({
 
       <SidebarSection>
         <SidebarItem
-          label="Forecast"
+          label={t('crm.forecast.title')}
           icon={<TrendingUp size={14} />}
           iconColor="#6366f1"
           isActive={activeView === 'forecast'}

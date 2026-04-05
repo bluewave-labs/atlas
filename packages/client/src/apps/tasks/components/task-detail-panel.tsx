@@ -76,13 +76,13 @@ export function TaskDetailPanel({
     <div className="task-detail-panel">
       {/* Header */}
       <div className="task-detail-header">
-        <span className="task-detail-header-label">Task detail</span>
+        <span className="task-detail-header-label">{t('tasks.taskDetail')}</span>
         <div className="task-detail-header-actions">
           <PresenceAvatars appId="tasks" recordId={task.id} />
           {canDelete && (
             <IconButton
               icon={<Trash2 size={14} />}
-              label="Delete task"
+              label={t('tasks.deleteTask')}
               size={28}
               destructive
               onClick={handleDelete}
@@ -90,7 +90,7 @@ export function TaskDetailPanel({
           )}
           <IconButton
             icon={<X size={14} />}
-            label="Close"
+            label={t('common.close')}
             size={28}
             onClick={onClose}
           />
@@ -107,7 +107,7 @@ export function TaskDetailPanel({
             <button
               className="task-detail-emoji-btn"
               onClick={() => setShowTaskEmoji(!showTaskEmoji)}
-              title="Set icon"
+              title={t('tasks.setIcon')}
             >
               {task.icon || <Plus size={14} />}
             </button>
@@ -127,16 +127,16 @@ export function TaskDetailPanel({
               setTitle(e.target.value);
               autoSave({ title: e.target.value });
             }}
-            placeholder="Task title..."
+            placeholder={t('tasks.taskTitlePlaceholder')}
           />
         </div>
 
         {/* Timestamps */}
         <div className="task-detail-timestamps">
           <div className="task-detail-timestamp-text">
-            Created {formatDateGlobal(task.createdAt)}
+            {t('tasks.createdOn', { date: formatDateGlobal(task.createdAt) })}
             {task.completedAt && (
-              <> · Completed {formatDateGlobal(task.completedAt)}</>
+              <> · {t('tasks.completedOn', { date: formatDateGlobal(task.completedAt) })}</>
             )}
           </div>
         </div>
@@ -145,7 +145,7 @@ export function TaskDetailPanel({
         <div className="task-detail-fields">
           {/* When */}
           <div className="task-detail-field">
-            <span className="task-detail-label">When</span>
+            <span className="task-detail-label">{t('tasks.whenLabel')}</span>
             <div className="task-detail-pills">
               {WHEN_OPTIONS.map(opt => (
                 <button
@@ -157,7 +157,7 @@ export function TaskDetailPanel({
                   }}
                 >
                   <opt.icon size={11} />
-                  {opt.label}
+                  {t(opt.labelKey)}
                 </button>
               ))}
             </div>
@@ -165,7 +165,7 @@ export function TaskDetailPanel({
 
           {/* Priority */}
           <div className="task-detail-field">
-            <span className="task-detail-label">Priority</span>
+            <span className="task-detail-label">{t('tasks.priorityLabel')}</span>
             <div className="task-detail-pills">
               {PRIORITY_OPTIONS.map(opt => (
                 <button
@@ -179,7 +179,7 @@ export function TaskDetailPanel({
                   {opt.color !== 'transparent' && (
                     <StatusDot color={opt.color} size={6} />
                   )}
-                  {opt.label}
+                  {t(opt.labelKey)}
                 </button>
               ))}
             </div>
@@ -187,7 +187,7 @@ export function TaskDetailPanel({
 
           {/* Due date */}
           <div className="task-detail-field">
-            <span className="task-detail-label">Due</span>
+            <span className="task-detail-label">{t('tasks.dueLabel')}</span>
             <input
               type="date"
               className="task-date-input"
@@ -200,7 +200,7 @@ export function TaskDetailPanel({
             {dueDate && (
               <IconButton
                 icon={<X size={12} />}
-                label="Clear due date"
+                label={t('tasks.clearDueDate')}
                 size={24}
                 onClick={() => {
                   setDueDate('');
@@ -227,7 +227,7 @@ export function TaskDetailPanel({
           {/* Project */}
           {project && (
             <div className="task-detail-field">
-              <span className="task-detail-label">Project</span>
+              <span className="task-detail-label">{t('tasks.projectLabel')}</span>
               <span className="task-detail-project-info">
                 {project.icon ? (
                   <span style={{ fontSize: 'var(--font-size-md)' }}>{project.icon}</span>
@@ -295,7 +295,7 @@ export function TaskDetailPanel({
             onChange={(html) => {
               autoSave({ description: html || null });
             }}
-            placeholder="Add notes..."
+            placeholder={t('tasks.addNotes')}
           />
         </div>
 

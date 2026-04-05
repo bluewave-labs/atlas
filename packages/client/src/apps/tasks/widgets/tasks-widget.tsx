@@ -45,7 +45,7 @@ export function TasksWidget(_props: AppWidgetProps) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
         <CheckSquare size={12} style={{ color: 'rgba(255,255,255,0.7)' }} />
         <span style={{ fontSize: 'var(--font-size-sm)', color: 'rgba(255,255,255,0.7)' }}>
-          {t('tasks.widgetTitle', 'Tasks')}
+          {t('tasks.widgetTitle')}
         </span>
       </div>
 
@@ -56,16 +56,16 @@ export function TasksWidget(_props: AppWidgetProps) {
 
       {/* Subtitle */}
       <div style={{ fontSize: 'var(--font-size-sm)', color: 'rgba(255,255,255,0.75)' }}>
-        {t('tasks.widgetDueToday', 'due today')}
+        {t('tasks.widgetDueToday')}
       </div>
 
       {/* Overdue + completed indicators */}
       <div style={{ display: 'flex', gap: 'var(--spacing-md)', fontSize: 14, marginTop: 2 }}>
         <span style={{ color: overdue > 0 ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.6)' }}>
-          {overdue} {t('tasks.widgetOverdue', 'overdue')}
+          {overdue} {t('tasks.widgetOverdue')}
         </span>
         <span style={{ color: 'rgba(255,255,255,0.6)' }}>
-          {completedThisWeek} {t('tasks.widgetCompleted', 'this week')}
+          {completedThisWeek} {t('tasks.widgetCompleted')}
         </span>
       </div>
     </div>

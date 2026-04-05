@@ -174,12 +174,12 @@ export function TasksPage() {
       else inbox.push(t);
     }
     const groups: { label: string; icon: typeof Inbox; color: string; tasks: Task[]; noHeader?: boolean }[] = [];
-    if (overdue.length > 0) groups.push({ label: 'Overdue', icon: Calendar, color: '#ef4444', tasks: overdue });
-    if (inbox.length > 0) groups.push({ label: 'Unscheduled', icon: Inbox, color: '#3b82f6', tasks: inbox, noHeader: true });
-    if (today.length > 0) groups.push({ label: 'Today', icon: Star, color: '#f59e0b', tasks: today });
-    if (evening.length > 0) groups.push({ label: 'This evening', icon: Moon, color: '#6366f1', tasks: evening });
-    if (anytime.length > 0) groups.push({ label: 'Anytime', icon: CircleDot, color: '#06b6d4', tasks: anytime });
-    if (someday.length > 0) groups.push({ label: 'Someday', icon: Coffee, color: '#a78bfa', tasks: someday });
+    if (overdue.length > 0) groups.push({ label: t('tasks.overdue'), icon: Calendar, color: '#ef4444', tasks: overdue });
+    if (inbox.length > 0) groups.push({ label: t('tasks.unscheduled'), icon: Inbox, color: '#3b82f6', tasks: inbox, noHeader: true });
+    if (today.length > 0) groups.push({ label: t('tasks.todayLabel'), icon: Star, color: '#f59e0b', tasks: today });
+    if (evening.length > 0) groups.push({ label: t('tasks.thisEvening'), icon: Moon, color: '#6366f1', tasks: evening });
+    if (anytime.length > 0) groups.push({ label: t('tasks.whenOptions.anytime'), icon: CircleDot, color: '#06b6d4', tasks: anytime });
+    if (someday.length > 0) groups.push({ label: t('tasks.whenOptions.someday'), icon: Coffee, color: '#a78bfa', tasks: someday });
     return groups;
   }, [activeSection, displayTasks]);
 
@@ -343,7 +343,7 @@ export function TasksPage() {
   }), [counts]);
 
   const handleNewProject = () => {
-    createProject.mutate({ title: 'New project' }, {
+    createProject.mutate({ title: t('tasks.newProject') }, {
       onSuccess: (proj) => setActiveSection(`project:${proj.id}`),
     });
   };
@@ -405,7 +405,7 @@ export function TasksPage() {
       />
 
       <ContentArea
-        title={sectionTitle ?? 'Tasks'}
+        title={sectionTitle ?? t('tasks.title')}
         actions={
           <>
             {displayTasks.length > 0 && <span className="tasks-toolbar-count">{displayTasks.length}</span>}
@@ -426,7 +426,7 @@ export function TasksPage() {
                     ref={(el) => { if (el) el.indeterminate = someVisibleSelected; }}
                     onChange={() => {}} style={{ cursor: 'pointer', accentColor: 'var(--color-accent-primary)', margin: 0 }} />
                 </span>}
-                label={allVisibleSelected ? 'Deselect all' : 'Select all'} size={28} onClick={toggleSelectAll}
+                label={allVisibleSelected ? t('tasks.deselectAll') : t('tasks.selectAll')} size={28} onClick={toggleSelectAll}
               />
             )}
             {canShowBoard && (
@@ -448,14 +448,14 @@ export function TasksPage() {
                   onChange={e => setSearchQuery(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Escape') { setShowSearch(false); setSearchQuery(''); } }}
                   placeholder={t('tasks.searchPlaceholder')} />
-                <IconButton icon={<X size={12} />} label="Close search" size={24} tooltip={false}
+                <IconButton icon={<X size={12} />} label={t('tasks.closeSearch')} size={24} tooltip={false}
                   onClick={() => { setShowSearch(false); setSearchQuery(''); }} />
               </div>
             ) : (
-              <IconButton icon={<Search size={15} />} label="Search (press /)" size={28}
+              <IconButton icon={<Search size={15} />} label={t('tasks.searchShortcut')} size={28}
                 onClick={() => { setShowSearch(true); setTimeout(() => searchInputRef.current?.focus(), 50); }} />
             )}
-            <IconButton icon={<Settings2 size={15} strokeWidth={1.8} />} label="Tasks settings" size={28}
+            <IconButton icon={<Settings2 size={15} strokeWidth={1.8} />} label={t('tasks.tasksSettings')} size={28}
               onClick={() => openSettings('tasks')} />
           </>
         }

@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, X, Filter } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
@@ -91,6 +92,7 @@ function FilterEditor({
   onChange: (f: CrmFilter) => void;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation();
   const column = columns.find((c) => c.key === filter.column);
   const colType = column?.type || 'text';
   const operators = OPERATORS[colType] || OPERATORS.text;
@@ -151,7 +153,7 @@ function FilterEditor({
 
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Button variant="ghost" size="sm" onClick={onRemove}>
-          Remove
+          {t('common.remove')}
         </Button>
       </div>
     </div>
@@ -161,6 +163,7 @@ function FilterEditor({
 // ─── FilterBar component ────────────────────────────────────────────
 
 export function FilterBar({ columns, filters, onFiltersChange }: FilterBarProps) {
+  const { t } = useTranslation();
   const [addOpen, setAddOpen] = useState(false);
   const [editingFilterId, setEditingFilterId] = useState<string | null>(null);
 
@@ -215,7 +218,7 @@ export function FilterBar({ columns, filters, onFiltersChange }: FilterBarProps)
               color: 'var(--color-text-tertiary)', padding: 'var(--spacing-xs) var(--spacing-sm)',
               textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'var(--font-family)',
             }}>
-              Filter by
+              {t('crm.actions.filterBy')}
             </div>
             {columns.map((col) => (
               <button
@@ -292,7 +295,7 @@ export function FilterBar({ columns, filters, onFiltersChange }: FilterBarProps)
               onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-tertiary)'; }}
             >
-              <Plus size={11} /> Add filter
+              <Plus size={11} /> {t('crm.actions.addFilter')}
             </button>
           </PopoverTrigger>
           <PopoverContent width={220} align="start">
@@ -302,7 +305,7 @@ export function FilterBar({ columns, filters, onFiltersChange }: FilterBarProps)
                 color: 'var(--color-text-tertiary)', padding: 'var(--spacing-xs) var(--spacing-sm)',
                 textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'var(--font-family)',
               }}>
-                Filter by
+                {t('crm.actions.filterBy')}
               </div>
               {columns.map((col) => (
                 <button
@@ -338,7 +341,7 @@ export function FilterBar({ columns, filters, onFiltersChange }: FilterBarProps)
         onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)'; }}
         onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-tertiary)'; }}
       >
-        <X size={11} /> Clear filters
+        <X size={11} /> {t('crm.actions.clearFilters')}
       </button>
     </div>
   );

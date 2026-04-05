@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { TaskProject } from '@atlasmail/shared';
 import { useUpdateProject } from '../hooks';
 import { EmojiPicker } from '../../../components/shared/emoji-picker';
@@ -8,6 +9,7 @@ export function ProjectHeader({
 }: {
   project: TaskProject;
 }) {
+  const { t } = useTranslation();
   const updateProject = useUpdateProject();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isEditingDesc, setIsEditingDesc] = useState(false);
@@ -38,7 +40,7 @@ export function ProjectHeader({
           <button
             className="task-project-emoji-btn"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            title="Change icon"
+            title={t('tasks.changeIcon')}
           >
             {project.icon || <div className="tasks-project-indicator large" style={{ background: project.color }} />}
           </button>
@@ -61,14 +63,14 @@ export function ProjectHeader({
           onChange={e => setDesc(e.target.value)}
           onBlur={handleDescSave}
           onKeyDown={e => { if (e.key === 'Enter') handleDescSave(); if (e.key === 'Escape') setIsEditingDesc(false); }}
-          placeholder="Add a description..."
+          placeholder={t('tasks.addDescription')}
         />
       ) : (
         <div
           className="task-project-desc"
           onClick={() => setIsEditingDesc(true)}
         >
-          {project.description || <span className="task-project-desc-placeholder">Add a description...</span>}
+          {project.description || <span className="task-project-desc-placeholder">{t('tasks.addDescription')}</span>}
         </div>
       )}
     </div>

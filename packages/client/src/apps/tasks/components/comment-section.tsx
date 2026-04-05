@@ -27,12 +27,12 @@ export function CommentSection({ taskId }: { taskId: string }) {
     const then = new Date(dateStr).getTime();
     const diff = now - then;
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins}m ago`;
+    if (mins < 1) return t('tasks.activity.justNow');
+    if (mins < 60) return t('tasks.activity.minutesAgo', { count: mins });
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
+    if (hours < 24) return t('tasks.activity.hoursAgo', { count: hours });
     const days = Math.floor(hours / 24);
-    return `${days}d ago`;
+    return t('tasks.activity.daysAgo', { count: days });
   }
 
   return (
@@ -92,7 +92,7 @@ export function CommentSection({ taskId }: { taskId: string }) {
                   fontWeight: 'var(--font-weight-medium)' as any,
                   color: 'var(--color-text-primary)',
                 }}>
-                  {comment.userName || comment.userEmail || 'Unknown'}
+                  {comment.userName || comment.userEmail || t('tasks.comments.unknown')}
                 </span>
                 <span style={{
                   fontSize: 'var(--font-size-xs)',

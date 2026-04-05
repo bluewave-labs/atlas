@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Modal } from '../../../../components/ui/modal';
 import { Button } from '../../../../components/ui/button';
 import { TAG_COLORS } from '../../lib/helpers';
@@ -22,13 +23,14 @@ export function TagModal({
   setTagColor,
   handleTagSubmit,
 }: TagModalProps) {
+  const { t } = useTranslation();
   return (
-    <Modal open={!!tagModalItem} onOpenChange={() => setTagModalItem(null)} width={360} title="Add tag">
+    <Modal open={!!tagModalItem} onOpenChange={() => setTagModalItem(null)} width={360} title={t('drive.modals.addTag')}>
       <div style={{ padding: 'var(--spacing-xl)' }}>
         <input
           value={tagLabel}
           onChange={(e) => setTagLabel(e.target.value)}
-          placeholder="Tag name"
+          placeholder={t('drive.modals.tagName')}
           autoFocus
           onKeyDown={(e) => { if (e.key === 'Enter') handleTagSubmit(); }}
           style={{
@@ -64,7 +66,7 @@ export function TagModal({
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
           <Button variant="secondary" onClick={() => setTagModalItem(null)}>
-            Cancel
+            {t('drive.modals.cancel')}
           </Button>
           <Button
             variant="primary"
@@ -75,7 +77,7 @@ export function TagModal({
               cursor: tagLabel.trim() ? 'pointer' : 'not-allowed',
             }}
           >
-            Add
+            {t('drive.modals.add')}
           </Button>
         </div>
       </div>

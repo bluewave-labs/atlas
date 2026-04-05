@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   DollarSign, Trophy, Target, TrendingUp, XCircle,
   CalendarDays, PhoneCall, Mail, StickyNote, Users as UsersIcon,
@@ -23,39 +24,39 @@ function getActivityIcon(type: string) {
   }
 }
 
-function getActivityLabel(type: string): string {
+function getActivityLabelDash(type: string, t: (key: string) => string): string {
   switch (type) {
-    case 'call': return 'Call';
-    case 'email': return 'Email';
-    case 'meeting': return 'Meeting';
-    case 'note': return 'Note';
-    case 'stage_change': return 'Stage change';
-    case 'deal_won': return 'Deal won';
-    case 'deal_lost': return 'Deal lost';
+    case 'call': return t('crm.activities.call');
+    case 'email': return t('crm.activities.email');
+    case 'meeting': return t('crm.activities.meeting');
+    case 'note': return t('crm.activities.note');
+    case 'stage_change': return t('crm.activities.stageChange');
+    case 'deal_won': return t('crm.activities.dealWon');
+    case 'deal_lost': return t('crm.activities.dealLost');
     default: return type;
   }
 }
 
-function timeAgo(dateStr: string): string {
+function timeAgo(dateStr: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Just now';
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t('crm.dashboard.justNow');
+  if (mins < 60) return t('crm.dashboard.minutesAgo', { count: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return t('crm.dashboard.hoursAgo', { count: hours });
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
+  if (days < 7) return t('crm.dashboard.daysAgo', { count: days });
   return formatDate(dateStr);
 }
 
-function daysUntil(dateStr: string | null): string {
+function daysUntil(dateStr: string | null, t: (key: string, opts?: Record<string, unknown>) => string): string {
   if (!dateStr) return '--';
   const diff = new Date(dateStr).getTime() - Date.now();
   const days = Math.ceil(diff / 86400000);
-  if (days < 0) return 'Overdue';
-  if (days === 0) return 'Today';
-  if (days === 1) return 'Tomorrow';
-  return `${days} days`;
+  if (days < 0) return t('crm.dashboard.overdue');
+  if (days === 0) return t('crm.dashboard.today');
+  if (days === 1) return t('crm.dashboard.tomorrow');
+  return t('crm.dashboard.daysLeft', { count: days });
 }
 
 // KPI cards use the shared StatCard component
@@ -67,6 +68,7 @@ function PipelineChart({
 }: {
   valueByStage: CrmDashboard['valueByStage'];
 }) {
+  const { t } = useTranslation();
   const maxValue = useMemo(
     () => Math.max(...valueByStage.map((s) => s.value), 1),
     [valueByStage],
@@ -75,15 +77,15 @@ function PipelineChart({
   if (valueByStage.length === 0) {
     return (
       <div className="crm-dashboard-card">
-        <h3 className="crm-dashboard-card-title">Pipeline by stage</h3>
-        <div className="crm-dashboard-empty">No active deals in pipeline</div>
+        <h3 className="crm-dashboard-card-title">{t('crm.dashboard.pipelineByStage')}</h3>
+        <div className="crm-dashboard-empty">{t('crm.dashboard.noActiveDeals')}</div>
       </div>
     );
   }
 
   return (
     <div className="crm-dashboard-card">
-      <h3 className="crm-dashboard-card-title">Pipeline by stage</h3>
+      <h3 className="crm-dashboard-card-title">{t('crm.dashboard.pipelineByStage')}</h3>
       <div className="crm-bar-chart">
         {valueByStage.map((stage) => (
           <div key={stage.stageId} className="crm-bar-row">
@@ -99,7 +101,7 @@ function PipelineChart({
             </div>
             <span className="crm-bar-value">
               {formatCurrencyCompact(stage.value)}
-              <span className="crm-bar-count">({stage.count} {stage.count === 1 ? 'deal' : 'deals'})</span>
+              <span className="crm-bar-count">({stage.count} {stage.count === 1 ? t('crm.deals.deal') : t('crm.sidebar.deals').toLowerCase()})</span>
             </span>
           </div>
         ))}
@@ -111,18 +113,19 @@ function PipelineChart({
 // ─── Recent Activities ────────────────────────────────────────────
 
 function RecentActivities({ activities }: { activities: CrmActivity[] }) {
+  const { t } = useTranslation();
   if (activities.length === 0) {
     return (
       <div className="crm-dashboard-card">
-        <h3 className="crm-dashboard-card-title">Recent activities</h3>
-        <div className="crm-dashboard-empty">No activities yet</div>
+        <h3 className="crm-dashboard-card-title">{t('crm.dashboard.recentActivities')}</h3>
+        <div className="crm-dashboard-empty">{t('crm.activities.noActivities')}</div>
       </div>
     );
   }
 
   return (
     <div className="crm-dashboard-card">
-      <h3 className="crm-dashboard-card-title">Recent activities</h3>
+      <h3 className="crm-dashboard-card-title">{t('crm.dashboard.recentActivities')}</h3>
       <div className="crm-dashboard-activities">
         {activities.map((activity) => (
           <div key={activity.id} className="crm-activity-item">
@@ -132,7 +135,7 @@ function RecentActivities({ activities }: { activities: CrmActivity[] }) {
             <div className="crm-activity-body">
               <div className="crm-activity-text">{activity.body}</div>
               <div className="crm-activity-meta">
-                {getActivityLabel(activity.type)} &middot; {timeAgo(activity.createdAt)}
+                {getActivityLabelDash(activity.type, t)} &middot; {timeAgo(activity.createdAt, t)}
               </div>
             </div>
           </div>
@@ -153,11 +156,12 @@ function DealsTable({
   deals: CrmDeal[];
   showCloseDate?: boolean;
 }) {
+  const { t } = useTranslation();
   if (deals.length === 0) {
     return (
       <div className="crm-dashboard-card">
         <h3 className="crm-dashboard-card-title">{title}</h3>
-        <div className="crm-dashboard-empty">No deals to show</div>
+        <div className="crm-dashboard-empty">{t('crm.dashboard.noDealsToShow')}</div>
       </div>
     );
   }
@@ -169,11 +173,11 @@ function DealsTable({
         <table className="crm-dashboard-table">
           <thead>
             <tr>
-              <th><ColumnHeader label="Deal" icon={<Briefcase size={12} />} /></th>
-              <th><ColumnHeader label="Company" icon={<Building2 size={12} />} /></th>
-              <th style={{ textAlign: 'right' }}><ColumnHeader label="Value" icon={<DollarSign size={12} />} /></th>
-              {showCloseDate && <th><ColumnHeader label="Close date" icon={<CalendarDays size={12} />} /></th>}
-              <th><ColumnHeader label="Stage" icon={<Tag size={12} />} /></th>
+              <th><ColumnHeader label={t('crm.deals.deal')} icon={<Briefcase size={12} />} /></th>
+              <th><ColumnHeader label={t('crm.deals.company')} icon={<Building2 size={12} />} /></th>
+              <th style={{ textAlign: 'right' }}><ColumnHeader label={t('crm.deals.value')} icon={<DollarSign size={12} />} /></th>
+              {showCloseDate && <th><ColumnHeader label={t('crm.deals.closeDate')} icon={<CalendarDays size={12} />} /></th>}
+              <th><ColumnHeader label={t('crm.deals.stage')} icon={<Tag size={12} />} /></th>
             </tr>
           </thead>
           <tbody>
@@ -188,7 +192,7 @@ function DealsTable({
                   <td>
                     <span className="crm-dashboard-close-date">
                       <CalendarDays size={12} />
-                      {daysUntil(deal.expectedCloseDate)}
+                      {daysUntil(deal.expectedCloseDate, t)}
                     </span>
                   </td>
                 )}
@@ -240,17 +244,18 @@ function DashboardSkeleton() {
 // ─── Main Dashboard ───────────────────────────────────────────────
 
 export function CrmDashboard() {
+  const { t } = useTranslation();
   const { data: dashboard, isLoading, error, refetch } = useDashboard();
 
   if (error) {
     return (
       <div className="crm-dashboard" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-md)', padding: 'var(--spacing-2xl)', minHeight: 300 }}>
         <AlertTriangle size={32} style={{ color: 'var(--color-error)' }} />
-        <span style={{ fontSize: 'var(--font-size-md)', color: 'var(--color-text-primary)', fontWeight: 'var(--font-weight-medium)' }}>Failed to load dashboard</span>
-        <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)' }}>Something went wrong while fetching dashboard data.</span>
+        <span style={{ fontSize: 'var(--font-size-md)', color: 'var(--color-text-primary)', fontWeight: 'var(--font-weight-medium)' }}>{t('crm.dashboard.loadFailed')}</span>
+        <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)' }}>{t('crm.dashboard.loadFailedDesc')}</span>
         <Button variant="secondary" size="sm" onClick={() => refetch()}>
           <RefreshCw size={14} style={{ marginRight: 6 }} />
-          Retry
+          {t('crm.dashboard.retry')}
         </Button>
       </div>
     );
@@ -265,30 +270,30 @@ export function CrmDashboard() {
       {/* KPI Cards */}
       <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)', flexWrap: 'wrap' }}>
         <StatCard
-          label="Total pipeline value"
+          label={t('crm.dashboard.totalPipeline')}
           value={formatCurrencyCompact(dashboard.totalPipelineValue)}
-          subtitle={`${dashboard.dealCount} active deal${dashboard.dealCount !== 1 ? 's' : ''}`}
+          subtitle={t('crm.dashboard.activeDeals', { count: dashboard.dealCount })}
           color="var(--color-accent-primary)"
           icon={DollarSign}
         />
         <StatCard
-          label="Deals won this month"
+          label={t('crm.dashboard.dealsWonThisMonth')}
           value={`${dashboard.dealsWonCount}`}
-          subtitle={`${formatCurrencyCompact(dashboard.dealsWonValue)} revenue`}
+          subtitle={`${formatCurrencyCompact(dashboard.dealsWonValue)} ${t('crm.dashboard.revenue')}`}
           color="var(--color-success)"
           icon={Trophy}
         />
         <StatCard
-          label="Win rate"
+          label={t('crm.dashboard.winRate')}
           value={`${dashboard.winRate}%`}
-          subtitle={`${dashboard.dealsWonCount}W / ${dashboard.dealsLostCount}L this month`}
+          subtitle={`${dashboard.dealsWonCount}W / ${dashboard.dealsLostCount}L ${t('crm.dashboard.thisMonth')}`}
           color="var(--color-warning)"
           icon={Target}
         />
         <StatCard
-          label="Average deal size"
+          label={t('crm.dashboard.avgDealSize')}
           value={formatCurrencyCompact(dashboard.averageDealSize)}
-          subtitle="Across active deals"
+          subtitle={t('crm.dashboard.acrossActiveDeals')}
           color="#6366f1"
           icon={TrendingUp}
         />
@@ -303,12 +308,12 @@ export function CrmDashboard() {
       {/* Tables */}
       <div className="crm-dashboard-grid">
         <DealsTable
-          title="Deals closing soon"
+          title={t('crm.dashboard.closingSoon')}
           deals={dashboard.dealsClosingSoon}
           showCloseDate
         />
         <DealsTable
-          title="Top deals"
+          title={t('crm.dashboard.topDeals')}
           deals={dashboard.topDeals}
         />
       </div>

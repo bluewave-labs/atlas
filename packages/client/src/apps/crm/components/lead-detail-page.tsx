@@ -147,7 +147,7 @@ export function LeadDetailPage({ leadId, onBack, onNavigate }: LeadDetailPagePro
   if (!lead) {
     return (
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
-        Lead not found
+        {t('crm.leads.notFound')}
       </div>
     );
   }
@@ -162,7 +162,7 @@ export function LeadDetailPage({ leadId, onBack, onNavigate }: LeadDetailPagePro
         padding: 'var(--spacing-sm) var(--spacing-lg)',
         borderBottom: '1px solid var(--color-border-secondary)', flexShrink: 0,
       }}>
-        <IconButton icon={<ArrowLeft size={16} />} label="Back" size={28} onClick={onBack} />
+        <IconButton icon={<ArrowLeft size={16} />} label={t('common.previous')} size={28} onClick={onBack} />
         <span style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
           {lead.name}
         </span>
@@ -172,10 +172,10 @@ export function LeadDetailPage({ leadId, onBack, onNavigate }: LeadDetailPagePro
         {lead.status !== 'converted' && lead.status !== 'lost' && (
           <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
             <Button variant="primary" size="sm" icon={<Trophy size={13} />} onClick={() => updateLead.mutate({ id: lead.id, status: 'converted' })}>
-              Won
+              {t('crm.deals.markWon')}
             </Button>
             <Button variant="danger" size="sm" icon={<XCircle size={13} />} onClick={() => updateLead.mutate({ id: lead.id, status: 'lost' })}>
-              Lost
+              {t('crm.deals.markLost')}
             </Button>
           </div>
         )}
@@ -184,8 +184,8 @@ export function LeadDetailPage({ leadId, onBack, onNavigate }: LeadDetailPagePro
         <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
           {currentIdx >= 0 ? `${currentIdx + 1} / ${leads.length}` : ''}
         </span>
-        <IconButton icon={<ChevronLeft size={16} />} label="Previous" size={28} onClick={() => canPrev && onNavigate(leads[currentIdx - 1].id)} style={{ opacity: canPrev ? 1 : 0.3 }} />
-        <IconButton icon={<ChevronRight size={16} />} label="Next" size={28} onClick={() => canNext && onNavigate(leads[currentIdx + 1].id)} style={{ opacity: canNext ? 1 : 0.3 }} />
+        <IconButton icon={<ChevronLeft size={16} />} label={t('common.previous')} size={28} onClick={() => canPrev && onNavigate(leads[currentIdx - 1].id)} style={{ opacity: canPrev ? 1 : 0.3 }} />
+        <IconButton icon={<ChevronRight size={16} />} label={t('common.next')} size={28} onClick={() => canNext && onNavigate(leads[currentIdx + 1].id)} style={{ opacity: canNext ? 1 : 0.3 }} />
       </div>
 
       {/* Status pipeline */}
@@ -208,12 +208,12 @@ export function LeadDetailPage({ leadId, onBack, onNavigate }: LeadDetailPagePro
 
           {/* Field grid — all editable */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
-            <EditableField label="Expected revenue" value={String(lead.expectedRevenue || 0)} type="number" onSave={(v) => updateLead.mutate({ id: lead.id, expectedRevenue: Number(v) || 0 })} />
-            <EditableField label="Probability" value={String(lead.probability || 0)} type="number" suffix="%" onSave={(v) => updateLead.mutate({ id: lead.id, probability: Number(v) || 0 })} />
-            <EditableField label="Contact" value={lead.name} onSave={(v) => updateLead.mutate({ id: lead.id, name: v })} />
-            <EditableField label="Salesperson" value={lead.assignedUserId || ''} onSave={() => {}} />
+            <EditableField label={t('crm.leads.expectedRevenue')} value={String(lead.expectedRevenue || 0)} type="number" onSave={(v) => updateLead.mutate({ id: lead.id, expectedRevenue: Number(v) || 0 })} />
+            <EditableField label={t('crm.deals.probability')} value={String(lead.probability || 0)} type="number" suffix="%" onSave={(v) => updateLead.mutate({ id: lead.id, probability: Number(v) || 0 })} />
+            <EditableField label={t('crm.deals.contact')} value={lead.name} onSave={(v) => updateLead.mutate({ id: lead.id, name: v })} />
+            <EditableField label={t('crm.leads.salesperson')} value={lead.assignedUserId || ''} onSave={() => {}} />
             <EditableField label={t('crm.leads.email')} value={lead.email || ''} onSave={(v) => updateLead.mutate({ id: lead.id, email: v || null })} />
-            <EditableField label="Expected closing" value={lead.expectedCloseDate ? lead.expectedCloseDate.split('T')[0] : ''} type="date" onSave={(v) => updateLead.mutate({ id: lead.id, expectedCloseDate: v || null })} />
+            <EditableField label={t('crm.leads.expectedClosing')} value={lead.expectedCloseDate ? lead.expectedCloseDate.split('T')[0] : ''} type="date" onSave={(v) => updateLead.mutate({ id: lead.id, expectedCloseDate: v || null })} />
             <EditableField label={t('crm.leads.phone')} value={lead.phone || ''} onSave={(v) => updateLead.mutate({ id: lead.id, phone: v || null })} />
             <EditableField label={t('crm.leads.companyName')} value={lead.companyName || ''} onSave={(v) => updateLead.mutate({ id: lead.id, companyName: v || null })} />
           </div>
@@ -235,7 +235,7 @@ export function LeadDetailPage({ leadId, onBack, onNavigate }: LeadDetailPagePro
               borderBottom: '1px solid var(--color-border-secondary)',
             }}>
               <TabButton label={t('crm.leads.notes')} active={activeTab === 'notes'} onClick={() => setActiveTab('notes')} />
-              <TabButton label="Extra info" active={activeTab === 'extra'} onClick={() => setActiveTab('extra')} />
+              <TabButton label={t('crm.leads.extraInfo')} active={activeTab === 'extra'} onClick={() => setActiveTab('extra')} />
             </div>
 
             {activeTab === 'notes' && (
@@ -265,7 +265,7 @@ export function LeadDetailPage({ leadId, onBack, onNavigate }: LeadDetailPagePro
                   <div style={{ textAlign: 'center', padding: 'var(--spacing-xl)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
                     <Sparkles size={32} style={{ marginBottom: 'var(--spacing-sm)', opacity: 0.3 }} />
                     <p style={{ fontSize: 'var(--font-size-sm)', margin: '0 0 var(--spacing-md) 0' }}>
-                      No enrichment data yet. Use AI to research this lead.
+                      {t('crm.leads.noEnrichmentData')}
                     </p>
                     <Button
                       variant="primary"
@@ -274,7 +274,7 @@ export function LeadDetailPage({ leadId, onBack, onNavigate }: LeadDetailPagePro
                       onClick={() => enrichLead.mutate(lead.id)}
                       disabled={enrichLead.isPending}
                     >
-                      {enrichLead.isPending ? 'Enriching...' : 'Enrich with AI'}
+                      {enrichLead.isPending ? t('crm.leads.enriching') : t('crm.leads.enrichWithAI')}
                     </Button>
                   </div>
                 )}
@@ -292,7 +292,7 @@ export function LeadDetailPage({ leadId, onBack, onNavigate }: LeadDetailPagePro
                 onClick={() => enrichLead.mutate(lead.id)}
                 disabled={enrichLead.isPending}
               >
-                {enrichLead.isPending ? 'Enriching...' : 'Enrich with AI'}
+                {enrichLead.isPending ? t('crm.leads.enriching') : t('crm.leads.enrichWithAI')}
               </Button>
             )}
             {lead.status !== 'converted' && (
@@ -302,7 +302,7 @@ export function LeadDetailPage({ leadId, onBack, onNavigate }: LeadDetailPagePro
             )}
             <div style={{ flex: 1 }} />
             <Button variant="danger" size="sm" icon={<Trash2 size={14} />} onClick={() => setShowDelete(true)}>
-              Delete
+              {t('common.delete')}
             </Button>
           </div>
         </div>
@@ -319,7 +319,7 @@ export function LeadDetailPage({ leadId, onBack, onNavigate }: LeadDetailPagePro
             color: 'var(--color-text-tertiary)', textTransform: 'uppercase',
             letterSpacing: '0.04em', fontFamily: 'var(--font-family)',
           }}>
-            Activity
+            {t('crm.sidebar.activities')}
           </div>
 
           {/* Log activity */}
@@ -339,13 +339,13 @@ export function LeadDetailPage({ leadId, onBack, onNavigate }: LeadDetailPagePro
             <Input
               value={newActivityBody}
               onChange={(e) => setNewActivityBody(e.target.value)}
-              placeholder="Log an activity..."
+              placeholder={t('crm.activities.logActivity')}
               size="sm"
               style={{ flex: 1 }}
               onKeyDown={(e) => { if (e.key === 'Enter') handleLogActivity(); }}
             />
             <Button variant="primary" size="sm" onClick={handleLogActivity} disabled={!newActivityBody.trim()}>
-              Log
+              {t('crm.activities.logActivity')}
             </Button>
           </div>
 
@@ -353,7 +353,7 @@ export function LeadDetailPage({ leadId, onBack, onNavigate }: LeadDetailPagePro
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
             {(activitiesData?.activities ?? []).length === 0 ? (
               <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', padding: 'var(--spacing-lg) 0', textAlign: 'center' }}>
-                No activities yet
+                {t('crm.activities.noActivities')}
               </div>
             ) : (
               (activitiesData?.activities ?? []).slice(0, 20).map((activity) => (
@@ -386,9 +386,9 @@ export function LeadDetailPage({ leadId, onBack, onNavigate }: LeadDetailPagePro
       <ConfirmDialog
         open={showDelete}
         onOpenChange={setShowDelete}
-        title="Delete lead"
-        description={`Are you sure you want to delete "${lead.name}"? This action cannot be undone.`}
-        confirmLabel="Delete"
+        title={t('crm.leads.deleteLead')}
+        description={t('crm.confirm.deleteContact', { name: lead.name })}
+        confirmLabel={t('common.delete')}
         destructive
         onConfirm={() => { deleteLead.mutate(lead.id); onBack(); }}
       />
@@ -425,6 +425,7 @@ function EnrichmentResults({ data, enrichedAt, onRefresh, isRefreshing, leadTags
   leadTags: string[];
   onAddTag: (tag: string) => void;
 }) {
+  const { t } = useTranslation();
   const industry = data.companyIndustry as string | null;
   const compSize = data.companySize as string | null;
   const compDesc = data.companyDescription as string | null;
@@ -437,13 +438,13 @@ function EnrichmentResults({ data, enrichedAt, onRefresh, isRefreshing, leadTags
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
       {industry && (
         <div className="crm-detail-field">
-          <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-medium)', textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'var(--font-family)' }}>Industry</span>
+          <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-medium)', textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'var(--font-family)' }}>{t('crm.companies.industry')}</span>
           <span><Chip>{industry}</Chip></span>
         </div>
       )}
       {compSize && (
         <div className="crm-detail-field">
-          <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-medium)', textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'var(--font-family)' }}>Company size</span>
+          <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-medium)', textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'var(--font-family)' }}>{t('crm.companies.size')}</span>
           <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>{compSize}</span>
         </div>
       )}
@@ -463,7 +464,7 @@ function EnrichmentResults({ data, enrichedAt, onRefresh, isRefreshing, leadTags
       {score !== null && (
         <div className="crm-detail-field">
           <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-medium)', textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'var(--font-family)' }}>
-            Lead score
+            {t('crm.leads.leadScore')}
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
             <span style={{
@@ -485,7 +486,7 @@ function EnrichmentResults({ data, enrichedAt, onRefresh, isRefreshing, leadTags
       {tags.length > 0 && (
         <div>
           <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-medium)', textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'var(--font-family)', display: 'block', marginBottom: 4 }}>
-            Suggested tags
+            {t('crm.leads.suggestedTags')}
           </span>
           <div style={{ display: 'flex', gap: 'var(--spacing-xs)', flexWrap: 'wrap' }}>
             {tags.map((tag, i) => {
@@ -515,7 +516,7 @@ function EnrichmentResults({ data, enrichedAt, onRefresh, isRefreshing, leadTags
       )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', paddingTop: 'var(--spacing-sm)', borderTop: '1px solid var(--color-border-secondary)' }}>
         <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
-          {enrichedAt ? `Enriched ${formatDate(enrichedAt)}` : 'Enriched'}
+          {enrichedAt ? `${t('crm.leads.enriched')} ${formatDate(enrichedAt)}` : t('crm.leads.enriched')}
         </span>
         <Button
           variant="ghost"
@@ -524,7 +525,7 @@ function EnrichmentResults({ data, enrichedAt, onRefresh, isRefreshing, leadTags
           onClick={onRefresh}
           disabled={isRefreshing}
         >
-          {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          {isRefreshing ? t('crm.leads.refreshing') : t('crm.leads.refresh')}
         </Button>
       </div>
     </div>

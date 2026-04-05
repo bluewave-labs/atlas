@@ -1,5 +1,6 @@
 import { useState, type ReactElement } from 'react';
 import { Settings2, Eye, Zap } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
   useTasksSettingsStore,
   type TaskDefaultView,
@@ -37,18 +38,25 @@ interface TasksSidebarSection {
 // Panel: General
 // ---------------------------------------------------------------------------
 
-const DEFAULT_VIEW_OPTIONS: Array<{ value: TaskDefaultView; label: string }> = [
-  { value: 'inbox', label: 'Inbox' },
-  { value: 'today', label: 'Today' },
-  { value: 'anytime', label: 'Anytime' },
-];
+function useDefaultViewOptions(): Array<{ value: TaskDefaultView; label: string }> {
+  const { t } = useTranslation();
+  return [
+    { value: 'inbox', label: t('tasks.settings.optionInbox') },
+    { value: 'today', label: t('tasks.settings.optionToday') },
+    { value: 'anytime', label: t('tasks.settings.optionAnytime') },
+  ];
+}
 
-const VIEW_MODE_OPTIONS: Array<{ value: TaskViewMode; label: string }> = [
-  { value: 'list', label: 'List' },
-  { value: 'board', label: 'Board' },
-];
+function useViewModeOptions(): Array<{ value: TaskViewMode; label: string }> {
+  const { t } = useTranslation();
+  return [
+    { value: 'list', label: t('tasks.settings.optionList') },
+    { value: 'board', label: t('tasks.settings.optionBoard') },
+  ];
+}
 
 export function TasksGeneralPanel() {
+  const { t } = useTranslation();
   const {
     defaultView, setDefaultView,
     viewMode, setViewMode,
@@ -56,38 +64,40 @@ export function TasksGeneralPanel() {
     showCalendarInToday, setShowCalendarInToday,
     showEveningSection, setShowEveningSection,
   } = useTasksSettingsStore();
+  const defaultViewOptions = useDefaultViewOptions();
+  const viewModeOptions = useViewModeOptions();
 
   return (
     <div>
-      <SettingsSection title="Navigation" description="Configure default navigation behavior.">
-        <SettingsRow label="Default view" description="Which section opens when you navigate to tasks.">
+      <SettingsSection title={t('tasks.settings.navigation')} description={t('tasks.settings.navigationDesc')}>
+        <SettingsRow label={t('tasks.settings.defaultView')} description={t('tasks.settings.defaultViewDesc')}>
           <SettingsSelect
             value={defaultView}
-            options={DEFAULT_VIEW_OPTIONS}
+            options={defaultViewOptions}
             onChange={setDefaultView}
           />
         </SettingsRow>
-        <SettingsRow label="Default view mode" description="List or board layout for the inbox view.">
+        <SettingsRow label={t('tasks.settings.defaultViewMode')} description={t('tasks.settings.defaultViewModeDesc')}>
           <SettingsSelect
             value={viewMode}
-            options={VIEW_MODE_OPTIONS}
+            options={viewModeOptions}
             onChange={setViewMode}
           />
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection title="Today view" description="Customize what appears in the Today section.">
-        <SettingsRow label="Show calendar events" description="Display today's schedule above your tasks.">
-          <SettingsToggle checked={showCalendarInToday} onChange={setShowCalendarInToday} label="Show calendar events" />
+      <SettingsSection title={t('tasks.settings.todayView')} description={t('tasks.settings.todayViewDesc')}>
+        <SettingsRow label={t('tasks.settings.showCalendarEvents')} description={t('tasks.settings.showCalendarEventsDesc')}>
+          <SettingsToggle checked={showCalendarInToday} onChange={setShowCalendarInToday} label={t('tasks.settings.showCalendarEvents')} />
         </SettingsRow>
-        <SettingsRow label="Evening section" description="Split Today into daytime and evening groups.">
-          <SettingsToggle checked={showEveningSection} onChange={setShowEveningSection} label="Evening section" />
+        <SettingsRow label={t('tasks.settings.eveningSection')} description={t('tasks.settings.eveningSectionDesc')}>
+          <SettingsToggle checked={showEveningSection} onChange={setShowEveningSection} label={t('tasks.settings.eveningSection')} />
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection title="Safety">
-        <SettingsRow label="Confirm before deleting" description="Show a confirmation before deleting tasks.">
-          <SettingsToggle checked={confirmBeforeDelete} onChange={setConfirmBeforeDelete} label="Confirm before deleting" />
+      <SettingsSection title={t('tasks.settings.safety')}>
+        <SettingsRow label={t('tasks.settings.confirmBeforeDeleting')} description={t('tasks.settings.confirmBeforeDeletingDesc')}>
+          <SettingsToggle checked={confirmBeforeDelete} onChange={setConfirmBeforeDelete} label={t('tasks.settings.confirmBeforeDeleting')} />
         </SettingsRow>
       </SettingsSection>
     </div>
@@ -99,6 +109,7 @@ export function TasksGeneralPanel() {
 // ---------------------------------------------------------------------------
 
 export function TasksAppearancePanel() {
+  const { t } = useTranslation();
   const {
     showWhenBadges, setShowWhenBadges,
     showProjectInList, setShowProjectInList,
@@ -108,21 +119,21 @@ export function TasksAppearancePanel() {
 
   return (
     <div>
-      <SettingsSection title="Task list" description="Control what's visible on each task row.">
-        <SettingsRow label="When badges" description="Show star, moon, or calendar icons for task timing.">
-          <SettingsToggle checked={showWhenBadges} onChange={setShowWhenBadges} label="When badges" />
+      <SettingsSection title={t('tasks.settings.taskList')} description={t('tasks.settings.taskListDesc')}>
+        <SettingsRow label={t('tasks.settings.whenBadges')} description={t('tasks.settings.whenBadgesDesc')}>
+          <SettingsToggle checked={showWhenBadges} onChange={setShowWhenBadges} label={t('tasks.settings.whenBadges')} />
         </SettingsRow>
-        <SettingsRow label="Project name" description="Show the project name on tasks in project views.">
-          <SettingsToggle checked={showProjectInList} onChange={setShowProjectInList} label="Project name" />
+        <SettingsRow label={t('tasks.settings.projectName')} description={t('tasks.settings.projectNameDesc')}>
+          <SettingsToggle checked={showProjectInList} onChange={setShowProjectInList} label={t('tasks.settings.projectName')} />
         </SettingsRow>
-        <SettingsRow label="Notes indicator" description="Show an icon when a task has notes or subtasks.">
-          <SettingsToggle checked={showNotesIndicator} onChange={setShowNotesIndicator} label="Notes indicator" />
+        <SettingsRow label={t('tasks.settings.notesIndicator')} description={t('tasks.settings.notesIndicatorDesc')}>
+          <SettingsToggle checked={showNotesIndicator} onChange={setShowNotesIndicator} label={t('tasks.settings.notesIndicator')} />
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection title="Density">
-        <SettingsRow label="Compact mode" description="Reduce padding for a denser task list.">
-          <SettingsToggle checked={compactMode} onChange={setCompactMode} label="Compact mode" />
+      <SettingsSection title={t('tasks.settings.density')}>
+        <SettingsRow label={t('tasks.settings.compactMode')} description={t('tasks.settings.compactModeDesc')}>
+          <SettingsToggle checked={compactMode} onChange={setCompactMode} label={t('tasks.settings.compactMode')} />
         </SettingsRow>
       </SettingsSection>
     </div>
@@ -133,43 +144,52 @@ export function TasksAppearancePanel() {
 // Panel: Behavior
 // ---------------------------------------------------------------------------
 
-const COMPLETED_OPTIONS: Array<{ value: TaskCompletedBehavior; label: string }> = [
-  { value: 'fade', label: 'Fade out' },
-  { value: 'move', label: 'Move to completed' },
-  { value: 'hide', label: 'Hide immediately' },
-];
+function useCompletedOptions(): Array<{ value: TaskCompletedBehavior; label: string }> {
+  const { t } = useTranslation();
+  return [
+    { value: 'fade', label: t('tasks.settings.optionFadeOut') },
+    { value: 'move', label: t('tasks.settings.optionMoveToCompleted') },
+    { value: 'hide', label: t('tasks.settings.optionHideImmediately') },
+  ];
+}
 
-const SORT_OPTIONS: Array<{ value: TaskSortOrder; label: string }> = [
-  { value: 'manual', label: 'Manual (drag to reorder)' },
-  { value: 'priority', label: 'Priority' },
-  { value: 'dueDate', label: 'Due date' },
-  { value: 'title', label: 'Title (A-Z)' },
-  { value: 'created', label: 'Date created' },
-];
+function useSortOptions(): Array<{ value: TaskSortOrder; label: string }> {
+  const { t } = useTranslation();
+  return [
+    { value: 'manual', label: t('tasks.settings.optionManual') },
+    { value: 'priority', label: t('tasks.settings.optionPriority') },
+    { value: 'dueDate', label: t('tasks.settings.optionDueDate') },
+    { value: 'title', label: t('tasks.settings.optionTitleAZ') },
+    { value: 'created', label: t('tasks.settings.optionDateCreated') },
+  ];
+}
 
 export function TasksBehaviorPanel() {
+  const { t } = useTranslation();
   const {
     completedBehavior, setCompletedBehavior,
     defaultSortOrder, setDefaultSortOrder,
   } = useTasksSettingsStore();
+  const completedOptions = useCompletedOptions();
+  const sortOptions = useSortOptions();
 
   return (
     <div>
-      <SettingsSection title="Completion" description="What happens when you check off a task.">
-        <SettingsRow label="Completed tasks" description="How completed tasks behave in the list.">
+      <SettingsSection title={t('tasks.settings.completion')} description={t('tasks.settings.completionDesc')}>
+        <SettingsRow label={t('tasks.settings.completedTasks')} description={t('tasks.settings.completedTasksDesc')}>
           <SettingsSelect
             value={completedBehavior}
-            options={COMPLETED_OPTIONS}
+            options={completedOptions}
             onChange={setCompletedBehavior}
           />
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection title="Sorting" description="Default sort order for task lists.">
-        <SettingsRow label="Sort order" description="How tasks are ordered within each section.">
+      <SettingsSection title={t('tasks.settings.sorting')} description={t('tasks.settings.sortingDesc')}>
+        <SettingsRow label={t('tasks.settings.sortOrder')} description={t('tasks.settings.sortOrderDesc')}>
           <SettingsSelect
             value={defaultSortOrder}
-            options={SORT_OPTIONS}
+            options={sortOptions}
             onChange={setDefaultSortOrder}
           />
         </SettingsRow>
@@ -188,28 +208,7 @@ const PANELS: Record<TasksNavItemId, () => ReactElement> = {
   behavior: TasksBehaviorPanel,
 };
 
-const SIDEBAR_SECTIONS: TasksSidebarSection[] = [
-  {
-    title: 'Tasks',
-    items: [
-      { id: 'general', label: 'General', icon: Settings2 },
-      { id: 'appearance', label: 'Appearance', icon: Eye },
-      { id: 'behavior', label: 'Behavior', icon: Zap },
-    ],
-  },
-];
-
-const PANEL_TITLES: Record<TasksNavItemId, string> = {
-  general: 'General',
-  appearance: 'Appearance',
-  behavior: 'Behavior',
-};
-
-const PANEL_DESCRIPTIONS: Record<TasksNavItemId, string> = {
-  general: 'Navigation, Today view, and safety options',
-  appearance: 'Control what appears on task rows',
-  behavior: 'Completion and sorting preferences',
-};
+// These are now functions using translation hooks - moved into the modal component
 
 // ---------------------------------------------------------------------------
 // Main modal
@@ -221,8 +220,32 @@ interface TasksSettingsModalProps {
 }
 
 export function TasksSettingsModal({ open, onClose }: TasksSettingsModalProps) {
+  const { t } = useTranslation();
   const [activeItem, setActiveItem] = useState<TasksNavItemId>('general');
   const ActivePanel = PANELS[activeItem];
+
+  const sidebarSections: TasksSidebarSection[] = [
+    {
+      title: t('tasks.settings.tasksLabel'),
+      items: [
+        { id: 'general', label: t('tasks.settings.general'), icon: Settings2 },
+        { id: 'appearance', label: t('tasks.settings.appearance'), icon: Eye },
+        { id: 'behavior', label: t('tasks.settings.behavior'), icon: Zap },
+      ],
+    },
+  ];
+
+  const panelTitles: Record<TasksNavItemId, string> = {
+    general: t('tasks.settings.general'),
+    appearance: t('tasks.settings.appearance'),
+    behavior: t('tasks.settings.behavior'),
+  };
+
+  const panelDescriptions: Record<TasksNavItemId, string> = {
+    general: t('tasks.settings.generalDesc'),
+    appearance: t('tasks.settings.appearanceDesc'),
+    behavior: t('tasks.settings.behaviorDesc'),
+  };
 
   return (
     <Modal
@@ -230,7 +253,7 @@ export function TasksSettingsModal({ open, onClose }: TasksSettingsModalProps) {
       onOpenChange={(o) => !o && onClose()}
       width={660}
       height={520}
-      title="Tasks settings"
+      title={t('tasks.settings.modalTitle')}
     >
       {/* Left sidebar */}
       <div
@@ -264,11 +287,11 @@ export function TasksSettingsModal({ open, onClose }: TasksSettingsModalProps) {
               fontFamily: 'var(--font-family)',
             }}
           >
-            Settings
+            {t('tasks.settings.title')}
           </span>
         </div>
 
-        {SIDEBAR_SECTIONS.map((section) => (
+        {sidebarSections.map((section) => (
           <div key={section.title}>
             <div
               style={{
@@ -308,7 +331,7 @@ export function TasksSettingsModal({ open, onClose }: TasksSettingsModalProps) {
           overflow: 'hidden',
         }}
       >
-        <Modal.Header title={PANEL_TITLES[activeItem]} subtitle={PANEL_DESCRIPTIONS[activeItem]} />
+        <Modal.Header title={panelTitles[activeItem]} subtitle={panelDescriptions[activeItem]} />
         <Modal.Body>
           <ActivePanel />
         </Modal.Body>

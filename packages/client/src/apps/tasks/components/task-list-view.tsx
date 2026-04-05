@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown, CheckCircle2, Moon, Sun } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { Task, TaskProject, TaskWhen, TenantUser } from '@atlasmail/shared';
 import type { NavSection } from '../lib/constants';
 import { TaskItem } from './task-item';
@@ -82,6 +83,7 @@ export function TaskListView({
   onSeed: () => void;
   renderTaskItem: (task: Task) => React.ReactNode;
 }) {
+  const { t } = useTranslation();
   const tasksSettings = useTasksSettingsStore();
   const [collapsedHeadings, setCollapsedHeadings] = useState<Set<string>>(new Set());
   const [completedCollapsed, setCompletedCollapsed] = useState(true);
@@ -94,13 +96,13 @@ export function TaskListView({
         <>
           {canCreate && <NewTaskCreator defaultWhen="today" projectId={projectIdForNew} />}
           {todayTasks.daytime.length > 0 && (
-            <CollapsibleSection label="Today" icon={Sun} color="#d97706" count={todayTasks.daytime.length}>
+            <CollapsibleSection label={t('tasks.todayLabel')} icon={Sun} color="#d97706" count={todayTasks.daytime.length}>
               {todayTasks.daytime.map(renderTaskItem)}
               {canCreate && <QuickCaptureInput defaultWhen="today" projectId={projectIdForNew} />}
             </CollapsibleSection>
           )}
           {todayTasks.evening.length > 0 && (
-            <CollapsibleSection label="This evening" icon={Moon} color="#6366f1" count={todayTasks.evening.length}>
+            <CollapsibleSection label={t('tasks.thisEvening')} icon={Moon} color="#6366f1" count={todayTasks.evening.length}>
               {todayTasks.evening.map(renderTaskItem)}
               {canCreate && <QuickCaptureInput defaultWhen="evening" projectId={projectIdForNew} />}
             </CollapsibleSection>
@@ -198,7 +200,7 @@ export function TaskListView({
           >
             <ChevronDown size={13} className={`task-section-chevron${completedCollapsed ? ' collapsed' : ''}`} />
             <CheckCircle2 size={13} />
-            <span>Completed</span>
+            <span>{t('tasks.completed')}</span>
             <span className="task-section-count">{completedTasks.length}</span>
           </button>
           {!completedCollapsed && completedTasks.map(renderTaskItem)}

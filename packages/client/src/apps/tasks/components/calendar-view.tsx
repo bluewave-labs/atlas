@@ -32,11 +32,8 @@ export function CalendarView({
   while (calendarDays.length % 7 !== 0) calendarDays.push(null);
 
   const todayStr = getTodayStr();
-  const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
-  ];
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const monthNames = t('tasks.calendar.monthNames', { returnObjects: true }) as string[];
+  const dayNames = t('tasks.calendar.dayNames', { returnObjects: true }) as string[];
 
   // Group tasks by due date
   const tasksByDate = useMemo(() => {
@@ -197,7 +194,7 @@ export function CalendarView({
                     }}
                     title={task.title}
                   >
-                    {task.title || 'Untitled'}
+                    {task.title || t('tasks.untitled')}
                   </button>
                 ))}
                 {dayTasks.length > MAX_TASKS_PER_CELL && (

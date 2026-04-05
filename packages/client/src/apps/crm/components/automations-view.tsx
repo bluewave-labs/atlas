@@ -15,91 +15,99 @@ import { ConfirmDialog } from '../../../components/ui/confirm-dialog';
 
 // ─── Constants ────────────────────────────────────────────────────
 
-const TRIGGER_OPTIONS = [
-  { value: 'deal_stage_changed', label: 'Deal stage changed' },
-  { value: 'deal_created', label: 'Deal created' },
-  { value: 'deal_won', label: 'Deal won' },
-  { value: 'deal_lost', label: 'Deal lost' },
-  { value: 'contact_created', label: 'Contact created' },
-  { value: 'activity_logged', label: 'Activity logged' },
-];
+function getTriggerOptions(t: (key: string) => string) {
+  return [
+    { value: 'deal_stage_changed', label: t('crm.automations.triggerDealStageChanged') },
+    { value: 'deal_created', label: t('crm.automations.triggerDealCreated') },
+    { value: 'deal_won', label: t('crm.automations.triggerDealWon') },
+    { value: 'deal_lost', label: t('crm.automations.triggerDealLost') },
+    { value: 'contact_created', label: t('crm.automations.triggerContactCreated') },
+    { value: 'activity_logged', label: t('crm.automations.triggerActivityLogged') },
+  ];
+}
 
-const ACTION_OPTIONS = [
-  { value: 'create_task', label: 'Create task' },
-  { value: 'update_field', label: 'Update field' },
-  { value: 'change_deal_stage', label: 'Change deal stage' },
-  { value: 'add_tag', label: 'Add tag' },
-  { value: 'assign_user', label: 'Assign user' },
-  { value: 'log_activity', label: 'Log activity' },
-  { value: 'send_notification', label: 'Send notification' },
-];
+function getActionOptions(t: (key: string) => string) {
+  return [
+    { value: 'create_task', label: t('crm.automations.actionCreateTask') },
+    { value: 'update_field', label: t('crm.automations.actionUpdateField') },
+    { value: 'change_deal_stage', label: t('crm.automations.actionChangeDealStage') },
+    { value: 'add_tag', label: t('crm.automations.actionAddTag') },
+    { value: 'assign_user', label: t('crm.automations.actionAssignUser') },
+    { value: 'log_activity', label: t('crm.automations.actionLogActivity') },
+    { value: 'send_notification', label: t('crm.automations.actionSendNotification') },
+  ];
+}
 
-const ACTIVITY_TYPE_OPTIONS = [
-  { value: '', label: 'Any type' },
-  { value: 'note', label: 'Note' },
-  { value: 'call', label: 'Call' },
-  { value: 'meeting', label: 'Meeting' },
-  { value: 'email', label: 'Email' },
-];
+function getActivityTypeOptions(t: (key: string) => string) {
+  return [
+    { value: '', label: t('crm.automations.anyType') },
+    { value: 'note', label: t('crm.activities.note') },
+    { value: 'call', label: t('crm.activities.call') },
+    { value: 'meeting', label: t('crm.activities.meeting') },
+    { value: 'email', label: t('crm.activities.email') },
+  ];
+}
 
-const FIELD_OPTIONS = [
-  { value: 'probability', label: 'Probability' },
-  { value: 'value', label: 'Value' },
-  { value: 'title', label: 'Title' },
-];
+function getFieldOptions(t: (key: string) => string) {
+  return [
+    { value: 'probability', label: t('crm.deals.probability') },
+    { value: 'value', label: t('crm.deals.value') },
+    { value: 'title', label: t('crm.deals.title') },
+  ];
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
-function getTriggerLabel(trigger: string): string {
-  return TRIGGER_OPTIONS.find((t) => t.value === trigger)?.label ?? trigger;
+function getTriggerLabel(trigger: string, t: (key: string) => string): string {
+  return getTriggerOptions(t).find((o) => o.value === trigger)?.label ?? trigger;
 }
 
-function getActionLabel(action: string): string {
-  return ACTION_OPTIONS.find((a) => a.value === action)?.label ?? action;
+function getActionLabel(action: string, t: (key: string) => string): string {
+  return getActionOptions(t).find((a) => a.value === action)?.label ?? action;
 }
 
-function describeTrigger(workflow: CrmWorkflow, stages: CrmDealStage[]): string {
-  const base = getTriggerLabel(workflow.trigger);
+function describeTrigger(workflow: CrmWorkflow, stages: CrmDealStage[], t: (key: string) => string): string {
+  const base = getTriggerLabel(workflow.trigger, t);
   const config = workflow.triggerConfig;
 
   if (workflow.trigger === 'deal_stage_changed') {
     const fromName = config.fromStage ? stages.find((s) => s.id === config.fromStage)?.name : null;
     const toName = config.toStage ? stages.find((s) => s.id === config.toStage)?.name : null;
-    if (fromName && toName) return `Deal moves from "${fromName}" to "${toName}"`;
-    if (toName) return `Deal moves to "${toName}"`;
-    if (fromName) return `Deal leaves "${fromName}"`;
-    return 'Deal stage changes';
+    if (fromName && toName) return `${base}: "${fromName}" → "${toName}"`;
+    if (toName) return `${base}: → "${toName}"`;
+    if (fromName) return `${base}: "${fromName}" →`;
+    return base;
   }
 
   if (workflow.trigger === 'activity_logged' && config.activityType) {
-    return `${config.activityType} activity logged`;
+    return `${config.activityType} ${t('crm.automations.triggerActivityLogged').toLowerCase()}`;
   }
 
   return base;
 }
 
-function describeAction(workflow: CrmWorkflow, stages: CrmDealStage[]): string {
+function describeAction(workflow: CrmWorkflow, stages: CrmDealStage[], t: (key: string) => string): string {
   const config = workflow.actionConfig;
 
   switch (workflow.action) {
     case 'create_task':
-      return `Create task "${config.taskTitle || 'Untitled'}"`;
+      return `${t('crm.automations.actionCreateTask')}: "${config.taskTitle || ''}"`;
     case 'update_field':
-      return `Set ${config.fieldName || 'field'} to "${config.fieldValue || ''}"`;
+      return `${t('crm.automations.actionUpdateField')}: ${config.fieldName || ''} = "${config.fieldValue || ''}"`;
     case 'change_deal_stage': {
-      const stageName = stages.find((s) => s.id === config.newStageId)?.name ?? 'unknown';
-      return `Move deal to "${stageName}"`;
+      const stageName = stages.find((s) => s.id === config.newStageId)?.name ?? '';
+      return `${t('crm.automations.actionChangeDealStage')}: "${stageName}"`;
     }
     case 'add_tag':
-      return `Add tag "${config.tag || ''}"`;
+      return `${t('crm.automations.actionAddTag')}: "${config.tag || ''}"`;
     case 'assign_user':
-      return `Assign to user ${config.assignedUserId || 'unknown'}`;
+      return `${t('crm.automations.actionAssignUser')}: ${config.assignedUserId || ''}`;
     case 'log_activity':
-      return `Log ${config.activityType || 'note'}: "${config.body || ''}"`;
+      return `${t('crm.automations.actionLogActivity')}: "${config.body || ''}"`;
     case 'send_notification':
-      return `Send notification: "${config.message || ''}"`;
+      return `${t('crm.automations.actionSendNotification')}: "${config.message || ''}"`;
     default:
-      return getActionLabel(workflow.action);
+      return getActionLabel(workflow.action, t);
   }
 }
 
@@ -138,7 +146,7 @@ function CreateWorkflowModal({
   const [notificationMessage, setNotificationMessage] = useState('');
 
   const stageOptions = [
-    { value: '', label: 'Any stage' },
+    { value: '', label: t('crm.automations.anyStage') },
     ...stages.map((s) => ({ value: s.id, label: s.name })),
   ];
 
@@ -216,18 +224,18 @@ function CreateWorkflowModal({
       <Modal.Body>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
           <Input
-            label="Name"
-            placeholder="e.g., Follow up on qualified deals"
+            label={t('crm.automations.name')}
+            placeholder={t('crm.automations.namePlaceholder')}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
 
           <div>
-            <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xs)' }}>When this happens...</div>
+            <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xs)' }}>{t('crm.automations.whenThisHappens')}</div>
             <Select
               value={trigger}
               onChange={(val) => setTrigger(val)}
-              options={TRIGGER_OPTIONS}
+              options={getTriggerOptions(t)}
             />
           </div>
 
@@ -235,7 +243,7 @@ function CreateWorkflowModal({
           {trigger === 'deal_stage_changed' && (
             <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xs)' }}>From stage</div>
+                <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xs)' }}>{t('crm.automations.fromStage')}</div>
                 <Select
                   value={fromStage}
                   onChange={(val) => setFromStage(val)}
@@ -243,7 +251,7 @@ function CreateWorkflowModal({
                 />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xs)' }}>To stage</div>
+                <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xs)' }}>{t('crm.automations.toStage')}</div>
                 <Select
                   value={toStage}
                   onChange={(val) => setToStage(val)}
@@ -255,11 +263,11 @@ function CreateWorkflowModal({
 
           {trigger === 'activity_logged' && (
             <div>
-              <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xs)' }}>Activity type</div>
+              <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xs)' }}>{t('crm.automations.activityType')}</div>
               <Select
                 value={activityType}
                 onChange={(val) => setActivityType(val)}
-                options={ACTIVITY_TYPE_OPTIONS}
+                options={getActivityTypeOptions(t)}
               />
             </div>
           )}
@@ -267,19 +275,19 @@ function CreateWorkflowModal({
           <div style={{ borderTop: '1px solid var(--color-border-primary)', margin: 'var(--spacing-xs) 0' }} />
 
           <div>
-            <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xs)' }}>Then do this...</div>
+            <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xs)' }}>{t('crm.automations.thenDoThis')}</div>
             <Select
               value={action}
               onChange={(val) => setAction(val)}
-              options={ACTION_OPTIONS}
+              options={getActionOptions(t)}
             />
           </div>
 
           {/* Action config */}
           {action === 'create_task' && (
             <Input
-              label="Task title"
-              placeholder="e.g., Schedule demo call"
+              label={t('crm.automations.taskTitle')}
+              placeholder={t('crm.automations.taskTitlePlaceholder')}
               value={taskTitle}
               onChange={(e) => setTaskTitle(e.target.value)}
             />
@@ -288,17 +296,17 @@ function CreateWorkflowModal({
           {action === 'update_field' && (
             <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xs)' }}>Field</div>
+                <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xs)' }}>{t('crm.automations.field')}</div>
                 <Select
                   value={fieldName}
                   onChange={(val) => setFieldName(val)}
-                  options={FIELD_OPTIONS}
+                  options={getFieldOptions(t)}
                 />
               </div>
               <div style={{ flex: 1 }}>
                 <Input
-                  label="New value"
-                  placeholder="e.g., 50"
+                  label={t('crm.automations.newValue')}
+                  placeholder={t('crm.automations.newValuePlaceholder')}
                   value={fieldValue}
                   onChange={(e) => setFieldValue(e.target.value)}
                 />
@@ -308,7 +316,7 @@ function CreateWorkflowModal({
 
           {action === 'change_deal_stage' && (
             <div>
-              <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xs)' }}>New stage</div>
+              <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xs)' }}>{t('crm.automations.newStage')}</div>
               <Select
                 value={newStageId}
                 onChange={(val) => setNewStageId(val)}
@@ -319,8 +327,8 @@ function CreateWorkflowModal({
 
           {action === 'add_tag' && (
             <Input
-              label="Tag to add"
-              placeholder="e.g., customer"
+              label={t('crm.automations.tagToAdd')}
+              placeholder={t('crm.automations.tagPlaceholder')}
               value={tagValue}
               onChange={(e) => setTagValue(e.target.value)}
             />
@@ -328,8 +336,8 @@ function CreateWorkflowModal({
 
           {action === 'assign_user' && (
             <Input
-              label="User ID"
-              placeholder="Enter user ID to assign"
+              label={t('crm.automations.userId')}
+              placeholder={t('crm.automations.userIdPlaceholder')}
               value={assignedUserId}
               onChange={(e) => setAssignedUserId(e.target.value)}
             />
@@ -338,21 +346,21 @@ function CreateWorkflowModal({
           {action === 'log_activity' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
               <div>
-                <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xs)' }}>Activity type</div>
+                <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xs)' }}>{t('crm.automations.activityType')}</div>
                 <Select
                   value={logActivityType}
                   onChange={(val) => setLogActivityType(val)}
                   options={[
-                    { value: 'note', label: 'Note' },
-                    { value: 'call', label: 'Call' },
-                    { value: 'meeting', label: 'Meeting' },
-                    { value: 'email', label: 'Email' },
+                    { value: 'note', label: t('crm.activities.note') },
+                    { value: 'call', label: t('crm.activities.call') },
+                    { value: 'meeting', label: t('crm.activities.meeting') },
+                    { value: 'email', label: t('crm.activities.email') },
                   ]}
                 />
               </div>
               <Input
-                label="Activity body"
-                placeholder="e.g., Deal was lost. Review and follow up."
+                label={t('crm.automations.activityBody')}
+                placeholder={t('crm.automations.activityBodyPlaceholder')}
                 value={logActivityBody}
                 onChange={(e) => setLogActivityBody(e.target.value)}
               />
@@ -361,8 +369,8 @@ function CreateWorkflowModal({
 
           {action === 'send_notification' && (
             <Input
-              label="Notification message"
-              placeholder="e.g., A deal was just won!"
+              label={t('crm.automations.notificationMessage')}
+              placeholder={t('crm.automations.notificationPlaceholder')}
               value={notificationMessage}
               onChange={(e) => setNotificationMessage(e.target.value)}
             />
@@ -541,14 +549,14 @@ export function AutomationsView({ stages }: { stages: CrmDealStage[] }) {
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                 }}>
-                  {describeTrigger(workflow, stages)} &rarr; {describeAction(workflow, stages)}
+                  {describeTrigger(workflow, stages, t)} &rarr; {describeAction(workflow, stages, t)}
                 </div>
               </div>
 
               {/* Execution count */}
               <span style={{ flexShrink: 0 }}>
                 <Badge variant="default">
-                  {workflow.executionCount} {workflow.executionCount === 1 ? 'run' : 'runs'}
+                  {workflow.executionCount} {t('crm.automations.runs')}
                 </Badge>
               </span>
 
@@ -566,7 +574,7 @@ export function AutomationsView({ stages }: { stages: CrmDealStage[] }) {
                   flexShrink: 0,
                   transition: 'background-color 0.2s',
                 }}
-                title={workflow.isActive ? 'Disable automation' : 'Enable automation'}
+                title={workflow.isActive ? t('crm.automations.disable') : t('crm.automations.enable')}
               >
                 <span style={{
                   position: 'absolute',
@@ -593,7 +601,7 @@ export function AutomationsView({ stages }: { stages: CrmDealStage[] }) {
                   flexShrink: 0,
                   borderRadius: 'var(--radius-sm)',
                 }}
-                title="Delete automation"
+                title={t('crm.actions.delete')}
               >
                 <Trash2 size={14} />
               </button>

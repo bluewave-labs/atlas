@@ -1,4 +1,5 @@
 import { ChevronDown, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { Task } from '@atlasmail/shared';
 import { useMyAppPermission } from '../../../hooks/use-app-permissions';
 import { IconButton } from '../../../components/ui/icon-button';
@@ -16,6 +17,7 @@ export function HeadingRow({
   onToggle: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation();
   const { data: tasksPerm } = useMyAppPermission('tasks');
   const canDelete = !tasksPerm || tasksPerm.role === 'admin';
   return (
@@ -28,7 +30,7 @@ export function HeadingRow({
       {canDelete && (
         <IconButton
           icon={<X size={12} />}
-          label="Delete section"
+          label={t('tasks.deleteSection')}
           size={24}
           destructive
           className="task-heading-delete"

@@ -67,18 +67,18 @@ function getTodayStr(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
-function formatDueDate(dateStr: string): string {
+function formatDueDateKanban(dateStr: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const dd = dateStr.slice(0, 10);
   const todayStr = getTodayStr();
-  if (dd === todayStr) return 'Today';
+  if (dd === todayStr) return t('tasks.todayLabel');
   const [y, m, d] = dd.split('-').map(Number);
   const dueLocal = new Date(y, m - 1, d);
   const now = new Date();
   const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const diff = Math.round((dueLocal.getTime() - todayLocal.getTime()) / (1000 * 60 * 60 * 24));
-  if (diff === 1) return 'Tomorrow';
-  if (diff === -1) return 'Yesterday';
-  if (diff < -1) return `${Math.abs(diff)}d overdue`;
+  if (diff === 1) return t('tasks.tomorrowLabel');
+  if (diff === -1) return t('tasks.yesterdayLabel');
+  if (diff < -1) return t('tasks.daysOverdue', { count: Math.abs(diff) });
   if (diff <= 7) return dueLocal.toLocaleDateString([], { weekday: 'short' });
   return dueLocal.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
@@ -153,7 +153,7 @@ function KanbanCard({
           {task.dueDate && (
             <span className={`kanban-card-due${isOverdue(task.dueDate) ? ' overdue' : ''}`}>
               <Calendar size={9} />
-              {formatDueDate(task.dueDate)}
+              {formatDueDateKanban(task.dueDate, t)}
             </span>
           )}
           {task.recurrenceRule && (

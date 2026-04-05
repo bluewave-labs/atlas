@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next';
 import type { DriveItem } from '@atlasmail/shared';
 import type { SortBy, TypeFilter, ModifiedFilter } from './types';
 
@@ -9,6 +10,17 @@ export const MIN_PREVIEW_WIDTH = 280;
 export const MAX_PREVIEW_WIDTH = 600;
 export const VIEW_MODE_KEY = 'atlasmail_drive_view_mode';
 
+export function getSortOptions(t: TFunction): { value: SortBy; label: string }[] {
+  return [
+    { value: 'default', label: t('drive.sort.default') },
+    { value: 'name', label: t('drive.sort.name') },
+    { value: 'size', label: t('drive.sort.size') },
+    { value: 'date', label: t('drive.sort.dateModified') },
+    { value: 'type', label: t('drive.sort.type') },
+  ];
+}
+
+/** @deprecated Use getSortOptions(t) instead */
 export const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: 'default', label: 'Default' },
   { value: 'name', label: 'Name' },
@@ -17,6 +29,28 @@ export const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: 'type', label: 'Type' },
 ];
 
+export function getTypeFilterOptions(t: TFunction): { value: TypeFilter; label: string }[] {
+  return [
+    { value: 'all', label: t('drive.typeFilter.anyType') },
+    { value: 'folders', label: t('drive.typeFilter.folders') },
+    { value: 'documents', label: t('drive.typeFilter.documents') },
+    { value: 'word', label: t('drive.typeFilter.word') },
+    { value: 'spreadsheets', label: t('drive.typeFilter.spreadsheets') },
+    { value: 'excel', label: t('drive.typeFilter.excel') },
+    { value: 'presentations', label: t('drive.typeFilter.presentations') },
+    { value: 'powerpoint', label: t('drive.typeFilter.powerpoint') },
+    { value: 'photos', label: t('drive.typeFilter.photosImages') },
+    { value: 'pdfs', label: t('drive.typeFilter.pdfs') },
+    { value: 'videos', label: t('drive.typeFilter.videos') },
+    { value: 'audio', label: t('drive.typeFilter.audio') },
+    { value: 'archives', label: t('drive.typeFilter.archives') },
+    { value: 'code', label: t('drive.typeFilter.code') },
+    { value: 'text', label: t('drive.typeFilter.textFiles') },
+    { value: 'drawings', label: t('drive.typeFilter.drawings') },
+  ];
+}
+
+/** @deprecated Use getTypeFilterOptions(t) instead */
 export const TYPE_FILTER_OPTIONS: { value: TypeFilter; label: string }[] = [
   { value: 'all', label: 'Any type' },
   { value: 'folders', label: 'Folders' },
@@ -47,9 +81,19 @@ export const TAG_COLORS = [
 
 // ─── Helper functions ────────────────────────────────────────────────
 
-export function getModifiedFilterOptions(): { value: ModifiedFilter; label: string }[] {
+export function getModifiedFilterOptions(t?: TFunction): { value: ModifiedFilter; label: string }[] {
   const now = new Date();
   const thisYear = now.getFullYear();
+  if (t) {
+    return [
+      { value: 'any', label: t('drive.modifiedFilter.anyTime') },
+      { value: 'today', label: t('drive.modifiedFilter.today') },
+      { value: '7days', label: t('drive.modifiedFilter.last7Days') },
+      { value: '30days', label: t('drive.modifiedFilter.last30Days') },
+      { value: 'thisYear', label: t('drive.modifiedFilter.thisYear', { year: thisYear }) },
+      { value: 'lastYear', label: t('drive.modifiedFilter.lastYear', { year: thisYear - 1 }) },
+    ];
+  }
   return [
     { value: 'any', label: 'Any time' },
     { value: 'today', label: 'Today' },

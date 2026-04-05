@@ -23,33 +23,41 @@ import { StatCard } from '../../../components/ui/stat-card';
 
 const ROLES: CrmRole[] = ['admin', 'manager', 'sales', 'viewer'];
 
-const ENTITIES: { id: CrmEntity; label: string; icon: typeof Eye }[] = [
-  { id: 'deals', label: 'Deals', icon: Eye },
-  { id: 'contacts', label: 'Contacts', icon: Eye },
-  { id: 'companies', label: 'Companies', icon: Eye },
-  { id: 'activities', label: 'Activities', icon: Eye },
-  { id: 'workflows', label: 'Automations', icon: Eye },
-  { id: 'dashboard', label: 'Dashboard', icon: Eye },
-];
+function getEntities(t: (key: string) => string): { id: CrmEntity; label: string; icon: typeof Eye }[] {
+  return [
+    { id: 'deals', label: t('crm.sidebar.deals'), icon: Eye },
+    { id: 'contacts', label: t('crm.sidebar.contacts'), icon: Eye },
+    { id: 'companies', label: t('crm.sidebar.companies'), icon: Eye },
+    { id: 'activities', label: t('crm.sidebar.activities'), icon: Eye },
+    { id: 'workflows', label: t('crm.sidebar.automations'), icon: Eye },
+    { id: 'dashboard', label: t('crm.sidebar.dashboard'), icon: Eye },
+  ];
+}
 
-const OPERATIONS: { id: CrmOperation; label: string; icon: typeof Eye }[] = [
-  { id: 'view', label: 'View', icon: Eye },
-  { id: 'create', label: 'Create', icon: Plus },
-  { id: 'update', label: 'Edit', icon: Pencil },
-  { id: 'delete', label: 'Delete', icon: Trash2 },
-];
+function getOperations(t: (key: string) => string): { id: CrmOperation; label: string; icon: typeof Eye }[] {
+  return [
+    { id: 'view', label: t('crm.permissions.view'), icon: Eye },
+    { id: 'create', label: t('crm.permissions.create'), icon: Plus },
+    { id: 'update', label: t('crm.permissions.edit'), icon: Pencil },
+    { id: 'delete', label: t('common.delete'), icon: Trash2 },
+  ];
+}
 
-const ROLE_OPTIONS = [
-  { value: 'admin', label: 'Admin' },
-  { value: 'manager', label: 'Manager' },
-  { value: 'sales', label: 'Sales' },
-  { value: 'viewer', label: 'Viewer' },
-];
+function getRoleOptions(t: (key: string) => string) {
+  return [
+    { value: 'admin', label: t('crm.permissions.admin') },
+    { value: 'manager', label: t('crm.permissions.manager') },
+    { value: 'sales', label: t('crm.permissions.sales') },
+    { value: 'viewer', label: t('crm.permissions.viewer') },
+  ];
+}
 
-const ACCESS_OPTIONS = [
-  { value: 'all', label: 'All records' },
-  { value: 'own', label: 'Own records only' },
-];
+function getAccessOptions(t: (key: string) => string) {
+  return [
+    { value: 'all', label: t('crm.permissions.allRecords') },
+    { value: 'own', label: t('crm.permissions.ownRecords') },
+  ];
+}
 
 const ROLE_COLORS: Record<CrmRole, string> = {
   admin: '#7c3aed',
@@ -58,12 +66,14 @@ const ROLE_COLORS: Record<CrmRole, string> = {
   viewer: '#6b7280',
 };
 
-const ROLE_DESCRIPTIONS: Record<CrmRole, string> = {
-  admin: 'Full access to all CRM features including permissions and automations',
-  manager: 'Full CRUD on all entities, view-only on automations',
-  sales: 'Manage deals, contacts, and activities. View-only on companies',
-  viewer: 'Read-only access to all entities',
-};
+function getRoleDescriptions(t: (key: string) => string): Record<CrmRole, string> {
+  return {
+    admin: t('crm.permissions.adminDesc'),
+    manager: t('crm.permissions.managerDesc'),
+    sales: t('crm.permissions.salesDesc'),
+    viewer: t('crm.permissions.viewerDesc'),
+  };
+}
 
 const ROLE_ICONS: Record<CrmRole, typeof Crown> = {
   admin: Crown,
@@ -96,6 +106,9 @@ function MatrixCell({ allowed }: { allowed: boolean }) {
 // ─── Permission Matrix (Odoo/Salesforce style) ──────────────────────
 
 function PermissionMatrix() {
+  const { t } = useTranslation();
+  const ENTITIES = getEntities(t);
+  const OPERATIONS = getOperations(t);
   const [hoveredRole, setHoveredRole] = useState<CrmRole | null>(null);
 
   return (
@@ -120,7 +133,7 @@ function PermissionMatrix() {
           textTransform: 'uppercase',
           letterSpacing: '0.04em',
         }}>
-          Role
+          {t('crm.permissions.role')}
         </div>
         {ENTITIES.map((entity) => (
           <div
@@ -231,6 +244,9 @@ function UserPermissionRow({ perm, onUpdate }: {
   perm: CrmPermissionWithUser;
   onUpdate: (userId: string, role: CrmRole, recordAccess: CrmRecordAccess) => void;
 }) {
+  const { t } = useTranslation();
+  const ROLE_OPTIONS = getRoleOptions(t);
+  const ACCESS_OPTIONS = getAccessOptions(t);
   return (
     <div style={{
       display: 'grid',
@@ -351,7 +367,7 @@ export function PermissionsView() {
             key={role}
             label={role}
             value={role.charAt(0).toUpperCase() + role.slice(1)}
-            subtitle={ROLE_DESCRIPTIONS[role]}
+            subtitle={getRoleDescriptions(t)[role]}
             color={ROLE_COLORS[role]}
             icon={ROLE_ICONS[role]}
           />
@@ -380,22 +396,22 @@ export function PermissionsView() {
         color: 'var(--color-text-tertiary)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Eye size={10} /> View
+          <Eye size={10} /> {t('crm.permissions.view')}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Plus size={10} /> Create
+          <Plus size={10} /> {t('crm.permissions.create')}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Pencil size={10} /> Edit
+          <Pencil size={10} /> {t('crm.permissions.edit')}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <Trash2 size={10} /> Delete
+          <Trash2 size={10} /> {t('common.delete')}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <MatrixCell allowed={true} /> Allowed
+          <MatrixCell allowed={true} /> {t('crm.permissions.allowed')}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <MatrixCell allowed={false} /> Denied
+          <MatrixCell allowed={false} /> {t('crm.permissions.denied')}
         </div>
       </div>
 
@@ -425,9 +441,9 @@ export function PermissionsView() {
           background: 'var(--color-bg-secondary)',
           borderBottom: '1px solid var(--color-border-secondary)',
         }}>
-          <span style={headerStyle}>User</span>
-          <span style={headerStyle}>Role</span>
-          <span style={headerStyle}>Record access</span>
+          <span style={headerStyle}>{t('crm.permissions.user')}</span>
+          <span style={headerStyle}>{t('crm.permissions.role')}</span>
+          <span style={headerStyle}>{t('crm.permissions.recordAccess')}</span>
         </div>
 
         {/* Permission rows */}

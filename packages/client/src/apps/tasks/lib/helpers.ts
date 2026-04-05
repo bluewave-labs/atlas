@@ -13,10 +13,10 @@ export function isOverdue(dateStr: string): boolean {
   return dateStr.slice(0, 10) < getTodayStr();
 }
 
-export function formatDueDate(dateStr: string): string {
+export function formatDueDate(dateStr: string, t?: (key: string, opts?: Record<string, unknown>) => string): string {
   const dd = dateStr.slice(0, 10);
   const todayStr = getTodayStr();
-  if (dd === todayStr) return 'Today';
+  if (dd === todayStr) return t ? t('tasks.todayLabel') : 'Today';
 
   // Use local date parts to avoid timezone issues
   const [y, m, d] = dd.split('-').map(Number);
@@ -25,9 +25,9 @@ export function formatDueDate(dateStr: string): string {
   const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const diff = Math.round((dueLocal.getTime() - todayLocal.getTime()) / (1000 * 60 * 60 * 24));
 
-  if (diff === 1) return 'Tomorrow';
-  if (diff === -1) return 'Yesterday';
-  if (diff < -1) return `${Math.abs(diff)}d overdue`;
+  if (diff === 1) return t ? t('tasks.tomorrowLabel') : 'Tomorrow';
+  if (diff === -1) return t ? t('tasks.yesterdayLabel') : 'Yesterday';
+  if (diff < -1) return t ? t('tasks.daysOverdue', { count: Math.abs(diff) }) : `${Math.abs(diff)}d overdue`;
   if (diff <= 7) return dueLocal.toLocaleDateString([], { weekday: 'short' });
   return formatDateGlobal(dueLocal);
 }

@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Star, Clock, HardDrive, Users, File,
 } from 'lucide-react';
@@ -36,6 +37,7 @@ export function DriveDataTableList({
   driveSettings,
   renderTags,
 }: DriveDataTableListProps) {
+  const { t } = useTranslation();
   // Map SortBy <-> DataTable SortState
   const dtSort: SortState | null = sortBy === 'default' ? null : {
     column: sortBy === 'date' ? 'date' : sortBy,
@@ -82,7 +84,7 @@ export function DriveDataTableList({
   const columns: DataTableColumn<DriveItem>[] = [
     {
       key: 'name',
-      label: 'Name',
+      label: t('drive.table.name'),
       icon: <File size={12} />,
       sortable: true,
       render: (item) => {
@@ -124,7 +126,7 @@ export function DriveDataTableList({
               <Star size={12} fill="var(--color-star, #f59e0b)" color="var(--color-star, #f59e0b)" />
             )}
             {((item as any).shareCount > 0 || (item as any).hasShareLink) && (
-              <Tooltip content="Shared">
+              <Tooltip content={t('drive.table.shared')}>
                 <span style={{ display: 'inline-flex', color: 'var(--color-text-tertiary)' }}>
                   <Users size={12} />
                 </span>
@@ -137,7 +139,7 @@ export function DriveDataTableList({
     },
     ...(sidebarView === 'shared' ? [{
       key: 'sharedBy',
-      label: 'Shared by',
+      label: t('drive.table.sharedBy'),
       width: 160,
       sortable: false,
       render: (item: DriveItem) => {
@@ -156,7 +158,7 @@ export function DriveDataTableList({
               </Tooltip>
             )}
             <Badge variant={sharedItem.sharePermission === 'edit' ? 'primary' : 'default'}>
-              {sharedItem.sharePermission === 'edit' ? 'Edit' : 'View'}
+              {sharedItem.sharePermission === 'edit' ? t('drive.sharing.shareEdit') : t('drive.sharing.shareView')}
             </Badge>
           </div>
         );
@@ -164,7 +166,7 @@ export function DriveDataTableList({
     } as DataTableColumn<DriveItem>] : []),
     {
       key: 'size',
-      label: 'Size',
+      label: t('drive.table.size'),
       icon: <HardDrive size={12} />,
       width: 100,
       sortable: true,
@@ -178,7 +180,7 @@ export function DriveDataTableList({
     },
     {
       key: 'date',
-      label: 'Modified',
+      label: t('drive.table.modified'),
       icon: <Clock size={12} />,
       width: 140,
       sortable: true,

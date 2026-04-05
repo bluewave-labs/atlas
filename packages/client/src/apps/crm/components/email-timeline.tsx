@@ -30,6 +30,7 @@ function stripHtml(html: string): string {
 }
 
 function EmailItem({ email }: { email: CrmEmail }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
   const bodyText = email.body || (email.bodyHtml ? stripHtml(email.bodyHtml) : null);
@@ -102,7 +103,7 @@ function EmailItem({ email }: { email: CrmEmail }) {
             whiteSpace: 'nowrap',
             marginTop: 2,
           }}>
-            {email.subject || '(no subject)'}
+            {email.subject || t('common.noSubject')}
           </div>
         </div>
       </button>
@@ -185,7 +186,7 @@ export function EmailTimeline({
       {/* Email list */}
       {isLoading ? (
         <div style={{ padding: 'var(--spacing-lg)', textAlign: 'center', color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)' }}>
-          Loading emails...
+          {t('common.loading')}
         </div>
       ) : !emails || emails.length === 0 ? (
         <div style={{ padding: 'var(--spacing-lg)', textAlign: 'center', color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)' }}>

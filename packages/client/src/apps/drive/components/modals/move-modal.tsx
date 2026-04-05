@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { HardDrive, FolderPlus } from 'lucide-react';
 import { Modal } from '../../../../components/ui/modal';
 import { Button } from '../../../../components/ui/button';
@@ -27,6 +28,7 @@ export function MoveModal({
   setTargetId,
   onSubmit,
 }: MoveModalProps) {
+  const { t } = useTranslation();
   return (
     <Modal open={open} onOpenChange={onOpenChange} width={400} title={title}>
       <div style={{ padding: 'var(--spacing-xl)', maxHeight: 400, overflowY: 'auto' }}>
@@ -49,7 +51,7 @@ export function MoveModal({
           }}
         >
           <HardDrive size={16} />
-          My drive (root)
+          {t('drive.modals.myDriveRoot')}
         </button>
 
         {folderTree.map((folder) => (
@@ -80,10 +82,10 @@ export function MoveModal({
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16, borderTop: '1px solid var(--color-border-secondary)', paddingTop: 16 }}>
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('drive.modals.cancel')}
           </Button>
           <Button variant="primary" onClick={onSubmit}>
-            Move here
+            {t('drive.modals.moveHere')}
           </Button>
         </div>
       </div>

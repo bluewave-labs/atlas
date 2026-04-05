@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Plus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useCreateTask } from '../hooks';
 import { Button } from '../../../components/ui/button';
 
@@ -8,6 +9,7 @@ export function NewHeadingCreator({
 }: {
   projectId: string;
 }) {
+  const { t } = useTranslation();
   const [isCreating, setIsCreating] = useState(false);
   const [title, setTitle] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -43,7 +45,7 @@ export function NewHeadingCreator({
         icon={<Plus size={14} />}
         onClick={() => setIsCreating(true)}
       >
-        Add section
+        {t('tasks.addSection')}
       </Button>
     );
   }
@@ -57,7 +59,7 @@ export function NewHeadingCreator({
         onChange={e => setTitle(e.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={handleSubmit}
-        placeholder="Section name..."
+        placeholder={t('tasks.sectionNamePlaceholder')}
       />
     </div>
   );

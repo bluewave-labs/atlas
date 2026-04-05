@@ -203,7 +203,7 @@ export function CrmPage() {
   const sectionTitle = useMemo(() => {
     switch (activeView) {
       case 'dashboard': return t('crm.sidebar.dashboard');
-      case 'leads': return 'Leads';
+      case 'leads': return t('crm.leads.title');
       case 'pipeline': return t('crm.sidebar.pipeline');
       case 'deals': return t('crm.sidebar.deals');
       case 'contacts': return t('crm.sidebar.contacts');
@@ -211,7 +211,7 @@ export function CrmPage() {
       case 'activities': return t('crm.sidebar.activities');
       case 'automations': return t('crm.sidebar.automations');
       case 'permissions': return t('crm.sidebar.permissions');
-      case 'forecast': return 'Forecast';
+      case 'forecast': return t('crm.forecast.title');
       case 'leadForms': return t('crm.leadForms.title');
     }
   }, [activeView, t]);
@@ -356,12 +356,12 @@ export function CrmPage() {
           )}
           {selectedIds.size === 2 && activeView === 'contacts' && (
             <Button variant="secondary" size="sm" onClick={() => setShowMergeContacts(true)}>
-              <Merge size={14} style={{ marginRight: 4 }} />Merge
+              <Merge size={14} style={{ marginRight: 4 }} />{t('crm.merge.merge')}
             </Button>
           )}
           {selectedIds.size === 2 && activeView === 'companies' && (
             <Button variant="secondary" size="sm" onClick={() => setShowMergeCompanies(true)}>
-              <Merge size={14} style={{ marginRight: 4 }} />Merge
+              <Merge size={14} style={{ marginRight: 4 }} />{t('crm.merge.merge')}
             </Button>
           )}
           {((activeView === 'deals' && canAccess(myRole, 'deals', 'delete')) ||

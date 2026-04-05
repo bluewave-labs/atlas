@@ -24,6 +24,7 @@ function EventStatusDot({ status }: { status: string }) {
 }
 
 function EventItem({ event }: { event: CrmCalendarEvent }) {
+  const { t } = useTranslation();
   const isCancelled = event.status === 'cancelled';
   const startDate = new Date(event.startTime);
   const endDate = new Date(event.endTime);
@@ -54,7 +55,7 @@ function EventItem({ event }: { event: CrmCalendarEvent }) {
           fontFamily: 'var(--font-family)',
           textDecoration: isCancelled ? 'line-through' : 'none',
         }}>
-          {event.summary || '(no title)'}
+          {event.summary || t('common.noSubject')}
         </div>
 
         <div style={{
@@ -99,7 +100,7 @@ function EventItem({ event }: { event: CrmCalendarEvent }) {
           target="_blank"
           rel="noopener noreferrer"
           style={{ color: 'var(--color-text-tertiary)', flexShrink: 0, paddingTop: 2 }}
-          title="Open in Google Calendar"
+          title={t('crm.calendar.openInGoogle')}
         >
           <ExternalLink size={14} />
         </a>
@@ -185,7 +186,7 @@ export function CalendarEvents({
 
       {isLoading ? (
         <div style={{ padding: 'var(--spacing-lg)', textAlign: 'center', color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)' }}>
-          Loading events...
+          {t('common.loading')}
         </div>
       ) : (!events || events.length === 0) ? (
         <div style={{ padding: 'var(--spacing-lg)', textAlign: 'center', color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)' }}>
@@ -242,7 +243,7 @@ export function CalendarEvents({
                   onClick={() => setShowAllPast(true)}
                   style={{ marginTop: 'var(--spacing-sm)' }}
                 >
-                  Show {past.length - 5} more
+                  {t('crm.calendar.showMore', { count: past.length - 5 })}
                 </Button>
               )}
             </div>

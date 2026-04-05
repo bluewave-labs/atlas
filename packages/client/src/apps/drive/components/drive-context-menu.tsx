@@ -56,13 +56,13 @@ export function DriveContextMenuView({
         <>
           <ContextMenuItem
             icon={<RotateCcw size={14} />}
-            label="Restore"
+            label={t('drive.context.restore')}
             onClick={() => handleRestore(contextMenu.item)}
           />
           <ContextMenuSeparator />
           <ContextMenuItem
             icon={<Trash2 size={14} />}
-            label="Delete permanently"
+            label={t('drive.context.deletePermanently')}
             onClick={() => handlePermanentDelete(contextMenu.item)}
             destructive
           />
@@ -72,7 +72,7 @@ export function DriveContextMenuView({
           {contextMenu.item.linkedResourceType && contextMenu.item.linkedResourceId && (
             <ContextMenuItem
               icon={<ExternalLink size={14} />}
-              label="Open in editor"
+              label={t('drive.context.openInEditor')}
               onClick={() => {
                 const item = contextMenu.item;
                 setContextMenu(null);
@@ -85,20 +85,20 @@ export function DriveContextMenuView({
           {contextMenu.item.type === 'file' && !contextMenu.item.linkedResourceType && (
             <ContextMenuItem
               icon={<Download size={14} />}
-              label="Download"
+              label={t('drive.context.download')}
               onClick={() => handleDownload(contextMenu.item)}
             />
           )}
           {contextMenu.item.type === 'folder' && (
             <ContextMenuItem
               icon={<FileArchive size={14} />}
-              label="Download as ZIP"
+              label={t('drive.context.downloadAsZip')}
               onClick={() => handleDownloadZip(contextMenu.item)}
             />
           )}
           <ContextMenuItem
             icon={<Pencil size={14} />}
-            label="Rename"
+            label={t('drive.context.rename')}
             onClick={() => handleRename(contextMenu.item)}
           />
           {contextMenu.item.type === 'folder' && (
@@ -136,7 +136,7 @@ export function DriveContextMenuView({
           {contextMenu.item.type === 'file' && (
             <ContextMenuItem
               icon={<Upload size={14} />}
-              label="Upload new version"
+              label={t('drive.context.uploadNewVersion')}
               onClick={() => {
                 setReplaceTargetId(contextMenu.item.id);
                 setContextMenu(null);
@@ -147,7 +147,7 @@ export function DriveContextMenuView({
           <ContextMenuSeparator />
           <ContextMenuItem
             icon={<Trash2 size={14} />}
-            label="Move to trash"
+            label={t('drive.context.moveToTrash')}
             onClick={() => handleMoveToTrash(contextMenu.item)}
             destructive
           />

@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useMyAppPermission } from '../../../hooks/use-app-permissions';
 import { useSubtasks, useCreateSubtask, useUpdateSubtask, useDeleteSubtask } from '../hooks';
 import { IconButton } from '../../../components/ui/icon-button';
 
 export function SubtaskSection({ taskId }: { taskId: string }) {
+  const { t } = useTranslation();
   const { data: tasksPerm } = useMyAppPermission('tasks');
   const canDelete = !tasksPerm || tasksPerm.role === 'admin';
   const { data: subtasks = [] } = useSubtasks(taskId);
@@ -26,11 +28,11 @@ export function SubtaskSection({ taskId }: { taskId: string }) {
     <div className="px-4 py-3 border-t border-gray-100">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Subtasks {subtasks.length > 0 && `(${completedCount}/${subtasks.length})`}
+          {t('tasks.subtasks.title')} {subtasks.length > 0 && `(${completedCount}/${subtasks.length})`}
         </span>
         <IconButton
           icon={<Plus size={14} />}
-          label="Add subtask"
+          label={t('tasks.subtasks.add')}
           size={24}
           tooltip={false}
           onClick={() => setIsAdding(!isAdding)}
@@ -67,7 +69,7 @@ export function SubtaskSection({ taskId }: { taskId: string }) {
             {canDelete && (
               <IconButton
                 icon={<Trash2 size={12} />}
-                label="Delete subtask"
+                label={t('tasks.subtasks.delete')}
                 size={22}
                 destructive
                 tooltip={false}
@@ -87,7 +89,7 @@ export function SubtaskSection({ taskId }: { taskId: string }) {
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') setIsAdding(false); }}
-            placeholder="Add a subtask..."
+            placeholder={t('tasks.subtasks.placeholder')}
             className="flex-1 text-sm px-2 py-1 border border-gray-200 rounded focus:outline-none focus:border-blue-400"
             autoFocus
           />

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Modal } from '../../../../components/ui/modal';
 import { Button } from '../../../../components/ui/button';
 
@@ -16,13 +17,14 @@ export function NewFolderModal({
   setFolderName,
   onSubmit,
 }: NewFolderModalProps) {
+  const { t } = useTranslation();
   return (
-    <Modal open={open} onOpenChange={onOpenChange} width={400} title="New folder">
+    <Modal open={open} onOpenChange={onOpenChange} width={400} title={t('drive.modals.newFolder')}>
       <div style={{ padding: 'var(--spacing-xl)' }}>
         <input
           value={folderName}
           onChange={(e) => setFolderName(e.target.value)}
-          placeholder="Folder name"
+          placeholder={t('drive.modals.folderName')}
           autoFocus
           onKeyDown={(e) => { if (e.key === 'Enter') onSubmit(); }}
           style={{
@@ -40,7 +42,7 @@ export function NewFolderModal({
         />
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('drive.modals.cancel')}
           </Button>
           <Button
             variant="primary"
@@ -51,7 +53,7 @@ export function NewFolderModal({
               cursor: folderName.trim() ? 'pointer' : 'not-allowed',
             }}
           >
-            Create
+            {t('drive.modals.create')}
           </Button>
         </div>
       </div>

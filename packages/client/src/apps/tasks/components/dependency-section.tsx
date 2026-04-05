@@ -99,7 +99,7 @@ export function DependencySection({ taskId, allTasks }: { taskId: string; allTas
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
             }}>
-              {dep.blockerTitle || 'Untitled'}
+              {dep.blockerTitle || t('tasks.untitled')}
             </span>
             <IconButton
               icon={<X size={12} />}
@@ -176,7 +176,7 @@ export function DependencySection({ taskId, allTasks }: { taskId: string; allTas
                     <CircleDot size={12} color="var(--color-text-tertiary)" />
                   )}
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {task.title || 'Untitled'}
+                    {task.title || t('tasks.untitled')}
                   </span>
                 </button>
               ))}

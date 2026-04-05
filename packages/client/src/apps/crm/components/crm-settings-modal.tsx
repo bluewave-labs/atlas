@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   DndContext,
   closestCenter,
@@ -67,6 +68,7 @@ function SortableStageRow({
   onCancelEdit: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation();
   const {
     attributes,
     listeners,
@@ -115,7 +117,7 @@ function SortableStageRow({
               onChange={(e) => onEditRottingDaysChange(e.target.value)}
               size="sm"
               type="number"
-              placeholder="Rotting days"
+              placeholder={t('crm.deals.rottingDays')}
               style={{ width: 90 }}
             />
           </div>
@@ -134,8 +136,8 @@ function SortableStageRow({
                 />
               ))}
             </div>
-            <Button variant="primary" size="sm" onClick={onSaveEdit}>Save</Button>
-            <Button variant="ghost" size="sm" onClick={onCancelEdit}>Cancel</Button>
+            <Button variant="primary" size="sm" onClick={onSaveEdit}>{t('common.save')}</Button>
+            <Button variant="ghost" size="sm" onClick={onCancelEdit}>{t('common.cancel')}</Button>
           </div>
         </div>
       ) : (
@@ -154,7 +156,7 @@ function SortableStageRow({
               {stage.rottingDays}d
             </span>
           )}
-          <IconButton icon={<Trash2 size={12} />} label="Delete stage" size={24} destructive onClick={onDelete} />
+          <IconButton icon={<Trash2 size={12} />} label={t('crm.settings.deleteStage')} size={24} destructive onClick={onDelete} />
         </>
       )}
     </div>
@@ -164,6 +166,7 @@ function SortableStageRow({
 // ─── Stages Panel ──────────────────────────────────────────────────
 
 export function CrmStagesPanel() {
+  const { t } = useTranslation();
   const { data: stagesData } = useStages();
   const stages = stagesData?.stages ?? [];
   const createStage = useCreateStage();
@@ -223,7 +226,7 @@ export function CrmStagesPanel() {
 
   return (
     <div>
-      <SettingsSection title="Pipeline stages" description="Drag to reorder. Click a stage name to edit.">
+      <SettingsSection title={t('crm.settings.pipelineStages')} description={t('crm.settings.pipelineStagesDesc')}>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={stages.map((s) => s.id)} strategy={verticalListSortingStrategy}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
@@ -254,7 +257,7 @@ export function CrmStagesPanel() {
             <Input
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              placeholder="Stage name"
+              placeholder={t('crm.settings.stageName')}
               size="sm"
               style={{ flex: 1 }}
               autoFocus
@@ -274,12 +277,12 @@ export function CrmStagesPanel() {
                 />
               ))}
             </div>
-            <Button variant="primary" size="sm" onClick={handleAdd} disabled={!newName.trim()}>Add</Button>
-            <Button variant="ghost" size="sm" onClick={() => { setShowAdd(false); setNewName(''); }}>Cancel</Button>
+            <Button variant="primary" size="sm" onClick={handleAdd} disabled={!newName.trim()}>{t('crm.settings.add')}</Button>
+            <Button variant="ghost" size="sm" onClick={() => { setShowAdd(false); setNewName(''); }}>{t('common.cancel')}</Button>
           </div>
         ) : (
           <Button variant="ghost" size="sm" icon={<Plus size={14} />} onClick={() => setShowAdd(true)} style={{ alignSelf: 'flex-start', marginTop: 'var(--spacing-xs)' }}>
-            Add stage
+            {t('crm.settings.addStage')}
           </Button>
         )}
       </SettingsSection>
@@ -292,6 +295,7 @@ export function CrmStagesPanel() {
 const TYPE_ICONS = ['sticky-note', 'phone-call', 'mail', 'calendar-days', 'target', 'trophy'];
 
 export function CrmActivityTypesPanel() {
+  const { t } = useTranslation();
   const { data: types } = useActivityTypes();
   const activityTypes = types ?? [];
   const createType = useCreateActivityType();
@@ -343,11 +347,11 @@ export function CrmActivityTypesPanel() {
 
   return (
     <div>
-      <SettingsSection title="Activity types" description="Customize the types of activities you can log.">
+      <SettingsSection title={t('crm.settings.activityTypes')} description={t('crm.settings.activityTypesDesc')}>
         {activityTypes.length === 0 && (
           <div style={{ padding: 'var(--spacing-md)', textAlign: 'center' }}>
             <Button variant="secondary" size="sm" onClick={() => seedTypes.mutate()}>
-              Create default types
+              {t('crm.settings.createDefaultTypes')}
             </Button>
           </div>
         )}
@@ -375,8 +379,8 @@ export function CrmActivityTypesPanel() {
                             }} />
                           ))}
                         </div>
-                        <Button variant="primary" size="sm" onClick={saveEdit}>Save</Button>
-                        <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>Cancel</Button>
+                        <Button variant="primary" size="sm" onClick={saveEdit}>{t('common.save')}</Button>
+                        <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>{t('common.cancel')}</Button>
                       </div>
                     ) : (
                       <>
@@ -386,7 +390,7 @@ export function CrmActivityTypesPanel() {
                         <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
                           {at.icon}
                         </span>
-                        <IconButton icon={<Trash2 size={12} />} label="Delete type" size={24} destructive onClick={() => deleteType.mutate(at.id)} />
+                        <IconButton icon={<Trash2 size={12} />} label={t('crm.settings.deleteType')} size={24} destructive onClick={() => deleteType.mutate(at.id)} />
                       </>
                     )}
                   </div>
@@ -397,13 +401,13 @@ export function CrmActivityTypesPanel() {
         </DndContext>
         {showAdd ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', padding: '8px var(--spacing-sm)' }}>
-            <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Type name" size="sm" style={{ flex: 1 }} autoFocus onKeyDown={(e) => e.key === 'Enter' && handleAdd()} />
-            <Button variant="primary" size="sm" onClick={handleAdd} disabled={!newName.trim()}>Add</Button>
-            <Button variant="ghost" size="sm" onClick={() => setShowAdd(false)}>Cancel</Button>
+            <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t('crm.settings.typeName')} size="sm" style={{ flex: 1 }} autoFocus onKeyDown={(e) => e.key === 'Enter' && handleAdd()} />
+            <Button variant="primary" size="sm" onClick={handleAdd} disabled={!newName.trim()}>{t('crm.settings.add')}</Button>
+            <Button variant="ghost" size="sm" onClick={() => setShowAdd(false)}>{t('common.cancel')}</Button>
           </div>
         ) : (
           <Button variant="ghost" size="sm" icon={<Plus size={14} />} onClick={() => setShowAdd(true)} style={{ marginTop: 'var(--spacing-xs)' }}>
-            Add activity type
+            {t('crm.settings.addActivityType')}
           </Button>
         )}
       </SettingsSection>
@@ -414,29 +418,30 @@ export function CrmActivityTypesPanel() {
 // ─── General Panel ─────────────────────────────────────────────────
 
 export function CrmGeneralPanel() {
+  const { t } = useTranslation();
   const { defaultView, setDefaultView } = useCrmSettingsStore();
   const { currencySymbol, setCurrencySymbol } = useSettingsStore();
 
   return (
     <div>
-      <SettingsSection title="General">
-        <SettingsRow label="Default view" description="Which section to show when opening CRM">
+      <SettingsSection title={t('crm.settings.general')}>
+        <SettingsRow label={t('crm.settings.defaultView')} description={t('crm.settings.defaultViewDesc')}>
           <SettingsSelect
             value={defaultView}
             options={[
-              { value: 'dashboard', label: 'Dashboard' },
-              { value: 'leads', label: 'Leads' },
-              { value: 'pipeline', label: 'Pipeline' },
-              { value: 'deals', label: 'Deals' },
-              { value: 'contacts', label: 'Contacts' },
-              { value: 'companies', label: 'Companies' },
-              { value: 'activities', label: 'Activities' },
-              { value: 'forecast', label: 'Forecast' },
+              { value: 'dashboard', label: t('crm.sidebar.dashboard') },
+              { value: 'leads', label: t('crm.leads.title') },
+              { value: 'pipeline', label: t('crm.sidebar.pipeline') },
+              { value: 'deals', label: t('crm.sidebar.deals') },
+              { value: 'contacts', label: t('crm.sidebar.contacts') },
+              { value: 'companies', label: t('crm.sidebar.companies') },
+              { value: 'activities', label: t('crm.sidebar.activities') },
+              { value: 'forecast', label: t('crm.forecast.title') },
             ]}
             onChange={setDefaultView}
           />
         </SettingsRow>
-        <SettingsRow label="Currency" description="Currency symbol used for deal values">
+        <SettingsRow label={t('crm.settings.currency')} description={t('crm.settings.currencyDesc')}>
           <SettingsSelect
             value={currencySymbol}
             options={[
@@ -459,6 +464,7 @@ export function CrmGeneralPanel() {
 // ─── Integrations Panel ───────────────────────────────────────────
 
 export function CrmIntegrationsPanel() {
+  const { t } = useTranslation();
   const { data: status, isLoading, refetch } = useGoogleSyncStatus();
   const startSync = useStartGoogleSync();
   const stopSync = useStopGoogleSync();
@@ -466,7 +472,7 @@ export function CrmIntegrationsPanel() {
   if (isLoading) {
     return (
       <div style={{ padding: 'var(--spacing-xl)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
-        Loading...
+        {t('common.loading')}
       </div>
     );
   }
@@ -491,33 +497,33 @@ export function CrmIntegrationsPanel() {
 
   return (
     <div>
-      <SettingsSection title="Google integration" description="Connect your Google account to sync emails and calendar events with CRM.">
+      <SettingsSection title={t('crm.settings.googleIntegration')} description={t('crm.settings.googleIntegrationDesc')}>
         {!status?.googleConfigured ? (
           <div style={{ padding: 'var(--spacing-lg)', background: 'var(--color-bg-tertiary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border-secondary)' }}>
             <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
-              Google integration is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables to enable.
+              {t('crm.google.notConfigured')}
             </div>
           </div>
         ) : !status?.connected ? (
-          <SettingsRow label="Google account" description="Connect to sync emails and calendar events">
+          <SettingsRow label={t('crm.settings.googleAccount')} description={t('crm.settings.googleAccountDesc')}>
             <Button variant="primary" size="sm" onClick={handleConnect}>
-              Connect Google
+              {t('crm.google.connect')}
             </Button>
           </SettingsRow>
         ) : (
           <>
-            <SettingsRow label="Connection" description="Your Google account is connected">
+            <SettingsRow label={t('crm.settings.connection')} description={t('crm.settings.connectionDesc')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-                <Badge variant="success">Connected</Badge>
+                <Badge variant="success">{t('crm.google.connected')}</Badge>
                 <Button variant="danger" size="sm" onClick={handleDisconnect}>
-                  Disconnect
+                  {t('crm.google.disconnect')}
                 </Button>
               </div>
             </SettingsRow>
 
             <SettingsRow
-              label="Sync status"
-              description={status.syncError || (status.lastSync ? `Last synced: ${formatRelativeDate(status.lastSync)}` : 'Not yet synced')}
+              label={t('crm.settings.syncStatus')}
+              description={status.syncError || (status.lastSync ? `${t('crm.settings.lastSynced')}: ${formatRelativeDate(status.lastSync)}` : t('crm.settings.notYetSynced'))}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
                 <Badge variant={status.syncStatus === 'active' ? 'success' : status.syncStatus === 'error' ? 'error' : status.syncStatus === 'syncing' ? 'warning' : 'default'}>
@@ -530,11 +536,11 @@ export function CrmIntegrationsPanel() {
                     onClick={() => startSync.mutate()}
                     disabled={status.syncStatus === 'syncing' || startSync.isPending}
                   >
-                    {status.syncStatus === 'syncing' ? 'Syncing...' : 'Sync now'}
+                    {status.syncStatus === 'syncing' ? t('crm.google.syncing') : t('crm.google.syncNow')}
                   </Button>
                 ) : (
                   <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
-                    Redis required for sync
+                    {t('crm.google.redisRequired')}
                   </span>
                 )}
               </div>

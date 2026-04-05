@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import {
   Check, ChevronRight, GripVertical, Hash, Repeat, FileText,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { Task, TaskProject, TenantUser } from '@atlasmail/shared';
 import { useTasksSettingsStore } from '../settings-store';
 import { useAuthStore } from '../../../stores/auth-store';
@@ -53,6 +54,7 @@ export function TaskItem({
   showCheckbox?: boolean;
   isBlocked?: boolean;
 }) {
+  const { t } = useTranslation();
   const tasksSettings = useTasksSettingsStore();
   const currentUserId = useAuthStore((s) => s.account?.userId);
   const [completing, setCompleting] = useState(false);
@@ -143,7 +145,7 @@ export function TaskItem({
       <button
         className={`task-checkbox${task.status === 'completed' || completing ? ' completed' : ''}`}
         onClick={handleComplete}
-        aria-label={task.status === 'completed' ? 'Mark incomplete' : 'Mark complete'}
+        aria-label={task.status === 'completed' ? t('tasks.markIncomplete') : t('tasks.markComplete')}
       >
         {(task.status === 'completed' || completing) && (
           <Check size={12} color="#fff" strokeWidth={3} className="task-check-icon" />
@@ -171,7 +173,7 @@ export function TaskItem({
               className={`task-title-text${task.status === 'completed' ? ' completed' : ''}`}
               onClick={handleTitleClick}
             >
-              {task.title || 'Untitled'}
+              {task.title || t('tasks.untitled')}
             </span>
           )}
           {task.subtasks && task.subtasks.length > 0 && (
@@ -180,18 +182,18 @@ export function TaskItem({
             </span>
           )}
           <WhenBadge when={task.when} dueDate={task.dueDate} showBadge={showWhenBadge} />
-          {isBlocked && <Badge variant="warning">Blocked</Badge>}
+          {isBlocked && <Badge variant="warning">{t('tasks.blocked')}</Badge>}
         </div>
 
         {((showDueDate && task.dueDate) || (showProject && project) || task.tags.length > 0 || task.recurrenceRule) && (
           <div className="task-meta-row">
             {showDueDate && task.dueDate && (
               <span className={getDueBadgeClass(task.dueDate)}>
-                {formatDueDate(task.dueDate)}
+                {formatDueDate(task.dueDate, t)}
               </span>
             )}
             {task.recurrenceRule && (
-              <span className="task-meta-recurrence" title={`Repeats ${task.recurrenceRule}`}>
+              <span className="task-meta-recurrence" title={t('tasks.repeats', { rule: task.recurrenceRule })}>
                 <Repeat size={10} />
               </span>
             )}
@@ -229,7 +231,7 @@ export function TaskItem({
       {/* Creator badge for team tasks */}
       {task.visibility === 'team' && task.userId !== currentUserId && (task as any).creatorName && (
         <span style={{ fontSize: 10, color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', flexShrink: 0 }}>
-          by {(task as any).creatorName}
+          {t('tasks.createdBy', { name: (task as any).creatorName })}
         </span>
       )}
 

@@ -134,7 +134,7 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
   if (!deal) {
     return (
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
-        Deal not found
+        {t('crm.deals.notFound')}
       </div>
     );
   }
@@ -147,7 +147,7 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
         padding: 'var(--spacing-sm) var(--spacing-lg)',
         borderBottom: '1px solid var(--color-border-secondary)', flexShrink: 0,
       }}>
-        <IconButton icon={<ArrowLeft size={16} />} label="Back" size={28} onClick={onBack} />
+        <IconButton icon={<ArrowLeft size={16} />} label={t('common.previous')} size={28} onClick={onBack} />
         <span style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
           {deal.title}
         </span>
@@ -157,22 +157,22 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
         {!deal.wonAt && !deal.lostAt && (
           <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
             <Button variant="primary" size="sm" icon={<Trophy size={13} />} onClick={() => markWon.mutate(deal.id)}>
-              Won
+              {t('crm.deals.markWon')}
             </Button>
             <Button variant="danger" size="sm" icon={<XCircle size={13} />} onClick={() => setShowMarkLost(true)}>
-              Lost
+              {t('crm.deals.markLost')}
             </Button>
           </div>
         )}
-        {deal.wonAt && <Badge variant="success">Won {formatDate(deal.wonAt)}</Badge>}
-        {deal.lostAt && <Badge variant="error">Lost {formatDate(deal.lostAt)}</Badge>}
+        {deal.wonAt && <Badge variant="success">{t('crm.deals.wonOn')} {formatDate(deal.wonAt)}</Badge>}
+        {deal.lostAt && <Badge variant="error">{t('crm.deals.lostOn')} {formatDate(deal.lostAt)}</Badge>}
 
         {/* Navigation */}
         <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
           {currentIdx >= 0 ? `${currentIdx + 1} / ${deals.length}` : ''}
         </span>
-        <IconButton icon={<ChevronLeft size={16} />} label="Previous" size={28} onClick={() => canPrev && onNavigate(deals[currentIdx - 1].id)} style={{ opacity: canPrev ? 1 : 0.3 }} />
-        <IconButton icon={<ChevronRight size={16} />} label="Next" size={28} onClick={() => canNext && onNavigate(deals[currentIdx + 1].id)} style={{ opacity: canNext ? 1 : 0.3 }} />
+        <IconButton icon={<ChevronLeft size={16} />} label={t('common.previous')} size={28} onClick={() => canPrev && onNavigate(deals[currentIdx - 1].id)} style={{ opacity: canPrev ? 1 : 0.3 }} />
+        <IconButton icon={<ChevronRight size={16} />} label={t('common.next')} size={28} onClick={() => canNext && onNavigate(deals[currentIdx + 1].id)} style={{ opacity: canNext ? 1 : 0.3 }} />
       </div>
 
       {/* Stage pipeline */}
@@ -215,7 +215,7 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
               <Select
                 value={deal.contactId || ''}
                 onChange={(v) => updateDeal.mutate({ id: deal.id, contactId: v || null })}
-                options={[{ value: '', label: 'None' }, ...contacts.map(c => ({ value: c.id, label: c.name }))]}
+                options={[{ value: '', label: t('crm.deals.noneAssigned') }, ...contacts.map(c => ({ value: c.id, label: c.name }))]}
                 size="sm"
               />
             </div>
@@ -226,7 +226,7 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
               <Select
                 value={deal.companyId || ''}
                 onChange={(v) => updateDeal.mutate({ id: deal.id, companyId: v || null })}
-                options={[{ value: '', label: 'None' }, ...companies.map(c => ({ value: c.id, label: c.name }))]}
+                options={[{ value: '', label: t('crm.deals.noneAssigned') }, ...companies.map(c => ({ value: c.id, label: c.name }))]}
                 size="sm"
               />
             </div>
@@ -252,7 +252,7 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
           {/* Won/Lost info */}
           {deal.lostAt && deal.lostReason && (
             <div style={{ padding: 'var(--spacing-md)', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--color-error)' }}>
-              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-semibold)', textTransform: 'uppercase', marginBottom: 4 }}>Lost reason</div>
+              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-semibold)', textTransform: 'uppercase', marginBottom: 4 }}>{t('crm.deals.lostReason')}</div>
               <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>{deal.lostReason}</div>
             </div>
           )}
@@ -270,7 +270,7 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
           {/* Delete */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 'var(--spacing-lg)' }}>
             <Button variant="danger" size="sm" icon={<Trash2 size={14} />} onClick={() => setShowDeleteConfirm(true)}>
-              Delete deal
+              {t('crm.deals.deleteDeal')}
             </Button>
           </div>
         </div>
@@ -307,13 +307,13 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
             <Input
               value={newActivityBody}
               onChange={(e) => setNewActivityBody(e.target.value)}
-              placeholder="Log an activity..."
+              placeholder={t('crm.activities.logActivity')}
               size="sm"
               style={{ flex: 1 }}
               onKeyDown={(e) => { if (e.key === 'Enter') handleLogActivity(); }}
             />
             <Button variant="primary" size="sm" onClick={handleLogActivity} disabled={!newActivityBody.trim()}>
-              Log
+              {t('crm.activities.logActivity')}
             </Button>
           </div>
 
@@ -321,7 +321,7 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
             {activities.length === 0 ? (
               <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', padding: 'var(--spacing-lg) 0', textAlign: 'center' }}>
-                No activities yet
+                {t('crm.activities.noActivities')}
               </div>
             ) : (
               activities.slice(0, 20).map((activity) => (
@@ -354,9 +354,9 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
       <ConfirmDialog
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}
-        title="Delete deal"
-        description={`Are you sure you want to delete "${deal.title}"? This action cannot be undone.`}
-        confirmLabel="Delete"
+        title={t('crm.deals.deleteDeal')}
+        description={t('crm.confirm.deleteDeal', { name: deal.title })}
+        confirmLabel={t('common.delete')}
         destructive
         onConfirm={() => { deleteDeal.mutate(deal.id); onBack(); }}
       />
