@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, ExternalLink } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { api } from '../../lib/api-client';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -11,6 +11,8 @@ import {
   SettingsRow,
 } from './settings-primitives';
 import { useAuthStore } from '../../stores/auth-store';
+import { useToastStore } from '../../stores/toast-store';
+import { useGoogleDriveStatus } from '../../apps/drive/hooks';
 
 export function IntegrationsPanel() {
   const { t } = useTranslation();
@@ -18,6 +20,7 @@ export function IntegrationsPanel() {
   const tenantRole = useAuthStore((s) => s.tenantRole);
   const isAdmin = isSuperAdmin || tenantRole === 'owner' || tenantRole === 'admin';
   const [connectingDrive, setConnectingDrive] = useState(false);
+  const addToast = useToastStore((s) => s.addToast);
 
   const { data: status, isLoading, refetch } = useQuery({
     queryKey: ['integrations', 'google-status'],
@@ -38,21 +41,15 @@ export function IntegrationsPanel() {
     staleTime: 30_000,
   });
 
-  const driveStatus = useQuery({
-    queryKey: ['drive', 'google', 'status'],
-    queryFn: async () => {
-      const { data } = await api.get('/drive/google/status');
-      return data.data as { connected: boolean; driveScoped: boolean };
-    },
-    staleTime: 30_000,
-    enabled: !!status?.connected,
-  });
+  const driveStatus = useGoogleDriveStatus();
 
   const handleConnect = async () => {
     try {
       const { data } = await api.get('/auth/google/connect');
       window.open(data.data.url, '_blank', 'width=600,height=700');
-    } catch { /* handled */ }
+    } catch {
+      addToast({ type: 'error', message: t('settings.integrations.connectError', 'Failed to connect Google account') });
+    }
   };
 
   const handleConnectDrive = async () => {
@@ -60,21 +57,25 @@ export function IntegrationsPanel() {
     try {
       const { data } = await api.get('/drive/google/connect');
       window.open(data.data.url, '_blank', 'width=600,height=700');
-    } catch { /* handled */ }
-    setConnectingDrive(false);
+    } catch {
+      addToast({ type: 'error', message: t('settings.integrations.driveConnectError', 'Failed to connect Google Drive') });
+    } finally {
+      setConnectingDrive(false);
+    }
   };
 
   const handleDisconnect = async () => {
     try {
       await api.post('/auth/google/disconnect');
       refetch();
-    } catch { /* handled */ }
+    } catch {
+      addToast({ type: 'error', message: t('settings.integrations.disconnectError', 'Failed to disconnect Google account') });
+    }
   };
 
   if (isLoading) return <div />;
 
   return (
-    <div>
       <SettingsSection
         title={t('settings.integrations.google', 'Google')}
         description={t('settings.integrations.googleDesc', 'Connect Google for email sync, calendar sync, and Drive file import/export')}
@@ -178,6 +179,5 @@ export function IntegrationsPanel() {
           </>
         )}
       </SettingsSection>
-    </div>
   );
 }

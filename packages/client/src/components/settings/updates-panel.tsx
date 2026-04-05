@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Clock } from 'lucide-react';
@@ -19,7 +18,6 @@ interface UpdateStatus {
 export function UpdatesPanel() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [checkResult, setCheckResult] = useState<'idle' | 'checking' | 'success' | 'error'>('idle');
 
   const { data: status, isLoading } = useQuery({
     queryKey: ['updates', 'status'],
@@ -45,9 +43,6 @@ export function UpdatesPanel() {
       const { data } = await api.post('/updates/check');
       return data;
     },
-    onMutate: () => setCheckResult('checking'),
-    onSuccess: () => setCheckResult('success'),
-    onError: () => setCheckResult('error'),
   });
 
   const containerExists = status?.containerExists ?? false;
@@ -56,7 +51,6 @@ export function UpdatesPanel() {
   if (isLoading) return <div />;
 
   return (
-    <div>
       <SettingsSection
         title={t('settings.updates.title', 'Updates')}
         description={t('settings.updates.desc', 'Manage automatic updates for Atlas')}
@@ -106,24 +100,24 @@ export function UpdatesPanel() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  icon={<RefreshCw size={13} className={checkResult === 'checking' ? 'tables-spin' : undefined} />}
+                  icon={<RefreshCw size={13} className={checkNow.isPending ? 'tables-spin' : undefined} />}
                   onClick={() => checkNow.mutate()}
-                  disabled={checkResult === 'checking'}
+                  disabled={checkNow.isPending}
                 >
-                  {checkResult === 'checking'
+                  {checkNow.isPending
                     ? t('settings.updates.checking', 'Checking...')
                     : t('settings.updates.checkButton', 'Check now')}
                 </Button>
               </SettingsRow>
             )}
 
-            {checkResult === 'success' && (
+            {checkNow.isSuccess && (
               <AlertBanner variant="success">
                 {t('settings.updates.checkSuccess', 'Update check complete. If a new version is available it will be applied automatically.')}
               </AlertBanner>
             )}
 
-            {checkResult === 'error' && (
+            {checkNow.isError && (
               <AlertBanner variant="warning">
                 {t('settings.updates.checkError', 'Could not reach the update service. Try enabling auto-update first.')}
               </AlertBanner>
@@ -135,6 +129,5 @@ export function UpdatesPanel() {
           </AlertBanner>
         )}
       </SettingsSection>
-    </div>
   );
 }

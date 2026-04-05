@@ -9,6 +9,11 @@ import { logger } from '../../../utils/logger';
 
 const UPLOADS_DIR = path.join(__dirname, '../../../../uploads');
 
+// Ensure uploads directory exists at module load
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
 // Google Docs MIME type → export MIME type + file extension
 const GOOGLE_EXPORT_MAP: Record<string, { mimeType: string; ext: string }> = {
   'application/vnd.google-apps.document': {
@@ -84,7 +89,7 @@ export async function importFileFromGoogleDrive(
   // 1. Get file metadata
   const metaRes = await drive.files.get({
     fileId: googleFileId,
-    fields: 'id, name, mimeType, size',
+    fields: 'id, name, mimeType',
   });
 
   const meta = metaRes.data;
@@ -112,49 +117,50 @@ export async function importFileFromGoogleDrive(
   const storagePath = `${userId}_${Date.now()}_${safeName}`;
   const filePath = path.join(UPLOADS_DIR, storagePath);
 
-  // Ensure uploads directory exists
-  if (!fs.existsSync(UPLOADS_DIR)) {
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-  }
-
   let fileSize: number;
 
-  if (exportInfo) {
-    // Google Workspace doc — use export
-    const exportRes = await drive.files.export(
-      { fileId: googleFileId, mimeType: exportInfo.mimeType },
-      { responseType: 'stream' },
+  try {
+    if (exportInfo) {
+      // Google Workspace doc — use export
+      const exportRes = await drive.files.export(
+        { fileId: googleFileId, mimeType: exportInfo.mimeType },
+        { responseType: 'stream' },
+      );
+      const writeStream = fs.createWriteStream(filePath);
+      await pipeline(exportRes.data as unknown as Readable, writeStream);
+      fileSize = fs.statSync(filePath).size;
+    } else {
+      // Regular file — download via alt=media
+      const downloadRes = await drive.files.get(
+        { fileId: googleFileId, alt: 'media' },
+        { responseType: 'stream' },
+      );
+      const writeStream = fs.createWriteStream(filePath);
+      await pipeline(downloadRes.data as unknown as Readable, writeStream);
+      fileSize = fs.statSync(filePath).size;
+    }
+
+    // 4. Create driveItem record
+    const driveItem = await itemsService.uploadFile(userId, accountId, {
+      name: finalName,
+      type: 'file',
+      mimeType: finalMimeType,
+      size: fileSize,
+      storagePath,
+      parentId: targetParentId || null,
+    }, tenantId);
+
+    logger.info(
+      { userId, googleFileId, driveItemId: driveItem.id },
+      'Imported file from Google Drive',
     );
-    const writeStream = fs.createWriteStream(filePath);
-    await pipeline(exportRes.data as unknown as Readable, writeStream);
-    fileSize = fs.statSync(filePath).size;
-  } else {
-    // Regular file — download via alt=media
-    const downloadRes = await drive.files.get(
-      { fileId: googleFileId, alt: 'media' },
-      { responseType: 'stream' },
-    );
-    const writeStream = fs.createWriteStream(filePath);
-    await pipeline(downloadRes.data as unknown as Readable, writeStream);
-    fileSize = fs.statSync(filePath).size;
+
+    return driveItem;
+  } catch (err) {
+    // Clean up partially downloaded file
+    fs.unlink(filePath, () => {});
+    throw err;
   }
-
-  // 4. Create driveItem record
-  const driveItem = await itemsService.uploadFile(userId, accountId, {
-    name: finalName,
-    type: 'file',
-    mimeType: finalMimeType,
-    size: fileSize,
-    storagePath,
-    parentId: targetParentId || null,
-  }, tenantId);
-
-  logger.info(
-    { userId, googleFileId, driveItemId: driveItem.id },
-    'Imported file from Google Drive',
-  );
-
-  return driveItem;
 }
 
 // ─── Export an Atlas Drive file to Google Drive ─────────────────────
@@ -184,11 +190,12 @@ export async function exportToGoogleDrive(
   }
 
   const fileStream = fs.createReadStream(filePath);
+  const mimeType = item.mimeType ?? 'application/octet-stream';
 
   // 3. Upload to Google Drive
   const requestBody: Record<string, unknown> = {
     name: item.name,
-    mimeType: item.mimeType || 'application/octet-stream',
+    mimeType,
   };
   if (googleParentFolderId) {
     requestBody.parents = [googleParentFolderId];
@@ -197,7 +204,7 @@ export async function exportToGoogleDrive(
   const uploadRes = await drive.files.create({
     requestBody: requestBody as any,
     media: {
-      mimeType: item.mimeType || 'application/octet-stream',
+      mimeType,
       body: fileStream,
     },
     fields: 'id, webViewLink',

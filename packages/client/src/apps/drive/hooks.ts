@@ -596,7 +596,7 @@ export function useGoogleDriveStatus() {
   });
 }
 
-export function useGoogleDriveFiles(parentId?: string) {
+export function useGoogleDriveFiles(parentId?: string, enabled = true) {
   return useQuery({
     queryKey: ['drive', 'google', 'browse', parentId],
     queryFn: async () => {
@@ -605,7 +605,7 @@ export function useGoogleDriveFiles(parentId?: string) {
       const { data } = await api.get(`/drive/google/browse?${params}`);
       return data.data as Array<{ id: string; name: string; mimeType: string; size: number | null; modifiedTime: string; isFolder: boolean }>;
     },
-    enabled: false, // only fetch when user opens the modal
+    enabled,
   });
 }
 

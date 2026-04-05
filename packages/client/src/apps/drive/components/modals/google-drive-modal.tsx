@@ -10,6 +10,7 @@ import {
   useGoogleDriveFiles,
   useImportFromGoogleDrive,
 } from '../../hooks';
+import { formatBytes } from '../../../../lib/format';
 
 interface GoogleDriveModalProps {
   open: boolean;
@@ -30,13 +31,6 @@ function getFileIcon(mimeType: string, isFolder: boolean) {
   return <File size={16} style={{ color: '#64748b', flexShrink: 0 }} />;
 }
 
-function formatSize(bytes: number | null): string {
-  if (bytes === null || bytes === 0) return '';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-}
 
 export function GoogleDriveModal({ open, onClose, targetParentId }: GoogleDriveModalProps) {
   const { t } = useTranslation();
@@ -50,15 +44,12 @@ export function GoogleDriveModal({ open, onClose, targetParentId }: GoogleDriveM
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data: status, isLoading: statusLoading } = useGoogleDriveStatus();
-  const { data: files, isLoading: filesLoading, refetch } = useGoogleDriveFiles(currentFolderId);
+  const isConnectedAndScoped = !!(status?.connected && status?.driveScoped);
+  const { data: files, isLoading: filesLoading } = useGoogleDriveFiles(
+    currentFolderId,
+    open && isConnectedAndScoped,
+  );
   const importMutation = useImportFromGoogleDrive();
-
-  // Refetch files when modal opens or folder changes
-  useEffect(() => {
-    if (open && status?.connected && status?.driveScoped) {
-      refetch();
-    }
-  }, [open, currentFolderId, status?.connected, status?.driveScoped, refetch]);
 
   // Reset state when modal closes
   useEffect(() => {
@@ -276,7 +267,7 @@ export function GoogleDriveModal({ open, onClose, targetParentId }: GoogleDriveM
                           <ChevronRight size={14} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
                         ) : (
                           <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', flexShrink: 0 }}>
-                            {formatSize(file.size)}
+                            {formatBytes(file.size)}
                           </span>
                         )}
                       </div>
