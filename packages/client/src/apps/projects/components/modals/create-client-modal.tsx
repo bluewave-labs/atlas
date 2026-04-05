@@ -34,8 +34,8 @@ export function CreateClientModal({ open, onClose }: { open: boolean; onClose: (
       <Modal.Body>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
           <Input label={t('projects.clients.clientName')} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('projects.clients.clientNamePlaceholder')} autoFocus />
-          <Input label={t('projects.clients.email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="client@company.com" />
-          <Input label={t('projects.clients.phone')} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1-555-0100" />
+          <Input label={t('projects.clients.email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('projects.placeholder.email')} />
+          <Input label={t('projects.clients.phone')} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('projects.placeholder.phone')} />
           <Textarea label={t('projects.clients.address')} value={address} onChange={(e) => setAddress(e.target.value)} rows={2} />
         </div>
       </Modal.Body>

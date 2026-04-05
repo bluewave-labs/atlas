@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { useEditor } from '@tiptap/react';
 import type { SearchReplaceState } from '../extensions/search-replace';
 import {
@@ -23,6 +24,7 @@ export function SearchBar({
   onToggleReplace: () => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const storage = editor.storage.searchReplace as SearchReplaceState;
 
@@ -38,7 +40,7 @@ export function SearchBar({
           <input
             ref={searchInputRef}
             type="text"
-            placeholder="Find..."
+            placeholder={t('docs.find')}
             className="search-replace-input"
             value={storage.query}
             onChange={(e) => editor.commands.setSearchQuery(e.target.value)}
@@ -58,7 +60,7 @@ export function SearchBar({
         <span className="search-replace-count">
           {storage.matchCount > 0
             ? `${storage.activeIndex + 1} / ${storage.matchCount}`
-            : storage.query ? 'No results' : ''}
+            : storage.query ? t('docs.noResults', { query: storage.query }) : ''}
         </span>
         <button
           className="search-replace-btn"
@@ -91,7 +93,7 @@ export function SearchBar({
             <Replace size={13} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
             <input
               type="text"
-              placeholder="Replace..."
+              placeholder={t('docs.replace')}
               className="search-replace-input"
               value={storage.replaceText}
               onChange={(e) => editor.commands.setReplaceText(e.target.value)}
@@ -111,13 +113,13 @@ export function SearchBar({
             className="search-replace-btn search-replace-action"
             onClick={() => editor.commands.replaceCurrentMatch()}
           >
-            Replace
+            {t('docs.replaceBtn')}
           </button>
           <button
             className="search-replace-btn search-replace-action"
             onClick={() => editor.commands.replaceAllMatches()}
           >
-            All
+            {t('docs.replaceAll')}
           </button>
         </div>
       )}

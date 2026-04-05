@@ -187,7 +187,7 @@ export function SignerPanel({
               onClick={(e) => e.stopPropagation()}
             >
               <Input
-                placeholder="name@example.com"
+                placeholder={t('sign.send.emailPlaceholder')}
                 value={signer.email}
                 onChange={(e) => handleUpdateSigner(idx, 'email', e.target.value)}
                 size="sm"

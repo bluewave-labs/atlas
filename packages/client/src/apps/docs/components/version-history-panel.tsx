@@ -47,12 +47,12 @@ export function VersionHistoryPanel({
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <History size={16} style={{ color: 'var(--color-text-secondary)' }} />
           <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-primary)' }}>
-            Version history
+            {t('docs.versionHistory')}
           </span>
         </div>
         <IconButton
           icon={<X size={14} />}
-          label="Close"
+          label={t('common.close')}
           size={24}
           onClick={onClose}
         />
@@ -75,7 +75,7 @@ export function VersionHistoryPanel({
       <div style={{ flex: 1, overflow: 'auto', padding: '4px 0' }}>
         {isLoading ? (
           <div style={{ padding: 16, textAlign: 'center', color: 'var(--color-text-tertiary)', fontSize: 12 }}>
-            Loading...
+            {t('common.loading')}
           </div>
         ) : !versions || versions.length === 0 ? (
           <div style={{ padding: 16, textAlign: 'center', color: 'var(--color-text-tertiary)', fontSize: 12 }}>
@@ -102,6 +102,7 @@ function VersionRow({
   version: { id: string; title: string; createdAt: string };
   onRestore: () => void;
 }) {
+  const { t } = useTranslation();
   const [hovered, setHovered] = useState(false);
   const date = new Date(version.createdAt);
   const timeStr = date.toLocaleString(undefined, {
@@ -139,7 +140,7 @@ function VersionRow({
           onClick={onRestore}
           style={{ fontSize: 11, height: 24, padding: '0 8px' }}
         >
-          Restore
+          {t('docs.restore')}
         </Button>
       )}
     </div>

@@ -88,7 +88,7 @@ export function HolidaysView() {
                 <span style={{ flex: 1, fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
                   {h.name}
                 </span>
-                <Badge variant={h.type === 'public' ? 'error' : h.type === 'company' ? 'primary' : 'warning'}>{h.type}</Badge>
+                <Badge variant={h.type === 'public' ? 'error' : h.type === 'company' ? 'primary' : 'warning'}>{t(`hr.holidays.type${h.type.charAt(0).toUpperCase() + h.type.slice(1)}`)}</Badge>
                 {canDelete && <IconButton icon={<Trash2 size={14} />} label={t('common.delete')} size={26} destructive onClick={() => deleteHoliday.mutate(h.id)} />}
               </div>
             ))}
@@ -97,7 +97,7 @@ export function HolidaysView() {
           {showAddHoliday && (
             <div style={{ marginTop: 'var(--spacing-lg)', padding: 'var(--spacing-lg)', border: '1px solid var(--color-border-primary)', borderRadius: 'var(--radius-lg)' }}>
               <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
-                <Input label={t('hr.holidays.name')} value={hName} onChange={(e) => setHName(e.target.value)} placeholder="New Year's Day" style={{ flex: 1 }} autoFocus />
+                <Input label={t('hr.holidays.name')} value={hName} onChange={(e) => setHName(e.target.value)} placeholder={t('hr.placeholder.holidayName')} style={{ flex: 1 }} autoFocus />
                 <Input label={t('hr.holidays.date')} type="date" value={hDate} onChange={(e) => setHDate(e.target.value)} style={{ flex: 1 }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)', flex: 1 }}>
                   <label className="hr-field-label">{t('hr.fields.type')}</label>

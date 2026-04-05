@@ -85,11 +85,11 @@ export function DocumentView({
                 fontSize: 12,
               }}
             >
-              Change cover
+              {t('docs.changeCover')}
             </Button>
             <IconButton
               icon={<X size={12} />}
-              label="Remove cover"
+              label={t('docs.removeCover')}
               size={26}
               onClick={() => onCoverChange(null)}
               style={{
@@ -118,7 +118,7 @@ export function DocumentView({
           <div style={{ position: 'relative', display: 'inline-block', marginBottom: 8 }}>
             <IconButton
               icon={<span style={{ fontSize: 48, lineHeight: 1 }}>{doc.icon}</span>}
-              label="Change icon"
+              label={t('docs.changeIcon')}
               size={56}
               tooltip
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
@@ -154,7 +154,7 @@ export function DocumentView({
           {!doc.coverImage && (
             <button className="doc-meta-action-btn" onClick={() => setShowCoverPicker(!showCoverPicker)}>
               <ImageIcon size={14} />
-              Add cover
+              {t('docs.addCover')}
             </button>
           )}
         </div>
@@ -165,7 +165,7 @@ export function DocumentView({
           className="doc-inline-title"
           value={doc.title}
           onChange={(e) => onTitleChange(e.target.value)}
-          placeholder="Untitled"
+          placeholder={t('docs.untitled')}
           rows={1}
           style={{ resize: 'none' }}
           onKeyDown={(e) => {

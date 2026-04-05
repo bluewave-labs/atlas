@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MessageSquare, Check, Trash2, X } from 'lucide-react';
 import {
   useDocComments,
@@ -36,6 +37,7 @@ export function CommentSidebar({ docId, isOpen, onClose }: CommentSidebarProps) 
   const resolveComment = useResolveDocComment();
   const deleteComment = useDeleteDocComment();
   const [newComment, setNewComment] = useState('');
+  const { t } = useTranslation();
   const [showResolved, setShowResolved] = useState(false);
 
   const activeComments = comments.filter((c: DocumentComment) => !c.isResolved && !c.parentId);
@@ -77,7 +79,7 @@ export function CommentSidebar({ docId, isOpen, onClose }: CommentSidebarProps) 
             fontWeight: 'var(--font-weight-semibold)',
             color: 'var(--color-text-primary)',
           }}>
-            Comments
+            {t('docs.comments')}
           </span>
           {activeComments.length > 0 && (
             <span style={{
@@ -88,7 +90,7 @@ export function CommentSidebar({ docId, isOpen, onClose }: CommentSidebarProps) 
             </span>
           )}
         </div>
-        <IconButton icon={<X size={16} />} label="Close" size={24} onClick={onClose} />
+        <IconButton icon={<X size={16} />} label={t('common.close')} size={24} onClick={onClose} />
       </div>
 
       {/* New comment input */}
@@ -100,7 +102,7 @@ export function CommentSidebar({ docId, isOpen, onClose }: CommentSidebarProps) 
         <Textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
-          placeholder="Add a comment..."
+          placeholder={t('docs.addComment')}
           rows={2}
           style={{ resize: 'none', fontSize: 'var(--font-size-sm)' }}
           onKeyDown={(e) => {
@@ -110,7 +112,7 @@ export function CommentSidebar({ docId, isOpen, onClose }: CommentSidebarProps) 
         {newComment.trim() && (
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 'var(--spacing-sm)' }}>
             <Button variant="primary" size="sm" onClick={handleSubmit}>
-              Comment
+              {t('docs.comment')}
             </Button>
           </div>
         )}
@@ -125,7 +127,7 @@ export function CommentSidebar({ docId, isOpen, onClose }: CommentSidebarProps) 
             fontSize: 'var(--font-size-sm)',
             color: 'var(--color-text-tertiary)',
           }}>
-            No comments yet
+            {t('docs.noComments')}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
@@ -177,14 +179,14 @@ export function CommentSidebar({ docId, isOpen, onClose }: CommentSidebarProps) 
                     {!comment.isResolved && (
                       <IconButton
                         icon={<Check size={14} />}
-                        label="Resolve"
+                        label={t('docs.resolve')}
                         size={22}
                         onClick={() => resolveComment.mutate({ commentId: comment.id, docId })}
                       />
                     )}
                     <IconButton
                       icon={<Trash2 size={14} />}
-                      label="Delete"
+                      label={t('common.delete')}
                       size={22}
                       destructive
                       onClick={() => deleteComment.mutate({ commentId: comment.id, docId })}
@@ -210,7 +212,7 @@ export function CommentSidebar({ docId, isOpen, onClose }: CommentSidebarProps) 
             onClick={() => setShowResolved(!showResolved)}
             style={{ fontSize: 12 }}
           >
-            {showResolved ? 'Hide' : 'Show'} {resolvedComments.length} resolved
+            {showResolved ? t('docs.hideResolved', { count: resolvedComments.length }) : t('docs.showResolved', { count: resolvedComments.length })}
           </Button>
         </div>
       )}

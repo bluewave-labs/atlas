@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import * as pdfjsLib from 'pdfjs-dist';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
@@ -22,6 +23,7 @@ interface PageData {
 }
 
 export function PdfViewer({ url, scale = 1.5, onPageCount, renderOverlay, onPageImages, scrollToPage }: PdfViewerProps) {
+  const { t } = useTranslation();
   const [pages, setPages] = useState<PageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -104,7 +106,7 @@ export function PdfViewer({ url, scale = 1.5, onPageCount, renderOverlay, onPage
       } catch (err) {
         if (!cancelled) {
           console.error('PDF load error:', err);
-          setError('Failed to load PDF');
+          setError(t('sign.pdf.loading'));
           setLoading(false);
         }
       }
@@ -135,7 +137,7 @@ export function PdfViewer({ url, scale = 1.5, onPageCount, renderOverlay, onPage
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, color: 'var(--color-text-secondary)', fontFamily: 'var(--font-family)', fontSize: 'var(--font-size-sm)' }}>
-        Loading PDF...
+        {t('sign.pdf.loading')}
       </div>
     );
   }
@@ -188,7 +190,7 @@ export function PdfViewer({ url, scale = 1.5, onPageCount, renderOverlay, onPage
             </div>
           )}
           <div style={{ textAlign: 'center', marginTop: 4, fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
-            Page {page.pageNumber} of {pages.length}
+            {t('sign.pdf.pageOf', { current: page.pageNumber, total: pages.length })}
           </div>
         </div>
       ))}

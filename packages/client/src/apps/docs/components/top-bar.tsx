@@ -67,30 +67,30 @@ export function TopBar({
     const fullHtml = [
       '<!DOCTYPE html>',
       '<html>',
-      '<head><meta charset="utf-8"><title>' + (doc.title || 'Untitled') + '</title></head>',
+      '<head><meta charset="utf-8"><title>' + (doc.title || t('docs.untitled')) + '</title></head>',
       '<body>',
-      '<h1>' + (doc.title || 'Untitled') + '</h1>',
+      '<h1>' + (doc.title || t('docs.untitled')) + '</h1>',
       html,
       '</body>',
       '</html>',
     ].join('\n');
-    downloadFile(`${doc.title || 'Untitled'}.html`, fullHtml, 'text/html');
+    downloadFile(`${doc.title || t('docs.untitled')}.html`, fullHtml, 'text/html');
     setShowExport(false);
   };
 
   const handleExportMarkdown = () => {
     const md = `# ${doc.title}\n\n${htmlToMarkdown(html)}`;
-    downloadFile(`${doc.title || 'Untitled'}.md`, md, 'text/markdown');
+    downloadFile(`${doc.title || t('docs.untitled')}.md`, md, 'text/markdown');
     setShowExport(false);
   };
 
   const handleExportText = () => {
-    downloadFile(`${doc.title || 'Untitled'}.txt`, `${doc.title}\n\n${plainText}`, 'text/plain');
+    downloadFile(`${doc.title || t('docs.untitled')}.txt`, `${doc.title}\n\n${plainText}`, 'text/plain');
     setShowExport(false);
   };
 
   const handlePrint = () => {
-    const title = doc.title || 'Untitled';
+    const title = doc.title || t('docs.untitled');
     const printHtml = [
       '<!DOCTYPE html>',
       '<html>',
@@ -171,7 +171,7 @@ export function TopBar({
             >
               {crumb.icon && <span style={{ fontSize: 11 }}>{crumb.icon}</span>}
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {crumb.title || 'Untitled'}
+                {crumb.title || t('docs.untitled')}
               </span>
             </Button>
             <ChevronRight size={10} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
@@ -190,7 +190,7 @@ export function TopBar({
           }}
         >
           {doc.icon && <span style={{ fontSize: 11 }}>{doc.icon}</span>}
-          {doc.title || 'Untitled'}
+          {doc.title || t('docs.untitled')}
         </span>
       </div>
 
@@ -230,7 +230,7 @@ export function TopBar({
       {/* Comments toggle button */}
       <IconButton
         icon={<MessageSquare size={14} />}
-        label="Comments"
+        label={t('docs.comments')}
         size={26}
         active={showComments}
         onClick={onToggleComments}
@@ -239,7 +239,7 @@ export function TopBar({
       {/* Version history button */}
       <IconButton
         icon={<History size={14} />}
-        label="Version history"
+        label={t('docs.versionHistory')}
         size={26}
         onClick={onShowVersionHistory}
       />
@@ -247,7 +247,7 @@ export function TopBar({
       {/* Settings button */}
       <IconButton
         icon={<Settings size={14} />}
-        label="Document settings"
+        label={t('docs.settingsTitle')}
         size={26}
         onClick={onOpenSettings}
       />
@@ -256,7 +256,7 @@ export function TopBar({
       <div ref={exportRef} style={{ position: 'relative', flexShrink: 0 }}>
         <IconButton
           icon={<Download size={14} />}
-          label="Export"
+          label={t('docs.export')}
           size={26}
           onClick={() => setShowExport(!showExport)}
         />
@@ -279,9 +279,9 @@ export function TopBar({
           >
             <ExportBtn label="HTML" onClick={handleExportHTML} />
             <ExportBtn label="Markdown" onClick={handleExportMarkdown} />
-            <ExportBtn label="Plain text" onClick={handleExportText} />
+            <ExportBtn label={t('docs.plainText')} onClick={handleExportText} />
             <div style={{ height: 1, background: 'var(--color-border-primary)', margin: '4px 0' }} />
-            <ExportBtn label="Print / PDF" onClick={handlePrint} icon={<Printer size={13} />} />
+            <ExportBtn label={t('docs.printPdf')} onClick={handlePrint} icon={<Printer size={13} />} />
           </div>
         )}
       </div>

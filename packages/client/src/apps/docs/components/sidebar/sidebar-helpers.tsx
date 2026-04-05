@@ -1,4 +1,5 @@
 import { IconButton } from '../../../../components/ui/icon-button';
+import { useTranslation } from 'react-i18next';
 import { useDocumentList } from '../../hooks';
 import { RotateCcw } from 'lucide-react';
 import { FlatDocRow } from './flat-doc-row';
@@ -83,12 +84,13 @@ export function TrashView({
   onSelect: (id: string) => void;
   onRestore: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   const { data } = useDocumentList(true); // include archived
   const allDocs = data?.documents ?? [];
   const archivedDocs = allDocs.filter((d) => d.isArchived);
 
   if (archivedDocs.length === 0) {
-    return <EmptySidebarMsg>Trash is empty.</EmptySidebarMsg>;
+    return <EmptySidebarMsg>{t('docs.trashEmpty')}</EmptySidebarMsg>;
   }
 
   return (
@@ -106,7 +108,7 @@ export function TrashView({
             <SidebarButton
               icon={<RotateCcw size={12} />}
               onClick={() => onRestore(doc.id)}
-              tooltip="Restore"
+              tooltip={t('docs.restore')}
             />
           }
         />

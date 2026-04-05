@@ -12,7 +12,7 @@ export function TeamCalendarView() {
 
   const [year, month] = currentMonth.split('-').map(Number);
   const daysInMonth = new Date(year, month, 0).getDate();
-  const monthName = new Date(year, month - 1).toLocaleDateString('en', { month: 'long', year: 'numeric' });
+  const monthName = new Date(year, month - 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 
   const prevMonth = () => {
     const d = new Date(year, month - 2, 1);

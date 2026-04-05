@@ -40,6 +40,7 @@
     "madeTeamVisible": "Condiviso con il team",
     "madePrivate": "Reso privato",
     "showLess": "Mostra meno",
+    "nMore": "altri {{count}}",
     "download": "Scarica",
     "unknown": "Sconosciuto",
     "settings": "Impostazioni",
@@ -312,6 +313,8 @@
     "customImapDesc": "Collega qualsiasi email con le impostazioni del server",
     "aboutAtlas": "Informazioni su Atlas",
     "allInOnePlatform": "Piattaforma aziendale tutto-in-uno",
+    "aboutParagraph1": "Atlas è una piattaforma aziendale self-hosted che riunisce CRM, HR, gestione progetti, editor documenti, archiviazione file, firme elettroniche e molto altro in un unico spazio di lavoro. Costruita con tecnologie web moderne per team che desiderano il pieno controllo sui propri dati.",
+    "aboutParagraph2": "A differenza delle soluzioni solo cloud, Atlas funziona sulla propria infrastruttura con il codice sorgente completo disponibile. Distribuzione con Docker in pochi minuti, personalizzazione secondo le proprie esigenze e piena proprietà dei dati aziendali — nessun vendor lock-in, nessun prezzo per postazione, nessun limite.",
     "version": "Versione",
     "currentAppVersion": "Versione corrente dell'applicazione",
     "builtWith": "Realizzato con",
@@ -559,7 +562,57 @@
     "saving": "Salvataggio...",
     "saveSnapshot": "Salva istantanea",
     "noVersionsYet": "Nessuna versione ancora. Clicca \"Salva istantanea\" per crearne una.",
-    "addIcon": "Aggiungi icona"
+    "addIcon": "Aggiungi icona",
+    "addCover": "Aggiungi copertina",
+    "changeCover": "Cambia copertina",
+    "removeCover": "Rimuovi copertina",
+    "changeIcon": "Cambia icona",
+    "importDocument": "Importa documento",
+    "documentNotFound": "Documento non trovato",
+    "versionHistory": "Cronologia versioni",
+    "comments": "Commenti",
+    "addComment": "Aggiungi un commento...",
+    "comment": "Commenta",
+    "noComments": "Nessun commento",
+    "resolve": "Risolvi",
+    "showResolved": "Mostra {{count}} risolti",
+    "hideResolved": "Nascondi {{count}} risolti",
+    "export": "Esporta",
+    "plainText": "Testo semplice",
+    "printPdf": "Stampa / PDF",
+    "wordsCount": "{{count}} parole",
+    "readingTime": "{{time}}",
+    "referencedIn": "Riferimento in {{count}} documento",
+    "referencedInPlural": "Riferimento in {{count}} documenti",
+    "searchTemplates": "Cerca modelli...",
+    "startWithTemplate": "Inizia con un modello",
+    "startWithTemplateDesc": "Inizia più velocemente con pagine predefinite",
+    "all": "Tutti",
+    "startFresh": "Inizia da zero",
+    "useTemplate": "Usa modello",
+    "noTemplatesMatch": "Nessun modello corrisponde alla ricerca",
+    "searchDrawings": "Cerca disegni...",
+    "noDrawingsFound": "Nessun disegno trovato",
+    "untitledDrawing": "Disegno senza titolo",
+    "searchTables": "Cerca tabelle...",
+    "noTablesFound": "Nessuna tabella trovata",
+    "untitledTable": "Tabella senza titolo",
+    "find": "Trova...",
+    "replace": "Sostituisci...",
+    "replaceBtn": "Sostituisci",
+    "replaceAll": "Tutti",
+    "caseSensitive": "Sensibile alle maiuscole",
+    "showReplace": "Mostra sostituzione",
+    "hideReplace": "Nascondi sostituzione",
+    "keyboardShortcuts": "Scorciatoie da tastiera",
+    "tableAddRowAbove": "+Riga \u2191",
+    "tableAddRowBelow": "+Riga \u2193",
+    "tableDeleteRow": "\u2212Riga",
+    "tableAddColBefore": "+Col \u2190",
+    "tableAddColAfter": "+Col \u2192",
+    "tableDeleteCol": "\u2212Col",
+    "tableDelete": "Tabella",
+    "importedFrom": "Importato da {{filename}}"
   },
   "draw": {
     "title": "Draw",
@@ -628,6 +681,7 @@
     "saved": "Salvato",
     "exportPdf": "Esporta come PDF",
     "insertImage": "Inserisci immagine",
+    "imageTooLarge": "L'immagine deve essere inferiore a 10 MB",
     "empty": {
       "title": "Crea il tuo primo disegno",
       "desc": "Disegna diagrammi, wireframe e idee visive",
@@ -1942,7 +1996,8 @@
     "status": {
       "active": "Attivo",
       "onLeave": "In permesso",
-      "terminated": "Cessato"
+      "terminated": "Cessato",
+      "probation": "Periodo di prova"
     },
     "leaveType": {
       "vacation": "Ferie",
@@ -2222,6 +2277,23 @@
     },
     "confirm": {
       "deleteEmployee": "Sei sicuro di voler eliminare {{name}}? Questa azione non può essere annullata."
+    },
+    "onboardingCategory": {
+      "general": "Generale",
+      "it": "IT",
+      "hr": "Risorse umane",
+      "team": "Team",
+      "admin": "Amministrazione"
+    },
+    "placeholder": {
+      "fullName": "Mario Rossi",
+      "email": "mario@azienda.it",
+      "role": "Ingegnere software",
+      "departmentName": "Ingegneria",
+      "holidayName": "Capodanno",
+      "leaveTypeName": "Ferie",
+      "leaveTypeSlug": "ferie",
+      "policyName": "Standard"
     }
   },
   "sign": {
@@ -2274,7 +2346,8 @@
       "voidConfirm": "Questo annullerà tutti i link di firma in sospeso. I firmatari non potranno più firmare questo documento.",
       "redirectUrl": "URL di reindirizzamento",
       "redirectUrlPlaceholder": "URL a cui reindirizzare il firmatario dopo la firma (opzionale)",
-      "settingsTitle": "Impostazioni documento"
+      "settingsTitle": "Impostazioni documento",
+      "tagPlaceholder": "Nome tag..."
     },
     "fields": {
       "signature": "Firma",
@@ -2288,7 +2361,10 @@
       "readOnly": "Solo lettura",
       "placeholder": "Segnaposto",
       "fontSize": "Dimensione carattere",
-      "textAlign": "Allineamento"
+      "textAlign": "Allineamento",
+      "alignLeft": "Sinistra",
+      "alignCenter": "Centro",
+      "alignRight": "Destra"
     },
     "roles": {
       "signer": "Firmatario",
@@ -2319,7 +2395,9 @@
       "emailSubject": "Oggetto e-mail",
       "emailMessage": "Messaggio e-mail",
       "emailSubjectPlaceholder": "Oggetto personalizzato (facoltativo)",
-      "emailMessagePlaceholder": "Messaggio personalizzato per l'invito alla firma (facoltativo)"
+      "emailMessagePlaceholder": "Messaggio personalizzato per l'invito alla firma (facoltativo)",
+      "emailPlaceholder": "nome@esempio.it",
+      "namePlaceholder": "Mario Rossi"
     },
     "reminders": {
       "lastSent": "Ultimo promemoria inviato il {{date}}",
@@ -2399,7 +2477,12 @@
       "typeYourName": "Digita il tuo nome",
       "clear": "Cancella",
       "cancel": "Annulla",
-      "apply": "Applica"
+      "apply": "Applica",
+      "uploadSignature": "Carica"
+    },
+    "pdf": {
+      "loading": "Caricamento PDF...",
+      "pageOf": "Pagina {{current}} di {{total}}"
     },
     "empty": {
       "title": "Fai firmare i documenti",
@@ -2826,6 +2909,31 @@
       "noMatchingClients": "Nessun cliente corrispondente",
       "noMatchingInvoices": "Nessuna fattura corrispondente",
       "tryDifferentSearch": "Prova con un termine di ricerca diverso"
+    },
+    "calendar": {
+      "jan": "Gen",
+      "feb": "Feb",
+      "mar": "Mar",
+      "apr": "Apr",
+      "may": "Mag",
+      "jun": "Giu",
+      "jul": "Lug",
+      "aug": "Ago",
+      "sep": "Set",
+      "oct": "Ott",
+      "nov": "Nov",
+      "dec": "Dic",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Gio",
+      "fri": "Ven",
+      "sat": "Sab",
+      "sun": "Dom"
+    },
+    "placeholder": {
+      "email": "cliente@azienda.it",
+      "phone": "+39-555-0100"
     }
   },
   "setup": {

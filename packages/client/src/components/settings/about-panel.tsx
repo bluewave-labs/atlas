@@ -31,13 +31,18 @@ export function AboutPanel() {
           </div>
           <div
             style={{
-              marginTop: 4,
-              fontSize: 'var(--font-size-md)',
-              color: 'var(--color-text-tertiary)',
+              marginTop: 'var(--spacing-md)',
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--color-text-secondary)',
               fontFamily: 'var(--font-family)',
+              lineHeight: 'var(--line-height-normal)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--spacing-sm)',
             }}
           >
-            {t('settings.allInOnePlatform')}
+            <p style={{ margin: 0 }}>{t('settings.aboutParagraph1')}</p>
+            <p style={{ margin: 0 }}>{t('settings.aboutParagraph2')}</p>
           </div>
         </div>
 

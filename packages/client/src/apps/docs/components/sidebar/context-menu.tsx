@@ -1,4 +1,5 @@
 import { Star, Copy, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../../../components/ui/button';
 
 // ─── ContextMenu ────────────────────────────────────────────────────────
@@ -14,6 +15,7 @@ export function DocContextMenu({
   onToggleFavorite: () => void;
   isFavorite: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -34,12 +36,12 @@ export function DocContextMenu({
     >
       <MenuButton
         icon={<Star size={14} />}
-        label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+        label={isFavorite ? t('docs.removeFromFavorites') : t('docs.addToFavorites')}
         onClick={onToggleFavorite}
       />
-      <MenuButton icon={<Copy size={14} />} label="Duplicate" onClick={onDuplicate} />
+      <MenuButton icon={<Copy size={14} />} label={t('docs.duplicate')} onClick={onDuplicate} />
       <div style={{ height: 1, background: 'var(--color-border-primary)', margin: '4px 0' }} />
-      <MenuButton icon={<Trash2 size={14} />} label="Delete" onClick={onDelete} danger />
+      <MenuButton icon={<Trash2 size={14} />} label={t('common.delete')} onClick={onDelete} danger />
     </div>
   );
 }

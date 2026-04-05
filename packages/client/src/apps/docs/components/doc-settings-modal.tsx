@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Type, Rocket } from 'lucide-react';
 import { useDocSettingsStore, type DocFontStyle, type DocSidebarDefault } from '../settings-store';
 import {
@@ -81,6 +82,7 @@ const FONT_STYLES: { id: DocFontStyle; label: string; fontFamily: string; previe
 // ---------------------------------------------------------------------------
 
 export function DocsEditorPanel() {
+  const { t } = useTranslation();
   const {
     fontStyle, setFontStyle,
     smallText, setSmallText,
@@ -88,9 +90,15 @@ export function DocsEditorPanel() {
     spellCheck, setSpellCheck,
   } = useDocSettingsStore();
 
+  const fontLabels: Record<string, string> = {
+    default: t('docs.fontDefault'),
+    serif: t('docs.fontSerif'),
+    mono: t('docs.fontMono'),
+  };
+
   return (
     <div>
-      <SettingsSection title="Font style" description="Choose the typeface used in the document body.">
+      <SettingsSection title={t('docs.fontStyle')} description={t('docs.fontStyleDesc')}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--spacing-sm)' }}>
           {FONT_STYLES.map((fs) => (
             <SelectableCard
@@ -119,25 +127,25 @@ export function DocsEditorPanel() {
                     : ('var(--font-weight-normal)' as CSSProperties['fontWeight']),
                 }}
               >
-                {fs.label}
+                {fontLabels[fs.id] || fs.label}
               </span>
             </SelectableCard>
           ))}
         </div>
       </SettingsSection>
 
-      <SettingsSection title="Layout">
-        <SettingsRow label="Small text" description="Use a smaller font size for body text.">
-          <SettingsToggle checked={smallText} onChange={setSmallText} label="Small text" />
+      <SettingsSection title={t('docs.layout')}>
+        <SettingsRow label={t('docs.smallText')} description={t('docs.smallTextDesc')}>
+          <SettingsToggle checked={smallText} onChange={setSmallText} label={t('docs.smallText')} />
         </SettingsRow>
-        <SettingsRow label="Full width" description="Stretch pages to fill the available width.">
-          <SettingsToggle checked={fullWidth} onChange={setFullWidth} label="Full width" />
+        <SettingsRow label={t('docs.fullWidth')} description={t('docs.fullWidthDesc')}>
+          <SettingsToggle checked={fullWidth} onChange={setFullWidth} label={t('docs.fullWidth')} />
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection title="Input">
-        <SettingsRow label="Spell check" description="Highlight misspelled words in the editor.">
-          <SettingsToggle checked={spellCheck} onChange={setSpellCheck} label="Spell check" />
+      <SettingsSection title={t('docs.input')}>
+        <SettingsRow label={t('docs.spellCheck')} description={t('docs.spellCheckDesc')}>
+          <SettingsToggle checked={spellCheck} onChange={setSpellCheck} label={t('docs.spellCheck')} />
         </SettingsRow>
       </SettingsSection>
     </div>
@@ -155,24 +163,31 @@ const SIDEBAR_DEFAULT_OPTIONS: Array<{ value: DocSidebarDefault; label: string }
 ];
 
 export function DocsStartupPanel() {
+  const { t } = useTranslation();
   const {
     openLastVisited, setOpenLastVisited,
     sidebarDefault, setSidebarDefault,
   } = useDocSettingsStore();
 
+  const sidebarDefaultOptions: Array<{ value: DocSidebarDefault; label: string }> = [
+    { value: 'tree', label: t('docs.pages') },
+    { value: 'favorites', label: t('docs.favorites') },
+    { value: 'recent', label: t('docs.recent') },
+  ];
+
   return (
     <div>
-      <SettingsSection title="On open" description="What happens when you navigate to the documents section.">
-        <SettingsRow label="Open last visited page" description="Automatically open the most recently viewed page.">
-          <SettingsToggle checked={openLastVisited} onChange={setOpenLastVisited} label="Open last visited page" />
+      <SettingsSection title={t('docs.onOpen')} description={t('docs.onOpenDesc')}>
+        <SettingsRow label={t('docs.openLastVisited')} description={t('docs.openLastVisitedDesc')}>
+          <SettingsToggle checked={openLastVisited} onChange={setOpenLastVisited} label={t('docs.openLastVisited')} />
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection title="Sidebar">
-        <SettingsRow label="Default section" description="Which view the sidebar shows when you first open documents.">
+      <SettingsSection title={t('docs.sidebar')}>
+        <SettingsRow label={t('docs.defaultSection')} description={t('docs.defaultSectionDesc')}>
           <SettingsSelect
             value={sidebarDefault}
-            options={SIDEBAR_DEFAULT_OPTIONS}
+            options={sidebarDefaultOptions}
             onChange={setSidebarDefault}
           />
         </SettingsRow>
@@ -200,8 +215,29 @@ interface DocSettingsModalProps {
 }
 
 export function DocSettingsModal({ open, onClose }: DocSettingsModalProps) {
+  const { t } = useTranslation();
   const [activeItem, setActiveItem] = useState<DocNavItemId>('editor');
   const ActivePanel = PANELS[activeItem];
+
+  const sidebarSections: DocSidebarSection[] = [
+    {
+      title: t('docs.title'),
+      items: [
+        { id: 'editor', label: t('docs.editor'), icon: Type },
+        { id: 'startup', label: t('docs.startup'), icon: Rocket },
+      ],
+    },
+  ];
+
+  const panelTitles: Record<DocNavItemId, string> = {
+    editor: t('docs.editor'),
+    startup: t('docs.startup'),
+  };
+
+  const panelDescriptions: Record<DocNavItemId, string> = {
+    editor: t('docs.editorDesc'),
+    startup: t('docs.startupDesc'),
+  };
 
   return (
     <Modal
@@ -209,7 +245,7 @@ export function DocSettingsModal({ open, onClose }: DocSettingsModalProps) {
       onOpenChange={(o) => !o && onClose()}
       width={660}
       height={520}
-      title="Document settings"
+      title={t('docs.settingsTitle')}
     >
       {/* Left sidebar */}
       <div
@@ -243,11 +279,11 @@ export function DocSettingsModal({ open, onClose }: DocSettingsModalProps) {
               fontFamily: 'var(--font-family)',
             }}
           >
-            Settings
+            {t('docs.settings')}
           </span>
         </div>
 
-        {SIDEBAR_SECTIONS.map((section) => (
+        {sidebarSections.map((section) => (
           <div key={section.title}>
             <div
               style={{
@@ -287,7 +323,7 @@ export function DocSettingsModal({ open, onClose }: DocSettingsModalProps) {
           overflow: 'hidden',
         }}
       >
-        <Modal.Header title={PANEL_TITLES[activeItem]} subtitle={PANEL_DESCRIPTIONS[activeItem]} />
+        <Modal.Header title={panelTitles[activeItem]} subtitle={panelDescriptions[activeItem]} />
         <Modal.Body>
           <ActivePanel />
         </Modal.Body>

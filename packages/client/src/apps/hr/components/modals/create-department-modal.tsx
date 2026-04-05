@@ -52,7 +52,7 @@ export function CreateDepartmentModal({
       <Modal.Header title={t('hr.actions.addDepartment')} subtitle={t('hr.actions.addDepartmentSubtitle')} />
       <Modal.Body>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-          <Input label={t('hr.fields.departmentName')} value={name} onChange={(e) => setName(e.target.value)} placeholder="Engineering" autoFocus />
+          <Input label={t('hr.fields.departmentName')} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('hr.placeholder.departmentName')} autoFocus />
           <Input label={t('hr.fields.description')} value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('hr.fields.optionalDescription')} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
             <label className="hr-field-label">{t('hr.fields.color')}</label>

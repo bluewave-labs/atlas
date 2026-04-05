@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // ─── Drawing embed picker ─────────────────────────────────────────────────
 
@@ -11,6 +12,7 @@ export function DrawingPicker({
   onSelect: (drawing: { id: string; title: string }) => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [selectedIdx, setSelectedIdx] = useState(0);
 
@@ -67,7 +69,7 @@ export function DrawingPicker({
                 onClose();
               }
             }}
-            placeholder="Search drawings..."
+            placeholder={t('docs.searchDrawings')}
             style={{
               width: '100%',
               border: 'none',
@@ -83,7 +85,7 @@ export function DrawingPicker({
         <div style={{ overflowY: 'auto', maxHeight: 300, padding: 4 }}>
           {filtered.length === 0 ? (
             <div style={{ padding: '16px 12px', textAlign: 'center', fontSize: 12, color: 'var(--color-text-tertiary)' }}>
-              No drawings found
+              {t('docs.noDrawingsFound')}
             </div>
           ) : (
             filtered.map((d, i) => (
@@ -109,7 +111,7 @@ export function DrawingPicker({
               >
                 <span style={{ color: 'var(--color-text-tertiary)', fontSize: 14 }}>{'\u270F'}</span>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {d.title || 'Untitled drawing'}
+                  {d.title || t('docs.untitledDrawing')}
                 </span>
               </button>
             ))
@@ -131,13 +133,14 @@ export function TablePicker({
   onSelect: (table: { id: string; title: string }) => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [selectedIdx, setSelectedIdx] = useState(0);
 
   const filtered = useMemo(() => {
     if (!query.trim()) return tables;
     const q = query.toLowerCase();
-    return tables.filter((t) => t.title.toLowerCase().includes(q));
+    return tables.filter((tbl) => tbl.title.toLowerCase().includes(q));
   }, [tables, query]);
 
   return (
@@ -187,7 +190,7 @@ export function TablePicker({
                 onClose();
               }
             }}
-            placeholder="Search tables..."
+            placeholder={t('docs.searchTables')}
             style={{
               width: '100%',
               border: 'none',
@@ -203,13 +206,13 @@ export function TablePicker({
         <div style={{ overflowY: 'auto', maxHeight: 300, padding: 4 }}>
           {filtered.length === 0 ? (
             <div style={{ padding: '16px 12px', textAlign: 'center', fontSize: 12, color: 'var(--color-text-tertiary)' }}>
-              No tables found
+              {t('docs.noTablesFound')}
             </div>
           ) : (
-            filtered.map((t, i) => (
+            filtered.map((tbl, i) => (
               <button
-                key={t.id}
-                onClick={() => onSelect(t)}
+                key={tbl.id}
+                onClick={() => onSelect(tbl)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -229,7 +232,7 @@ export function TablePicker({
               >
                 <span style={{ color: 'var(--color-text-tertiary)', fontSize: 14 }}>{'\u2637'}</span>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {t.title || 'Untitled table'}
+                  {tbl.title || t('docs.untitledTable')}
                 </span>
               </button>
             ))

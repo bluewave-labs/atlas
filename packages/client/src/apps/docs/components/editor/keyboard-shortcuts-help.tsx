@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 
 // ─── Keyboard shortcuts help modal ───────────────────────────────────────
@@ -51,6 +52,7 @@ const SHORTCUT_SECTIONS = [
 ];
 
 export function KeyboardShortcutsHelp({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
   const modKey = isMac ? '\u2318' : 'Ctrl';
 
@@ -75,7 +77,7 @@ export function KeyboardShortcutsHelp({ onClose }: { onClose: () => void }) {
     <div className="shortcuts-modal-backdrop" onClick={onClose}>
       <div className="shortcuts-modal" onClick={(e) => e.stopPropagation()}>
         <div className="shortcuts-modal-header">
-          <span className="shortcuts-modal-title">Keyboard shortcuts</span>
+          <span className="shortcuts-modal-title">{t('docs.keyboardShortcuts')}</span>
           <button className="search-replace-btn" onClick={onClose}><X size={16} /></button>
         </div>
         <div className="shortcuts-modal-body">

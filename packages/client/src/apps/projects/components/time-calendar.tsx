@@ -38,12 +38,14 @@ function getMonthDates(year: number, month: number): Array<{ date: string; isCur
   return dates;
 }
 
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
+function getMonthName(month: number, t: (k: string) => string): string {
+  const keys = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+  return t(`projects.calendar.${keys[month]}`);
+}
 
-const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+function getDayNames(t: (k: string) => string): string[] {
+  return ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map(d => t(`projects.calendar.${d}`));
+}
 
 // ─── Component ────────────────────────────────────────────────────
 
@@ -93,7 +95,7 @@ export function TimeCalendar() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)' }}>
         <IconButton icon={<ChevronLeft size={14} />} label={t('projects.timeTracking.prevMonth')} size={28} onClick={() => navigateMonth(-1)} />
         <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)', minWidth: 160, textAlign: 'center' }}>
-          {MONTH_NAMES[month]} {year}
+          {getMonthName(month, t)} {year}
         </span>
         <IconButton icon={<ChevronRight size={14} />} label={t('projects.timeTracking.nextMonth')} size={28} onClick={() => navigateMonth(1)} />
       </div>
@@ -101,7 +103,7 @@ export function TimeCalendar() {
       {/* Calendar grid */}
       <div className="projects-calendar">
         {/* Day headers */}
-        {DAY_NAMES.map((day) => (
+        {getDayNames(t).map((day) => (
           <div key={day} className="projects-calendar-header">{day}</div>
         ))}
 

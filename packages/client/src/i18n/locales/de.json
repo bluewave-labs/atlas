@@ -40,6 +40,7 @@
     "madeTeamVisible": "Mit Team geteilt",
     "madePrivate": "Privat gemacht",
     "showLess": "Weniger anzeigen",
+    "nMore": "{{count}} weitere",
     "download": "Herunterladen",
     "unknown": "Unbekannt",
     "settings": "Einstellungen",
@@ -312,6 +313,8 @@
     "customImapDesc": "Beliebige E-Mail mit Servereinstellungen verbinden",
     "aboutAtlas": "Über Atlas",
     "allInOnePlatform": "All-in-One-Geschäftsplattform",
+    "aboutParagraph1": "Atlas ist eine selbst gehostete Geschäftsplattform, die CRM, HR, Projektmanagement, Dokumentenbearbeitung, Dateispeicherung, E-Signaturen und mehr in einem einzigen Arbeitsbereich vereint. Entwickelt mit modernen Webtechnologien für Teams, die volle Kontrolle über ihre Daten wünschen.",
+    "aboutParagraph2": "Im Gegensatz zu reinen Cloud-Lösungen läuft Atlas auf Ihrer eigenen Infrastruktur mit vollständig verfügbarem Quellcode. Bereitstellung mit Docker in wenigen Minuten, Anpassung an Ihre Bedürfnisse und volle Datenhoheit — kein Vendor Lock-in, keine Preise pro Arbeitsplatz, keine Einschränkungen.",
     "version": "Version",
     "currentAppVersion": "Aktuelle Anwendungsversion",
     "builtWith": "Erstellt mit",
@@ -559,7 +562,57 @@
     "saving": "Speichern...",
     "saveSnapshot": "Snapshot speichern",
     "noVersionsYet": "Noch keine Versionen. Klicken Sie auf \"Snapshot speichern\", um eine zu erstellen.",
-    "addIcon": "Symbol hinzufügen"
+    "addIcon": "Symbol hinzufügen",
+    "addCover": "Cover hinzufügen",
+    "changeCover": "Cover ändern",
+    "removeCover": "Cover entfernen",
+    "changeIcon": "Symbol ändern",
+    "importDocument": "Dokument importieren",
+    "documentNotFound": "Dokument nicht gefunden",
+    "versionHistory": "Versionsgeschichte",
+    "comments": "Kommentare",
+    "addComment": "Kommentar hinzufügen...",
+    "comment": "Kommentar",
+    "noComments": "Noch keine Kommentare",
+    "resolve": "Erledigt",
+    "showResolved": "{{count}} erledigte anzeigen",
+    "hideResolved": "{{count}} erledigte ausblenden",
+    "export": "Exportieren",
+    "plainText": "Nur Text",
+    "printPdf": "Drucken / PDF",
+    "wordsCount": "{{count}} Wörter",
+    "readingTime": "{{time}}",
+    "referencedIn": "In {{count}} Dokument referenziert",
+    "referencedInPlural": "In {{count}} Dokumenten referenziert",
+    "searchTemplates": "Vorlagen suchen...",
+    "startWithTemplate": "Mit Vorlage beginnen",
+    "startWithTemplateDesc": "Starten Sie schneller mit vorgefertigten Seiten",
+    "all": "Alle",
+    "startFresh": "Neu beginnen",
+    "useTemplate": "Vorlage verwenden",
+    "noTemplatesMatch": "Keine Vorlagen entsprechen Ihrer Suche",
+    "searchDrawings": "Zeichnungen suchen...",
+    "noDrawingsFound": "Keine Zeichnungen gefunden",
+    "untitledDrawing": "Unbenannte Zeichnung",
+    "searchTables": "Tabellen suchen...",
+    "noTablesFound": "Keine Tabellen gefunden",
+    "untitledTable": "Unbenannte Tabelle",
+    "find": "Suchen...",
+    "replace": "Ersetzen...",
+    "replaceBtn": "Ersetzen",
+    "replaceAll": "Alle",
+    "caseSensitive": "Groß-/Kleinschreibung",
+    "showReplace": "Ersetzen anzeigen",
+    "hideReplace": "Ersetzen ausblenden",
+    "keyboardShortcuts": "Tastaturkürzel",
+    "tableAddRowAbove": "+Zeile \u2191",
+    "tableAddRowBelow": "+Zeile \u2193",
+    "tableDeleteRow": "\u2212Zeile",
+    "tableAddColBefore": "+Spalte \u2190",
+    "tableAddColAfter": "+Spalte \u2192",
+    "tableDeleteCol": "\u2212Spalte",
+    "tableDelete": "Tabelle",
+    "importedFrom": "Importiert von {{filename}}"
   },
   "draw": {
     "title": "Draw",
@@ -628,6 +681,7 @@
     "saved": "Gespeichert",
     "exportPdf": "Als PDF exportieren",
     "insertImage": "Bild einfügen",
+    "imageTooLarge": "Bild muss kleiner als 10 MB sein",
     "empty": {
       "title": "Erste Zeichnung erstellen",
       "desc": "Skizzieren Sie Diagramme, Wireframes und visuelle Ideen",
@@ -1942,7 +1996,8 @@
     "status": {
       "active": "Aktiv",
       "onLeave": "Abwesend",
-      "terminated": "Ausgeschieden"
+      "terminated": "Ausgeschieden",
+      "probation": "Probezeit"
     },
     "leaveType": {
       "vacation": "Urlaub",
@@ -2222,6 +2277,23 @@
     },
     "confirm": {
       "deleteEmployee": "Möchten Sie {{name}} wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+    },
+    "onboardingCategory": {
+      "general": "Allgemein",
+      "it": "IT",
+      "hr": "Personalwesen",
+      "team": "Team",
+      "admin": "Verwaltung"
+    },
+    "placeholder": {
+      "fullName": "Max Mustermann",
+      "email": "max@firma.de",
+      "role": "Softwareentwickler",
+      "departmentName": "Technik",
+      "holidayName": "Neujahr",
+      "leaveTypeName": "Urlaub",
+      "leaveTypeSlug": "urlaub",
+      "policyName": "Standard"
     }
   },
   "sign": {
@@ -2274,7 +2346,8 @@
       "voidConfirm": "Damit werden alle ausstehenden Unterschriftslinks ungültig. Unterzeichner können dieses Dokument nicht mehr unterschreiben.",
       "redirectUrl": "Weiterleitungs-URL",
       "redirectUrlPlaceholder": "URL zur Weiterleitung nach der Unterzeichnung (optional)",
-      "settingsTitle": "Dokumenteinstellungen"
+      "settingsTitle": "Dokumenteinstellungen",
+      "tagPlaceholder": "Tag-Name..."
     },
     "fields": {
       "signature": "Unterschrift",
@@ -2288,7 +2361,10 @@
       "readOnly": "Schreibgeschützt",
       "placeholder": "Platzhalter",
       "fontSize": "Schriftgröße",
-      "textAlign": "Ausrichtung"
+      "textAlign": "Ausrichtung",
+      "alignLeft": "Links",
+      "alignCenter": "Mitte",
+      "alignRight": "Rechts"
     },
     "roles": {
       "signer": "Unterzeichner",
@@ -2319,7 +2395,9 @@
       "emailSubject": "E-Mail-Betreff",
       "emailMessage": "E-Mail-Nachricht",
       "emailSubjectPlaceholder": "Benutzerdefinierte Betreffzeile (optional)",
-      "emailMessagePlaceholder": "Benutzerdefinierte Nachricht für die Signatureinladung (optional)"
+      "emailMessagePlaceholder": "Benutzerdefinierte Nachricht für die Signatureinladung (optional)",
+      "emailPlaceholder": "name@beispiel.de",
+      "namePlaceholder": "Max Mustermann"
     },
     "reminders": {
       "lastSent": "Letzte Erinnerung gesendet: {{date}}",
@@ -2399,7 +2477,12 @@
       "typeYourName": "Geben Sie Ihren Namen ein",
       "clear": "Löschen",
       "cancel": "Abbrechen",
-      "apply": "Anwenden"
+      "apply": "Anwenden",
+      "uploadSignature": "Hochladen"
+    },
+    "pdf": {
+      "loading": "PDF wird geladen...",
+      "pageOf": "Seite {{current}} von {{total}}"
     },
     "empty": {
       "title": "Dokumente unterschreiben lassen",
@@ -2826,6 +2909,31 @@
       "noMatchingClients": "Keine passenden Kunden",
       "noMatchingInvoices": "Keine passenden Rechnungen",
       "tryDifferentSearch": "Versuchen Sie einen anderen Suchbegriff"
+    },
+    "calendar": {
+      "jan": "Jan",
+      "feb": "Feb",
+      "mar": "Mär",
+      "apr": "Apr",
+      "may": "Mai",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Aug",
+      "sep": "Sep",
+      "oct": "Okt",
+      "nov": "Nov",
+      "dec": "Dez",
+      "mon": "Mo",
+      "tue": "Di",
+      "wed": "Mi",
+      "thu": "Do",
+      "fri": "Fr",
+      "sat": "Sa",
+      "sun": "So"
+    },
+    "placeholder": {
+      "email": "kunde@firma.de",
+      "phone": "+49-555-0100"
     }
   },
   "setup": {

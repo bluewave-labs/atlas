@@ -82,8 +82,8 @@ export function LeaveTypesView() {
         <div style={{ marginTop: 'var(--spacing-lg)', padding: 'var(--spacing-lg)', border: '1px solid var(--color-border-primary)', borderRadius: 'var(--radius-lg)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
             <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
-              <Input label={t('hr.fields.name')} value={name} onChange={(e) => setName(e.target.value)} placeholder="Vacation" style={{ flex: 1 }} autoFocus />
-              <Input label={t('hr.leaveTypes.slug')} value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="vacation" style={{ flex: 1 }} />
+              <Input label={t('hr.fields.name')} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('hr.placeholder.leaveTypeName')} style={{ flex: 1 }} autoFocus />
+              <Input label={t('hr.leaveTypes.slug')} value={slug} onChange={(e) => setSlug(e.target.value)} placeholder={t('hr.placeholder.leaveTypeSlug')} style={{ flex: 1 }} />
             </div>
             <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
               <Input label={t('hr.leaveTypes.daysPerYear')} type="number" value={String(days)} onChange={(e) => setDays(Number(e.target.value))} style={{ flex: 1 }} />

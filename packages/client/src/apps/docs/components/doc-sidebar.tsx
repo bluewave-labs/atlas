@@ -64,7 +64,7 @@ export function DocSidebar({ selectedId, onSelect, onNewFromTemplate, onImport }
   }, [selectedId]);
 
   const handleNewPage = useCallback(() => {
-    createDoc.mutate({ title: 'Untitled' }, {
+    createDoc.mutate({ title: t('docs.untitled') }, {
       onSuccess: (doc) => {
         onSelect(doc.id);
       },
@@ -73,7 +73,7 @@ export function DocSidebar({ selectedId, onSelect, onNewFromTemplate, onImport }
 
   const handleNewSubPage = useCallback(
     (parentId: string) => {
-      createDoc.mutate({ title: 'Untitled', parentId }, {
+      createDoc.mutate({ title: t('docs.untitled'), parentId }, {
         onSuccess: (doc) => {
           onSelect(doc.id);
         },
@@ -196,7 +196,7 @@ export function DocSidebar({ selectedId, onSelect, onNewFromTemplate, onImport }
         onChange={(e) => setSearchQuery(e.target.value)}
         onFocus={() => { setSearchFocused(true); setView('tree'); }}
         onBlur={() => setSearchFocused(false)}
-        placeholder="Search"
+        placeholder={t('docs.search')}
         style={{
           flex: 1,
           border: 'none',
@@ -227,7 +227,7 @@ export function DocSidebar({ selectedId, onSelect, onNewFromTemplate, onImport }
         disabled={createDoc.isPending}
         style={{ width: '100%', justifyContent: 'flex-start', color: 'var(--color-text-tertiary)' }}
       >
-        New page
+        {t('docs.newPage')}
       </Button>
       {onNewFromTemplate && (
         <Button
@@ -237,7 +237,7 @@ export function DocSidebar({ selectedId, onSelect, onNewFromTemplate, onImport }
           onClick={onNewFromTemplate}
           style={{ width: '100%', justifyContent: 'flex-start', color: 'var(--color-text-tertiary)' }}
         >
-          From template
+          {t('docs.fromTemplate')}
         </Button>
       )}
       {onImport && (
@@ -248,7 +248,7 @@ export function DocSidebar({ selectedId, onSelect, onNewFromTemplate, onImport }
           onClick={onImport}
           style={{ width: '100%', justifyContent: 'flex-start', color: 'var(--color-text-tertiary)' }}
         >
-          Import document
+          {t('docs.importDocument')}
         </Button>
       )}
     </div>
@@ -258,7 +258,7 @@ export function DocSidebar({ selectedId, onSelect, onNewFromTemplate, onImport }
     <>
     <AppSidebar
       storageKey="atlas_docs_sidebar"
-      title="Write"
+      title={t('docs.title')}
       search={searchBar}
       footer={footerContent}
     >
@@ -266,20 +266,20 @@ export function DocSidebar({ selectedId, onSelect, onNewFromTemplate, onImport }
       <div style={{ padding: '0 0 0 0' }}>
         <QuickLink
           icon={<Clock size={14} />}
-          label="Recently viewed"
+          label={t('docs.recentlyViewed')}
           active={view === 'recent'}
           onClick={() => setView(view === 'recent' ? 'tree' : 'recent')}
         />
         <QuickLink
           icon={<Star size={14} />}
-          label="Favorites"
+          label={t('docs.favorites')}
           active={view === 'favorites'}
           onClick={() => setView(view === 'favorites' ? 'tree' : 'favorites')}
           badge={favoriteDocs.length > 0 ? favoriteDocs.length : undefined}
         />
         <QuickLink
           icon={<Trash2 size={14} />}
-          label="Trash"
+          label={t('docs.trash')}
           active={view === 'trash'}
           onClick={() => setView(view === 'trash' ? 'tree' : 'trash')}
         />
@@ -315,12 +315,12 @@ export function DocSidebar({ selectedId, onSelect, onNewFromTemplate, onImport }
               letterSpacing: '0.04em',
             }}
           >
-            Private
+            {t('docs.private')}
           </span>
           <SidebarButton
             icon={<Plus size={13} />}
             onClick={handleNewPage}
-            tooltip="New page"
+            tooltip={t('docs.newPage')}
             disabled={createDoc.isPending}
           />
         </div>
@@ -344,7 +344,7 @@ export function DocSidebar({ selectedId, onSelect, onNewFromTemplate, onImport }
               letterSpacing: '0.04em',
             }}
           >
-            {view === 'favorites' ? 'Favorites' : view === 'recent' ? 'Recently viewed' : 'Trash'}
+            {view === 'favorites' ? t('docs.favorites') : view === 'recent' ? t('docs.recentlyViewed') : t('docs.trash')}
           </span>
         </div>
       )}
@@ -356,7 +356,7 @@ export function DocSidebar({ selectedId, onSelect, onNewFromTemplate, onImport }
         ) : view === 'tree' ? (
           /* Tree view */
           filteredTree.length === 0 && searchQuery.trim() ? (
-            <EmptySidebarMsg>No results for "{searchQuery}"</EmptySidebarMsg>
+            <EmptySidebarMsg>{t('docs.noResults', { query: searchQuery })}</EmptySidebarMsg>
           ) : (
             filteredTree.map((node) => (
               <TreeNode
@@ -380,7 +380,7 @@ export function DocSidebar({ selectedId, onSelect, onNewFromTemplate, onImport }
         ) : view === 'favorites' ? (
           /* Favorites view */
           favoriteDocs.length === 0 ? (
-            <EmptySidebarMsg>No favorites yet. Star a page to add it here.</EmptySidebarMsg>
+            <EmptySidebarMsg>{t('docs.noFavorites')}</EmptySidebarMsg>
           ) : (
             favoriteDocs.map((doc) => (
               <FlatDocRow
@@ -394,7 +394,7 @@ export function DocSidebar({ selectedId, onSelect, onNewFromTemplate, onImport }
                   <SidebarButton
                     icon={<StarOff size={12} />}
                     onClick={() => toggleFavorite(doc.id)}
-                    tooltip="Remove from favorites"
+                    tooltip={t('docs.removeFromFavorites')}
                   />
                 }
               />
@@ -403,7 +403,7 @@ export function DocSidebar({ selectedId, onSelect, onNewFromTemplate, onImport }
         ) : view === 'recent' ? (
           /* Recently viewed */
           recentDocs.length === 0 ? (
-            <EmptySidebarMsg>No recently viewed documents.</EmptySidebarMsg>
+            <EmptySidebarMsg>{t('docs.noRecentDocs')}</EmptySidebarMsg>
           ) : (
             recentDocs.map((doc) => (
               <FlatDocRow

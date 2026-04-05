@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Search } from 'lucide-react';
 import type { PageTemplate, TemplateCategory } from '../lib/templates';
 import { ALL_CATEGORIES, PAGE_TEMPLATES } from '../lib/templates';
@@ -18,6 +19,7 @@ function CardPreviewLines() {
 }
 
 function TemplateCard({ template, onClick }: { template: PageTemplate; onClick: () => void }) {
+  const { t } = useTranslation();
   const isBlank = template.name === 'Blank page';
 
   if (isBlank) {
@@ -45,7 +47,7 @@ function TemplateCard({ template, onClick }: { template: PageTemplate; onClick: 
       >
         <CardPreviewLines />
         <div className="tg-card-overlay">
-          <span className="tg-card-use-btn">Use template</span>
+          <span className="tg-card-use-btn">{t('docs.useTemplate')}</span>
         </div>
       </div>
       <div className="tg-card-body">
@@ -73,6 +75,7 @@ export function TemplateGallery({
   onSelect: (template: PageTemplate) => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<TemplateCategory | 'All'>('All');
 
@@ -105,7 +108,7 @@ export function TemplateGallery({
     }
     const result: { label: string; templates: PageTemplate[] }[] = [];
     if (map.has('_blank')) {
-      result.push({ label: 'Start fresh', templates: map.get('_blank')! });
+      result.push({ label: t('docs.startFresh'), templates: map.get('_blank')! });
     }
     for (const cat of ALL_CATEGORIES) {
       if (map.has(cat)) {
@@ -113,22 +116,22 @@ export function TemplateGallery({
       }
     }
     return result;
-  }, [filtered, activeCategory]);
+  }, [filtered, activeCategory, t]);
 
   return (
     <div className="tg-root">
       {/* Sticky header */}
       <div className="tg-header">
-        <button className="tg-back-btn" onClick={onClose} aria-label="Back to documents">
+        <button className="tg-back-btn" onClick={onClose} aria-label={t('docs.backToDocuments')}>
           <ArrowLeft size={14} />
-          Back to documents
+          {t('docs.backToDocuments')}
         </button>
         <div className="tg-header-spacer" />
         <div className="tg-search" role="search">
           <Search size={13} aria-hidden="true" />
           <input
             type="search"
-            placeholder="Search templates..."
+            placeholder={t('docs.searchTemplates')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             aria-label="Search templates"
@@ -141,8 +144,8 @@ export function TemplateGallery({
       <div className="tg-body">
         {/* Hero */}
         <div className="tg-hero">
-          <h1 className="tg-hero-title">Start with a template</h1>
-          <p className="tg-hero-sub">Get started faster with pre-built pages for every workflow</p>
+          <h1 className="tg-hero-title">{t('docs.startWithTemplate')}</h1>
+          <p className="tg-hero-sub">{t('docs.startWithTemplateDesc')}</p>
         </div>
 
         {/* Category pills */}
@@ -151,7 +154,7 @@ export function TemplateGallery({
             className={`tg-pill${activeCategory === 'All' ? ' is-active' : ''}`}
             onClick={() => setActiveCategory('All')}
           >
-            All
+            {t('docs.all')}
           </button>
           {ALL_CATEGORIES.map((cat) => (
             <button
@@ -168,13 +171,13 @@ export function TemplateGallery({
         {grouped.length === 0 ? (
           <div className="tg-empty">
             <Search size={32} strokeWidth={1.2} />
-            <p>No templates match your search</p>
+            <p>{t('docs.noTemplatesMatch')}</p>
           </div>
         ) : (
           grouped.map((group) => (
             <div key={group.label} className="tg-category-section">
               {grouped.length > 1 && (
-                <p className="tg-category-label">{group.label === 'Start fresh' ? 'Start fresh' : group.label}</p>
+                <p className="tg-category-label">{group.label}</p>
               )}
               <div className="tg-grid">
                 {group.templates.map((tpl) => (

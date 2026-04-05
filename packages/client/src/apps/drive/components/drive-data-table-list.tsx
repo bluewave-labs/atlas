@@ -168,7 +168,7 @@ export function DriveDataTableList({
       key: 'size',
       label: t('drive.table.size'),
       icon: <HardDrive size={12} />,
-      width: 100,
+      width: 120,
       sortable: true,
       align: 'right' as const,
       render: (item) => (

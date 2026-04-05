@@ -110,7 +110,7 @@ export function SignSendModal({
                 <div style={{ flex: 1 }}>
                   <Input
                     label={idx === 0 ? t('sign.send.signerEmail') : undefined}
-                    placeholder="name@example.com"
+                    placeholder={t('sign.send.emailPlaceholder')}
                     value={signer.email}
                     onChange={(e) => {
                       const updated = [...signers];
@@ -123,7 +123,7 @@ export function SignSendModal({
                 <div style={{ flex: 1 }}>
                   <Input
                     label={idx === 0 ? t('sign.send.signerName') : undefined}
-                    placeholder="John Doe"
+                    placeholder={t('sign.send.namePlaceholder')}
                     value={signer.name}
                     onChange={(e) => {
                       const updated = [...signers];

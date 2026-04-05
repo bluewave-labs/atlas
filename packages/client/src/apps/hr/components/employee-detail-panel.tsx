@@ -192,11 +192,11 @@ function OnboardingSection({ employeeId }: { employeeId: string }) {
             value={newCategory}
             onChange={setNewCategory}
             options={[
-              { value: 'general', label: 'General' },
-              { value: 'IT', label: 'IT' },
-              { value: 'HR', label: 'HR' },
-              { value: 'Team', label: 'Team' },
-              { value: 'Admin', label: 'Admin' },
+              { value: 'general', label: t('hr.onboardingCategory.general') },
+              { value: 'IT', label: t('hr.onboardingCategory.it') },
+              { value: 'HR', label: t('hr.onboardingCategory.hr') },
+              { value: 'Team', label: t('hr.onboardingCategory.team') },
+              { value: 'Admin', label: t('hr.onboardingCategory.admin') },
             ]}
             size="sm"
           />
@@ -236,7 +236,7 @@ function OnboardingSection({ employeeId }: { employeeId: string }) {
               }}>
                 {task.title}
               </span>
-              {getCategoryBadge(task.category)}
+              {getCategoryBadge(task.category, t)}
               {canDelete && <IconButton icon={<Trash2 size={12} />} label={t('common.delete')} size={20} destructive onClick={() => deleteTask.mutate(task.id)} />}
             </div>
           ))}
@@ -317,7 +317,7 @@ function DocumentsSection({ employeeId }: { employeeId: string }) {
               <span style={{ flex: 1, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {doc.name}
               </span>
-              {getDocTypeBadge(doc.type)}
+              {getDocTypeBadge(doc.type, t)}
               <span style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}>
                 {formatSize(doc.size)}
               </span>
@@ -473,7 +473,7 @@ export function EmployeeDetailPanel({
                 <Input
                   ref={roleRef}
                   value={role}
-                  aria-label="Employee role"
+                  aria-label={t('hr.fields.role')}
                   onChange={(e) => { setRole(e.target.value); autoSave({ role: e.target.value }); }}
                   style={{
                     fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)',

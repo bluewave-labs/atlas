@@ -40,6 +40,7 @@
     "madeTeamVisible": "Partagé avec l'équipe",
     "madePrivate": "Rendu privé",
     "showLess": "Afficher moins",
+    "nMore": "{{count}} de plus",
     "download": "Télécharger",
     "unknown": "Inconnu",
     "settings": "Paramètres",
@@ -312,6 +313,8 @@
     "customImapDesc": "Connecter n'importe quel e-mail avec les paramètres du serveur",
     "aboutAtlas": "À propos d'Atlas",
     "allInOnePlatform": "Plateforme professionnelle tout-en-un",
+    "aboutParagraph1": "Atlas est une plateforme professionnelle auto-hébergée qui réunit CRM, RH, gestion de projets, édition de documents, stockage de fichiers, signatures électroniques et bien plus dans un espace de travail unifié. Conçue avec des technologies web modernes pour les équipes qui souhaitent un contrôle total sur leurs données.",
+    "aboutParagraph2": "Contrairement aux solutions exclusivement cloud, Atlas fonctionne sur votre propre infrastructure avec le code source complet disponible. Déployez avec Docker en quelques minutes, personnalisez selon vos besoins et gardez la maîtrise totale de vos données — pas de dépendance fournisseur, pas de tarification par siège, pas de limites.",
     "version": "Version",
     "currentAppVersion": "Version actuelle de l'application",
     "builtWith": "Construit avec",
@@ -559,7 +562,57 @@
     "saving": "Enregistrement...",
     "saveSnapshot": "Enregistrer un instantané",
     "noVersionsYet": "Aucune version pour le moment. Cliquez sur \"Enregistrer un instantané\" pour en créer une.",
-    "addIcon": "Ajouter une icône"
+    "addIcon": "Ajouter une icône",
+    "addCover": "Ajouter une couverture",
+    "changeCover": "Changer la couverture",
+    "removeCover": "Supprimer la couverture",
+    "changeIcon": "Changer l'icône",
+    "importDocument": "Importer un document",
+    "documentNotFound": "Document introuvable",
+    "versionHistory": "Historique des versions",
+    "comments": "Commentaires",
+    "addComment": "Ajouter un commentaire...",
+    "comment": "Commenter",
+    "noComments": "Pas encore de commentaires",
+    "resolve": "Résoudre",
+    "showResolved": "Afficher {{count}} résolus",
+    "hideResolved": "Masquer {{count}} résolus",
+    "export": "Exporter",
+    "plainText": "Texte brut",
+    "printPdf": "Imprimer / PDF",
+    "wordsCount": "{{count}} mots",
+    "readingTime": "{{time}}",
+    "referencedIn": "Référencé dans {{count}} document",
+    "referencedInPlural": "Référencé dans {{count}} documents",
+    "searchTemplates": "Rechercher des modèles...",
+    "startWithTemplate": "Commencer avec un modèle",
+    "startWithTemplateDesc": "Démarrez plus vite avec des pages pré-construites",
+    "all": "Tout",
+    "startFresh": "Recommencer à zéro",
+    "useTemplate": "Utiliser le modèle",
+    "noTemplatesMatch": "Aucun modèle ne correspond à votre recherche",
+    "searchDrawings": "Rechercher des dessins...",
+    "noDrawingsFound": "Aucun dessin trouvé",
+    "untitledDrawing": "Dessin sans titre",
+    "searchTables": "Rechercher des tableaux...",
+    "noTablesFound": "Aucun tableau trouvé",
+    "untitledTable": "Tableau sans titre",
+    "find": "Rechercher...",
+    "replace": "Remplacer...",
+    "replaceBtn": "Remplacer",
+    "replaceAll": "Tout",
+    "caseSensitive": "Sensible à la casse",
+    "showReplace": "Afficher remplacer",
+    "hideReplace": "Masquer remplacer",
+    "keyboardShortcuts": "Raccourcis clavier",
+    "tableAddRowAbove": "+Ligne \u2191",
+    "tableAddRowBelow": "+Ligne \u2193",
+    "tableDeleteRow": "\u2212Ligne",
+    "tableAddColBefore": "+Col \u2190",
+    "tableAddColAfter": "+Col \u2192",
+    "tableDeleteCol": "\u2212Col",
+    "tableDelete": "Tableau",
+    "importedFrom": "Importé depuis {{filename}}"
   },
   "draw": {
     "title": "Draw",
@@ -628,6 +681,7 @@
     "saved": "Enregistré",
     "exportPdf": "Exporter en PDF",
     "insertImage": "Insérer une image",
+    "imageTooLarge": "L'image doit faire moins de 10 Mo",
     "empty": {
       "title": "Créez votre premier dessin",
       "desc": "Esquissez des diagrammes, des maquettes et des idées visuelles",
@@ -1942,7 +1996,8 @@
     "status": {
       "active": "Actif",
       "onLeave": "En conge",
-      "terminated": "Parti"
+      "terminated": "Parti",
+      "probation": "Période d'essai"
     },
     "leaveType": {
       "vacation": "Vacances",
@@ -2222,6 +2277,23 @@
     },
     "confirm": {
       "deleteEmployee": "Êtes-vous sûr de vouloir supprimer {{name}} ? Cette action est irréversible."
+    },
+    "onboardingCategory": {
+      "general": "Général",
+      "it": "Informatique",
+      "hr": "RH",
+      "team": "Équipe",
+      "admin": "Administration"
+    },
+    "placeholder": {
+      "fullName": "Jean Dupont",
+      "email": "jean@entreprise.fr",
+      "role": "Ingénieur logiciel",
+      "departmentName": "Ingénierie",
+      "holidayName": "Jour de l'An",
+      "leaveTypeName": "Congés",
+      "leaveTypeSlug": "conges",
+      "policyName": "Standard"
     }
   },
   "sign": {
@@ -2274,7 +2346,8 @@
       "voidConfirm": "Cela annulera tous les liens de signature en cours. Les signataires ne pourront plus signer ce document.",
       "redirectUrl": "URL de redirection",
       "redirectUrlPlaceholder": "URL de redirection après la signature (facultatif)",
-      "settingsTitle": "Paramètres du document"
+      "settingsTitle": "Paramètres du document",
+      "tagPlaceholder": "Nom du tag..."
     },
     "fields": {
       "signature": "Signature",
@@ -2288,7 +2361,10 @@
       "readOnly": "Lecture seule",
       "placeholder": "Texte indicatif",
       "fontSize": "Taille de police",
-      "textAlign": "Alignement"
+      "textAlign": "Alignement",
+      "alignLeft": "Gauche",
+      "alignCenter": "Centre",
+      "alignRight": "Droite"
     },
     "roles": {
       "signer": "Signataire",
@@ -2319,7 +2395,9 @@
       "emailSubject": "Objet de l'e-mail",
       "emailMessage": "Message de l'e-mail",
       "emailSubjectPlaceholder": "Objet personnalisé (facultatif)",
-      "emailMessagePlaceholder": "Message personnalisé pour l'invitation de signature (facultatif)"
+      "emailMessagePlaceholder": "Message personnalisé pour l'invitation de signature (facultatif)",
+      "emailPlaceholder": "nom@exemple.fr",
+      "namePlaceholder": "Jean Dupont"
     },
     "reminders": {
       "lastSent": "Dernier rappel envoyé le {{date}}",
@@ -2399,7 +2477,12 @@
       "typeYourName": "Saisissez votre nom",
       "clear": "Effacer",
       "cancel": "Annuler",
-      "apply": "Appliquer"
+      "apply": "Appliquer",
+      "uploadSignature": "Télécharger"
+    },
+    "pdf": {
+      "loading": "Chargement du PDF...",
+      "pageOf": "Page {{current}} sur {{total}}"
     },
     "empty": {
       "title": "Faites signer vos documents",
@@ -2826,6 +2909,31 @@
       "noMatchingClients": "Aucun client correspondant",
       "noMatchingInvoices": "Aucune facture correspondante",
       "tryDifferentSearch": "Essayez un autre terme de recherche"
+    },
+    "calendar": {
+      "jan": "Jan",
+      "feb": "Fév",
+      "mar": "Mar",
+      "apr": "Avr",
+      "may": "Mai",
+      "jun": "Jui",
+      "jul": "Jul",
+      "aug": "Aoû",
+      "sep": "Sep",
+      "oct": "Oct",
+      "nov": "Nov",
+      "dec": "Déc",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Jeu",
+      "fri": "Ven",
+      "sat": "Sam",
+      "sun": "Dim"
+    },
+    "placeholder": {
+      "email": "client@entreprise.fr",
+      "phone": "+33-1-55-0100"
     }
   },
   "setup": {

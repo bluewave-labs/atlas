@@ -1,4 +1,5 @@
 import { Link2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useDocBacklinks } from '../hooks/use-doc-comments';
 import { useNavigate } from 'react-router-dom';
 import type { Backlink } from '@atlasmail/shared';
@@ -8,6 +9,7 @@ interface BacklinksSectionProps {
 }
 
 export function BacklinksSection({ docId }: BacklinksSectionProps) {
+  const { t } = useTranslation();
   const { data: backlinks = [] } = useDocBacklinks(docId);
   const navigate = useNavigate();
 
@@ -18,7 +20,7 @@ export function BacklinksSection({ docId }: BacklinksSectionProps) {
       <div className="flex items-center gap-1.5 mb-2">
         <Link2 className="w-3.5 h-3.5 text-gray-400" />
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-          Referenced in {backlinks.length} document{backlinks.length !== 1 ? 's' : ''}
+          {backlinks.length !== 1 ? t('docs.referencedInPlural', { count: backlinks.length }) : t('docs.referencedIn', { count: backlinks.length })}
         </span>
       </div>
       <div className="space-y-1">
@@ -28,7 +30,7 @@ export function BacklinksSection({ docId }: BacklinksSectionProps) {
             onClick={() => navigate(`/docs/${bl.id}`)}
             className="block w-full text-left px-2 py-1.5 rounded text-sm text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer truncate"
           >
-            {bl.title || 'Untitled'}
+            {bl.title || t('docs.untitled')}
           </button>
         ))}
       </div>

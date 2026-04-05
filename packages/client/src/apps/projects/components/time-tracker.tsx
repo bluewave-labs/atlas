@@ -33,10 +33,11 @@ function getWeekDates(weekStart: string): string[] {
   return dates;
 }
 
-function formatShortDate(dateStr: string): string {
+function formatShortDate(dateStr: string, t?: (k: string) => string): string {
   const d = new Date(dateStr + 'T00:00:00');
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  return `${days[d.getDay()]} ${d.getDate()}`;
+  const dayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const dayLabel = t ? t(`projects.calendar.${dayKeys[d.getDay()]}`) : dayKeys[d.getDay()];
+  return `${dayLabel} ${d.getDate()}`;
 }
 
 function formatElapsed(seconds: number): string {
@@ -284,7 +285,7 @@ export function TimeTracker() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
           <IconButton icon={<ChevronLeft size={14} />} label={t('projects.timeTracking.prevWeek')} size={28} onClick={() => navigateWeek(-1)} />
           <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)', minWidth: 160, textAlign: 'center' }}>
-            {formatShortDate(weekDates[0])} - {formatShortDate(weekDates[6])}
+            {formatShortDate(weekDates[0], t)} - {formatShortDate(weekDates[6], t)}
           </span>
           <IconButton icon={<ChevronRight size={14} />} label={t('projects.timeTracking.nextWeek')} size={28} onClick={() => navigateWeek(1)} />
         </div>
@@ -305,7 +306,7 @@ export function TimeTracker() {
           </div>
           {weekDates.map((date) => (
             <div key={date} className="projects-time-header-cell" style={{ width: 70 }}>
-              {formatShortDate(date)}
+              {formatShortDate(date, t)}
             </div>
           ))}
           <div className="projects-time-header-cell" style={{ width: 70 }}>

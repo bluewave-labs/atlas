@@ -72,9 +72,9 @@ export function CreateEmployeeModal({
       <Modal.Header title={t('hr.actions.addEmployee')} subtitle={t('hr.actions.addEmployeeSubtitle')} />
       <Modal.Body>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-          <Input label={t('hr.fields.fullName')} value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" autoFocus />
-          <Input label={t('hr.fields.email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@company.com" />
-          <Input label={t('hr.fields.role')} value={role} onChange={(e) => setRole(e.target.value)} placeholder="Software Engineer" />
+          <Input label={t('hr.fields.fullName')} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('hr.placeholder.fullName')} autoFocus />
+          <Input label={t('hr.fields.email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('hr.placeholder.email')} />
+          <Input label={t('hr.fields.role')} value={role} onChange={(e) => setRole(e.target.value)} placeholder={t('hr.placeholder.role')} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
             <label className="hr-field-label">{t('hr.fields.department')}</label>
             <Select

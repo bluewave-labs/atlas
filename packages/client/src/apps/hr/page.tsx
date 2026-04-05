@@ -293,7 +293,7 @@ export function HrPage() {
               ))}
               {!showAllDepts && departments.length > MAX_VISIBLE_DEPTS + 1 && (
                 <SidebarItem
-                  label={`${departments.length - MAX_VISIBLE_DEPTS} more`}
+                  label={t('common.nMore', { count: departments.length - MAX_VISIBLE_DEPTS })}
                   icon={<ChevronDown size={13} />}
                   onClick={() => setShowAllDepts(true)}
                   style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}

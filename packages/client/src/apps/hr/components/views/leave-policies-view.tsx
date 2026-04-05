@@ -76,7 +76,7 @@ export function LeavePoliciesView() {
 
       {showCreate && (
         <div style={{ marginTop: 'var(--spacing-lg)', padding: 'var(--spacing-lg)', border: '1px solid var(--color-border-primary)', borderRadius: 'var(--radius-lg)' }}>
-          <Input label={t('hr.fields.name')} value={name} onChange={(e) => setName(e.target.value)} placeholder="Standard" autoFocus />
+          <Input label={t('hr.fields.name')} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('hr.placeholder.policyName')} autoFocus />
           <div style={{ marginTop: 'var(--spacing-md)' }}>
             <Input label={t('hr.fields.description')} value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('hr.fields.optionalDescription')} />
           </div>

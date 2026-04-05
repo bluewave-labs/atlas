@@ -34,18 +34,37 @@ export function getTimeOffStatusBadge(status: HrTimeOff['status'], t: (k: string
   }
 }
 
-export function getCategoryBadge(category: string) {
+const categoryKeys: Record<string, string> = {
+  general: 'hr.onboardingCategory.general',
+  IT: 'hr.onboardingCategory.it',
+  HR: 'hr.onboardingCategory.hr',
+  Team: 'hr.onboardingCategory.team',
+  Admin: 'hr.onboardingCategory.admin',
+};
+
+export function getCategoryBadge(category: string, t?: (k: string) => string) {
   const variants: Record<string, 'primary' | 'success' | 'warning' | 'error' | 'default'> = {
     IT: 'primary', HR: 'success', Team: 'warning', Admin: 'error',
   };
-  return <Badge variant={variants[category] || 'default'}>{category}</Badge>;
+  const label = t && categoryKeys[category] ? t(categoryKeys[category]) : category;
+  return <Badge variant={variants[category] || 'default'}>{label}</Badge>;
 }
 
-export function getDocTypeBadge(type: string) {
+const docTypeKeys: Record<string, string> = {
+  contract: 'hr.documents.types.contract',
+  certificate: 'hr.documents.types.certificate',
+  ID: 'hr.documents.types.id',
+  resume: 'hr.documents.types.resume',
+  'policy-acknowledgment': 'hr.documents.types.policy',
+  other: 'hr.documents.types.other',
+};
+
+export function getDocTypeBadge(type: string, t?: (k: string) => string) {
   const variants: Record<string, 'primary' | 'success' | 'warning' | 'error' | 'default'> = {
     contract: 'primary', certificate: 'success', ID: 'warning', resume: 'default', 'policy-acknowledgment': 'error',
   };
-  return <Badge variant={variants[type] || 'default'}>{type}</Badge>;
+  const label = t && docTypeKeys[type] ? t(docTypeKeys[type]) : type;
+  return <Badge variant={variants[type] || 'default'}>{label}</Badge>;
 }
 
 // --- Color Presets -------------------------------------------------------

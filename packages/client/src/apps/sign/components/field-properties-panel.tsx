@@ -305,9 +305,9 @@ export function FieldPropertiesPanel({
               onUpdateField({ options: opts } as Partial<SignatureField>);
             }}
             options={[
-              { value: 'left', label: 'Left' },
-              { value: 'center', label: 'Center' },
-              { value: 'right', label: 'Right' },
+              { value: 'left', label: t('sign.fields.alignLeft') },
+              { value: 'center', label: t('sign.fields.alignCenter') },
+              { value: 'right', label: t('sign.fields.alignRight') },
             ]}
             size="sm"
           />

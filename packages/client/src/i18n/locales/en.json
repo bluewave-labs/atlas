@@ -40,6 +40,7 @@
     "madeTeamVisible": "Shared with team",
     "madePrivate": "Made private",
     "showLess": "Show less",
+    "nMore": "{{count}} more",
     "download": "Download",
     "unknown": "Unknown",
     "settings": "Settings",
@@ -315,6 +316,8 @@
     "customImapDesc": "Connect any email with server settings",
     "aboutAtlas": "About Atlas",
     "allInOnePlatform": "All-in-one business platform",
+    "aboutParagraph1": "Atlas is a self-hosted business platform that brings CRM, HR, project management, document editing, file storage, e-signatures, and more into a single unified workspace. Built with modern web technologies and designed for teams that want full control over their data.",
+    "aboutParagraph2": "Unlike cloud-only solutions, Atlas runs on your own infrastructure with the complete source code available. Deploy with Docker in minutes, customize to your needs, and own every byte of your business data — no vendor lock-in, no per-seat pricing, no limits.",
     "version": "Version",
     "currentAppVersion": "Current application version",
     "builtWith": "Built with",
@@ -587,7 +590,58 @@
     "saving": "Saving...",
     "saveSnapshot": "Save snapshot",
     "noVersionsYet": "No versions yet. Click \"Save snapshot\" to create one.",
-    "addIcon": "Add icon"
+    "addIcon": "Add icon",
+    "addCover": "Add cover",
+    "changeCover": "Change cover",
+    "removeCover": "Remove cover",
+    "changeIcon": "Change icon",
+    "importDocument": "Import document",
+    "documentNotFound": "Document not found",
+    "versionHistory": "Version history",
+    "comments": "Comments",
+    "addComment": "Add a comment...",
+    "comment": "Comment",
+    "noComments": "No comments yet",
+    "resolve": "Resolve",
+    "showResolved": "Show {{count}} resolved",
+    "hideResolved": "Hide {{count}} resolved",
+    "export": "Export",
+    "plainText": "Plain text",
+    "printPdf": "Print / PDF",
+    "wordsCount": "{{count}} words",
+    "readingTime": "{{time}}",
+    "referencedIn": "Referenced in {{count}} document",
+    "referencedInPlural": "Referenced in {{count}} documents",
+    "searchTemplates": "Search templates...",
+    "startWithTemplate": "Start with a template",
+    "startWithTemplateDesc": "Get started faster with pre-built pages for every workflow",
+    "all": "All",
+    "startFresh": "Start fresh",
+    "useTemplate": "Use template",
+    "noTemplatesMatch": "No templates match your search",
+    "searchDrawings": "Search drawings...",
+    "noDrawingsFound": "No drawings found",
+    "untitledDrawing": "Untitled drawing",
+    "searchTables": "Search tables...",
+    "noTablesFound": "No tables found",
+    "untitledTable": "Untitled table",
+    "find": "Find...",
+    "replace": "Replace...",
+    "noResults": "No results for \"{{query}}\"",
+    "replaceBtn": "Replace",
+    "replaceAll": "All",
+    "caseSensitive": "Case sensitive",
+    "showReplace": "Show replace",
+    "hideReplace": "Hide replace",
+    "keyboardShortcuts": "Keyboard shortcuts",
+    "tableAddRowAbove": "+Row \u2191",
+    "tableAddRowBelow": "+Row \u2193",
+    "tableDeleteRow": "\u2212Row",
+    "tableAddColBefore": "+Col \u2190",
+    "tableAddColAfter": "+Col \u2192",
+    "tableDeleteCol": "\u2212Col",
+    "tableDelete": "Table",
+    "importedFrom": "Imported from {{filename}}"
   },
   "draw": {
     "title": "Draw",
@@ -658,6 +712,7 @@
     "exitPresent": "Exit presentation",
     "exportPdf": "Export as PDF",
     "insertImage": "Insert image",
+    "imageTooLarge": "Image must be under 10 MB",
     "empty": {
       "title": "Create your first drawing",
       "desc": "Sketch diagrams, wireframes, and visual ideas",
@@ -1974,7 +2029,8 @@
     "status": {
       "active": "Active",
       "onLeave": "On leave",
-      "terminated": "Terminated"
+      "terminated": "Terminated",
+      "probation": "Probation"
     },
     "leaveType": {
       "vacation": "Vacation",
@@ -2254,6 +2310,23 @@
       "display": "Display",
       "showDepartmentInList": "Show department in list",
       "showDepartmentInListDesc": "Display department column in employee list"
+    },
+    "onboardingCategory": {
+      "general": "General",
+      "it": "IT",
+      "hr": "HR",
+      "team": "Team",
+      "admin": "Admin"
+    },
+    "placeholder": {
+      "fullName": "John Doe",
+      "email": "john@company.com",
+      "role": "Software Engineer",
+      "departmentName": "Engineering",
+      "holidayName": "New Year's Day",
+      "leaveTypeName": "Vacation",
+      "leaveTypeSlug": "vacation",
+      "policyName": "Standard"
     }
   },
   "sign": {
@@ -2306,7 +2379,8 @@
       "voidConfirm": "This will cancel all outstanding signing links. Signers will no longer be able to sign this document.",
       "redirectUrl": "Redirect URL",
       "redirectUrlPlaceholder": "URL to redirect signer after signing (optional)",
-      "settingsTitle": "Document settings"
+      "settingsTitle": "Document settings",
+      "tagPlaceholder": "Tag name..."
     },
     "fields": {
       "signature": "Signature",
@@ -2320,7 +2394,10 @@
       "readOnly": "Read only",
       "placeholder": "Placeholder",
       "fontSize": "Font size",
-      "textAlign": "Alignment"
+      "textAlign": "Alignment",
+      "alignLeft": "Left",
+      "alignCenter": "Center",
+      "alignRight": "Right"
     },
     "roles": {
       "signer": "Signer",
@@ -2351,7 +2428,9 @@
       "emailSubject": "Email subject",
       "emailMessage": "Email message",
       "emailSubjectPlaceholder": "Custom subject line (optional)",
-      "emailMessagePlaceholder": "Custom message to include in the signing invitation (optional)"
+      "emailMessagePlaceholder": "Custom message to include in the signing invitation (optional)",
+      "emailPlaceholder": "name@example.com",
+      "namePlaceholder": "John Doe"
     },
     "reminders": {
       "lastSent": "Last reminder sent {{date}}",
@@ -2431,7 +2510,12 @@
       "typeYourName": "Type your name",
       "clear": "Clear",
       "cancel": "Cancel",
-      "apply": "Apply"
+      "apply": "Apply",
+      "uploadSignature": "Upload"
+    },
+    "pdf": {
+      "loading": "Loading PDF...",
+      "pageOf": "Page {{current}} of {{total}}"
     },
     "empty": {
       "title": "Get documents signed",
@@ -2831,6 +2915,31 @@
       "noMatchingClients": "No matching clients",
       "noMatchingInvoices": "No matching invoices",
       "tryDifferentSearch": "Try a different search term"
+    },
+    "calendar": {
+      "jan": "Jan",
+      "feb": "Feb",
+      "mar": "Mar",
+      "apr": "Apr",
+      "may": "May",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Aug",
+      "sep": "Sep",
+      "oct": "Oct",
+      "nov": "Nov",
+      "dec": "Dec",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    },
+    "placeholder": {
+      "email": "client@company.com",
+      "phone": "+1-555-0100"
     }
   },
   "setup": {

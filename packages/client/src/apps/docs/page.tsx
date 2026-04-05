@@ -39,6 +39,7 @@ import '../../styles/docs.css';
 
 export function DocsPage() {
   useDocSettingsSync();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [selectedId, setSelectedId] = useState<string | undefined>(id);
@@ -186,7 +187,7 @@ export function DocsPage() {
       } else if (ext === 'html' || ext === 'htm') {
         html = await file.text();
       } else {
-        html = `<p>Imported from ${file.name}</p>`;
+        html = `<p>${t('docs.importedFrom', { filename: file.name })}</p>`;
       }
 
       createDoc.mutate(
@@ -276,7 +277,7 @@ export function DocsPage() {
             ) : !selectedId ? (
               <div style={{ flex: 1, overflow: 'auto' }}><EmptyState /></div>
             ) : isLoading ? (
-              <div style={{ flex: 1, overflow: 'auto' }}><CenterText>Loading...</CenterText></div>
+              <div style={{ flex: 1, overflow: 'auto' }}><CenterText>{t('common.loading')}</CenterText></div>
             ) : doc ? (
               <div style={{ flex: 1, overflow: 'auto' }}>
                 <DocumentView
@@ -294,7 +295,7 @@ export function DocsPage() {
                 />
               </div>
             ) : (
-              <div style={{ flex: 1, overflow: 'auto' }}><CenterText>Document not found</CenterText></div>
+              <div style={{ flex: 1, overflow: 'auto' }}><CenterText>{t('docs.documentNotFound')}</CenterText></div>
             )}
           </div>
           {selectedId && (

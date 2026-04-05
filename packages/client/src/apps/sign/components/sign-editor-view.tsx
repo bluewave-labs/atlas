@@ -274,7 +274,7 @@ export function SignEditorView({
                           setTagDraft('');
                           setAddingTag(false);
                         }}
-                        placeholder="Tag name..."
+                        placeholder={t('sign.editor.tagPlaceholder')}
                         style={{
                           fontSize: 'var(--font-size-xs)',
                           fontFamily: 'var(--font-family)',

@@ -40,6 +40,7 @@
     "madeTeamVisible": "Takımla paylaşıldı",
     "madePrivate": "Özel yapıldı",
     "showLess": "Daha az göster",
+    "nMore": "{{count}} daha",
     "download": "İndir",
     "unknown": "Bilinmeyen",
     "settings": "Ayarlar",
@@ -312,6 +313,8 @@
     "customImapDesc": "Sunucu ayarlarıyla herhangi bir e-postayı bağlayın",
     "aboutAtlas": "Atlas hakkında",
     "allInOnePlatform": "Hepsi bir arada iş platformu",
+    "aboutParagraph1": "Atlas, CRM, İK, proje yönetimi, belge düzenleme, dosya depolama, e-imza ve daha fazlasını tek bir çalışma alanında birleştiren, kendi sunucunuzda barındırılabilen bir iş platformudur. Modern web teknolojileriyle geliştirilmiş olup verilerinin tam kontrolünü isteyen ekipler için tasarlanmıştır.",
+    "aboutParagraph2": "Yalnızca bulut tabanlı çözümlerin aksine Atlas kendi altyapınızda çalışır ve kaynak kodunun tamamı erişime açıktır. Docker ile dakikalar içinde dağıtın, ihtiyaçlarınıza göre özelleştirin ve iş verilerinizin tamamına sahip olun — satıcı bağımlılığı, koltuk başı fiyatlandırma veya kısıtlama yoktur.",
     "version": "Sürüm",
     "currentAppVersion": "Mevcut uygulama sürümü",
     "builtWith": "Teknolojiler",
@@ -559,7 +562,57 @@
     "saving": "Kaydediliyor...",
     "saveSnapshot": "Anlık görüntü kaydet",
     "noVersionsYet": "Henüz sürüm yok. Oluşturmak için \"Anlık görüntü kaydet\"e tıklayın.",
-    "addIcon": "Simge ekle"
+    "addIcon": "Simge ekle",
+    "addCover": "Kapak ekle",
+    "changeCover": "Kapağı değiştir",
+    "removeCover": "Kapağı kaldır",
+    "changeIcon": "Simgeyi değiştir",
+    "importDocument": "Belge içe aktar",
+    "documentNotFound": "Belge bulunamadı",
+    "versionHistory": "Sürüm geçmişi",
+    "comments": "Yorumlar",
+    "addComment": "Yorum ekle...",
+    "comment": "Yorum",
+    "noComments": "Henüz yorum yok",
+    "resolve": "Çözüldü",
+    "showResolved": "{{count}} çözülmüşü göster",
+    "hideResolved": "{{count}} çözülmüşü gizle",
+    "export": "Dışa aktar",
+    "plainText": "Düz metin",
+    "printPdf": "Yazdır / PDF",
+    "wordsCount": "{{count}} kelime",
+    "readingTime": "{{time}}",
+    "referencedIn": "{{count}} belgede referans verildi",
+    "referencedInPlural": "{{count}} belgede referans verildi",
+    "searchTemplates": "Şablon ara...",
+    "startWithTemplate": "Şablonla başla",
+    "startWithTemplateDesc": "Önceden hazırlanmış sayfalarla daha hızlı başlayın",
+    "all": "Tümü",
+    "startFresh": "Sıfırdan başla",
+    "useTemplate": "Şablonu kullan",
+    "noTemplatesMatch": "Aramanızla eşleşen şablon yok",
+    "searchDrawings": "Çizim ara...",
+    "noDrawingsFound": "Çizim bulunamadı",
+    "untitledDrawing": "Adsız çizim",
+    "searchTables": "Tablo ara...",
+    "noTablesFound": "Tablo bulunamadı",
+    "untitledTable": "Adsız tablo",
+    "find": "Bul...",
+    "replace": "Değiştir...",
+    "replaceBtn": "Değiştir",
+    "replaceAll": "Tümü",
+    "caseSensitive": "Büyük/küçük harf duyarlı",
+    "showReplace": "Değiştirmeyi göster",
+    "hideReplace": "Değiştirmeyi gizle",
+    "keyboardShortcuts": "Klavye kısayolları",
+    "tableAddRowAbove": "+Satır \u2191",
+    "tableAddRowBelow": "+Satır \u2193",
+    "tableDeleteRow": "\u2212Satır",
+    "tableAddColBefore": "+Sütun \u2190",
+    "tableAddColAfter": "+Sütun \u2192",
+    "tableDeleteCol": "\u2212Sütun",
+    "tableDelete": "Tablo",
+    "importedFrom": "{{filename}} dosyasından içe aktarıldı"
   },
   "draw": {
     "title": "Draw",
@@ -630,6 +683,7 @@
     "exitPresent": "Sunumdan çık",
     "exportPdf": "PDF olarak dışa aktar",
     "insertImage": "Resim ekle",
+    "imageTooLarge": "Resim 10 MB'den küçük olmalıdır",
     "empty": {
       "title": "İlk çiziminizi oluşturun",
       "desc": "Diyagramlar, tel kafesler ve görsel fikirler çizin",
@@ -1942,7 +1996,8 @@
     "status": {
       "active": "Aktif",
       "onLeave": "İzinli",
-      "terminated": "Ayrılmış"
+      "terminated": "Ayrılmış",
+      "probation": "Deneme süresi"
     },
     "leaveType": {
       "vacation": "Tatil",
@@ -2222,6 +2277,23 @@
     },
     "confirm": {
       "deleteEmployee": "{{name}} adlı çalışanı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
+    },
+    "onboardingCategory": {
+      "general": "Genel",
+      "it": "BT",
+      "hr": "İK",
+      "team": "Takım",
+      "admin": "Yönetim"
+    },
+    "placeholder": {
+      "fullName": "Ahmet Yılmaz",
+      "email": "ahmet@sirket.com",
+      "role": "Yazılım Mühendisi",
+      "departmentName": "Mühendislik",
+      "holidayName": "Yılbaşı",
+      "leaveTypeName": "Yıllık izin",
+      "leaveTypeSlug": "yillik-izin",
+      "policyName": "Standart"
     }
   },
   "sign": {
@@ -2274,7 +2346,8 @@
       "voidConfirm": "Bu işlem tüm bekleyen imza bağlantılarını iptal edecektir. İmzacılar artık bu belgeyi imzalayamaz.",
       "redirectUrl": "Yönlendirme URL'si",
       "redirectUrlPlaceholder": "İmzalama sonrası yönlendirilecek URL (isteğe bağlı)",
-      "settingsTitle": "Belge ayarları"
+      "settingsTitle": "Belge ayarları",
+      "tagPlaceholder": "Etiket adı..."
     },
     "fields": {
       "signature": "İmza",
@@ -2288,7 +2361,10 @@
       "readOnly": "Salt okunur",
       "placeholder": "Yer tutucu",
       "fontSize": "Yazı boyutu",
-      "textAlign": "Hizalama"
+      "textAlign": "Hizalama",
+      "alignLeft": "Sol",
+      "alignCenter": "Orta",
+      "alignRight": "Sağ"
     },
     "roles": {
       "signer": "İmzacı",
@@ -2319,7 +2395,9 @@
       "emailSubject": "E-posta konusu",
       "emailMessage": "E-posta mesajı",
       "emailSubjectPlaceholder": "Özel konu satırı (isteğe bağlı)",
-      "emailMessagePlaceholder": "İmza davetiyesine eklenecek özel mesaj (isteğe bağlı)"
+      "emailMessagePlaceholder": "İmza davetiyesine eklenecek özel mesaj (isteğe bağlı)",
+      "emailPlaceholder": "ad@ornek.com",
+      "namePlaceholder": "Ahmet Yılmaz"
     },
     "reminders": {
       "lastSent": "Son hatırlatma gönderildi: {{date}}",
@@ -2399,7 +2477,12 @@
       "typeYourName": "Adınızı yazın",
       "clear": "Temizle",
       "cancel": "İptal",
-      "apply": "Uygula"
+      "apply": "Uygula",
+      "uploadSignature": "Yükle"
+    },
+    "pdf": {
+      "loading": "PDF yükleniyor...",
+      "pageOf": "Sayfa {{current}} / {{total}}"
     },
     "empty": {
       "title": "Belgeleri imzalatın",
@@ -2826,6 +2909,31 @@
       "noMatchingClients": "Eslesen musteri bulunamadi",
       "noMatchingInvoices": "Eslesen fatura bulunamadi",
       "tryDifferentSearch": "Farkli bir arama terimi deneyin"
+    },
+    "calendar": {
+      "jan": "Oca",
+      "feb": "Şub",
+      "mar": "Mar",
+      "apr": "Nis",
+      "may": "May",
+      "jun": "Haz",
+      "jul": "Tem",
+      "aug": "Ağu",
+      "sep": "Eyl",
+      "oct": "Eki",
+      "nov": "Kas",
+      "dec": "Ara",
+      "mon": "Pzt",
+      "tue": "Sal",
+      "wed": "Çar",
+      "thu": "Per",
+      "fri": "Cum",
+      "sat": "Cmt",
+      "sun": "Paz"
+    },
+    "placeholder": {
+      "email": "musteri@sirket.com",
+      "phone": "+90-555-0100"
     }
   },
   "setup": {

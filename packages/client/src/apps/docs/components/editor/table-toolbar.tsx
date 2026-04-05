@@ -1,4 +1,5 @@
 import type { useEditor } from '@tiptap/react';
+import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
 
 // ─── Table toolbar (appears when cursor is inside a table) ──────────────
@@ -10,6 +11,7 @@ export function TableToolbar({
   editor: NonNullable<ReturnType<typeof useEditor>>;
   position: { top: number; left: number };
 }) {
+  const { t } = useTranslation();
   return (
     <div
       className="table-toolbar"
@@ -20,24 +22,24 @@ export function TableToolbar({
       {/* Row controls */}
       <button
         className="table-toolbar-btn"
-        title="Add row above"
+        title={t('docs.tableAddRowAbove')}
         onClick={() => editor.chain().focus().addRowBefore().run()}
       >
-        +Row ↑
+        {t('docs.tableAddRowAbove')}
       </button>
       <button
         className="table-toolbar-btn"
-        title="Add row below"
+        title={t('docs.tableAddRowBelow')}
         onClick={() => editor.chain().focus().addRowAfter().run()}
       >
-        +Row ↓
+        {t('docs.tableAddRowBelow')}
       </button>
       <button
         className="table-toolbar-btn table-toolbar-btn--danger"
-        title="Delete row"
+        title={t('docs.tableDeleteRow')}
         onClick={() => editor.chain().focus().deleteRow().run()}
       >
-        −Row
+        {t('docs.tableDeleteRow')}
       </button>
 
       <div className="table-toolbar-divider" />
@@ -45,24 +47,24 @@ export function TableToolbar({
       {/* Column controls */}
       <button
         className="table-toolbar-btn"
-        title="Add column before"
+        title={t('docs.tableAddColBefore')}
         onClick={() => editor.chain().focus().addColumnBefore().run()}
       >
-        +Col ←
+        {t('docs.tableAddColBefore')}
       </button>
       <button
         className="table-toolbar-btn"
-        title="Add column after"
+        title={t('docs.tableAddColAfter')}
         onClick={() => editor.chain().focus().addColumnAfter().run()}
       >
-        +Col →
+        {t('docs.tableAddColAfter')}
       </button>
       <button
         className="table-toolbar-btn table-toolbar-btn--danger"
-        title="Delete column"
+        title={t('docs.tableDeleteCol')}
         onClick={() => editor.chain().focus().deleteColumn().run()}
       >
-        −Col
+        {t('docs.tableDeleteCol')}
       </button>
 
       <div className="table-toolbar-divider" />
@@ -70,11 +72,11 @@ export function TableToolbar({
       {/* Delete table */}
       <button
         className="table-toolbar-btn table-toolbar-btn--danger"
-        title="Delete table"
+        title={t('docs.tableDelete')}
         onClick={() => editor.chain().focus().deleteTable().run()}
       >
         <Trash2 size={12} />
-        <span>Table</span>
+        <span>{t('docs.tableDelete')}</span>
       </button>
     </div>
   );
