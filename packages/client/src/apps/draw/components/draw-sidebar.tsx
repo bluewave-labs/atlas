@@ -60,7 +60,7 @@ function SortDropdown({
             top: '100%',
             right: 0,
             marginTop: 4,
-            minWidth: 160,
+            minWidth: 200,
             background: 'var(--color-bg-elevated)',
             border: '1px solid var(--color-border-primary)',
             borderRadius: 'var(--radius-md)',
@@ -88,6 +88,7 @@ function SortDropdown({
                 fontWeight: opt.value === value ? 600 : 400,
                 cursor: 'pointer',
                 transition: 'background 0.12s ease',
+                whiteSpace: 'nowrap',
               }}
               onMouseEnter={(e) => {
                 if (opt.value !== value) e.currentTarget.style.background = 'var(--color-surface-hover)';

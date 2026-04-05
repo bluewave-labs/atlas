@@ -1,6 +1,6 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useMemo } from 'react';
 import {
-  Plus, Hash, MoreHorizontal, Trash2, User, CalendarDays,
+  Plus, Hash, MoreHorizontal, Trash2, User, CalendarDays, ChevronDown,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { TaskProject } from '@atlasmail/shared';
@@ -31,6 +31,21 @@ export function TasksSidebar({
   const { t } = useTranslation();
   const [projectMenuId, setProjectMenuId] = useState<string | null>(null);
   const projectMenuRef = useRef<HTMLDivElement>(null);
+  const [showAllProjects, setShowAllProjects] = useState(false);
+  const [showAllTags, setShowAllTags] = useState(false);
+
+  const MAX_VISIBLE = 5;
+  const visibleProjects = useMemo(() => {
+    if (showAllProjects || projects.length <= MAX_VISIBLE + 1) return projects;
+    return projects.slice(0, MAX_VISIBLE);
+  }, [projects, showAllProjects]);
+  const hiddenProjectCount = projects.length - visibleProjects.length;
+
+  const visibleTags = useMemo(() => {
+    if (showAllTags || allTags.length <= MAX_VISIBLE + 1) return allTags;
+    return allTags.slice(0, MAX_VISIBLE);
+  }, [allTags, showAllTags]);
+  const hiddenTagCount = allTags.length - visibleTags.length;
 
   // Close project menu on click outside
   useEffect(() => {
@@ -104,7 +119,7 @@ export function TasksSidebar({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {projects.map(proj => (
+          {visibleProjects.map(proj => (
             <div key={proj.id} className="tasks-project-row" style={{ position: 'relative' }}>
               <button
                 className={`task-nav-item${activeSection === `project:${proj.id}` ? ' active' : ''}`}
@@ -147,6 +162,26 @@ export function TasksSidebar({
               )}
             </div>
           ))}
+          {hiddenProjectCount > 0 && (
+            <button
+              className="task-nav-item"
+              onClick={() => setShowAllProjects(true)}
+              style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}
+            >
+              <ChevronDown size={13} />
+              <span>{hiddenProjectCount} more</span>
+            </button>
+          )}
+          {showAllProjects && projects.length > MAX_VISIBLE + 1 && (
+            <button
+              className="task-nav-item"
+              onClick={() => setShowAllProjects(false)}
+              style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}
+            >
+              <ChevronDown size={13} style={{ transform: 'rotate(180deg)' }} />
+              <span>{t('common.showLess', 'Show less')}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -157,7 +192,7 @@ export function TasksSidebar({
             <span className="tasks-projects-label">Tags</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {allTags.map(tag => (
+            {visibleTags.map(tag => (
               <button
                 key={tag}
                 className={`task-nav-item${activeSection === `tag:${tag}` as any ? ' active' : ''}`}
@@ -167,6 +202,26 @@ export function TasksSidebar({
                 <span style={{ flex: 1 }}>{tag}</span>
               </button>
             ))}
+            {hiddenTagCount > 0 && (
+              <button
+                className="task-nav-item"
+                onClick={() => setShowAllTags(true)}
+                style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}
+              >
+                <ChevronDown size={13} />
+                <span>{hiddenTagCount} more</span>
+              </button>
+            )}
+            {showAllTags && allTags.length > MAX_VISIBLE + 1 && (
+              <button
+                className="task-nav-item"
+                onClick={() => setShowAllTags(false)}
+                style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}
+              >
+                <ChevronDown size={13} style={{ transform: 'rotate(180deg)' }} />
+                <span>{t('common.showLess', 'Show less')}</span>
+              </button>
+            )}
           </div>
         </div>
       )}

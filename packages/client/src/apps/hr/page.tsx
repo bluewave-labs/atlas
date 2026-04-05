@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Users, Building2, CalendarDays, Plus, Search, Settings2, X,
-  User,
+  User, ChevronDown,
   LayoutDashboard, GitBranch,
   ClipboardList, Calendar, Shield,
   UserCheck,
@@ -86,6 +86,8 @@ export function HrPage() {
   const [showCreateDepartment, setShowCreateDepartment] = useState(false);
   const [showCreateTimeOff, setShowCreateTimeOff] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<HrDepartment | null>(null);
+  const [showAllDepts, setShowAllDepts] = useState(false);
+  const MAX_VISIBLE_DEPTS = 5;
 
   // Data
   const { data: countsData } = useEmployeeCounts();
@@ -276,7 +278,10 @@ export function HrPage() {
                 count={counts.departments}
                 onClick={() => { setActiveNav('departments'); setSelectedEmployeeId(null); }}
               />
-              {departments.map((dept) => (
+              {(showAllDepts || departments.length <= MAX_VISIBLE_DEPTS + 1
+                ? departments
+                : departments.slice(0, MAX_VISIBLE_DEPTS)
+              ).map((dept) => (
                 <SidebarItem
                   key={dept.id}
                   label={dept.name}
@@ -286,6 +291,22 @@ export function HrPage() {
                   onClick={() => { setActiveNav(`dept:${dept.id}`); setSelectedEmployeeId(null); }}
                 />
               ))}
+              {!showAllDepts && departments.length > MAX_VISIBLE_DEPTS + 1 && (
+                <SidebarItem
+                  label={`${departments.length - MAX_VISIBLE_DEPTS} more`}
+                  icon={<ChevronDown size={13} />}
+                  onClick={() => setShowAllDepts(true)}
+                  style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}
+                />
+              )}
+              {showAllDepts && departments.length > MAX_VISIBLE_DEPTS + 1 && (
+                <SidebarItem
+                  label={t('common.showLess', 'Show less')}
+                  icon={<ChevronDown size={13} style={{ transform: 'rotate(180deg)' }} />}
+                  onClick={() => setShowAllDepts(false)}
+                  style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}
+                />
+              )}
             </SidebarSection>
 
             <SidebarSection>
