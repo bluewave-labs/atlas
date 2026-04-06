@@ -1210,12 +1210,11 @@ export function HomePage() {
                 onDragStart={(e) => {
                   setDockDragId(app.id);
                   e.dataTransfer.effectAllowed = 'move';
-                  // Use a tiny transparent ghost so browser snap-back is invisible
-                  const ghost = document.createElement('div');
-                  ghost.style.cssText = 'width:1px;height:1px;opacity:0.01;position:fixed;top:-9999px';
-                  document.body.appendChild(ghost);
-                  e.dataTransfer.setDragImage(ghost, 0, 0);
-                  requestAnimationFrame(() => document.body.removeChild(ghost));
+                  // Use the icon element as drag image
+                  const iconEl = e.currentTarget.querySelector('.dock-icon-inner') as HTMLElement;
+                  if (iconEl) {
+                    e.dataTransfer.setDragImage(iconEl, 26, 26);
+                  }
                 }}
                 onDragEnd={() => {
                   if (dockDragId && dockDragOverId && dockDragId !== dockDragOverId) {
