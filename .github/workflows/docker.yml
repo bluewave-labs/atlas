@@ -14,7 +14,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: bluewave-labs/atlas
+  IMAGE_NAME: gorkem-bwl/atlas
 
 permissions:
   contents: read
