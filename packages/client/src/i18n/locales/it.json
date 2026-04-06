@@ -2289,7 +2289,9 @@
       "approved": "Permesso approvato",
       "rejected": "Permesso rifiutato",
       "rejectComment": "Motivo del rifiuto (facoltativo)",
-      "days": "{{count}} giorni"
+      "days": "{{count}} giorni",
+      "approveFailed": "Impossibile approvare il permesso",
+      "rejectFailed": "Impossibile rifiutare il permesso"
     },
     "leaveAppStatus": {
       "draft": "Bozza",

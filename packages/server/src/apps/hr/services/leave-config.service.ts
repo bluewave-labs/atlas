@@ -3,7 +3,7 @@ import {
   hrLeaveTypes, hrLeavePolicies, hrLeavePolicyAssignments,
   hrHolidayCalendars, hrHolidays, leaveBalances,
 } from '../../../db/schema';
-import { eq, and, asc, desc, sql, gte, lte, ne } from 'drizzle-orm';
+import { eq, and, asc, desc, sql, gte, lte, ne, inArray } from 'drizzle-orm';
 import { logger } from '../../../utils/logger';
 
 // ─── Leave Types ──────────────────────────────────────────────────
@@ -221,6 +221,14 @@ export async function assignPolicy(accountId: string, employeeId: string, policy
     // Prorate allocation if assigning mid-year
     const currentMonth = now.getMonth() + 1; // 1-12
 
+    // Pre-fetch all existing balances for this employee+year to avoid N+1
+    const existingBalances = await db.select().from(leaveBalances)
+      .where(and(
+        eq(leaveBalances.accountId, accountId), eq(leaveBalances.employeeId, employeeId),
+        eq(leaveBalances.year, currentYear),
+      ));
+    const existingBySlug = new Map(existingBalances.map(b => [b.leaveType, b]));
+
     for (const alloc of policy.allocations) {
       const lt = leaveTypesData.find(t => t.id === alloc.leaveTypeId);
       if (!lt) continue;
@@ -232,16 +240,11 @@ export async function assignPolicy(accountId: string, employeeId: string, policy
         allocatedDays = Math.ceil(alloc.daysPerYear * monthsRemaining / 12);
       }
 
-      // Check if balance already exists
-      const existing = await db.select().from(leaveBalances)
-        .where(and(
-          eq(leaveBalances.accountId, accountId), eq(leaveBalances.employeeId, employeeId),
-          eq(leaveBalances.leaveType, lt.slug), eq(leaveBalances.year, currentYear),
-        )).limit(1);
+      const existing = existingBySlug.get(lt.slug);
 
-      if (existing.length > 0) {
+      if (existing) {
         await db.update(leaveBalances).set({ allocated: allocatedDays, leaveTypeId: lt.id, updatedAt: now })
-          .where(eq(leaveBalances.id, existing[0].id));
+          .where(eq(leaveBalances.id, existing.id));
       } else {
         await db.insert(leaveBalances).values({
           accountId, employeeId, leaveType: lt.slug, year: currentYear,
@@ -298,12 +301,11 @@ export async function allocateBalancesForYear(accountId: string, year: number) {
   const leaveTypesData = await db.select().from(hrLeaveTypes)
     .where(and(eq(hrLeaveTypes.accountId, accountId), eq(hrLeaveTypes.isArchived, false)));
   const leaveTypeById = new Map(leaveTypesData.map(lt => [lt.id, lt]));
-  const leaveTypeBySlug = new Map(leaveTypesData.map(lt => [lt.slug, lt]));
 
   // 3. Get all policies referenced by assignments
   const policyIds = [...new Set(assignments.map(a => a.policyId))];
   const policies = await db.select().from(hrLeavePolicies)
-    .where(and(eq(hrLeavePolicies.accountId, accountId), eq(hrLeavePolicies.isArchived, false)));
+    .where(and(eq(hrLeavePolicies.accountId, accountId), eq(hrLeavePolicies.isArchived, false), inArray(hrLeavePolicies.id, policyIds)));
   const policyById = new Map(policies.map(p => [p.id, p]));
 
   // 4. Get existing balances for this year to check idempotency
@@ -323,6 +325,7 @@ export async function allocateBalancesForYear(accountId: string, year: number) {
 
   let allocated = 0;
   let skipped = 0;
+  const allNewRows: Array<typeof leaveBalances.$inferInsert> = [];
 
   for (const assignment of assignments) {
     const policy = policyById.get(assignment.policyId);
@@ -348,7 +351,7 @@ export async function allocateBalancesForYear(accountId: string, year: number) {
         carried = Math.min(Math.max(unused, 0), lt.maxCarryForward);
       }
 
-      await db.insert(leaveBalances).values({
+      allNewRows.push({
         accountId,
         employeeId: assignment.employeeId,
         leaveType: lt.slug,
@@ -364,6 +367,11 @@ export async function allocateBalancesForYear(accountId: string, year: number) {
       existingSet.add(key); // prevent duplicates within this run
       allocated++;
     }
+  }
+
+  // Batch insert all new balance rows at once
+  if (allNewRows.length > 0) {
+    await db.insert(leaveBalances).values(allNewRows);
   }
 
   logger.info({ accountId, year, allocated, skipped }, 'Leave balance allocation completed');

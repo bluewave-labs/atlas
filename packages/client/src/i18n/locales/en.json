@@ -2325,7 +2325,9 @@
       "approved": "Leave approved",
       "rejected": "Leave rejected",
       "rejectComment": "Rejection reason (optional)",
-      "days": "{{count}} days"
+      "days": "{{count}} days",
+      "approveFailed": "Failed to approve leave",
+      "rejectFailed": "Failed to reject leave"
     },
     "leaveAppStatus": {
       "draft": "Draft",

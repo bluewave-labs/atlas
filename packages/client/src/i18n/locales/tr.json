@@ -2289,7 +2289,9 @@
       "approved": "İzin onaylandı",
       "rejected": "İzin reddedildi",
       "rejectComment": "Red nedeni (isteğe bağlı)",
-      "days": "{{count}} gün"
+      "days": "{{count}} gün",
+      "approveFailed": "İzin onaylanamadı",
+      "rejectFailed": "İzin reddedilemedi"
     },
     "leaveAppStatus": {
       "draft": "Taslak",

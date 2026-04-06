@@ -2289,7 +2289,9 @@
       "approved": "Urlaub genehmigt",
       "rejected": "Urlaub abgelehnt",
       "rejectComment": "Ablehnungsgrund (optional)",
-      "days": "{{count}} Tage"
+      "days": "{{count}} Tage",
+      "approveFailed": "Urlaub konnte nicht genehmigt werden",
+      "rejectFailed": "Urlaub konnte nicht abgelehnt werden"
     },
     "leaveAppStatus": {
       "draft": "Entwurf",

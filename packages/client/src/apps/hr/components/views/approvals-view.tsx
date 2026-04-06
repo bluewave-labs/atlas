@@ -29,6 +29,11 @@ export function ApprovalsView() {
     approveApp.mutate({ id }, {
       onSuccess: () => {
         addToast({ type: 'success', message: t('hr.approvals.approved') });
+        setRejectingId(null);
+        setRejectComment('');
+      },
+      onError: () => {
+        addToast({ type: 'error', message: t('hr.approvals.approveFailed') });
       },
     });
   };
@@ -39,6 +44,9 @@ export function ApprovalsView() {
         addToast({ type: 'success', message: t('hr.approvals.rejected') });
         setRejectingId(null);
         setRejectComment('');
+      },
+      onError: () => {
+        addToast({ type: 'error', message: t('hr.approvals.rejectFailed') });
       },
     });
   };
@@ -68,7 +76,7 @@ export function ApprovalsView() {
         height: '100%',
         gap: 'var(--spacing-md)',
         color: 'var(--color-text-tertiary)',
-        fontFamily: 'var(--font-family)',
+
         padding: 'var(--spacing-2xl)',
       }}>
         <CheckSquare size={40} strokeWidth={1.2} />
@@ -91,7 +99,7 @@ export function ApprovalsView() {
           fontSize: 'var(--font-size-lg)',
           fontWeight: 'var(--font-weight-semibold)',
           color: 'var(--color-text-primary)',
-          fontFamily: 'var(--font-family)',
+  
         }}>
           {t('hr.approvals.title')}
         </h2>
@@ -125,7 +133,7 @@ export function ApprovalsView() {
                     fontWeight: 'var(--font-weight-medium)',
                     fontSize: 'var(--font-size-md)',
                     color: 'var(--color-text-primary)',
-                    fontFamily: 'var(--font-family)',
+            
                     marginBottom: 2,
                   }}>
                     {approval.employeeName}
@@ -138,12 +146,12 @@ export function ApprovalsView() {
                     flexWrap: 'wrap',
                     marginBottom: 'var(--spacing-xs)',
                   }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
                       <StatusDot color={approval.leaveTypeColor} size={8} />
                       <span style={{
                         fontSize: 'var(--font-size-sm)',
                         color: 'var(--color-text-secondary)',
-                        fontFamily: 'var(--font-family)',
+                
                       }}>
                         {approval.leaveTypeName}
                       </span>
@@ -152,7 +160,7 @@ export function ApprovalsView() {
                     <span style={{
                       fontSize: 'var(--font-size-sm)',
                       color: 'var(--color-text-tertiary)',
-                      fontFamily: 'var(--font-family)',
+              
                     }}>
                       {formatDate(approval.startDate)} — {formatDate(approval.endDate)}
                     </span>
@@ -166,7 +174,7 @@ export function ApprovalsView() {
                     <div style={{
                       fontSize: 'var(--font-size-sm)',
                       color: 'var(--color-text-tertiary)',
-                      fontFamily: 'var(--font-family)',
+              
                       marginTop: 'var(--spacing-xs)',
                     }}>
                       {approval.reason}
@@ -176,14 +184,14 @@ export function ApprovalsView() {
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 4,
+                    gap: 'var(--spacing-xs)',
                     marginTop: 'var(--spacing-xs)',
                   }}>
                     <Clock size={12} style={{ color: 'var(--color-text-tertiary)' }} />
                     <span style={{
                       fontSize: 'var(--font-size-xs)',
                       color: 'var(--color-text-tertiary)',
-                      fontFamily: 'var(--font-family)',
+              
                     }}>
                       {formatDate(approval.createdAt)}
                     </span>

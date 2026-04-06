@@ -2289,7 +2289,9 @@
       "approved": "Conge approuve",
       "rejected": "Conge rejete",
       "rejectComment": "Motif du rejet (facultatif)",
-      "days": "{{count}} jours"
+      "days": "{{count}} jours",
+      "approveFailed": "Impossible d'approuver le congé",
+      "rejectFailed": "Impossible de rejeter le congé"
     },
     "leaveAppStatus": {
       "draft": "Brouillon",

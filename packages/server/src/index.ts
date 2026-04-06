@@ -10,13 +10,12 @@ import { closeRedis } from './config/redis';
 import { startUpdateChecker, stopUpdateChecker } from './apps/marketplace/update-checker';
 import { startReminderScheduler, stopReminderScheduler } from './apps/sign/reminder';
 import { startTaskReminderScheduler, stopTaskReminderScheduler } from './apps/tasks/reminder';
+import { startLeaveBalanceScheduler, stopLeaveBalanceScheduler } from './apps/hr/services/leave-balance-scheduler';
 
 const PURGE_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 const BACKUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
-const LEAVE_BALANCE_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // daily
 let purgeTimer: ReturnType<typeof setInterval> | null = null;
 let backupTimer: ReturnType<typeof setInterval> | null = null;
-let leaveBalanceTimer: ReturnType<typeof setInterval> | null = null;
 
 const app = createApp();
 
@@ -65,12 +64,7 @@ app.listen(env.PORT, async () => {
   startDigestScheduler();
 
   // Leave balance allocation — runs daily, checks if current year balances exist
-  const { checkLeaveBalances } = await import('./apps/hr/services/leave-balance-scheduler');
-
-  // Run after 60s delay to allow DB to settle, then daily
-  setTimeout(() => checkLeaveBalances().catch(() => {}), 60_000);
-  leaveBalanceTimer = setInterval(checkLeaveBalances, LEAVE_BALANCE_CHECK_INTERVAL);
-  logger.info('Leave balance daily scheduler enabled');
+  startLeaveBalanceScheduler();
 });
 
 // Graceful shutdown
@@ -79,7 +73,7 @@ function handleShutdown(signal: string) {
 
   if (purgeTimer) { clearInterval(purgeTimer); purgeTimer = null; }
   if (backupTimer) { clearInterval(backupTimer); backupTimer = null; }
-  if (leaveBalanceTimer) { clearInterval(leaveBalanceTimer); leaveBalanceTimer = null; }
+  stopLeaveBalanceScheduler();
   stopUpdateChecker();
   stopReminderScheduler();
   stopTaskReminderScheduler();
