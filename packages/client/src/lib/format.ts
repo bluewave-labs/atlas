@@ -76,6 +76,8 @@ export function formatRelativeDate(date: string | Date | null | undefined): stri
 
   if (days === 0) return 'Today';
   if (days === 1) return 'Yesterday';
+  if (days === -1) return 'Tomorrow';
+  if (days < -1) return `in ${Math.abs(days)} days`;
   if (days < 7) return `${days} days ago`;
 
   return formatDate(d);

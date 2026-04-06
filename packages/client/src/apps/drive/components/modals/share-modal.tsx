@@ -255,7 +255,15 @@ export function ShareModal({
                     />
                     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 'var(--spacing-xs)' }}>
                       <span>{t('drive.sharing.linkCreated', { date: formatRelativeDate(link.createdAt) })}</span>
-                      <span>{link.expiresAt ? t('drive.sharing.linkExpires', { date: formatRelativeDate(link.expiresAt) }) : t('drive.sharing.linkNoExpiry')}</span>
+                      {link.expiresAt ? (
+                        new Date(link.expiresAt) < new Date() ? (
+                          <span style={{ color: 'var(--color-error)' }}>{t('drive.sharing.linkExpired', 'Expired')}</span>
+                        ) : (
+                          <span>{t('drive.sharing.linkExpires', { date: formatRelativeDate(link.expiresAt) })}</span>
+                        )
+                      ) : (
+                        <span>{t('drive.sharing.linkNoExpiry')}</span>
+                      )}
                       {link.passwordHash && (
                         <Badge variant="warning">
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 10 }}><Lock size={8} /> {t('drive.sharing.protected')}</span>
