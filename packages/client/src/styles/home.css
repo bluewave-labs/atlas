@@ -164,7 +164,7 @@
 }
 
 .dock-item.dock-resetting {
-  transition: width 150ms ease-out, height 150ms ease-out, margin-top 150ms ease-out;
+  transition: width 350ms cubic-bezier(0.25, 1, 0.5, 1), height 350ms cubic-bezier(0.25, 1, 0.5, 1), margin-top 350ms cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 /* Glossy shine overlay — macOS inner highlight */
