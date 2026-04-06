@@ -1,5 +1,7 @@
 # Atlas
-Self-hosted business platform with CRM, HRM, digital signatures, document editor, task management, spreadsheets, file storage, and drawing tools.
+Self-hosted business platform with inter-connected CRM, HRM, digital signatures, document editor, task management, spreadsheets, file storage, and drawing tools, all can be used by the same team.
+
+Atlas can also deploy several 3rd party apps, including [Activepieces](https://www.activepieces.com/), [Cal.com](http://cal.com/), [Formbricks](http://formbricks.com/), [Mattermost](http://mattermost.com/), [Umami](https://umami.is/) and [Checkmate](https://checkmate.so/).
 
 <img width="3422" height="1954" alt="image" src="https://github.com/user-attachments/assets/30a7d84c-5ade-46ac-9192-279050ba20fb" />
 
@@ -93,6 +95,26 @@ npm run dev
 | Write | Rich text editor with cover images, comments, templates |
 | Draw | Excalidraw-based canvas with PDF export, image insertion, presentation mode |
 | Marketplace | One-click deploy of 10 Docker apps (Metabase, Mattermost, Vaultwarden, etc.) |
+
+## Marketplace
+
+Atlas can also host 3rd party apps. Here is a screenshot of the Atlas Marketplace. We're adding more by time but feel free to create an issue if you would like to see your favorite app here.
+
+<img width="2466" height="2210" alt="image" src="https://github.com/user-attachments/assets/45d83b6b-6554-4369-a7ac-306ab05118ba" />
+
+| App | Category | Description | Status | License |
+|-----|----------|-------------|--------|---------|
+| Activepieces | Automation | Visual workflow automation — connect your apps and automate tasks |
+| Cal.com | Scheduling | Open-source scheduling platform — event types, availability, booking pages, and calendar integrations |
+| Chatwoot | Support | Open-source helpdesk and live chat — manage customer conversations across channels |
+| Checkmate | Monitoring | Open-source uptime monitoring for your websites and APIs | 
+| Formbricks | Forms | Open-source survey & experience management — in-app surveys, link surveys, and user research |
+| Listmonk | Email Marketing | High-performance newsletter and mailing list manager — self-hosted email marketing |
+| Mattermost | Communication | Open-source team messaging — channels, threads, and integrations (Slack alternative) |
+| Metabase | Analytics | Business intelligence and analytics dashboards — ask questions, get charts |
+| Umami | Analytics | Privacy-focused web analytics — lightweight alternative to Google Analytics | 
+| Vaultwarden | Security | Bitwarden-compatible password manager — self-hosted vault for keys and secrets | 
+
 
 ## Tech stack
 
