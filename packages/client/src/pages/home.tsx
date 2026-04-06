@@ -726,6 +726,8 @@ export function HomePage() {
     currentX: number;
     offsetX: number;
     isDragging: boolean; // true once mouse moves past threshold
+    isDropping: boolean; // true during drop animation
+    dropTargetX: number; // X position to animate to on drop
   } | null>(null);
   const [dockDragOverId, setDockDragOverId] = useState<string | null>(null);
 
@@ -762,16 +764,37 @@ export function HomePage() {
 
     const handleMouseUp = () => {
       if (dockDragState.isDragging && dockDragOverId && dockDragState.id !== dockDragOverId) {
-        handleDockReorder(dockDragState.id, dockDragOverId);
+        // Find the target slot position for the drop animation
+        const dock = dockRef.current;
+        const items = dock?.querySelectorAll<HTMLElement>('.dock-item');
+        let targetX = dockDragState.currentX;
+        if (items) {
+          const targetIdx = orderedDockApps.findIndex(a => a.id === dockDragOverId);
+          if (targetIdx >= 0 && items[targetIdx]) {
+            const rect = items[targetIdx].getBoundingClientRect();
+            targetX = rect.left + rect.width / 2;
+          }
+        }
+        // Start drop animation
+        setDockDragState(prev => prev ? { ...prev, isDropping: true, dropTargetX: targetX } : null);
+        // After animation completes, do the actual reorder
+        setTimeout(() => {
+          handleDockReorder(dockDragState.id, dockDragOverId);
+          handleDockMouseLeave();
+        }, 200);
       } else if (!dockDragState.isDragging) {
         // It was a click, not a drag — navigate
         const app = orderedDockApps.find(a => a.id === dockDragState.id);
         if (app) navigate(app.route);
+        setDockDragState(null);
+        setDockDragOverId(null);
+        handleDockMouseLeave();
+      } else {
+        // Dragged but not over a different target — cancel
+        setDockDragState(null);
+        setDockDragOverId(null);
+        handleDockMouseLeave();
       }
-      setDockDragState(null);
-      setDockDragOverId(null);
-      // Reset magnification after drag ends
-      handleDockMouseLeave();
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -1280,6 +1303,8 @@ export function HomePage() {
                     currentX: e.clientX,
                     offsetX: e.clientX - rect.left - rect.width / 2,
                     isDragging: false,
+                    isDropping: false,
+                    dropTargetX: 0,
                   });
                 }}
                 style={{
@@ -1337,20 +1362,23 @@ export function HomePage() {
         </nav>
 
         {/* Floating dock icon during drag */}
-        {dockDragState?.isDragging && (() => {
+        {(dockDragState?.isDragging || dockDragState?.isDropping) && (() => {
           const app = orderedDockApps.find(a => a.id === dockDragState.id);
           if (!app) return null;
           const Icon = app.icon;
           const dockRect = dockRef.current?.getBoundingClientRect();
+          const isDropping = dockDragState.isDropping;
+          const xPos = isDropping ? dockDragState.dropTargetX : dockDragState.currentX;
           return (
             <div style={{
               position: 'fixed',
-              left: dockDragState.currentX - 26,
+              left: xPos - 26,
               top: (dockRect?.top ?? 0) + 8,
               width: 52,
               height: 52,
               zIndex: 9999,
               pointerEvents: 'none',
+              transition: isDropping ? 'left 0.2s cubic-bezier(0.2, 0, 0, 1), top 0.2s cubic-bezier(0.2, 0, 0, 1), transform 0.2s cubic-bezier(0.2, 0, 0, 1)' : 'none',
             }}>
               <div style={{
                 width: 52,
@@ -1360,8 +1388,11 @@ export function HomePage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 background: `linear-gradient(145deg, color-mix(in srgb, ${app.color} 85%, #fff) 0%, ${app.color} 50%, color-mix(in srgb, ${app.color} 70%, #000) 100%)`,
-                boxShadow: `0 8px 24px ${app.color}88, 0 4px 12px rgba(0,0,0,0.3)`,
-                transform: 'scale(1.15)',
+                boxShadow: isDropping
+                  ? `0 3px 10px ${app.color}55, inset 0 1px 1px rgba(255,255,255,0.25)`
+                  : `0 8px 24px ${app.color}88, 0 4px 12px rgba(0,0,0,0.3)`,
+                transform: isDropping ? 'scale(1)' : 'scale(1.15)',
+                transition: isDropping ? 'transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease' : 'none',
               }}>
                 <Icon size={26} color="#fff" strokeWidth={1.6} style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }} />
               </div>
