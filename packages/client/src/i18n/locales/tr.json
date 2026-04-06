@@ -2239,13 +2239,15 @@
       "deactivate": "Devre dışı bırak",
       "activate": "Etkinleştir",
       "carry": "Devir",
-      "emptyDesc": "Yıllık izin, hastalık izni veya kişisel izin gibi kuruluşunuzun sunduğu izin türlerini tanımlayın."
+      "emptyDesc": "Yıllık izin, hastalık izni veya kişisel izin gibi kuruluşunuzun sunduğu izin türlerini tanımlayın.",
+      "loadDefaults": "Varsayılanları yükle"
     },
     "policies": {
       "empty": "Henüz izin politikası yapılandırılmadı.",
       "add": "Politika ekle",
       "default": "Varsayılan",
-      "emptyDesc": "Çalışanların yılda kaç gün izin hakkına sahip olduğunu belirleyen politikalar oluşturun."
+      "emptyDesc": "Çalışanların yılda kaç gün izin hakkına sahip olduğunu belirleyen politikalar oluşturun.",
+      "loadDefaults": "Varsayılanları yükle"
     },
     "holidays": {
       "empty": "Bu takvimde tatil yok.",
@@ -2257,7 +2259,12 @@
       "typePublic": "Resmî tatil",
       "typeCompany": "Şirket tatili",
       "typeOptional": "İsteğe bağlı tatil",
-      "emptyDesc": "Ekibiniz için resmi tatilleri, şirket tatillerini ve isteğe bağlı izin günlerini ekleyin."
+      "emptyDesc": "Ekibiniz için resmi tatilleri, şirket tatillerini ve isteğe bağlı izin günlerini ekleyin.",
+      "importHolidays": "Tatilleri içe aktar",
+      "importTitle": "Ülke tatillerini içe aktar",
+      "importDesc": "2026 resmi tatillerini içe aktarmak için bir ülke seçin",
+      "importSuccess": "{{country}} ülkesinden {{count}} tatil içe aktarıldı",
+      "holidayCount": "tatil"
     },
     "myLeave": {
       "empty": "Henüz izin başvurusu yok.",

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus } from 'lucide-react';
-import { useLeaveTypes, useLeavePolicies, useCreateLeavePolicy } from '../../hooks';
+import { Plus, Download } from 'lucide-react';
+import { useLeaveTypes, useLeavePolicies, useCreateLeavePolicy, useSeedLeavePolicies } from '../../hooks';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Badge } from '../../../../components/ui/badge';
@@ -14,6 +14,7 @@ export function LeavePoliciesView() {
   const { data: policies, isLoading } = useLeavePolicies();
   const { data: leaveTypes } = useLeaveTypes();
   const createPolicy = useCreateLeavePolicy();
+  const seedPolicies = useSeedLeavePolicies();
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -34,14 +35,26 @@ export function LeavePoliciesView() {
   return (
     <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-xl)' }}>
       {(!policies || policies.length === 0) && !showCreate && (
-        <FeatureEmptyState
-          illustration="generic"
-          title={t('hr.policies.empty')}
-          description={t('hr.policies.emptyDesc')}
-          actionLabel={t('hr.policies.add')}
-          actionIcon={<Plus size={14} />}
-          onAction={() => setShowCreate(true)}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <FeatureEmptyState
+            illustration="generic"
+            title={t('hr.policies.empty')}
+            description={t('hr.policies.emptyDesc')}
+            actionLabel={t('hr.policies.add')}
+            actionIcon={<Plus size={14} />}
+            onAction={() => setShowCreate(true)}
+          />
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<Download size={14} />}
+            onClick={() => seedPolicies.mutate()}
+            disabled={seedPolicies.isPending}
+            style={{ marginTop: 'var(--spacing-md)' }}
+          >
+            {t('hr.policies.loadDefaults')}
+          </Button>
+        </div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>

@@ -205,6 +205,44 @@ export async function getEmployeePolicy(req: Request, res: Response) {
   }
 }
 
+// ─── Seed Defaults ───────────────────────────────────────────────
+
+export async function seedLeaveTypes(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+
+    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
+    if (!canAccess(perm.role, 'create')) {
+      res.status(403).json({ success: false, error: 'No permission to create HR records' });
+      return;
+    }
+
+    const result = await hrService.seedDefaultLeaveTypes(accountId);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error({ error }, 'Failed to seed leave types');
+    res.status(500).json({ success: false, error: 'Failed to seed leave types' });
+  }
+}
+
+export async function seedLeavePolicies(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+
+    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
+    if (!canAccess(perm.role, 'create')) {
+      res.status(403).json({ success: false, error: 'No permission to create HR records' });
+      return;
+    }
+
+    const result = await hrService.seedDefaultPolicies(accountId);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error({ error }, 'Failed to seed leave policies');
+    res.status(500).json({ success: false, error: 'Failed to seed leave policies' });
+  }
+}
+
 // ─── Holiday Calendars ────────────────────────────────────────────
 
 export async function listHolidayCalendars(req: Request, res: Response) {

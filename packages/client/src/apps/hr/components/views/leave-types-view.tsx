@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Check, XCircle, Trash2 } from 'lucide-react';
-import { useLeaveTypes, useCreateLeaveType, useUpdateLeaveType, useDeleteLeaveType } from '../../hooks';
+import { Plus, Check, XCircle, Trash2, Download } from 'lucide-react';
+import { useLeaveTypes, useCreateLeaveType, useUpdateLeaveType, useDeleteLeaveType, useSeedLeaveTypes } from '../../hooks';
 import { useMyAppPermission } from '../../../../hooks/use-app-permissions';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
@@ -19,6 +19,7 @@ export function LeaveTypesView() {
   const createLeaveType = useCreateLeaveType();
   const updateLeaveType = useUpdateLeaveType();
   const deleteLeaveType = useDeleteLeaveType();
+  const seedLeaveTypes = useSeedLeaveTypes();
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -39,14 +40,26 @@ export function LeaveTypesView() {
   return (
     <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-xl)' }}>
       {(!leaveTypes || leaveTypes.length === 0) && !showCreate && (
-        <FeatureEmptyState
-          illustration="generic"
-          title={t('hr.leaveTypes.empty')}
-          description={t('hr.leaveTypes.emptyDesc')}
-          actionLabel={t('hr.leaveTypes.add')}
-          actionIcon={<Plus size={14} />}
-          onAction={() => setShowCreate(true)}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <FeatureEmptyState
+            illustration="generic"
+            title={t('hr.leaveTypes.empty')}
+            description={t('hr.leaveTypes.emptyDesc')}
+            actionLabel={t('hr.leaveTypes.add')}
+            actionIcon={<Plus size={14} />}
+            onAction={() => setShowCreate(true)}
+          />
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<Download size={14} />}
+            onClick={() => seedLeaveTypes.mutate()}
+            disabled={seedLeaveTypes.isPending}
+            style={{ marginTop: 'var(--spacing-md)' }}
+          >
+            {t('hr.leaveTypes.loadDefaults')}
+          </Button>
+        </div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>

@@ -425,7 +425,7 @@ export function HrPage() {
         )}
 
         {activeNav === 'departments' && (
-          <DepartmentsView departments={departments} employees={allEmployees} onEdit={setEditingDepartment} onDelete={handleDeleteDepartment} />
+          <DepartmentsView departments={departments} employees={allEmployees} onEdit={setEditingDepartment} onDelete={handleDeleteDepartment} onSelectDepartment={(deptId) => setActiveNav(`dept:${deptId}`)} />
         )}
 
         {activeNav === 'time-off' && (

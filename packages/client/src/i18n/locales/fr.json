@@ -2239,13 +2239,15 @@
       "deactivate": "Desactiver",
       "activate": "Activer",
       "carry": "Report",
-      "emptyDesc": "Définissez les types de congés proposés par votre organisation, tels que les vacances, les congés maladie ou les jours personnels."
+      "emptyDesc": "Définissez les types de congés proposés par votre organisation, tels que les vacances, les congés maladie ou les jours personnels.",
+      "loadDefaults": "Charger les valeurs par defaut"
     },
     "policies": {
       "empty": "Aucune politique de conge configuree.",
       "add": "Ajouter une politique",
       "default": "Par defaut",
-      "emptyDesc": "Créez des politiques pour définir le nombre de jours de chaque type de congé auxquels les employés ont droit par an."
+      "emptyDesc": "Créez des politiques pour définir le nombre de jours de chaque type de congé auxquels les employés ont droit par an.",
+      "loadDefaults": "Charger les valeurs par defaut"
     },
     "holidays": {
       "empty": "Aucun jour ferie dans ce calendrier.",
@@ -2257,7 +2259,12 @@
       "typePublic": "Jour ferie",
       "typeCompany": "Jour d'entreprise",
       "typeOptional": "Jour optionnel",
-      "emptyDesc": "Ajoutez les jours fériés, les congés d'entreprise et les jours de repos facultatifs pour votre équipe."
+      "emptyDesc": "Ajoutez les jours fériés, les congés d'entreprise et les jours de repos facultatifs pour votre équipe.",
+      "importHolidays": "Importer des jours fériés",
+      "importTitle": "Importer les jours fériés d'un pays",
+      "importDesc": "Sélectionnez un pays pour importer ses jours fériés 2026",
+      "importSuccess": "{{count}} jours fériés importés depuis {{country}}",
+      "holidayCount": "jours fériés"
     },
     "myLeave": {
       "empty": "Aucune demande de conge.",

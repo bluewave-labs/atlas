@@ -2239,13 +2239,15 @@
       "deactivate": "Disattiva",
       "activate": "Attiva",
       "carry": "Riporto",
-      "emptyDesc": "Definisci i tipi di congedo offerti dalla tua organizzazione, come ferie, malattia o permessi personali."
+      "emptyDesc": "Definisci i tipi di congedo offerti dalla tua organizzazione, come ferie, malattia o permessi personali.",
+      "loadDefaults": "Carica valori predefiniti"
     },
     "policies": {
       "empty": "Nessuna politica configurata.",
       "add": "Aggiungi politica",
       "default": "Predefinita",
-      "emptyDesc": "Crea politiche per definire quanti giorni di ogni tipo di congedo spettano ai dipendenti all'anno."
+      "emptyDesc": "Crea politiche per definire quanti giorni di ogni tipo di congedo spettano ai dipendenti all'anno.",
+      "loadDefaults": "Carica valori predefiniti"
     },
     "holidays": {
       "empty": "Nessuna festivita in questo calendario.",
@@ -2257,7 +2259,12 @@
       "typePublic": "Festivita pubblica",
       "typeCompany": "Festivita aziendale",
       "typeOptional": "Festivita opzionale",
-      "emptyDesc": "Aggiungi festività nazionali, ferie aziendali e giorni di riposo facoltativi per il tuo team."
+      "emptyDesc": "Aggiungi festività nazionali, ferie aziendali e giorni di riposo facoltativi per il tuo team.",
+      "importHolidays": "Importa festività",
+      "importTitle": "Importa festività nazionali",
+      "importDesc": "Seleziona un paese per importare le festività pubbliche del 2026",
+      "importSuccess": "Importate {{count}} festività da {{country}}",
+      "holidayCount": "festività"
     },
     "myLeave": {
       "empty": "Nessuna richiesta di permesso.",

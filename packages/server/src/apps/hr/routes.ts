@@ -35,6 +35,10 @@ router.post('/leave-types', hrController.createLeaveType);
 router.patch('/leave-types/:id', hrController.updateLeaveType);
 router.delete('/leave-types/:id', hrController.deleteLeaveType);
 
+// Seed leave defaults (before /:id)
+router.post('/leave-types/seed', hrController.seedLeaveTypes);
+router.post('/leave-policies/seed', hrController.seedLeavePolicies);
+
 // Leave Policies (before /:id)
 router.get('/leave-policies', hrController.listLeavePolicies);
 router.post('/leave-policies', hrController.createLeavePolicy);

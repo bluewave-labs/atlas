@@ -2275,13 +2275,15 @@
       "inactive": "Inactive",
       "deactivate": "Deactivate",
       "activate": "Activate",
-      "carry": "Carry"
+      "carry": "Carry",
+      "loadDefaults": "Load defaults"
     },
     "policies": {
       "empty": "No leave policies configured yet",
       "emptyDesc": "Create policies to define how many days of each leave type employees are entitled to per year.",
       "add": "Add policy",
-      "default": "Default"
+      "default": "Default",
+      "loadDefaults": "Load defaults"
     },
     "holidays": {
       "empty": "No holidays in this calendar",
@@ -2293,7 +2295,12 @@
       "date": "Date",
       "typePublic": "Public holiday",
       "typeCompany": "Company holiday",
-      "typeOptional": "Optional holiday"
+      "typeOptional": "Optional holiday",
+      "importHolidays": "Import holidays",
+      "importTitle": "Import country holidays",
+      "importDesc": "Select a country to import its 2026 public holidays",
+      "importSuccess": "Imported {{count}} holidays from {{country}}",
+      "holidayCount": "holidays"
     },
     "myLeave": {
       "empty": "No leave applications yet",

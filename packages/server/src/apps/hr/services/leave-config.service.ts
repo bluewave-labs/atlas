@@ -52,35 +52,95 @@ export async function deleteLeaveType(accountId: string, id: string) {
   return updateLeaveType(accountId, id, { isArchived: true });
 }
 
+const DEFAULT_LEAVE_TYPES = [
+  { name: 'Annual leave', slug: 'annual-leave', color: '#3b82f6', defaultDaysPerYear: 20, maxCarryForward: 5, requiresApproval: true, isPaid: true },
+  { name: 'Sick leave', slug: 'sick-leave', color: '#ef4444', defaultDaysPerYear: 10, maxCarryForward: 0, requiresApproval: true, isPaid: true },
+  { name: 'Personal leave', slug: 'personal', color: '#8b5cf6', defaultDaysPerYear: 3, maxCarryForward: 0, requiresApproval: true, isPaid: true },
+  { name: 'Maternity leave', slug: 'maternity', color: '#ec4899', defaultDaysPerYear: 90, maxCarryForward: 0, requiresApproval: true, isPaid: true },
+  { name: 'Paternity leave', slug: 'paternity', color: '#06b6d4', defaultDaysPerYear: 10, maxCarryForward: 0, requiresApproval: true, isPaid: true },
+  { name: 'Bereavement', slug: 'bereavement', color: '#6b7280', defaultDaysPerYear: 5, maxCarryForward: 0, requiresApproval: false, isPaid: true },
+  { name: 'Jury duty', slug: 'jury-duty', color: '#f59e0b', defaultDaysPerYear: 5, maxCarryForward: 0, requiresApproval: false, isPaid: true },
+  { name: 'Unpaid leave', slug: 'unpaid', color: '#94a3b8', defaultDaysPerYear: 30, maxCarryForward: 0, requiresApproval: true, isPaid: false },
+  { name: 'Study leave', slug: 'study', color: '#10b981', defaultDaysPerYear: 5, maxCarryForward: 0, requiresApproval: true, isPaid: true },
+  { name: 'Work from home', slug: 'wfh', color: '#6366f1', defaultDaysPerYear: 52, maxCarryForward: 0, requiresApproval: false, isPaid: true },
+];
+
 export async function seedDefaultLeaveTypes(accountId: string) {
-  const existing = await db.select({ id: hrLeaveTypes.id }).from(hrLeaveTypes)
-    .where(eq(hrLeaveTypes.accountId, accountId)).limit(1);
+  // Check which slugs already exist to avoid duplicates
+  const existing = await db.select({ slug: hrLeaveTypes.slug }).from(hrLeaveTypes)
+    .where(and(eq(hrLeaveTypes.accountId, accountId), eq(hrLeaveTypes.isArchived, false)));
+  const existingSlugs = new Set(existing.map(e => e.slug));
+
+  const toCreate = DEFAULT_LEAVE_TYPES.filter(lt => !existingSlugs.has(lt.slug));
+  if (toCreate.length === 0) return null;
+
+  const created = [];
+  for (const lt of toCreate) {
+    const result = await createLeaveType(accountId, lt);
+    created.push(result);
+  }
+
+  return { leaveTypes: created };
+}
+
+const DEFAULT_POLICY_TEMPLATES: Array<{
+  name: string; description: string; isDefault: boolean;
+  slugAllocations: Array<{ slug: string; daysPerYear: number }>;
+}> = [
+  {
+    name: 'Full-time', description: 'Standard allocation for full-time employees', isDefault: true,
+    slugAllocations: [
+      { slug: 'annual-leave', daysPerYear: 20 }, { slug: 'sick-leave', daysPerYear: 10 },
+      { slug: 'personal', daysPerYear: 3 }, { slug: 'maternity', daysPerYear: 90 },
+      { slug: 'paternity', daysPerYear: 10 }, { slug: 'bereavement', daysPerYear: 5 },
+      { slug: 'jury-duty', daysPerYear: 5 }, { slug: 'unpaid', daysPerYear: 30 },
+      { slug: 'study', daysPerYear: 5 }, { slug: 'wfh', daysPerYear: 52 },
+    ],
+  },
+  {
+    name: 'Part-time', description: 'Prorated allocation for part-time employees', isDefault: false,
+    slugAllocations: [
+      { slug: 'annual-leave', daysPerYear: 10 }, { slug: 'sick-leave', daysPerYear: 5 },
+      { slug: 'personal', daysPerYear: 2 }, { slug: 'maternity', daysPerYear: 90 },
+      { slug: 'paternity', daysPerYear: 10 }, { slug: 'bereavement', daysPerYear: 3 },
+      { slug: 'jury-duty', daysPerYear: 5 }, { slug: 'unpaid', daysPerYear: 15 },
+      { slug: 'study', daysPerYear: 3 }, { slug: 'wfh', daysPerYear: 26 },
+    ],
+  },
+  {
+    name: 'Contractor', description: 'Minimal allocation for contractors', isDefault: false,
+    slugAllocations: [
+      { slug: 'annual-leave', daysPerYear: 0 }, { slug: 'sick-leave', daysPerYear: 5 },
+      { slug: 'personal', daysPerYear: 0 }, { slug: 'unpaid', daysPerYear: 30 },
+    ],
+  },
+];
+
+export async function seedDefaultPolicies(accountId: string) {
+  // Only seed if no policies exist
+  const existing = await db.select({ id: hrLeavePolicies.id }).from(hrLeavePolicies)
+    .where(and(eq(hrLeavePolicies.accountId, accountId), eq(hrLeavePolicies.isArchived, false))).limit(1);
   if (existing.length > 0) return null;
 
-  const vacation = await createLeaveType(accountId, {
-    name: 'Vacation', slug: 'vacation', color: '#3b82f6', defaultDaysPerYear: 20,
-    maxCarryForward: 5, requiresApproval: true, isPaid: true,
-  });
-  const sick = await createLeaveType(accountId, {
-    name: 'Sick leave', slug: 'sick', color: '#ef4444', defaultDaysPerYear: 10,
-    maxCarryForward: 0, requiresApproval: false, isPaid: true,
-  });
-  const personal = await createLeaveType(accountId, {
-    name: 'Personal', slug: 'personal', color: '#f59e0b', defaultDaysPerYear: 5,
-    maxCarryForward: 0, requiresApproval: true, isPaid: true,
-  });
+  // Get leave types to resolve slug → id
+  const leaveTypes = await db.select().from(hrLeaveTypes)
+    .where(and(eq(hrLeaveTypes.accountId, accountId), eq(hrLeaveTypes.isArchived, false)));
+  const slugToId = new Map(leaveTypes.map(lt => [lt.slug, lt.id]));
 
-  // Create default policy
-  const policy = await createLeavePolicy(accountId, {
-    name: 'Standard', description: 'Default leave policy for all employees',
-    isDefault: true, allocations: [
-      { leaveTypeId: vacation.id, daysPerYear: 20 },
-      { leaveTypeId: sick.id, daysPerYear: 10 },
-      { leaveTypeId: personal.id, daysPerYear: 5 },
-    ],
-  });
+  const created = [];
+  for (const template of DEFAULT_POLICY_TEMPLATES) {
+    const allocations = template.slugAllocations
+      .filter(a => slugToId.has(a.slug))
+      .map(a => ({ leaveTypeId: slugToId.get(a.slug)!, daysPerYear: a.daysPerYear }));
 
-  return { leaveTypes: [vacation, sick, personal], policy };
+    const policy = await createLeavePolicy(accountId, {
+      name: template.name, description: template.description,
+      isDefault: template.isDefault, allocations,
+    });
+    created.push(policy);
+  }
+
+  return { policies: created };
 }
 
 // ─── Leave Policies ───────────────────────────────────────────────

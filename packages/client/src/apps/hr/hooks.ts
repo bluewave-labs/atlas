@@ -548,6 +548,17 @@ export function useDeleteLeaveType() {
   });
 }
 
+export function useSeedLeaveTypes() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post('/hr/leave-types/seed');
+      return data.data;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
 // ─── Leave Policies ───────────────────────────────────────────────
 
 export interface HrLeavePolicy {
@@ -586,6 +597,17 @@ export function useUpdateLeavePolicy() {
     mutationFn: async ({ id, ...input }: Partial<HrLeavePolicy> & { id: string }) => {
       const { data } = await api.patch(`/hr/leave-policies/${id}`, input);
       return data.data as HrLeavePolicy;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
+export function useSeedLeavePolicies() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post('/hr/leave-policies/seed');
+      return data.data;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
   });

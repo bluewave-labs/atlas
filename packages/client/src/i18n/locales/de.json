@@ -2239,13 +2239,15 @@
       "deactivate": "Deaktivieren",
       "activate": "Aktivieren",
       "carry": "Uebertrag",
-      "emptyDesc": "Definieren Sie die Urlaubsarten Ihrer Organisation, wie Urlaub, Krankheitstage oder persönliche Tage."
+      "emptyDesc": "Definieren Sie die Urlaubsarten Ihrer Organisation, wie Urlaub, Krankheitstage oder persönliche Tage.",
+      "loadDefaults": "Standardwerte laden"
     },
     "policies": {
       "empty": "Noch keine Urlaubsrichtlinien konfiguriert.",
       "add": "Richtlinie hinzufuegen",
       "default": "Standard",
-      "emptyDesc": "Erstellen Sie Richtlinien, die festlegen, wie viele Tage jeder Urlaubsart den Mitarbeitern pro Jahr zustehen."
+      "emptyDesc": "Erstellen Sie Richtlinien, die festlegen, wie viele Tage jeder Urlaubsart den Mitarbeitern pro Jahr zustehen.",
+      "loadDefaults": "Standardwerte laden"
     },
     "holidays": {
       "empty": "Keine Feiertage in diesem Kalender.",
@@ -2257,7 +2259,12 @@
       "typePublic": "Gesetzlicher Feiertag",
       "typeCompany": "Firmenfeiertag",
       "typeOptional": "Optionaler Feiertag",
-      "emptyDesc": "Fügen Sie gesetzliche Feiertage, Betriebsferien und optionale freie Tage für Ihr Team hinzu."
+      "emptyDesc": "Fügen Sie gesetzliche Feiertage, Betriebsferien und optionale freie Tage für Ihr Team hinzu.",
+      "importHolidays": "Feiertage importieren",
+      "importTitle": "Landesfeiertage importieren",
+      "importDesc": "Wählen Sie ein Land aus, um die gesetzlichen Feiertage 2026 zu importieren",
+      "importSuccess": "{{count}} Feiertage aus {{country}} importiert",
+      "holidayCount": "Feiertage"
     },
     "myLeave": {
       "empty": "Noch keine Urlaubsantraege.",
