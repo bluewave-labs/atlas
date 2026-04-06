@@ -187,6 +187,7 @@ function QuickTimeLog({ projects }: { projects: Project[] }) {
           placeholder="0"
           size="sm"
           style={{ width: 100 }}
+          aria-label={t('projects.timeTracking.hours')}
         />
         <Input
           value={description}
@@ -194,6 +195,7 @@ function QuickTimeLog({ projects }: { projects: Project[] }) {
           placeholder={t('projects.dashboard.whatDidYouWorkOn')}
           size="sm"
           style={{ flex: 1 }}
+          aria-label={t('projects.dashboard.whatDidYouWorkOn')}
         />
         <Button
           variant="primary"

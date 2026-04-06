@@ -326,6 +326,29 @@ export async function deleteEmployee(userId: string, id: string) {
   await updateEmployee(userId, id, { isArchived: true });
 }
 
+export async function getLinkedUserIdForEmployee(employeeId: string): Promise<string | null> {
+  try {
+    const [row] = await db.select({ linkedUserId: employees.linkedUserId })
+      .from(employees).where(eq(employees.id, employeeId)).limit(1);
+    return row?.linkedUserId ?? null;
+  } catch (err) {
+    logger.debug({ err, employeeId }, 'Failed to get linked user ID for employee');
+    return null;
+  }
+}
+
+export async function getManagerLinkedUserId(employeeId: string): Promise<string | null> {
+  try {
+    const [row] = await db.select({ managerId: employees.managerId })
+      .from(employees).where(eq(employees.id, employeeId)).limit(1);
+    if (!row?.managerId) return null;
+    return getLinkedUserIdForEmployee(row.managerId);
+  } catch (err) {
+    logger.debug({ err, employeeId }, 'Failed to get manager linked user ID');
+    return null;
+  }
+}
+
 export async function searchEmployees(userId: string, accountId: string, query: string) {
   const searchTerm = `%${query}%`;
   return db

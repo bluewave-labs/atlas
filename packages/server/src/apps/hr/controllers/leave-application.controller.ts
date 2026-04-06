@@ -3,39 +3,7 @@ import * as leaveService from '../leave.service';
 import { logger } from '../../../utils/logger';
 import { emitAppEvent } from '../../../services/event.service';
 import { getAppPermission, canAccess } from '../../../services/app-permissions.service';
-import { db } from '../../../config/database';
-import { employees, accounts } from '../../../db/schema';
-import { eq } from 'drizzle-orm';
-
-// ─── Helpers ─────────────────────────────────────────────────────
-
-/** Look up the platform userId for an employee by matching email to accounts table. */
-async function getAccountUserIdForEmployee(employeeId: string): Promise<string | null> {
-  try {
-    const [result] = await db.select({ userId: accounts.userId })
-      .from(accounts)
-      .innerJoin(employees, eq(employees.email, accounts.email))
-      .where(eq(employees.id, employeeId))
-      .limit(1);
-    return result?.userId ?? null;
-  } catch {
-    return null;
-  }
-}
-
-/** Look up the manager's platform userId for an employee. */
-async function getManagerUserIdForEmployee(employeeId: string): Promise<string | null> {
-  try {
-    const [employee] = await db.select({ managerId: employees.managerId })
-      .from(employees)
-      .where(eq(employees.id, employeeId))
-      .limit(1);
-    if (!employee?.managerId) return null;
-    return getAccountUserIdForEmployee(employee.managerId);
-  } catch {
-    return null;
-  }
-}
+import { getLinkedUserIdForEmployee, getManagerLinkedUserId } from '../services/employee.service';
 
 // ─── Leave Applications ───────────────────────────────────────────
 
@@ -83,7 +51,7 @@ export async function createLeaveApplication(req: Request, res: Response) {
     });
 
     if (req.auth!.tenantId) {
-      const managerUserId = await getManagerUserIdForEmployee(employeeId);
+      const managerUserId = await getManagerLinkedUserId(employeeId);
       emitAppEvent({
         tenantId: req.auth!.tenantId,
         userId: req.auth!.userId,
@@ -135,7 +103,7 @@ export async function submitLeaveApplication(req: Request, res: Response) {
     if (!data) { res.status(400).json({ success: false, error: 'Cannot submit this application' }); return; }
 
     if (req.auth!.tenantId && data.employeeId) {
-      const managerUserId = await getManagerUserIdForEmployee(data.employeeId);
+      const managerUserId = await getManagerLinkedUserId(data.employeeId);
       emitAppEvent({
         tenantId: req.auth!.tenantId,
         userId: req.auth!.userId,
@@ -170,7 +138,7 @@ export async function approveLeaveApplication(req: Request, res: Response) {
     if (!data) { res.status(400).json({ success: false, error: 'Cannot approve this application' }); return; }
 
     if (req.auth!.tenantId) {
-      const employeeUserId = data.employeeId ? await getAccountUserIdForEmployee(data.employeeId) : null;
+      const employeeUserId = data.employeeId ? await getLinkedUserIdForEmployee(data.employeeId) : null;
       emitAppEvent({
         tenantId: req.auth!.tenantId,
         userId,
@@ -205,7 +173,7 @@ export async function rejectLeaveApplication(req: Request, res: Response) {
     if (!data) { res.status(400).json({ success: false, error: 'Cannot reject this application' }); return; }
 
     if (req.auth!.tenantId) {
-      const employeeUserId = data.employeeId ? await getAccountUserIdForEmployee(data.employeeId) : null;
+      const employeeUserId = data.employeeId ? await getLinkedUserIdForEmployee(data.employeeId) : null;
       emitAppEvent({
         tenantId: req.auth!.tenantId,
         userId,
