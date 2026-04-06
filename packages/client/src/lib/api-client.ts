@@ -89,6 +89,8 @@ api.interceptors.response.use(
       // before authentication is fully initialised (e.g. DEV_MODE race).
       const refreshToken = localStorage.getItem('atlasmail_refresh_token');
       if (!refreshToken) {
+        // No refresh token — can't recover. Clear stale auth state.
+        handleAuthFailure();
         return Promise.reject(error);
       }
 
