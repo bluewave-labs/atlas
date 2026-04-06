@@ -29,6 +29,37 @@ interface ActivityFeedItem {
 
 // ─── Helpers ────────────────────────────────────────────────────────
 
+/**
+ * Look up the first tenantId for a user via tenant_members.
+ */
+export async function getTenantIdForUser(userId: string): Promise<string | null> {
+  const rows = await db
+    .select({ tenantId: tenantMembers.tenantId })
+    .from(tenantMembers)
+    .where(eq(tenantMembers.userId, userId))
+    .limit(1);
+  return rows[0]?.tenantId ?? null;
+}
+
+/**
+ * Batch-resolve tenantIds for multiple userIds in a single query.
+ * Returns a Map<userId, tenantId>.
+ */
+export async function getTenantIdsForUsers(userIds: string[]): Promise<Map<string, string>> {
+  if (userIds.length === 0) return new Map();
+  const rows = await db
+    .select({ userId: tenantMembers.userId, tenantId: tenantMembers.tenantId })
+    .from(tenantMembers)
+    .where(inArray(tenantMembers.userId, userIds));
+  const map = new Map<string, string>();
+  for (const row of rows) {
+    if (!map.has(row.userId)) {
+      map.set(row.userId, row.tenantId);
+    }
+  }
+  return map;
+}
+
 export async function getTenantMemberUserIds(tenantId: string): Promise<string[]> {
   const members = await db
     .select({ userId: tenantMembers.userId })

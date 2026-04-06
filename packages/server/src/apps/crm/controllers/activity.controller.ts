@@ -3,9 +3,7 @@ import * as crmService from '../services/activity.service';
 import { logger } from '../../../utils/logger';
 import { getAppPermission, canAccessEntity } from '../../../services/app-permissions.service';
 import { emitAppEvent } from '../../../services/event.service';
-import { db } from '../../../config/database';
-import { crmDeals } from '../../../db/schema';
-import { eq } from 'drizzle-orm';
+import { getDealAssigneeInfo } from '../services/deal.service';
 
 // ─── Activities ─────────────────────────────────────────────────────
 
@@ -59,8 +57,7 @@ export async function createActivity(req: Request, res: Response) {
 
     // Notify deal owner when activity is logged on their deal
     if (req.auth!.tenantId && dealId) {
-      const [deal] = await db.select({ assignedUserId: crmDeals.assignedUserId, title: crmDeals.title })
-        .from(crmDeals).where(eq(crmDeals.id, dealId)).limit(1);
+      const deal = await getDealAssigneeInfo(dealId);
 
       if (deal?.assignedUserId && deal.assignedUserId !== userId) {
         emitAppEvent({

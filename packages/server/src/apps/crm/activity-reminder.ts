@@ -1,36 +1,14 @@
 import { db } from '../../config/database';
-import { crmActivities, crmDeals, tenantMembers } from '../../db/schema';
-import { eq, and, sql, isNull, gte, lte } from 'drizzle-orm';
-import { emitAppEvent } from '../../services/event.service';
+import { crmActivities, crmDeals } from '../../db/schema';
+import { eq, and, isNull, gte, lte } from 'drizzle-orm';
+import { emitAppEvent, getTenantIdsForUsers } from '../../services/event.service';
 import { logger } from '../../utils/logger';
-
-// ─── In-memory tracking (resets each cycle) ────────────────────────
-
-let remindedActivityIds = new Set<string>();
-let notifiedDealIds = new Set<string>();
-
-// ─── Helpers ───────────────────────────────────────────────────────
-
-/**
- * Look up the first tenantId for a user via tenant_members.
- */
-async function getTenantIdForUser(userId: string): Promise<string | null> {
-  const rows = await db
-    .select({ tenantId: tenantMembers.tenantId })
-    .from(tenantMembers)
-    .where(eq(tenantMembers.userId, userId))
-    .limit(1);
-  return rows[0]?.tenantId ?? null;
-}
 
 // ─── Activity Reminders (hourly) ───────────────────────────────────
 
 async function checkActivityReminders(): Promise<void> {
   const now = new Date();
   const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
-
-  // Reset the tracking set each cycle
-  remindedActivityIds = new Set<string>();
 
   try {
     // Find activities scheduled within the next hour that are not completed
@@ -59,11 +37,13 @@ async function checkActivityReminders(): Promise<void> {
 
     logger.info({ count: upcomingActivities.length }, 'Found upcoming CRM activities for reminders');
 
-    for (const activity of upcomingActivities) {
-      if (remindedActivityIds.has(activity.id)) continue;
+    // Batch-resolve tenant IDs for all users (fix N+1)
+    const uniqueUserIds = [...new Set(upcomingActivities.map((a) => a.userId))];
+    const tenantMap = await getTenantIdsForUsers(uniqueUserIds);
 
+    for (const activity of upcomingActivities) {
       try {
-        const tenantId = await getTenantIdForUser(activity.userId);
+        const tenantId = tenantMap.get(activity.userId);
         if (!tenantId) continue;
 
         const scheduledAt = activity.scheduledAt!;
@@ -82,7 +62,6 @@ async function checkActivityReminders(): Promise<void> {
           metadata: { activityId: activity.id, scheduledAt: scheduledAt.toISOString() },
         });
 
-        remindedActivityIds.add(activity.id);
         logger.info({ activityId: activity.id, userId: activity.userId }, 'CRM activity reminder sent');
       } catch (err) {
         logger.warn({ err, activityId: activity.id }, 'Failed to send CRM activity reminder');
@@ -93,14 +72,11 @@ async function checkActivityReminders(): Promise<void> {
   }
 }
 
-// ─── Deal Close Date Approaching (daily, every 24th cycle) ─────────
+// ─── Deal Close Date Approaching (daily) ──────────────────────────
 
 async function checkDealCloseDate(): Promise<void> {
   const now = new Date();
   const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
-
-  // Reset daily tracking
-  notifiedDealIds = new Set<string>();
 
   try {
     // Find deals closing within 3 days that are not won/lost/archived
@@ -130,12 +106,14 @@ async function checkDealCloseDate(): Promise<void> {
 
     logger.info({ count: closingDeals.length }, 'Found CRM deals approaching close date');
 
-    for (const deal of closingDeals) {
-      if (notifiedDealIds.has(deal.id)) continue;
+    // Batch-resolve tenant IDs for all notify targets (fix N+1)
+    const uniqueUserIds = [...new Set(closingDeals.map((d) => d.assignedUserId || d.userId))];
+    const tenantMap = await getTenantIdsForUsers(uniqueUserIds);
 
+    for (const deal of closingDeals) {
       try {
         const notifyUserId = deal.assignedUserId || deal.userId;
-        const tenantId = await getTenantIdForUser(notifyUserId);
+        const tenantId = tenantMap.get(notifyUserId);
         if (!tenantId) continue;
 
         const closeDate = deal.expectedCloseDate!;
@@ -151,7 +129,6 @@ async function checkDealCloseDate(): Promise<void> {
           metadata: { dealId: deal.id, expectedCloseDate: closeDate.toISOString() },
         });
 
-        notifiedDealIds.add(deal.id);
         logger.info({ dealId: deal.id, notifyUserId }, 'CRM deal close-date reminder sent');
       } catch (err) {
         logger.warn({ err, dealId: deal.id }, 'Failed to send CRM deal close-date reminder');
@@ -166,7 +143,7 @@ async function checkDealCloseDate(): Promise<void> {
 
 let timer: ReturnType<typeof setInterval> | null = null;
 let startupTimer: ReturnType<typeof setTimeout> | null = null;
-let cycleCount = 0;
+let lastDealCheckDate = '';
 let running = false;
 
 async function runChecks(): Promise<void> {
@@ -174,9 +151,12 @@ async function runChecks(): Promise<void> {
   running = true;
   try {
     await checkActivityReminders();
-    cycleCount++;
-    if (cycleCount % 24 === 0) {
+
+    // Run the deal close-date check once per calendar day
+    const today = new Date().toISOString().slice(0, 10);
+    if (today !== lastDealCheckDate) {
       await checkDealCloseDate();
+      lastDealCheckDate = today;
     }
   } catch (err) {
     logger.error({ err }, 'CRM reminder check failed');
@@ -190,7 +170,9 @@ export function startCrmReminderScheduler(): void {
 
   startupTimer = setTimeout(() => {
     runChecks().catch((err) => logger.error({ err }, 'Initial CRM reminder check failed'));
-    timer = setInterval(runChecks, 60 * 60 * 1000); // hourly
+    timer = setInterval(() => {
+      runChecks().catch((err) => logger.error({ err }, 'CRM reminder cycle failed'));
+    }, 60 * 60 * 1000); // hourly
   }, 90_000); // 90s startup delay
 
   logger.info('CRM activity reminder scheduler started (hourly)');

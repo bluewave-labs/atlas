@@ -6,6 +6,14 @@ import type { CrmRecordAccess } from '@atlasmail/shared';
 import { executeWorkflows } from './workflow.service';
 import { createActivity } from './activity.service';
 
+// ─── Lightweight lookups ───────────────────────────────────────────
+
+export async function getDealAssigneeInfo(dealId: string): Promise<{ assignedUserId: string | null; title: string } | null> {
+  const [deal] = await db.select({ assignedUserId: crmDeals.assignedUserId, title: crmDeals.title })
+    .from(crmDeals).where(eq(crmDeals.id, dealId)).limit(1);
+  return deal || null;
+}
+
 // ─── Input types ────────────────────────────────────────────────────
 
 interface CreateDealStageInput {
