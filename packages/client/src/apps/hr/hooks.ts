@@ -602,6 +602,17 @@ export function useUpdateLeavePolicy() {
   });
 }
 
+export function useResyncPolicyBalances() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (policyId: string) => {
+      const { data } = await api.post(`/hr/leave-policies/${policyId}/resync`);
+      return data.data as { updated: number };
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },
+  });
+}
+
 export function useDeleteLeavePolicy() {
   const queryClient = useQueryClient();
   return useMutation({

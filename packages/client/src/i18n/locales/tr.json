@@ -2258,7 +2258,8 @@
       "deleteTitle": "Politikayı sil",
       "deleteDesc": "\"{{name}}\" politikasını silmek istediğinizden emin misiniz? Bu politikaya atanmış çalışanların yeniden atanması gerekecektir.",
       "createTitle": "İzin politikası oluştur",
-      "allocationsLabel": "İzin tahsisleri"
+      "allocationsLabel": "İzin tahsisleri",
+      "balancesUpdated": "{{count}} çalışan bakiyesi yeni tahsislere göre güncellendi"
     },
     "holidays": {
       "empty": "Bu takvimde tatil yok.",

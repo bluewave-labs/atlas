@@ -2258,7 +2258,8 @@
       "deleteTitle": "Elimina politica",
       "deleteDesc": "Sei sicuro di voler eliminare \"{{name}}\"? I dipendenti assegnati a questa politica dovranno essere riassegnati.",
       "createTitle": "Crea politica di congedo",
-      "allocationsLabel": "Allocazioni congedi"
+      "allocationsLabel": "Allocazioni congedi",
+      "balancesUpdated": "Aggiornati {{count}} saldo/i dipendente/i in base alle nuove allocazioni"
     },
     "holidays": {
       "empty": "Nessuna festivita in questo calendario.",

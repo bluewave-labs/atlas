@@ -198,6 +198,61 @@ export async function deleteLeavePolicy(accountId: string, id: string) {
   return updateLeavePolicy(accountId, id, { isArchived: true });
 }
 
+/**
+ * Re-sync leave balances for all employees assigned to a policy.
+ * Updates allocated days for the current year based on the policy's allocations.
+ * Does NOT change `used` or `carried` — only `allocated`.
+ */
+export async function resyncPolicyBalances(accountId: string, policyId: string) {
+  const currentYear = new Date().getFullYear();
+
+  // Get the policy
+  const [policy] = await db.select().from(hrLeavePolicies)
+    .where(and(eq(hrLeavePolicies.id, policyId), eq(hrLeavePolicies.accountId, accountId)))
+    .limit(1);
+  if (!policy) return { updated: 0 };
+
+  // Get all active assignments for this policy
+  const assignments = await db.select().from(hrLeavePolicyAssignments)
+    .where(and(
+      eq(hrLeavePolicyAssignments.policyId, policyId),
+      eq(hrLeavePolicyAssignments.accountId, accountId),
+      eq(hrLeavePolicyAssignments.isArchived, false),
+    ));
+
+  if (assignments.length === 0) return { updated: 0 };
+
+  // Get leave types for slug lookup
+  const leaveTypesData = await db.select().from(hrLeaveTypes)
+    .where(and(eq(hrLeaveTypes.accountId, accountId), eq(hrLeaveTypes.isArchived, false)));
+  const leaveTypeById = new Map(leaveTypesData.map(lt => [lt.id, lt]));
+
+  let updated = 0;
+  for (const assignment of assignments) {
+    for (const alloc of policy.allocations as Array<{ leaveTypeId: string; daysPerYear: number }>) {
+      const lt = leaveTypeById.get(alloc.leaveTypeId);
+      if (!lt) continue;
+
+      // Update existing balance for this employee + type + year
+      const [existing] = await db.select().from(leaveBalances)
+        .where(and(
+          eq(leaveBalances.employeeId, assignment.employeeId),
+          eq(leaveBalances.leaveType, lt.slug),
+          eq(leaveBalances.year, currentYear),
+        )).limit(1);
+
+      if (existing) {
+        await db.update(leaveBalances)
+          .set({ allocated: alloc.daysPerYear, updatedAt: new Date() })
+          .where(eq(leaveBalances.id, existing.id));
+        updated++;
+      }
+    }
+  }
+
+  return { updated };
+}
+
 export async function assignPolicy(accountId: string, employeeId: string, policyId: string, effectiveFrom?: string) {
   const now = new Date();
 

@@ -2258,7 +2258,8 @@
       "deleteTitle": "Supprimer la politique",
       "deleteDesc": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Les employés assignés à cette politique devront être réassignés.",
       "createTitle": "Créer une politique de congé",
-      "allocationsLabel": "Allocations de congés"
+      "allocationsLabel": "Allocations de congés",
+      "balancesUpdated": "{{count}} solde(s) employé(s) mis à jour selon les nouvelles allocations"
     },
     "holidays": {
       "empty": "Aucun jour ferie dans ce calendrier.",

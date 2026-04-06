@@ -2294,7 +2294,8 @@
       "deleteTitle": "Delete policy",
       "deleteDesc": "Are you sure you want to delete \"{{name}}\"? Employees assigned to this policy will need to be reassigned.",
       "createTitle": "Create leave policy",
-      "allocationsLabel": "Leave allocations"
+      "allocationsLabel": "Leave allocations",
+      "balancesUpdated": "Updated {{count}} employee balance(s) to match new allocations"
     },
     "holidays": {
       "empty": "No holidays in this calendar",

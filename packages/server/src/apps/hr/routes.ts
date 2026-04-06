@@ -43,6 +43,7 @@ router.post('/leave-policies/seed', hrController.seedLeavePolicies);
 router.get('/leave-policies', hrController.listLeavePolicies);
 router.post('/leave-policies', hrController.createLeavePolicy);
 router.patch('/leave-policies/:id', hrController.updateLeavePolicy);
+router.post('/leave-policies/:id/resync', hrController.resyncPolicyBalances);
 router.delete('/leave-policies/:id', hrController.deleteLeavePolicy);
 
 // Holiday Calendars (before /:id)

@@ -264,6 +264,25 @@ export async function triggerBalanceAllocation(req: Request, res: Response) {
   }
 }
 
+export async function resyncPolicyBalances(req: Request, res: Response) {
+  try {
+    const accountId = req.auth!.accountId;
+    const policyId = req.params.id as string;
+
+    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
+    if (!canAccess(perm.role, 'update')) {
+      res.status(403).json({ success: false, error: 'No permission to manage HR records' });
+      return;
+    }
+
+    const result = await hrService.resyncPolicyBalances(accountId, policyId);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error({ error }, 'Failed to resync policy balances');
+    res.status(500).json({ success: false, error: 'Failed to resync policy balances' });
+  }
+}
+
 // ─── Holiday Calendars ────────────────────────────────────────────
 
 export async function listHolidayCalendars(req: Request, res: Response) {

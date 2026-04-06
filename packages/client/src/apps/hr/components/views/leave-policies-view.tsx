@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Download, Pencil, Trash2, Check, X } from 'lucide-react';
 import {
   useLeaveTypes, useLeavePolicies, useCreateLeavePolicy,
-  useUpdateLeavePolicy, useDeleteLeavePolicy, useSeedLeavePolicies,
+  useUpdateLeavePolicy, useDeleteLeavePolicy, useResyncPolicyBalances, useSeedLeavePolicies,
 } from '../../hooks';
+import { useToastStore } from '../../../../stores/toast-store';
 import type { HrLeaveType } from '../../hooks';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
@@ -119,6 +120,8 @@ function PolicyCard({
   const { t } = useTranslation();
   const updatePolicy = useUpdateLeavePolicy();
   const deletePolicy = useDeleteLeavePolicy();
+  const resyncBalances = useResyncPolicyBalances();
+  const addToast = useToastStore((s) => s.addToast);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(policy.name);
@@ -146,13 +149,25 @@ function PolicyCard({
 
   const handleSave = () => {
     if (!editName.trim()) return;
+    const allocationsChanged = JSON.stringify(editAllocations) !== JSON.stringify(policy.allocations);
     updatePolicy.mutate({
       id: policy.id,
       name: editName.trim(),
       description: editDesc.trim() || null,
       allocations: editAllocations,
     }, {
-      onSuccess: () => setIsEditing(false),
+      onSuccess: () => {
+        setIsEditing(false);
+        if (allocationsChanged) {
+          resyncBalances.mutate(policy.id, {
+            onSuccess: (result) => {
+              if (result.updated > 0) {
+                addToast({ type: 'success', message: t('hr.policies.balancesUpdated', { count: result.updated }) });
+              }
+            },
+          });
+        }
+      },
     });
   };
 
@@ -247,7 +262,7 @@ function PolicyCard({
 
         {/* Description */}
         {isEditing ? (
-          <div style={{ marginBottom: 'var(--spacing-md)' }}>
+          <div style={{ marginBottom: 'var(--spacing-md)', maxWidth: 400 }}>
             <Input
               value={editDesc}
               onChange={(e) => setEditDesc(e.target.value)}

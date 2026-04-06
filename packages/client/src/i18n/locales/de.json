@@ -2258,7 +2258,8 @@
       "deleteTitle": "Richtlinie löschen",
       "deleteDesc": "Möchten Sie \"{{name}}\" wirklich löschen? Mitarbeiter, die dieser Richtlinie zugewiesen sind, müssen neu zugewiesen werden.",
       "createTitle": "Urlaubsrichtlinie erstellen",
-      "allocationsLabel": "Urlaubszuteilungen"
+      "allocationsLabel": "Urlaubszuteilungen",
+      "balancesUpdated": "{{count}} Mitarbeiter-Kontingent(e) an neue Zuteilungen angepasst"
     },
     "holidays": {
       "empty": "Keine Feiertage in diesem Kalender.",
