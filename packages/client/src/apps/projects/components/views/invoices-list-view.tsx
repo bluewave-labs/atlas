@@ -85,9 +85,9 @@ export function InvoicesListView({ invoices, searchQuery, onSelect, selectedId, 
     },
     {
       key: 'lineItemCount',
-      label: t('projects.invoices.lineItems'),
+      label: t('projects.invoices.items'),
       icon: <Hash size={12} />,
-      width: 60,
+      width: 70,
       sortable: true,
       align: 'right',
       render: (invoice) => (

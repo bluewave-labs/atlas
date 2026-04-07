@@ -2852,6 +2852,7 @@
       "quantity": "Qte",
       "unitPrice": "Prix unitaire",
       "lineItems": "Lignes",
+      "items": "Lignes",
       "lineItemPlaceholder": "Description du service",
       "addLineItem": "Ajouter une ligne",
       "from": "Du",

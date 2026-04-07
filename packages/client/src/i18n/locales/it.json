@@ -2852,6 +2852,7 @@
       "quantity": "Qtà",
       "unitPrice": "Prezzo unitario",
       "lineItems": "Voci",
+      "items": "Voci",
       "lineItemPlaceholder": "Descrizione del servizio",
       "addLineItem": "Aggiungi voce",
       "from": "Da",

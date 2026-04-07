@@ -152,7 +152,7 @@ export function InvoiceDetailPanel({ invoice, onClose, onEdit }: { invoice: Invo
           <div>
             <span className="projects-detail-field-label">{t('projects.invoices.lineItems')}</span>
             <div style={{ marginTop: 'var(--spacing-sm)' }}>
-              {invoice.lineItems.map((li, i) => (
+              {(invoice.lineItems || []).map((li, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: 'var(--spacing-xs) 0', borderBottom: '1px solid var(--color-border-secondary)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-family)' }}>
                   <span style={{ color: 'var(--color-text-primary)', flex: 1 }}>{li.description}</span>
                   <span style={{ color: 'var(--color-text-tertiary)', width: 60, textAlign: 'right' }}>{li.quantity}h</span>

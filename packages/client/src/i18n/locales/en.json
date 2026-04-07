@@ -2858,6 +2858,7 @@
       "quantity": "Qty",
       "unitPrice": "Unit price",
       "lineItems": "Line items",
+      "items": "Items",
       "lineItemPlaceholder": "Service description",
       "addLineItem": "Add line item",
       "from": "From",

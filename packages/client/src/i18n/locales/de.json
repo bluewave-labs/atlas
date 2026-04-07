@@ -2852,6 +2852,7 @@
       "quantity": "Menge",
       "unitPrice": "Einzelpreis",
       "lineItems": "Positionen",
+      "items": "Posten",
       "lineItemPlaceholder": "Leistungsbeschreibung",
       "addLineItem": "Position hinzufugen",
       "from": "Von",
