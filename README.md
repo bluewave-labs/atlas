@@ -1,5 +1,9 @@
-# Atlas
-Self-hosted business platform with inter-connected CRM, HRM, digital signatures, document editor, task management, spreadsheets, file storage, and drawing tools, all can be used by the same team. It's a self hosted alternative for [Zoho](https://zoho.com/) and [Odoo](https://www.odoo.com/).
+<p align="center">
+   <img width="350" height="330" alt="image" src="https://github.com/user-attachments/assets/a9c1bd4b-1538-4378-81bd-a883175ac309" />
+</p>
+
+
+A self-hosted business platform that brings CRM, HRM, e-signatures, documents, tasks, spreadsheets, file storage, and whiteboards into one connected workspace for your team. An open alternative to [Zoho](https://zoho.com/) and [Odoo](https://www.odoo.com/).
 
 Atlas can also deploy several 3rd party apps, including [Activepieces](https://www.activepieces.com/), [Cal.com](http://cal.com/), [Formbricks](http://formbricks.com/), [Mattermost](http://mattermost.com/), [Umami](https://umami.is/) and [Checkmate](https://checkmate.so/).
 
