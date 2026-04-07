@@ -81,6 +81,9 @@ export async function listInvoices(userId: string, accountId: string, filters?: 
       isArchived: projectInvoices.isArchived,
       createdAt: projectInvoices.createdAt,
       updatedAt: projectInvoices.updatedAt,
+      eFaturaType: projectInvoices.eFaturaType,
+      eFaturaUuid: projectInvoices.eFaturaUuid,
+      eFaturaStatus: projectInvoices.eFaturaStatus,
       clientName: projectClients.name,
       lineItemCount: sql<number>`(SELECT COUNT(*) FROM project_invoice_line_items WHERE invoice_id = ${projectInvoices.id})`.as('line_item_count'),
     })
@@ -114,6 +117,9 @@ export async function getInvoice(userId: string, accountId: string, id: string) 
       isArchived: projectInvoices.isArchived,
       createdAt: projectInvoices.createdAt,
       updatedAt: projectInvoices.updatedAt,
+      eFaturaType: projectInvoices.eFaturaType,
+      eFaturaUuid: projectInvoices.eFaturaUuid,
+      eFaturaStatus: projectInvoices.eFaturaStatus,
       clientName: projectClients.name,
     })
     .from(projectInvoices)
