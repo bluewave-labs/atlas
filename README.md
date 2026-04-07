@@ -244,4 +244,4 @@ docker compose -f docker-compose.production.yml up -d
 
 ## License
 
-[Business Source License 1.1](LICENSE) — free for non-production use. Converts to Apache 2.0 after 4 years.
+[GNU Affero General Public License v3.0](LICENSE) — free to use, modify, and distribute. If you run a modified version as a network service, you must make the source available to users.

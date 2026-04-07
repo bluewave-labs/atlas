@@ -118,7 +118,7 @@ jobs:
             org.opencontainers.image.description=All-in-one business platform with modular app architecture
             org.opencontainers.image.source=https://github.com/bluewave-labs/atlas
             org.opencontainers.image.vendor=gorkem-bwl
-            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.licenses=AGPL-3.0
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
