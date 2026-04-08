@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api-client';
 import { queryKeys } from '../../config/query-keys';
+import { useAuthStore } from '../../stores/auth-store';
 
 // ─── Types ─────────────────────────────────────────────────────────
 
@@ -18,12 +19,14 @@ export interface SystemMetrics {
 // ─── Hooks ─────────────────────────────────────────────────────────
 
 export function useSystemMetrics() {
+  const isSuperAdmin = useAuthStore((s) => s.isSuperAdmin);
   return useQuery({
     queryKey: queryKeys.system.metrics,
     queryFn: async () => {
       const { data } = await api.get('/system/metrics');
       return data.data as SystemMetrics;
     },
+    enabled: isSuperAdmin,
     refetchInterval: 10_000,
     staleTime: 5_000,
   });
