@@ -50,14 +50,14 @@ export function OnboardingPage() {
   const [currency, setCurrency] = useState('$');
   const [withDemoData, setWithDemoData] = useState(true);
 
-  if (!isAuthenticated) {
-    return <Navigate to={ROUTES.LOGIN} replace />;
-  }
-
   useEffect(() => {
     i18n.changeLanguage(language);
     document.documentElement.lang = language;
   }, [language]);
+
+  if (!isAuthenticated) {
+    return <Navigate to={ROUTES.LOGIN} replace />;
+  }
 
   async function handleSubmit() {
     setLoading(true);

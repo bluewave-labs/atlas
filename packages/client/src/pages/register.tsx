@@ -27,8 +27,9 @@ export function RegisterPage() {
   const [companyName, setCompanyName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [registered, setRegistered] = useState(false);
 
-  if (isAuthenticated) {
+  if (isAuthenticated && !registered) {
     return <Navigate to={ROUTES.HOME} replace />;
   }
 
@@ -40,6 +41,7 @@ export function RegisterPage() {
     try {
       const { data } = await api.post('/auth/register', { name, email, password, companyName });
       const { accessToken, refreshToken, account } = data.data;
+      setRegistered(true);
       addAccount(account as Account, accessToken, refreshToken);
       navigate(ROUTES.ONBOARDING, { replace: true });
     } catch (err: any) {
