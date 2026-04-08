@@ -1,12 +1,10 @@
 import { useState, type CSSProperties } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/auth-store';
 import { useMyTenants } from '../../hooks/use-platform';
 import { useTenantAppsAdmin, useToggleTenantApp } from '../../hooks/use-tenant-app-admin';
 import { appRegistry } from '../../apps';
-import { LayoutGrid, Store, ArrowRight } from 'lucide-react';
-import { Button } from '../../components/ui/button';
+import { LayoutGrid } from 'lucide-react';
 import { Chip } from '../../components/ui/chip';
 import { Skeleton } from '../../components/ui/skeleton';
 
@@ -31,7 +29,6 @@ const APP_DESC_KEYS: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 export function OrgAppsPage() {
-  const navigate = useNavigate();
   const { t } = useTranslation();
   const storeTenantId = useAuthStore((s) => s.tenantId);
   const { data: tenants, isLoading: tenantsLoading } = useMyTenants();
@@ -78,13 +75,7 @@ export function OrgAppsPage() {
           </Chip>
         </div>
         <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', lineHeight: 'var(--line-height-normal)' }}>
-          {t('org.appsDescription')}{' '}
-          <button
-            onClick={() => navigate('/marketplace')}
-            style={{ background: 'none', border: 'none', padding: 0, color: 'var(--color-accent-primary)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', textDecoration: 'underline' }}
-          >
-            {t('org.marketplace')}
-          </button>.
+          {t('org.appsDescription')}
         </p>
       </div>
 
@@ -108,34 +99,6 @@ export function OrgAppsPage() {
         })}
       </div>
 
-      {/* Marketplace section */}
-      <div style={{
-        padding: 'var(--spacing-xl)',
-        background: 'var(--gradient-card-subtle)',
-        border: '1px solid var(--color-border-primary)',
-        borderRadius: 'var(--radius-lg)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--spacing-lg)',
-      }}>
-        <div style={{
-          width: 44, height: 44, borderRadius: 'var(--radius-lg)',
-          background: '#8b5cf6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-        }}>
-          <Store size={22} color="#fff" />
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'], color: 'var(--color-text-primary)', marginBottom: 2 }}>
-            {t('org.marketplace')}
-          </div>
-          <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', lineHeight: 'var(--line-height-normal)' }}>
-            {t('org.marketplaceDesc')}
-          </div>
-        </div>
-        <Button variant="secondary" size="sm" icon={<ArrowRight size={14} />} onClick={() => navigate('/marketplace')}>
-          {t('org.marketplace')}
-        </Button>
-      </div>
     </div>
   );
 }
