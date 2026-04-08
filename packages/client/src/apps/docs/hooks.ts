@@ -179,7 +179,7 @@ export function useDocumentSearch(query: string) {
 interface DocumentVersion {
   id: string;
   documentId: string;
-  accountId: string;
+  tenantId: string;
   title: string;
   content: Record<string, unknown> | null;
   createdAt: string;

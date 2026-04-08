@@ -494,7 +494,7 @@ export function useDeleteEmployeeDocument() {
 
 export interface HrLeaveType {
   id: string;
-  accountId: string;
+  tenantId: string;
   name: string;
   slug: string;
   color: string;

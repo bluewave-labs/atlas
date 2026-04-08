@@ -12,7 +12,7 @@ export interface AppPermission {
 
 export interface AppPermissionWithUser {
   id: string | null;
-  accountId: string;
+  tenantId: string;
   userId: string;
   role: AppRole;
   recordAccess: AppRecordAccess;

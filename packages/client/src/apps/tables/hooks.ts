@@ -173,7 +173,7 @@ interface RowComment {
   id: string;
   spreadsheetId: string;
   rowId: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   body: string;
   userName: string | null;

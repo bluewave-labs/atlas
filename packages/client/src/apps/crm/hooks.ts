@@ -40,7 +40,7 @@ export interface CrmContact {
 
 export interface CrmDealStage {
   id: string;
-  accountId: string;
+  tenantId: string;
   name: string;
   color: string;
   probability: number;
@@ -544,7 +544,7 @@ export function useDeleteActivity() {
 
 export interface CrmActivityTypeConfig {
   id: string;
-  accountId: string;
+  tenantId: string;
   name: string;
   icon: string;
   color: string;
@@ -659,7 +659,7 @@ export function useDashboard() {
 
 export interface CrmWorkflow {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   name: string;
   trigger: string;
@@ -746,7 +746,7 @@ export type CrmOperation = 'view' | 'create' | 'update' | 'delete';
 
 export interface CrmPermissionWithUser {
   id: string | null;
-  accountId: string;
+  tenantId: string;
   userId: string;
   role: CrmRole;
   recordAccess: CrmRecordAccess;
@@ -758,7 +758,7 @@ export interface CrmPermissionWithUser {
 
 export interface MyCrmPermission {
   id: string | null;
-  accountId: string;
+  tenantId: string;
   userId: string;
   role: CrmRole;
   recordAccess: CrmRecordAccess;
@@ -1267,7 +1267,7 @@ export function useCreateEvent() {
 
 export interface CrmSavedView {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   appSection: string;
   name: string;
@@ -1349,7 +1349,7 @@ export interface LeadFormField {
 
 export interface CrmLeadForm {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   name: string;
   token: string;
