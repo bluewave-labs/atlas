@@ -7,14 +7,14 @@ import { logger } from '../../../utils/logger';
 
 export async function logDriveActivity(data: {
   driveItemId: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   action: string;
   metadata?: Record<string, unknown>;
 }) {
   await db.insert(driveActivityLog).values({
     driveItemId: data.driveItemId,
-    accountId: data.accountId,
+    tenantId: data.tenantId,
     userId: data.userId,
     action: data.action,
     metadata: data.metadata || {},
@@ -65,11 +65,11 @@ export async function listComments(itemId: string) {
   }));
 }
 
-export async function createComment(userId: string, accountId: string, itemId: string, body: string) {
+export async function createComment(userId: string, tenantId: string, itemId: string, body: string) {
   const now = new Date();
   const [comment] = await db.insert(driveComments).values({
     driveItemId: itemId,
-    accountId,
+    tenantId,
     userId,
     body,
     createdAt: now,

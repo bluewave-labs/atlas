@@ -65,7 +65,7 @@ export async function listItems(userId: string, parentId: string | null, include
 
   const items = await db
     .select({
-      id: driveItems.id, accountId: driveItems.accountId, userId: driveItems.userId,
+      id: driveItems.id, tenantId: driveItems.tenantId, userId: driveItems.userId,
       name: driveItems.name, type: driveItems.type, mimeType: driveItems.mimeType,
       size: driveItems.size, parentId: driveItems.parentId, storagePath: driveItems.storagePath,
       icon: driveItems.icon, linkedResourceType: driveItems.linkedResourceType,
@@ -129,7 +129,7 @@ export async function getItem(userId: string, itemId: string, tenantId?: string 
 
 // ─── Create a folder ─────────────────────────────────────────────────
 
-export async function createFolder(userId: string, accountId: string, input: { name: string; parentId?: string | null }, tenantId?: string | null) {
+export async function createFolder(userId: string, tenantId: string, input: { name: string; parentId?: string | null }) {
   const now = new Date();
 
   const [maxSort] = await db
@@ -142,12 +142,11 @@ export async function createFolder(userId: string, accountId: string, input: { n
   const [created] = await db
     .insert(driveItems)
     .values({
-      accountId,
+      tenantId,
       userId,
       name: input.name || 'Untitled folder',
       type: 'folder',
       parentId: input.parentId || null,
-      tenantId: tenantId ?? null,
       sortOrder,
       createdAt: now,
       updatedAt: now,
@@ -160,7 +159,7 @@ export async function createFolder(userId: string, accountId: string, input: { n
 
 // ─── Upload file (create record after multer has saved the file) ─────
 
-export async function uploadFile(userId: string, accountId: string, input: CreateDriveItemInput, tenantId?: string | null) {
+export async function uploadFile(userId: string, tenantId: string, input: CreateDriveItemInput) {
   const now = new Date();
 
   const [maxSort] = await db
@@ -173,7 +172,7 @@ export async function uploadFile(userId: string, accountId: string, input: Creat
   const [created] = await db
     .insert(driveItems)
     .values({
-      accountId,
+      tenantId,
       userId,
       name: input.name,
       type: 'file',
@@ -181,7 +180,6 @@ export async function uploadFile(userId: string, accountId: string, input: Creat
       size: input.size || null,
       parentId: input.parentId || null,
       storagePath: input.storagePath || null,
-      tenantId: tenantId ?? null,
       sortOrder,
       createdAt: now,
       updatedAt: now,
@@ -418,13 +416,13 @@ export async function getWidgetData(userId: string) {
 
 // ─── Seed sample folder on first visit ───────────────────────────────
 
-export async function seedSampleFolder(_userId: string, _accountId: string) {
+export async function seedSampleFolder(_userId: string, _tenantId: string) {
   // No-op — sample data removed
 }
 
 // ─── Seed sample data (called from setup wizard) ────────────────────
 
-export async function seedSampleData(userId: string, accountId: string) {
+export async function seedSampleData(userId: string, tenantId: string) {
   // Idempotency guard — skip if folders already exist
   const existing = await db.select({ id: driveItems.id }).from(driveItems)
     .where(and(eq(driveItems.userId, userId), eq(driveItems.type, 'folder')))
@@ -432,13 +430,13 @@ export async function seedSampleData(userId: string, accountId: string) {
   if (existing.length > 0) return { skipped: true };
 
   // Create top-level folders
-  const company = await createFolder(userId, accountId, { name: 'Company' });
-  await createFolder(userId, accountId, { name: 'Projects' });
-  await createFolder(userId, accountId, { name: 'Shared' });
+  const company = await createFolder(userId, tenantId, { name: 'Company' });
+  await createFolder(userId, tenantId, { name: 'Projects' });
+  await createFolder(userId, tenantId, { name: 'Shared' });
 
   // Create subfolders inside Company
-  await createFolder(userId, accountId, { name: 'Templates', parentId: company.id });
-  await createFolder(userId, accountId, { name: 'Policies', parentId: company.id });
+  await createFolder(userId, tenantId, { name: 'Templates', parentId: company.id });
+  await createFolder(userId, tenantId, { name: 'Policies', parentId: company.id });
 
   logger.info({ userId }, 'Drive sample folders seeded');
   return { seeded: true };
@@ -494,7 +492,7 @@ export async function duplicateItem(userId: string, itemId: string) {
   const [created] = await db
     .insert(driveItems)
     .values({
-      accountId: item.accountId,
+      tenantId: item.tenantId,
       userId: item.userId,
       name: copyName,
       type: item.type,
@@ -516,7 +514,7 @@ export async function duplicateItem(userId: string, itemId: string) {
 
 // ─── Copy item (with recursive folder support) ──────────────────────
 
-export async function copyItem(userId: string, accountId: string, itemId: string, targetParentId?: string | null): Promise<typeof driveItems.$inferSelect | null> {
+export async function copyItem(userId: string, tenantId: string, itemId: string, targetParentId?: string | null): Promise<typeof driveItems.$inferSelect | null> {
   const item = await getItem(userId, itemId);
   if (!item) return null;
 
@@ -557,7 +555,7 @@ export async function copyItem(userId: string, accountId: string, itemId: string
   const [created] = await db
     .insert(driveItems)
     .values({
-      accountId,
+      tenantId,
       userId,
       name: copyName,
       type: item.type,
@@ -581,7 +579,7 @@ export async function copyItem(userId: string, accountId: string, itemId: string
       .where(and(eq(driveItems.userId, userId), eq(driveItems.parentId, itemId), eq(driveItems.isArchived, false)));
 
     for (const child of children) {
-      await copyItem(userId, accountId, child.id, created.id);
+      await copyItem(userId, tenantId, child.id, created.id);
     }
   }
 

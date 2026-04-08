@@ -20,8 +20,8 @@ export async function getWidgetData(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
-    const data = await signService.getWidgetData(userId, accountId);
+    const tenantId = req.auth!.tenantId;
+    const data = await signService.getWidgetData(userId, tenantId);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to get sign widget data');
@@ -40,8 +40,8 @@ export async function listDocuments(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
-    const docs = await signService.listDocuments(userId, accountId);
+    const tenantId = req.auth!.tenantId;
+    const docs = await signService.listDocuments(userId, tenantId);
     res.json({ success: true, data: { documents: docs } });
   } catch (error) {
     logger.error({ error }, 'Failed to list signature documents');
@@ -58,7 +58,7 @@ export async function createDocument(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { title, fileName, storagePath, pageCount, status, expiresAt, tags, redirectUrl } = req.body;
 
     if (!title || !fileName || !storagePath) {
@@ -66,7 +66,7 @@ export async function createDocument(req: Request, res: Response) {
       return;
     }
 
-    const doc = await signService.createDocument(userId, accountId, {
+    const doc = await signService.createDocument(userId, tenantId, {
       title, fileName, storagePath, pageCount, status, expiresAt, tags, redirectUrl,
     });
     res.json({ success: true, data: doc });
@@ -85,7 +85,7 @@ export async function uploadPDF(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const file = req.file as Express.Multer.File;
 
     if (!file) {
@@ -97,7 +97,7 @@ export async function uploadPDF(req: Request, res: Response) {
     const title = req.body.title || decodedName.replace(/\.pdf$/i, '');
     const pageCount = parseInt(req.body.pageCount) || 1;
 
-    const doc = await signService.createDocument(userId, accountId, {
+    const doc = await signService.createDocument(userId, tenantId, {
       title, fileName: decodedName, storagePath: file.filename, pageCount,
     });
 
@@ -297,9 +297,9 @@ export async function voidDocument(req: Request, res: Response) {
 export async function seedSampleData(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
-    const result = await signService.seedSampleData(userId, accountId);
+    const result = await signService.seedSampleData(userId, tenantId);
     res.json({ success: true, data: result });
   } catch (error) {
     logger.error({ error }, 'Failed to seed sign sample data');

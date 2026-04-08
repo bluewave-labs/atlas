@@ -6,7 +6,7 @@ import { getItem, normalizeTags } from './items.service';
 
 // ─── File versioning ─────────────────────────────────────────────────
 
-export async function createVersion(userId: string, accountId: string, itemId: string) {
+export async function createVersion(userId: string, tenantId: string, itemId: string) {
   const item = await getItem(userId, itemId);
   if (!item || item.type !== 'file') return null;
 
@@ -14,7 +14,7 @@ export async function createVersion(userId: string, accountId: string, itemId: s
     .insert(driveItemVersions)
     .values({
       driveItemId: item.id,
-      accountId,
+      tenantId,
       userId,
       name: item.name,
       mimeType: item.mimeType,
@@ -37,7 +37,7 @@ export async function listVersions(userId: string, itemId: string) {
     .limit(20);
 }
 
-export async function restoreVersion(userId: string, accountId: string, itemId: string, versionId: string) {
+export async function restoreVersion(userId: string, tenantId: string, itemId: string, versionId: string) {
   const item = await getItem(userId, itemId);
   if (!item || item.type !== 'file') return null;
 
@@ -50,7 +50,7 @@ export async function restoreVersion(userId: string, accountId: string, itemId: 
   if (!version) return null;
 
   // Snapshot current file as a new version before restoring
-  await createVersion(userId, accountId, itemId);
+  await createVersion(userId, tenantId, itemId);
 
   // Overwrite main record with version data
   const now = new Date();

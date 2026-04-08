@@ -19,7 +19,7 @@ export async function listDrawings(userId: string, includeArchived = false, tena
   return db
     .select({
       id: drawings.id,
-      accountId: drawings.accountId,
+      tenantId: drawings.tenantId,
       userId: drawings.userId,
       title: drawings.title,
       thumbnailUrl: drawings.thumbnailUrl,
@@ -51,7 +51,7 @@ export async function getDrawing(userId: string, drawingId: string, tenantId?: s
 
 // ─── Seed sample drawings on first visit ─────────────────────────────
 
-export async function seedSampleDrawings(userId: string, accountId: string) {
+export async function seedSampleDrawings(userId: string, tenantId: string) {
   const existing = await db
     .select({ id: drawings.id })
     .from(drawings)
@@ -130,7 +130,7 @@ export async function seedSampleDrawings(userId: string, accountId: string) {
   ];
 
   await db.insert(drawings).values({
-    accountId,
+    tenantId,
     userId,
     title: 'Product roadmap',
     content: { elements: roadmapElements, appState: { viewBackgroundColor: '#ffffff' } },
@@ -140,7 +140,7 @@ export async function seedSampleDrawings(userId: string, accountId: string) {
   });
 
   await db.insert(drawings).values({
-    accountId,
+    tenantId,
     userId,
     title: 'Team structure',
     content: { elements: teamElements, appState: { viewBackgroundColor: '#ffffff' } },
@@ -150,7 +150,7 @@ export async function seedSampleDrawings(userId: string, accountId: string) {
   });
 
   await db.insert(drawings).values({
-    accountId,
+    tenantId,
     userId,
     title: 'Brainstorm',
     content: { elements: brainstormElements, appState: { viewBackgroundColor: '#ffffff' } },
@@ -165,7 +165,7 @@ export async function seedSampleDrawings(userId: string, accountId: string) {
 
 // ─── Create a new drawing ────────────────────────────────────────────
 
-export async function createDrawing(userId: string, accountId: string, input: CreateDrawingInput, tenantId?: string | null) {
+export async function createDrawing(userId: string, tenantId: string, input: CreateDrawingInput) {
   const now = new Date();
 
   // Determine the next sort order
@@ -179,11 +179,10 @@ export async function createDrawing(userId: string, accountId: string, input: Cr
   const [created] = await db
     .insert(drawings)
     .values({
-      accountId,
+      tenantId,
       userId,
       title: input.title || 'Untitled drawing',
       content: input.content ?? null,
-      tenantId: tenantId ?? null,
       sortOrder,
       createdAt: now,
       updatedAt: now,
@@ -256,7 +255,7 @@ export async function searchDrawings(userId: string, query: string) {
   return db
     .select({
       id: drawings.id,
-      accountId: drawings.accountId,
+      tenantId: drawings.tenantId,
       userId: drawings.userId,
       title: drawings.title,
       thumbnailUrl: drawings.thumbnailUrl,

@@ -117,7 +117,7 @@ export async function revokeShare(driveItemId: string, sharedWithUserId: string)
     ));
 }
 
-export async function listSharedWithMe(userId: string, _accountId: string) {
+export async function listSharedWithMe(userId: string, _tenantId: string) {
   const shares = await db.select({
     share: driveItemShares,
     item: driveItems,

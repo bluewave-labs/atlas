@@ -35,7 +35,7 @@ export async function replaceFile(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const itemId = req.params.id as string;
     const file = req.file as Express.Multer.File;
 
@@ -51,7 +51,7 @@ export async function replaceFile(req: Request, res: Response) {
     }
 
     // Snapshot current file as a version
-    await driveService.createVersion(userId, accountId, itemId);
+    await driveService.createVersion(userId, tenantId, itemId);
 
     // Update main record with new file data
     const now = new Date();
@@ -90,11 +90,11 @@ export async function restoreVersion(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const itemId = req.params.id as string;
     const versionId = req.params.versionId as string;
 
-    const item = await driveService.restoreVersion(userId, accountId, itemId, versionId);
+    const item = await driveService.restoreVersion(userId, tenantId, itemId, versionId);
     if (!item) {
       res.status(404).json({ success: false, error: 'Version not found' });
       return;
@@ -159,7 +159,7 @@ export async function createShareLink(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const itemId = req.params.id as string;
     const { expiresAt, password } = req.body as { expiresAt?: string; password?: string };
 
@@ -169,10 +169,10 @@ export async function createShareLink(req: Request, res: Response) {
       return;
     }
 
-    if (req.auth!.tenantId) {
+    if (tenantId) {
       const item = await driveService.getItem(userId, itemId);
       emitAppEvent({
-        tenantId: req.auth!.tenantId,
+        tenantId,
         userId,
         appId: 'drive',
         eventType: 'file.shared',
@@ -181,7 +181,7 @@ export async function createShareLink(req: Request, res: Response) {
       }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     }
 
-    driveService.logDriveActivity({ driveItemId: itemId, accountId, userId, action: 'share_link.created' }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
+    driveService.logDriveActivity({ driveItemId: itemId, tenantId, userId, action: 'share_link.created' }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     res.json({ success: true, data: link });
   } catch (error) {
     logger.error({ error }, 'Failed to create share link');
@@ -246,7 +246,7 @@ export async function shareWithUser(req: Request, res: Response) {
       return;
     }
     const share = await driveService.shareItem(itemId, targetUserId, permission || 'view', userId);
-    driveService.logDriveActivity({ driveItemId: itemId, accountId: req.auth!.accountId, userId, action: 'file.shared', metadata: { sharedWith: targetUserId, permission: permission || 'view' } }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
+    driveService.logDriveActivity({ driveItemId: itemId, tenantId: req.auth!.tenantId, userId, action: 'file.shared', metadata: { sharedWith: targetUserId, permission: permission || 'view' } }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     res.json({ success: true, data: share });
   } catch (error) {
     logger.error({ error }, 'Failed to share item');
@@ -301,8 +301,8 @@ export async function getSharedWithMe(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
-    const items = await driveService.listSharedWithMe(userId, accountId);
+    const tenantId = req.auth!.tenantId;
+    const items = await driveService.listSharedWithMe(userId, tenantId);
     res.json({ success: true, data: items });
   } catch (error) {
     logger.error({ error }, 'Failed to get shared items');
@@ -356,7 +356,7 @@ export async function createComment(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const itemId = req.params.id as string;
     const { body } = req.body as { body?: string };
 
@@ -365,7 +365,7 @@ export async function createComment(req: Request, res: Response) {
       return;
     }
 
-    const comment = await driveService.createComment(userId, accountId, itemId, body.trim());
+    const comment = await driveService.createComment(userId, tenantId, itemId, body.trim());
     res.json({ success: true, data: comment });
 
     // Fire-and-forget: parse @mentions and create notifications

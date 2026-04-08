@@ -9,8 +9,8 @@ import * as googleDriveService from '../services/google-drive.service';
 
 export async function getStatus(req: Request, res: Response) {
   try {
-    const { accountId } = req.auth!;
-    const data = await googleDriveService.getDriveStatus(accountId);
+    const { tenantId } = req.auth!;
+    const data = await googleDriveService.getDriveStatus(tenantId);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to get Google Drive status');
@@ -31,7 +31,7 @@ export async function connect(req: Request, res: Response) {
     }
 
     const state = jwt.sign(
-      { userId: req.auth!.userId, accountId: req.auth!.accountId },
+      { userId: req.auth!.userId, tenantId: req.auth!.tenantId },
       env.JWT_SECRET,
       { expiresIn: '10m' },
     );
@@ -48,11 +48,11 @@ export async function connect(req: Request, res: Response) {
 
 export async function browse(req: Request, res: Response) {
   try {
-    const { accountId } = req.auth!;
+    const { tenantId } = req.auth!;
     const parentId = req.query.parentId as string | undefined;
     const query = req.query.q as string | undefined;
 
-    const files = await googleDriveService.listGoogleDriveFiles(accountId, parentId, query);
+    const files = await googleDriveService.listGoogleDriveFiles(tenantId, parentId, query);
     res.json({ success: true, data: files });
   } catch (error) {
     logger.error({ error }, 'Failed to browse Google Drive files');
@@ -64,7 +64,7 @@ export async function browse(req: Request, res: Response) {
 
 export async function importFiles(req: Request, res: Response) {
   try {
-    const { userId, accountId, tenantId } = req.auth!;
+    const { userId, tenantId } = req.auth!;
     const { fileIds, targetParentId } = req.body as {
       fileIds: string[];
       targetParentId?: string | null;
@@ -81,11 +81,10 @@ export async function importFiles(req: Request, res: Response) {
     for (const fileId of fileIds) {
       try {
         const item = await googleDriveService.importFileFromGoogleDrive(
-          accountId,
+          tenantId,
           userId,
           fileId,
           targetParentId,
-          tenantId ?? null,
         );
         results.push(item);
       } catch (err) {
@@ -105,7 +104,7 @@ export async function importFiles(req: Request, res: Response) {
 
 export async function exportFile(req: Request, res: Response) {
   try {
-    const { userId, accountId } = req.auth!;
+    const { userId, tenantId } = req.auth!;
     const { driveItemId, googleParentFolderId } = req.body as {
       driveItemId: string;
       googleParentFolderId?: string;
@@ -117,7 +116,7 @@ export async function exportFile(req: Request, res: Response) {
     }
 
     const data = await googleDriveService.exportToGoogleDrive(
-      accountId,
+      tenantId,
       userId,
       driveItemId,
       googleParentFolderId,

@@ -32,13 +32,13 @@ export async function listItems(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const parentId = (req.query.parentId as string) || null;
     const sortBy = (req.query.sortBy as string) || undefined;
     const sortOrder = (req.query.sortOrder as string) || undefined;
 
     // Auto-seed on first visit
-    await driveService.seedSampleFolder(userId, accountId);
+    await driveService.seedSampleFolder(userId, tenantId);
 
     const items = await driveService.listItems(userId, parentId, false, sortBy, sortOrder, req.auth!.tenantId ?? null);
     res.json({ success: true, data: { items } });
@@ -58,11 +58,11 @@ export async function createFolder(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { name, parentId } = req.body;
 
-    const folder = await driveService.createFolder(userId, accountId, { name, parentId }, req.auth!.tenantId ?? null);
-    driveService.logDriveActivity({ driveItemId: folder.id, accountId, userId, action: 'folder.created', metadata: { name: folder.name } }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
+    const folder = await driveService.createFolder(userId, tenantId, { name, parentId });
+    driveService.logDriveActivity({ driveItemId: folder.id, tenantId, userId, action: 'folder.created', metadata: { name: folder.name } }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     res.json({ success: true, data: folder });
   } catch (error) {
     logger.error({ error }, 'Failed to create folder');
@@ -80,7 +80,7 @@ export async function uploadFiles(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const parentId = (req.body.parentId as string) || null;
     const files = req.files as Express.Multer.File[];
 
@@ -93,14 +93,14 @@ export async function uploadFiles(req: Request, res: Response) {
     for (const file of files) {
       // Multer decodes filenames as Latin-1; re-decode as UTF-8 for proper Unicode support
       const decodedName = Buffer.from(file.originalname, 'latin1').toString('utf8');
-      const item = await driveService.uploadFile(userId, accountId, {
+      const item = await driveService.uploadFile(userId, tenantId, {
         name: decodedName,
         type: 'file',
         mimeType: file.mimetype,
         size: file.size,
         parentId,
         storagePath: file.filename,
-      }, req.auth!.tenantId ?? null);
+      });
       created.push(item);
     }
 
@@ -118,7 +118,7 @@ export async function uploadFiles(req: Request, res: Response) {
 
     // Activity log — fire-and-forget
     for (const item of created) {
-      driveService.logDriveActivity({ driveItemId: item.id, accountId, userId, action: 'file.uploaded', metadata: { name: item.name } }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
+      driveService.logDriveActivity({ driveItemId: item.id, tenantId, userId, action: 'file.uploaded', metadata: { name: item.name } }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     }
 
     res.json({ success: true, data: { items: created } });
@@ -299,7 +299,7 @@ export async function updateItem(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const itemId = req.params.id as string;
     const { name, parentId, icon, isFavourite, isArchived, tags } = req.body;
 
@@ -327,7 +327,7 @@ export async function updateItem(req: Request, res: Response) {
 
     // Activity log for rename
     if (name !== undefined) {
-      driveService.logDriveActivity({ driveItemId: itemId, accountId, userId, action: 'file.renamed', metadata: { name } }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
+      driveService.logDriveActivity({ driveItemId: itemId, tenantId, userId, action: 'file.renamed', metadata: { name } }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     }
 
     res.json({ success: true, data: item });
@@ -350,7 +350,7 @@ export async function deleteItem(req: Request, res: Response) {
     const itemId = req.params.id as string;
 
     await driveService.deleteItem(userId, itemId);
-    driveService.logDriveActivity({ driveItemId: itemId, accountId: req.auth!.accountId, userId, action: 'file.deleted' }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
+    driveService.logDriveActivity({ driveItemId: itemId, tenantId: req.auth!.tenantId, userId, action: 'file.deleted' }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete drive item');
@@ -376,7 +376,7 @@ export async function restoreItem(req: Request, res: Response) {
       return;
     }
 
-    driveService.logDriveActivity({ driveItemId: itemId, accountId: req.auth!.accountId, userId, action: 'file.restored' }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
+    driveService.logDriveActivity({ driveItemId: itemId, tenantId: req.auth!.tenantId, userId, action: 'file.restored' }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     res.json({ success: true, data: item });
   } catch (error) {
     logger.error({ error }, 'Failed to restore drive item');
@@ -439,11 +439,11 @@ export async function copyItem(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const itemId = req.params.id as string;
     const { targetParentId } = req.body as { targetParentId?: string | null };
 
-    const item = await driveService.copyItem(userId, accountId, itemId, targetParentId);
+    const item = await driveService.copyItem(userId, tenantId, itemId, targetParentId);
     if (!item) {
       res.status(404).json({ success: false, error: 'Item not found' });
       return;
@@ -560,9 +560,9 @@ export async function listItemsByType(req: Request, res: Response) {
 export async function seedSampleData(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
-    const result = await driveService.seedSampleData(userId, accountId);
+    const result = await driveService.seedSampleData(userId, tenantId);
     res.json({ success: true, data: result });
   } catch (error) {
     logger.error({ error }, 'Failed to seed drive sample data');

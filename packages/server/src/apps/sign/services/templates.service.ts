@@ -12,13 +12,13 @@ const UPLOADS_DIR = path.join(__dirname, '../../../../uploads');
 
 // ─── Templates ──────────────────────────────────────────────────────
 
-export async function listTemplates(userId: string, accountId: string) {
+export async function listTemplates(userId: string, tenantId: string) {
   return db
     .select()
     .from(signTemplates)
     .where(
       and(
-        eq(signTemplates.accountId, accountId),
+        eq(signTemplates.tenantId, tenantId),
         eq(signTemplates.isArchived, false),
       ),
     )
@@ -27,7 +27,7 @@ export async function listTemplates(userId: string, accountId: string) {
 
 export async function createTemplate(
   userId: string,
-  accountId: string,
+  tenantId: string,
   data: {
     title: string;
     fileName: string;
@@ -50,7 +50,7 @@ export async function createTemplate(
   const [created] = await db
     .insert(signTemplates)
     .values({
-      accountId,
+      tenantId,
       userId,
       title: data.title,
       fileName: data.fileName,
@@ -68,7 +68,7 @@ export async function createTemplate(
 
 export async function saveAsTemplate(
   userId: string,
-  accountId: string,
+  tenantId: string,
   documentId: string,
   title?: string,
 ) {
@@ -102,7 +102,7 @@ export async function saveAsTemplate(
   }
 
   // Create the template
-  return createTemplate(userId, accountId, {
+  return createTemplate(userId, tenantId, {
     title: title || `${doc.title} (template)`,
     fileName: doc.fileName,
     storagePath: newFileName,
@@ -123,7 +123,7 @@ export async function saveAsTemplate(
 
 export async function createDocumentFromTemplate(
   userId: string,
-  accountId: string,
+  tenantId: string,
   templateId: string,
   title?: string,
 ) {
@@ -134,7 +134,7 @@ export async function createDocumentFromTemplate(
     .where(
       and(
         eq(signTemplates.id, templateId),
-        eq(signTemplates.accountId, accountId),
+        eq(signTemplates.tenantId, tenantId),
         eq(signTemplates.isArchived, false),
       ),
     )
@@ -155,7 +155,7 @@ export async function createDocumentFromTemplate(
   }
 
   // Create the document
-  const doc = await createDocument(userId, accountId, {
+  const doc = await createDocument(userId, tenantId, {
     title: title || tpl.title,
     fileName: tpl.fileName,
     storagePath: newFileName,
@@ -181,7 +181,7 @@ export async function createDocumentFromTemplate(
   return doc;
 }
 
-export async function deleteTemplate(userId: string, accountId: string, templateId: string) {
+export async function deleteTemplate(userId: string, tenantId: string, templateId: string) {
   const now = new Date();
   await db
     .update(signTemplates)
@@ -189,7 +189,7 @@ export async function deleteTemplate(userId: string, accountId: string, template
     .where(
       and(
         eq(signTemplates.id, templateId),
-        eq(signTemplates.accountId, accountId),
+        eq(signTemplates.tenantId, tenantId),
       ),
     );
   logger.info({ userId, templateId }, 'Sign template archived');

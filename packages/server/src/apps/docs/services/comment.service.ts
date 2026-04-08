@@ -10,12 +10,12 @@ export async function listComments(userId: string, documentId: string) {
     .orderBy(asc(documentComments.createdAt));
 }
 
-export async function createComment(userId: string, accountId: string, documentId: string, input: {
+export async function createComment(userId: string, tenantId: string, documentId: string, input: {
   content: string; selectionFrom?: number; selectionTo?: number; selectionText?: string; parentId?: string;
 }) {
   const now = new Date();
   const [created] = await db.insert(documentComments).values({
-    documentId, userId, accountId,
+    documentId, userId, tenantId,
     content: input.content,
     selectionFrom: input.selectionFrom ?? null, selectionTo: input.selectionTo ?? null,
     selectionText: input.selectionText ?? null,

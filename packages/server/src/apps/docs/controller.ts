@@ -14,11 +14,11 @@ export async function listDocuments(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const includeArchived = req.query.includeArchived === 'true';
 
     // Auto-seed sample documents on first visit
-    await documentService.seedSampleDocuments(userId, accountId);
+    await documentService.seedSampleDocuments(userId, tenantId);
 
     const docs = await documentService.listDocuments(userId, includeArchived, req.auth!.tenantId ?? null);
     const tree = documentService.buildDocumentTree(docs);
@@ -40,15 +40,15 @@ export async function createDocument(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { parentId, title, icon, content } = req.body;
 
-    const doc = await documentService.createDocument(userId, accountId, {
+    const doc = await documentService.createDocument(userId, tenantId, {
       parentId,
       title,
       icon,
       content,
-    }, req.auth!.tenantId ?? null);
+    });
 
     res.json({ success: true, data: doc });
   } catch (error) {
@@ -304,9 +304,9 @@ export async function restoreVersion(req: Request, res: Response) {
 export async function seedSampleData(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
-    const result = await documentService.seedSampleDocuments(userId, accountId);
+    const result = await documentService.seedSampleDocuments(userId, tenantId);
     res.json({ success: true, data: { message: 'Seeded Docs sample data', ...result } });
   } catch (error) {
     logger.error({ error }, 'Failed to seed Docs sample data');
@@ -340,7 +340,7 @@ export async function createComment(req: Request, res: Response) {
       return;
     }
 
-    const comment = await documentService.createComment(req.auth!.userId, req.auth!.accountId, req.params.id as string, req.body);
+    const comment = await documentService.createComment(req.auth!.userId, req.auth!.tenantId, req.params.id as string, req.body);
     res.json({ success: true, data: comment });
 
     // Fire-and-forget: parse @mentions and create notifications
@@ -444,10 +444,10 @@ export async function importDocument(req: Request, res: Response) {
     // Simple import: accept { html, title } from client
     // Client handles file conversion (mammoth for docx, marked for md)
     const { html, title } = req.body;
-    const doc = await documentService.createDocument(req.auth!.userId, req.auth!.accountId, {
+    const doc = await documentService.createDocument(req.auth!.userId, req.auth!.tenantId, {
       title: title || 'Imported document',
       content: html ? { _html: html } : null,
-    }, req.auth!.tenantId ?? null);
+    });
     res.json({ success: true, data: doc });
   } catch (error) {
     logger.error({ error }, 'Failed to import document');

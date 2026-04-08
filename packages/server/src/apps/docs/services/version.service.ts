@@ -13,7 +13,7 @@ export async function createVersion(userId: string, documentId: string) {
     .insert(documentVersions)
     .values({
       documentId,
-      accountId: doc.accountId,
+      tenantId: doc.tenantId,
       userId,
       title: doc.title,
       content: doc.content,

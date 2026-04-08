@@ -6,9 +6,9 @@ import { normalizeTags } from './items.service';
 
 // ─── Create linked resources ─────────────────────────────────────────
 
-export async function createLinkedDocument(userId: string, accountId: string, parentId?: string | null) {
+export async function createLinkedDocument(userId: string, tenantId: string, parentId?: string | null) {
   const { createDocument } = await import('../../docs/service');
-  const doc = await createDocument(userId, accountId, { title: 'Untitled document' });
+  const doc = await createDocument(userId, tenantId, { title: 'Untitled document' });
 
   const now = new Date();
   const [maxSort] = await db
@@ -20,7 +20,7 @@ export async function createLinkedDocument(userId: string, accountId: string, pa
   const [created] = await db
     .insert(driveItems)
     .values({
-      accountId,
+      tenantId,
       userId,
       name: 'Untitled document',
       type: 'file',
@@ -38,9 +38,9 @@ export async function createLinkedDocument(userId: string, accountId: string, pa
   return { driveItem: normalizeTags(created), resourceId: doc.id };
 }
 
-export async function createLinkedDrawing(userId: string, accountId: string, parentId?: string | null) {
+export async function createLinkedDrawing(userId: string, tenantId: string, parentId?: string | null) {
   const { createDrawing } = await import('../../draw/service');
-  const drawing = await createDrawing(userId, accountId, { title: 'Untitled drawing' });
+  const drawing = await createDrawing(userId, tenantId, { title: 'Untitled drawing' });
 
   const now = new Date();
   const [maxSort] = await db
@@ -52,7 +52,7 @@ export async function createLinkedDrawing(userId: string, accountId: string, par
   const [created] = await db
     .insert(driveItems)
     .values({
-      accountId,
+      tenantId,
       userId,
       name: 'Untitled drawing',
       type: 'file',
@@ -70,9 +70,9 @@ export async function createLinkedDrawing(userId: string, accountId: string, par
   return { driveItem: normalizeTags(created), resourceId: drawing.id };
 }
 
-export async function createLinkedSpreadsheet(userId: string, accountId: string, parentId?: string | null) {
+export async function createLinkedSpreadsheet(userId: string, tenantId: string, parentId?: string | null) {
   const { createSpreadsheet } = await import('../../tables/service');
-  const spreadsheet = await createSpreadsheet(userId, accountId, { title: 'Untitled spreadsheet' });
+  const spreadsheet = await createSpreadsheet(userId, tenantId, { title: 'Untitled spreadsheet' });
 
   const now = new Date();
   const [maxSort] = await db
@@ -84,7 +84,7 @@ export async function createLinkedSpreadsheet(userId: string, accountId: string,
   const [created] = await db
     .insert(driveItems)
     .values({
-      accountId,
+      tenantId,
       userId,
       name: 'Untitled spreadsheet',
       type: 'file',

@@ -330,8 +330,8 @@ export async function listTemplates(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
-    const templates = await signService.listTemplates(userId, accountId);
+    const tenantId = req.auth!.tenantId;
+    const templates = await signService.listTemplates(userId, tenantId);
     res.json({ success: true, data: { templates } });
   } catch (error) {
     logger.error({ error }, 'Failed to list sign templates');
@@ -348,7 +348,7 @@ export async function createTemplate(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { title, fileName, storagePath, pageCount, fields } = req.body;
 
     if (!title || !fileName || !storagePath) {
@@ -356,7 +356,7 @@ export async function createTemplate(req: Request, res: Response) {
       return;
     }
 
-    const template = await signService.createTemplate(userId, accountId, {
+    const template = await signService.createTemplate(userId, tenantId, {
       title, fileName, storagePath, pageCount, fields,
     });
     res.json({ success: true, data: template });
@@ -375,11 +375,11 @@ export async function useTemplate(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const templateId = req.params.id as string;
     const { title } = req.body;
 
-    const doc = await signService.createDocumentFromTemplate(userId, accountId, templateId, title);
+    const doc = await signService.createDocumentFromTemplate(userId, tenantId, templateId, title);
     res.json({ success: true, data: doc });
   } catch (error) {
     logger.error({ error }, 'Failed to create document from template');
@@ -396,11 +396,11 @@ export async function saveAsTemplate(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const documentId = req.params.id as string;
     const { title } = req.body;
 
-    const template = await signService.saveAsTemplate(userId, accountId, documentId, title);
+    const template = await signService.saveAsTemplate(userId, tenantId, documentId, title);
     res.json({ success: true, data: template });
   } catch (error) {
     logger.error({ error }, 'Failed to save document as template');
@@ -417,10 +417,10 @@ export async function deleteTemplate(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const templateId = req.params.id as string;
 
-    await signService.deleteTemplate(userId, accountId, templateId);
+    await signService.deleteTemplate(userId, tenantId, templateId);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete sign template');

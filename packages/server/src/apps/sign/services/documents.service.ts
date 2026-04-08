@@ -64,14 +64,14 @@ export async function getUserEmail(userId: string): Promise<string> {
 
 // ─── Documents ──────────────────────────────────────────────────────
 
-export async function listDocuments(userId: string, accountId: string) {
+export async function listDocuments(userId: string, tenantId: string) {
   const docs = await db
     .select()
     .from(signatureDocuments)
     .where(
       and(
         eq(signatureDocuments.userId, userId),
-        eq(signatureDocuments.accountId, accountId),
+        eq(signatureDocuments.tenantId, tenantId),
         eq(signatureDocuments.isArchived, false),
       ),
     )
@@ -131,7 +131,7 @@ export async function getDocument(userId: string, documentId: string) {
 
 export async function createDocument(
   userId: string,
-  accountId: string,
+  tenantId: string,
   data: {
     title: string;
     fileName: string;
@@ -154,7 +154,7 @@ export async function createDocument(
   const [created] = await db
     .insert(signatureDocuments)
     .values({
-      accountId,
+      tenantId,
       userId,
       title: data.title,
       fileName: data.fileName,
@@ -330,12 +330,12 @@ export async function generateSignedPDF(documentId: string, storagePath: string)
 
 // ─── Widget summary (lightweight) ──────────────────────────────────
 
-export async function getWidgetData(userId: string, accountId: string) {
+export async function getWidgetData(userId: string, tenantId: string) {
   const rows = await db
     .select({ status: signatureDocuments.status, count: sql<number>`COUNT(*)`.as('count') })
     .from(signatureDocuments)
     .where(and(
-      eq(signatureDocuments.accountId, accountId),
+      eq(signatureDocuments.tenantId, tenantId),
       eq(signatureDocuments.isArchived, false),
     ))
     .groupBy(signatureDocuments.status);
@@ -358,6 +358,6 @@ export async function getWidgetData(userId: string, accountId: string) {
 
 // ─── Seed sample data (called from setup wizard) ────────────────────
 
-export async function seedSampleData(userId: string, accountId: string) {
+export async function seedSampleData(userId: string, tenantId: string) {
   return { skipped: true };
 }

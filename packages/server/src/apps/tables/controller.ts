@@ -13,11 +13,11 @@ export async function listSpreadsheets(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const includeArchived = req.query.includeArchived === 'true';
 
     // Auto-seed sample spreadsheet on first visit
-    await tableService.seedSampleSpreadsheets(userId, accountId);
+    await tableService.seedSampleSpreadsheets(userId, tenantId);
 
     const spreadsheets = await tableService.listSpreadsheets(userId, includeArchived);
 
@@ -38,10 +38,10 @@ export async function createSpreadsheet(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { title, columns, rows, viewConfig, color, icon } = req.body;
 
-    const spreadsheet = await tableService.createSpreadsheet(userId, accountId, {
+    const spreadsheet = await tableService.createSpreadsheet(userId, tenantId, {
       title,
       columns,
       rows,
@@ -175,9 +175,9 @@ export async function restoreSpreadsheet(req: Request, res: Response) {
 export async function seedSampleData(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
-    const result = await tableService.seedSampleSpreadsheets(userId, accountId);
+    const result = await tableService.seedSampleSpreadsheets(userId, tenantId);
     res.json({ success: true, data: { message: 'Seeded Tables sample data', ...result } });
   } catch (error) {
     logger.error({ error }, 'Failed to seed Tables sample data');
@@ -216,7 +216,7 @@ export async function createRowComment(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const spreadsheetId = req.params.id as string;
     const rowId = req.params.rowId as string;
     const { body } = req.body;
@@ -226,7 +226,7 @@ export async function createRowComment(req: Request, res: Response) {
       return;
     }
 
-    const comment = await tableService.createRowComment(userId, accountId, spreadsheetId, rowId, body.trim());
+    const comment = await tableService.createRowComment(userId, tenantId, spreadsheetId, rowId, body.trim());
     res.json({ success: true, data: comment });
   } catch (error) {
     logger.error({ error }, 'Failed to create row comment');

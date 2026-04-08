@@ -206,10 +206,10 @@ export async function createLinkedDocument(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { parentId } = req.body as { parentId?: string };
 
-    const result = await driveService.createLinkedDocument(userId, accountId, parentId);
+    const result = await driveService.createLinkedDocument(userId, tenantId, parentId);
     res.json({ success: true, data: result });
   } catch (error) {
     logger.error({ error }, 'Failed to create linked document');
@@ -227,10 +227,10 @@ export async function createLinkedDrawing(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { parentId } = req.body as { parentId?: string };
 
-    const result = await driveService.createLinkedDrawing(userId, accountId, parentId);
+    const result = await driveService.createLinkedDrawing(userId, tenantId, parentId);
     res.json({ success: true, data: result });
   } catch (error) {
     logger.error({ error }, 'Failed to create linked drawing');
@@ -248,10 +248,10 @@ export async function createLinkedSpreadsheet(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { parentId } = req.body as { parentId?: string };
 
-    const result = await driveService.createLinkedSpreadsheet(userId, accountId, parentId);
+    const result = await driveService.createLinkedSpreadsheet(userId, tenantId, parentId);
     res.json({ success: true, data: result });
   } catch (error) {
     logger.error({ error }, 'Failed to create linked spreadsheet');

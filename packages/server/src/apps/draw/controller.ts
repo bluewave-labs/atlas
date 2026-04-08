@@ -7,9 +7,9 @@ import { getAppPermission, canAccess } from '../../services/app-permissions.serv
 export async function seedSampleData(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
-    const result = await drawingService.seedSampleDrawings(userId, accountId);
+    const result = await drawingService.seedSampleDrawings(userId, tenantId);
     res.json({ success: true, data: { message: 'Seeded Draw sample data', ...result } });
   } catch (error) {
     logger.error({ error }, 'Failed to seed Draw sample data');
@@ -27,11 +27,11 @@ export async function listDrawings(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const includeArchived = req.query.includeArchived === 'true';
 
     // Auto-seed sample drawing on first visit
-    await drawingService.seedSampleDrawings(userId, accountId);
+    await drawingService.seedSampleDrawings(userId, tenantId);
 
     const drawings = await drawingService.listDrawings(userId, includeArchived, req.auth!.tenantId ?? null);
 
@@ -52,13 +52,13 @@ export async function createDrawing(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { title, content } = req.body;
 
-    const drawing = await drawingService.createDrawing(userId, accountId, {
+    const drawing = await drawingService.createDrawing(userId, tenantId, {
       title,
       content,
-    }, req.auth!.tenantId ?? null);
+    });
 
     res.json({ success: true, data: drawing });
   } catch (error) {

@@ -82,7 +82,7 @@ export function buildDocumentTree(
 
 // ─── Seed sample documents if the account has none ───────────────────
 
-export async function seedSampleDocuments(userId: string, accountId: string) {
+export async function seedSampleDocuments(userId: string, tenantId: string) {
   // Check if user has any meaningful docs (non-archived, with a title other than "Untitled")
   const meaningful = await db
     .select({ id: documents.id })
@@ -105,7 +105,7 @@ export async function seedSampleDocuments(userId: string, accountId: string) {
   const c = (html: string) => ({ _html: html });
 
   await db.insert(documents).values({
-    accountId, userId, title: 'Getting started', icon: '🚀', sortOrder: 0, createdAt: now, updatedAt: now,
+    tenantId, userId, title: 'Getting started', icon: '🚀', sortOrder: 0, createdAt: now, updatedAt: now,
     coverImage: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&h=300&fit=crop',
     content: c([
       '<h1>Getting started</h1>',
@@ -116,7 +116,7 @@ export async function seedSampleDocuments(userId: string, accountId: string) {
     ].join('')),
   });
 
-  logger.info({ userId, accountId }, 'Seeded sample documents');
+  logger.info({ userId, tenantId }, 'Seeded sample documents');
   return { documents: 1 };
 }
 
@@ -137,7 +137,7 @@ export async function getDocument(userId: string, documentId: string, tenantId?:
 
 // ─── Create a new document ───────────────────────────────────────────
 
-export async function createDocument(userId: string, accountId: string, input: CreateDocumentInput, tenantId?: string | null) {
+export async function createDocument(userId: string, tenantId: string, input: CreateDocumentInput) {
   const now = new Date();
 
   // Determine the next sort order within the target parent
@@ -158,13 +158,12 @@ export async function createDocument(userId: string, accountId: string, input: C
   const [created] = await db
     .insert(documents)
     .values({
-      accountId,
+      tenantId,
       userId,
       parentId: input.parentId ?? null,
       title: input.title || 'Untitled',
       content: input.content ?? null,
       icon: input.icon ?? null,
-      tenantId: tenantId ?? null,
       sortOrder,
       createdAt: now,
       updatedAt: now,

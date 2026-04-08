@@ -16,7 +16,7 @@ export async function listSpreadsheets(userId: string, includeArchived = false) 
   return db
     .select({
       id: spreadsheets.id,
-      accountId: spreadsheets.accountId,
+      tenantId: spreadsheets.tenantId,
       userId: spreadsheets.userId,
       title: spreadsheets.title,
       columns: spreadsheets.columns,
@@ -47,7 +47,7 @@ export async function getSpreadsheet(userId: string, spreadsheetId: string) {
 
 // ─── Seed sample spreadsheets on first visit ─────────────────────────
 
-export async function seedSampleSpreadsheets(userId: string, accountId: string) {
+export async function seedSampleSpreadsheets(userId: string, tenantId: string) {
   const existing = await db
     .select({ id: spreadsheets.id })
     .from(spreadsheets)
@@ -73,7 +73,7 @@ export async function seedSampleSpreadsheets(userId: string, accountId: string) 
   ];
 
   await db.insert(spreadsheets).values({
-    accountId, userId, title: 'Bug tracker', columns: bugCols, rows: bugRows,
+    tenantId, userId, title: 'Bug tracker', columns: bugCols, rows: bugRows,
     viewConfig: { activeView: 'grid' }, sortOrder: 0, createdAt: now, updatedAt: now,
   });
 
@@ -83,13 +83,13 @@ export async function seedSampleSpreadsheets(userId: string, accountId: string) 
 
 // ─── Create a new spreadsheet ────────────────────────────────────────
 
-export async function createSpreadsheet(userId: string, accountId: string, input: CreateSpreadsheetInput) {
+export async function createSpreadsheet(userId: string, tenantId: string, input: CreateSpreadsheetInput) {
   const now = new Date();
 
   const [created] = await db
     .insert(spreadsheets)
     .values({
-      accountId,
+      tenantId,
       userId,
       title: input.title || 'Untitled table',
       columns: input.columns ?? [],
@@ -163,7 +163,7 @@ export async function searchSpreadsheets(userId: string, query: string) {
   return db
     .select({
       id: spreadsheets.id,
-      accountId: spreadsheets.accountId,
+      tenantId: spreadsheets.tenantId,
       userId: spreadsheets.userId,
       title: spreadsheets.title,
       columns: spreadsheets.columns,
@@ -195,7 +195,7 @@ export async function listRowComments(spreadsheetId: string, rowId: string) {
       id: tableRowComments.id,
       spreadsheetId: tableRowComments.spreadsheetId,
       rowId: tableRowComments.rowId,
-      accountId: tableRowComments.accountId,
+      tenantId: tableRowComments.tenantId,
       userId: tableRowComments.userId,
       body: tableRowComments.body,
       userName: users.name,
@@ -216,7 +216,7 @@ export async function listRowComments(spreadsheetId: string, rowId: string) {
 
 export async function createRowComment(
   userId: string,
-  accountId: string,
+  tenantId: string,
   spreadsheetId: string,
   rowId: string,
   body: string,
@@ -227,7 +227,7 @@ export async function createRowComment(
     .values({
       spreadsheetId,
       rowId,
-      accountId,
+      tenantId,
       userId,
       body,
       createdAt: now,
@@ -241,7 +241,7 @@ export async function createRowComment(
       id: tableRowComments.id,
       spreadsheetId: tableRowComments.spreadsheetId,
       rowId: tableRowComments.rowId,
-      accountId: tableRowComments.accountId,
+      tenantId: tableRowComments.tenantId,
       userId: tableRowComments.userId,
       body: tableRowComments.body,
       userName: users.name,

@@ -32,19 +32,19 @@ const GOOGLE_EXPORT_MAP: Record<string, { mimeType: string; ext: string }> = {
 
 // ─── Check if Drive scope is granted ────────────────────────────────
 
-export async function getDriveStatus(accountId: string) {
-  const connected = await hasDriveScope(accountId);
+export async function getDriveStatus(tenantId: string) {
+  const connected = await hasDriveScope(tenantId);
   return { connected };
 }
 
 // ─── List files/folders in Google Drive ─────────────────────────────
 
 export async function listGoogleDriveFiles(
-  accountId: string,
+  tenantId: string,
   parentId?: string,
   query?: string,
 ) {
-  const auth = await getAuthenticatedClient(accountId);
+  const auth = await getAuthenticatedClient(tenantId);
   const drive = google.drive({ version: 'v3', auth });
 
   let q: string;
@@ -77,13 +77,12 @@ export async function listGoogleDriveFiles(
 // ─── Import a file from Google Drive into Atlas Drive ───────────────
 
 export async function importFileFromGoogleDrive(
-  accountId: string,
+  tenantId: string,
   userId: string,
   googleFileId: string,
   targetParentId?: string | null,
-  tenantId?: string | null,
 ) {
-  const auth = await getAuthenticatedClient(accountId);
+  const auth = await getAuthenticatedClient(tenantId);
   const drive = google.drive({ version: 'v3', auth });
 
   // 1. Get file metadata
@@ -141,14 +140,14 @@ export async function importFileFromGoogleDrive(
     }
 
     // 4. Create driveItem record
-    const driveItem = await itemsService.uploadFile(userId, accountId, {
+    const driveItem = await itemsService.uploadFile(userId, tenantId, {
       name: finalName,
       type: 'file',
       mimeType: finalMimeType,
       size: fileSize,
       storagePath,
       parentId: targetParentId || null,
-    }, tenantId);
+    });
 
     logger.info(
       { userId, googleFileId, driveItemId: driveItem.id },
@@ -166,12 +165,12 @@ export async function importFileFromGoogleDrive(
 // ─── Export an Atlas Drive file to Google Drive ─────────────────────
 
 export async function exportToGoogleDrive(
-  accountId: string,
+  tenantId: string,
   userId: string,
   driveItemId: string,
   googleParentFolderId?: string,
 ) {
-  const auth = await getAuthenticatedClient(accountId);
+  const auth = await getAuthenticatedClient(tenantId);
   const drive = google.drive({ version: 'v3', auth });
 
   // 1. Get Atlas file record
