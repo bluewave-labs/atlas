@@ -13,11 +13,11 @@ const MAX_LIMIT = 100;
 router.get('/', async (req: Request, res: Response) => {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const limit = Math.min(parseInt(req.query.limit as string) || 50, MAX_LIMIT);
     const before = req.query.before as string | undefined;
 
-    const data = await eventService.listNotifications(userId, accountId, limit, before);
+    const data = await eventService.listNotifications(userId, tenantId, limit, before);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to list notifications');
@@ -29,9 +29,9 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/unread-count', async (req: Request, res: Response) => {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
-    const count = await eventService.getUnreadCount(userId, accountId);
+    const count = await eventService.getUnreadCount(userId, tenantId);
     res.json({ success: true, data: { count } });
   } catch (error) {
     logger.error({ error }, 'Failed to get unread count');
@@ -43,9 +43,9 @@ router.get('/unread-count', async (req: Request, res: Response) => {
 router.post('/read-all', async (req: Request, res: Response) => {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
-    await eventService.markAllNotificationsRead(userId, accountId);
+    await eventService.markAllNotificationsRead(userId, tenantId);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to mark all notifications as read');

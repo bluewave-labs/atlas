@@ -8,7 +8,6 @@ import { customFieldDefinitions, customFieldValues } from '../db/schema';
  */
 export async function getFieldsWithValues(
   tenantId: string,
-  accountId: string,
   appId: string,
   recordType: string,
   recordId: string,
@@ -74,7 +73,7 @@ export async function getFieldsWithValues(
  * Uses INSERT ... ON CONFLICT UPDATE.
  */
 export async function upsertValues(
-  accountId: string,
+  tenantId: string,
   recordId: string,
   values: Array<{ fieldDefinitionId: string; value: unknown }>,
 ) {
@@ -84,7 +83,7 @@ export async function upsertValues(
   for (const { fieldDefinitionId, value } of values) {
     await db
       .insert(customFieldValues)
-      .values({ accountId, fieldDefinitionId, recordId, value })
+      .values({ tenantId, fieldDefinitionId, recordId, value })
       .onConflictDoUpdate({
         target: [customFieldValues.recordId, customFieldValues.fieldDefinitionId],
         set: { value, updatedAt: now },

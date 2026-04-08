@@ -17,7 +17,6 @@ router.get('/:appId/:recordType/:recordId', async (req: Request, res: Response) 
 
     const fields = await valueService.getFieldsWithValues(
       tenantId,
-      req.auth!.accountId,
       req.params.appId as string,
       req.params.recordType as string,
       req.params.recordId as string,
@@ -39,7 +38,7 @@ router.put('/:recordId', async (req: Request, res: Response) => {
     }
 
     await valueService.upsertValues(
-      req.auth!.accountId,
+      req.auth!.tenantId,
       req.params.recordId as string,
       values,
     );

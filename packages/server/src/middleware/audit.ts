@@ -73,7 +73,6 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
     getDbAndSchema().then(({ db, auditLog }) => {
       db.insert(auditLog).values({
         userId: req.auth?.userId ?? null,
-        accountId: req.auth?.accountId ?? null,
         tenantId: req.auth?.tenantId ?? null,
         action,
         entity,

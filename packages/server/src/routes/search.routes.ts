@@ -14,7 +14,7 @@ router.get('/', async (req: Request, res: Response) => {
       return;
     }
 
-    const results = await searchGlobal(q, req.auth!.accountId);
+    const results = await searchGlobal(q, req.auth!.tenantId);
     res.json({ success: true, data: results });
   } catch (err) {
     logger.error({ err }, 'Global search failed');

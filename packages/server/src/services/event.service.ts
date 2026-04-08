@@ -1,5 +1,5 @@
 import { db } from '../config/database';
-import { activityFeed, notifications, users, accounts, tenantMembers } from '../db/schema';
+import { activityFeed, notifications, users, tenantMembers } from '../db/schema';
 import { eq, and, desc, lt, sql, inArray } from 'drizzle-orm';
 import { logger } from '../utils/logger';
 
@@ -68,18 +68,6 @@ export async function getTenantMemberUserIds(tenantId: string): Promise<string[]
   return members.map((m) => m.userId);
 }
 
-/**
- * Look up the first account for a given userId so we can populate
- * accountId on notification rows.
- */
-async function getAccountIdForUser(userId: string): Promise<string | null> {
-  const rows = await db
-    .select({ id: accounts.id })
-    .from(accounts)
-    .where(eq(accounts.userId, userId))
-    .limit(1);
-  return rows[0]?.id ?? null;
-}
 
 // ─── Core: Emit Event ───────────────────────────────────────────────
 
@@ -101,20 +89,11 @@ export async function emitAppEvent(event: AppEvent): Promise<void> {
     const targetUserIds = event.notifyUserIds.filter((uid) => uid !== event.userId);
     if (targetUserIds.length > 0) {
       try {
-        // Batch lookup all accountIds in one query
-        const accountRows = await db
-          .select({ userId: accounts.userId, id: accounts.id })
-          .from(accounts)
-          .where(inArray(accounts.userId, targetUserIds));
-
-        const accountMap = new Map(accountRows.map((r) => [r.userId, r.id]));
         const sourceId = (meta.dealId ?? meta.employeeId ?? meta.documentId ?? meta.itemId ?? meta.id ?? null) as string | null;
 
-        const rows = targetUserIds
-          .filter((uid) => accountMap.has(uid))
-          .map((uid) => ({
+        const rows = targetUserIds.map((uid) => ({
             userId: uid,
-            accountId: accountMap.get(uid)!,
+            tenantId: event.tenantId,
             type: event.appId,
             title: event.title,
             body: null,
@@ -173,13 +152,13 @@ export async function listActivityFeed(
 
 export async function listNotifications(
   userId: string,
-  accountId: string,
+  tenantId: string,
   limit = 50,
   before?: string,
 ): Promise<{ items: typeof notifications.$inferSelect[]; hasMore: boolean; unreadCount: number }> {
   const conditions = [
     eq(notifications.userId, userId),
-    eq(notifications.accountId, accountId),
+    eq(notifications.tenantId, tenantId),
   ];
 
   if (before) {
@@ -199,7 +178,7 @@ export async function listNotifications(
       .where(
         and(
           eq(notifications.userId, userId),
-          eq(notifications.accountId, accountId),
+          eq(notifications.tenantId, tenantId),
           eq(notifications.isRead, false),
         ),
       ),
@@ -219,27 +198,27 @@ export async function markNotificationRead(notificationId: string, userId: strin
     .where(and(eq(notifications.id, notificationId), eq(notifications.userId, userId)));
 }
 
-export async function markAllNotificationsRead(userId: string, accountId: string): Promise<void> {
+export async function markAllNotificationsRead(userId: string, tenantId: string): Promise<void> {
   await db
     .update(notifications)
     .set({ isRead: true })
     .where(
       and(
         eq(notifications.userId, userId),
-        eq(notifications.accountId, accountId),
+        eq(notifications.tenantId, tenantId),
         eq(notifications.isRead, false),
       ),
     );
 }
 
-export async function getUnreadCount(userId: string, accountId: string): Promise<number> {
+export async function getUnreadCount(userId: string, tenantId: string): Promise<number> {
   const result = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(notifications)
     .where(
       and(
         eq(notifications.userId, userId),
-        eq(notifications.accountId, accountId),
+        eq(notifications.tenantId, tenantId),
         eq(notifications.isRead, false),
       ),
     );
