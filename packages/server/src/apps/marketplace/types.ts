@@ -42,7 +42,7 @@ export interface MarketplaceManifest {
 
 export interface MarketplaceAppRecord {
   id: string;
-  accountId: string;
+  tenantId: string;
   appId: string;
   status: string;
   assignedPort: number;

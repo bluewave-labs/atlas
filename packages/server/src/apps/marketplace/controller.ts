@@ -23,10 +23,10 @@ function requireAdmin(req: Request, res: Response): boolean {
 
 export async function getCatalog(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const catalog = service.getCatalog();
     const [installed, dockerAvailable, systemResources] = await Promise.all([
-      service.getInstalledApps(accountId),
+      service.getInstalledApps(tenantId),
       dockerService.isDockerAvailable(),
       dockerService.getSystemResources(),
     ]);
@@ -76,8 +76,8 @@ export async function getCatalog(req: Request, res: Response) {
 
 export async function getInstalled(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
-    const installed = await service.getInstalledApps(accountId);
+    const tenantId = req.auth!.tenantId;
+    const installed = await service.getInstalledApps(tenantId);
 
     // Enrich with live container status
     const enriched = await Promise.all(
@@ -115,7 +115,7 @@ export async function deploy(req: Request, res: Response) {
   if (!requireAdmin(req, res)) return;
 
   const appId = req.params.appId as string;
-  const accountId = req.auth!.accountId;
+  const tenantId = req.auth!.tenantId;
   const envOverrides = req.body?.envOverrides as Record<string, string> | undefined;
 
   try {
@@ -127,7 +127,7 @@ export async function deploy(req: Request, res: Response) {
     }
 
     // Check if already installed
-    const existing = await service.getAppInstallation(accountId, appId);
+    const existing = await service.getAppInstallation(tenantId, appId);
     if (existing) {
       res.status(409).json({ success: false, error: 'App is already installed' });
       return;
@@ -148,12 +148,12 @@ export async function deploy(req: Request, res: Response) {
     }
 
     // Allocate port and generate secrets
-    const port = await service.allocatePort(accountId);
+    const port = await service.allocatePort(tenantId);
     const secrets = service.generateSecrets(manifest);
 
     // Save installation record FIRST with "installing" status
-    await service.saveInstallation(accountId, appId, port, secrets, []);
-    await service.updateStatus(accountId, appId, 'installing');
+    await service.saveInstallation(tenantId, appId, port, secrets, []);
+    await service.updateStatus(tenantId, appId, 'installing');
 
     // Generate compose file
     const composeContent = generateComposeFile(manifest, port, secrets);
@@ -166,8 +166,8 @@ export async function deploy(req: Request, res: Response) {
 
     // Get container IDs and update record
     const containerIds = await dockerService.listAppContainers(appId);
-    await service.updateContainerIds(accountId, appId, containerIds);
-    await service.updateStatus(accountId, appId, 'running');
+    await service.updateContainerIds(tenantId, appId, containerIds);
+    await service.updateStatus(tenantId, appId, 'running');
 
     // Store env overrides if provided
     if (envOverrides && Object.keys(envOverrides).length > 0) {
@@ -189,7 +189,7 @@ export async function deploy(req: Request, res: Response) {
 
     // Try to update status to failed
     try {
-      await service.updateStatus(accountId, appId, 'failed');
+      await service.updateStatus(tenantId, appId, 'failed');
     } catch {
       // Non-critical
     }
@@ -205,10 +205,10 @@ export async function start(req: Request, res: Response) {
   if (!requireAdmin(req, res)) return;
 
   const appId = req.params.appId as string;
-  const accountId = req.auth!.accountId;
+  const tenantId = req.auth!.tenantId;
 
   try {
-    const installation = await service.getAppInstallation(accountId, appId);
+    const installation = await service.getAppInstallation(tenantId, appId);
     if (!installation) {
       res.status(404).json({ success: false, error: 'App is not installed' });
       return;
@@ -219,8 +219,8 @@ export async function start(req: Request, res: Response) {
 
     // Update container IDs and status
     const containerIds = await dockerService.listAppContainers(appId);
-    await service.updateContainerIds(accountId, appId, containerIds);
-    await service.updateStatus(accountId, appId, 'running');
+    await service.updateContainerIds(tenantId, appId, containerIds);
+    await service.updateStatus(tenantId, appId, 'running');
 
     res.json({ success: true, data: { appId, status: 'running' } });
   } catch (error) {
@@ -235,10 +235,10 @@ export async function stop(req: Request, res: Response) {
   if (!requireAdmin(req, res)) return;
 
   const appId = req.params.appId as string;
-  const accountId = req.auth!.accountId;
+  const tenantId = req.auth!.tenantId;
 
   try {
-    const installation = await service.getAppInstallation(accountId, appId);
+    const installation = await service.getAppInstallation(tenantId, appId);
     if (!installation) {
       res.status(404).json({ success: false, error: 'App is not installed' });
       return;
@@ -246,7 +246,7 @@ export async function stop(req: Request, res: Response) {
 
     const appDir = service.getAppDir(appId);
     await dockerService.stop(appId, appDir);
-    await service.updateStatus(accountId, appId, 'stopped');
+    await service.updateStatus(tenantId, appId, 'stopped');
 
     res.json({ success: true, data: { appId, status: 'stopped' } });
   } catch (error) {
@@ -261,10 +261,10 @@ export async function update(req: Request, res: Response) {
   if (!requireAdmin(req, res)) return;
 
   const appId = req.params.appId as string;
-  const accountId = req.auth!.accountId;
+  const tenantId = req.auth!.tenantId;
 
   try {
-    const installation = await service.getAppInstallation(accountId, appId);
+    const installation = await service.getAppInstallation(tenantId, appId);
     if (!installation) {
       res.status(404).json({ success: false, error: 'App is not installed' });
       return;
@@ -275,11 +275,11 @@ export async function update(req: Request, res: Response) {
 
     // Update container IDs
     const containerIds = await dockerService.listAppContainers(appId);
-    await service.updateContainerIds(accountId, appId, containerIds);
-    await service.updateStatus(accountId, appId, 'running');
+    await service.updateContainerIds(tenantId, appId, containerIds);
+    await service.updateStatus(tenantId, appId, 'running');
 
     // Clear digest info so it gets re-checked
-    await service.updateDigests(accountId, appId, undefined, undefined);
+    await service.updateDigests(tenantId, appId, undefined, undefined);
 
     res.json({ success: true, data: { appId, status: 'running' } });
   } catch (error) {
@@ -294,10 +294,10 @@ export async function remove(req: Request, res: Response) {
   if (!requireAdmin(req, res)) return;
 
   const appId = req.params.appId as string;
-  const accountId = req.auth!.accountId;
+  const tenantId = req.auth!.tenantId;
 
   try {
-    const installation = await service.getAppInstallation(accountId, appId);
+    const installation = await service.getAppInstallation(tenantId, appId);
     if (!installation) {
       res.status(404).json({ success: false, error: 'App is not installed' });
       return;
@@ -310,7 +310,7 @@ export async function remove(req: Request, res: Response) {
     } catch (dockerErr) {
       logger.warn({ error: dockerErr, appId }, 'Docker cleanup failed during remove (non-critical)');
     }
-    await service.removeInstallation(accountId, appId);
+    await service.removeInstallation(tenantId, appId);
 
     res.json({ success: true, data: { appId, removed: true } });
   } catch (error) {
@@ -324,9 +324,9 @@ export async function remove(req: Request, res: Response) {
 export async function getStatus(req: Request, res: Response) {
   try {
     const appId = req.params.appId as string;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
-    const installation = await service.getAppInstallation(accountId, appId);
+    const installation = await service.getAppInstallation(tenantId, appId);
     if (!installation) {
       res.status(404).json({ success: false, error: 'App is not installed' });
       return;
@@ -371,9 +371,9 @@ export async function getStatus(req: Request, res: Response) {
 export async function getLogs(req: Request, res: Response) {
   try {
     const appId = req.params.appId as string;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
-    const installation = await service.getAppInstallation(accountId, appId);
+    const installation = await service.getAppInstallation(tenantId, appId);
     if (!installation) {
       res.status(404).json({ success: false, error: 'App is not installed' });
       return;

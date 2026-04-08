@@ -50,11 +50,11 @@ export function getManifest(appId: string): MarketplaceManifest | undefined {
 /**
  * Get all installed marketplace apps for an account.
  */
-export async function getInstalledApps(accountId: string): Promise<MarketplaceAppRecord[]> {
+export async function getInstalledApps(tenantId: string): Promise<MarketplaceAppRecord[]> {
   const rows = await db
     .select()
     .from(marketplaceApps)
-    .where(eq(marketplaceApps.accountId, accountId));
+    .where(eq(marketplaceApps.tenantId, tenantId));
 
   return rows as MarketplaceAppRecord[];
 }
@@ -63,7 +63,7 @@ export async function getInstalledApps(accountId: string): Promise<MarketplaceAp
  * Get a single installation record.
  */
 export async function getAppInstallation(
-  accountId: string,
+  tenantId: string,
   appId: string,
 ): Promise<MarketplaceAppRecord | undefined> {
   const rows = await db
@@ -71,7 +71,7 @@ export async function getAppInstallation(
     .from(marketplaceApps)
     .where(
       and(
-        eq(marketplaceApps.accountId, accountId),
+        eq(marketplaceApps.tenantId, tenantId),
         eq(marketplaceApps.appId, appId),
       ),
     );
@@ -88,7 +88,7 @@ const PORT_MAX = 65000;
  * Allocate a random port in the 10000-65000 range, ensuring it is not
  * already assigned to another marketplace app in the database.
  */
-export async function allocatePort(_accountId: string): Promise<number> {
+export async function allocatePort(_tenantId: string): Promise<number> {
   // Get all ports already in use across all accounts
   const rows = await db
     .select({ port: marketplaceApps.assignedPort })
@@ -200,7 +200,7 @@ export function decryptSecrets(encrypted: string): Record<string, string> {
  * Save (insert or update) an installation record.
  */
 export async function saveInstallation(
-  accountId: string,
+  tenantId: string,
   appId: string,
   port: number,
   secrets: Record<string, string>,
@@ -210,7 +210,7 @@ export async function saveInstallation(
   const now = new Date();
 
   // Try to find existing
-  const existing = await getAppInstallation(accountId, appId);
+  const existing = await getAppInstallation(tenantId, appId);
 
   if (existing) {
     await db
@@ -224,13 +224,13 @@ export async function saveInstallation(
       })
       .where(
         and(
-          eq(marketplaceApps.accountId, accountId),
+          eq(marketplaceApps.tenantId, tenantId),
           eq(marketplaceApps.appId, appId),
         ),
       );
   } else {
     await db.insert(marketplaceApps).values({
-      accountId,
+      tenantId,
       appId,
       status: 'running',
       assignedPort: port,
@@ -246,7 +246,7 @@ export async function saveInstallation(
  * Update the status of an installed app.
  */
 export async function updateStatus(
-  accountId: string,
+  tenantId: string,
   appId: string,
   status: string,
 ): Promise<void> {
@@ -255,7 +255,7 @@ export async function updateStatus(
     .set({ status, updatedAt: new Date() })
     .where(
       and(
-        eq(marketplaceApps.accountId, accountId),
+        eq(marketplaceApps.tenantId, tenantId),
         eq(marketplaceApps.appId, appId),
       ),
     );
@@ -265,7 +265,7 @@ export async function updateStatus(
  * Update container IDs after a deploy/update operation.
  */
 export async function updateContainerIds(
-  accountId: string,
+  tenantId: string,
   appId: string,
   containerIds: string[],
 ): Promise<void> {
@@ -274,7 +274,7 @@ export async function updateContainerIds(
     .set({ containerIds, updatedAt: new Date() })
     .where(
       and(
-        eq(marketplaceApps.accountId, accountId),
+        eq(marketplaceApps.tenantId, tenantId),
         eq(marketplaceApps.appId, appId),
       ),
     );
@@ -284,7 +284,7 @@ export async function updateContainerIds(
  * Update image digest info (for update checking).
  */
 export async function updateDigests(
-  accountId: string,
+  tenantId: string,
   appId: string,
   imageDigest?: string,
   latestDigest?: string,
@@ -298,7 +298,7 @@ export async function updateDigests(
     .set(updates)
     .where(
       and(
-        eq(marketplaceApps.accountId, accountId),
+        eq(marketplaceApps.tenantId, tenantId),
         eq(marketplaceApps.appId, appId),
       ),
     );
@@ -308,14 +308,14 @@ export async function updateDigests(
  * Remove an installation record from the database.
  */
 export async function removeInstallation(
-  accountId: string,
+  tenantId: string,
   appId: string,
 ): Promise<void> {
   await db
     .delete(marketplaceApps)
     .where(
       and(
-        eq(marketplaceApps.accountId, accountId),
+        eq(marketplaceApps.tenantId, tenantId),
         eq(marketplaceApps.appId, appId),
       ),
     );
