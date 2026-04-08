@@ -7,10 +7,10 @@ import { logger } from '../../utils/logger';
 
 // ─── Get calendar events for a CRM contact ────────────────────────────
 
-export async function getContactEvents(accountId: string, contactId: string, limit = 50) {
+export async function getContactEvents(tenantId: string, contactId: string, limit = 50) {
   const [contact] = await db.select({ email: crmContacts.email })
     .from(crmContacts)
-    .where(and(eq(crmContacts.id, contactId), eq(crmContacts.accountId, accountId)))
+    .where(and(eq(crmContacts.id, contactId), eq(crmContacts.tenantId, tenantId)))
     .limit(1);
 
   if (!contact?.email) return [];
@@ -24,7 +24,7 @@ export async function getContactEvents(accountId: string, contactId: string, lim
            ce.status, ce.self_response_status, ce.html_link,
            ce.hangout_link, ce.organizer, ce.attendees
     FROM calendar_events ce
-    WHERE ce.account_id = ${accountId}
+    WHERE ce.account_id = ${tenantId}
     AND ce.attendees @> ${JSON.stringify([{ email: contactEmail }])}::jsonb
     ORDER BY ce.start_time DESC
     LIMIT ${limit}
@@ -35,19 +35,19 @@ export async function getContactEvents(accountId: string, contactId: string, lim
 
 // ─── Get calendar events for a CRM deal ────────────────────────────────
 
-export async function getDealEvents(accountId: string, dealId: string, limit = 50) {
+export async function getDealEvents(tenantId: string, dealId: string, limit = 50) {
   const [deal] = await db.select({
     contactId: crmDeals.contactId,
     companyId: crmDeals.companyId,
   })
     .from(crmDeals)
-    .where(and(eq(crmDeals.id, dealId), eq(crmDeals.accountId, accountId)))
+    .where(and(eq(crmDeals.id, dealId), eq(crmDeals.tenantId, tenantId)))
     .limit(1);
 
   if (!deal) return [];
 
   if (deal.contactId) {
-    return getContactEvents(accountId, deal.contactId, limit);
+    return getContactEvents(tenantId, deal.contactId, limit);
   }
 
   // If deal has a company, get events for all contacts in that company
@@ -56,7 +56,7 @@ export async function getDealEvents(accountId: string, dealId: string, limit = 5
       .from(crmContacts)
       .where(and(
         eq(crmContacts.companyId, deal.companyId),
-        eq(crmContacts.accountId, accountId),
+        eq(crmContacts.tenantId, tenantId),
         eq(crmContacts.isArchived, false),
       ));
 
@@ -79,7 +79,7 @@ export async function getDealEvents(accountId: string, dealId: string, limit = 5
              ce.status, ce.self_response_status, ce.html_link,
              ce.hangout_link, ce.organizer, ce.attendees
       FROM calendar_events ce
-      WHERE ce.account_id = ${accountId}
+      WHERE ce.account_id = ${tenantId}
       AND (${combinedCondition})
       ORDER BY ce.start_time DESC
       LIMIT ${limit}
@@ -94,7 +94,7 @@ export async function getDealEvents(accountId: string, dealId: string, limit = 5
 // ─── Create a Google Calendar event ────────────────────────────────────
 
 export async function createCalendarEvent(
-  accountId: string,
+  tenantId: string,
   summary: string,
   startTime: string,
   endTime: string,
@@ -102,14 +102,14 @@ export async function createCalendarEvent(
   location?: string,
   description?: string,
 ) {
-  const client = await getAuthenticatedClient(accountId);
+  const client = await getAuthenticatedClient(tenantId);
   const calendarApi = google.calendar({ version: 'v3', auth: client });
 
   // Get the primary calendar
   const [primaryCal] = await db.select()
     .from(calendars)
     .where(and(
-      eq(calendars.accountId, accountId),
+      eq(calendars.tenantId, tenantId),
       eq(calendars.isPrimary, true),
     ))
     .limit(1);
@@ -147,7 +147,7 @@ export async function createCalendarEvent(
     }));
 
     const eventValues = {
-      accountId,
+      tenantId,
       calendarId: primaryCal.id,
       googleEventId: event.id,
       summary: event.summary ?? null,
@@ -169,11 +169,11 @@ export async function createCalendarEvent(
     await db.insert(calendarEvents)
       .values({ ...eventValues, createdAt: new Date() })
       .onConflictDoUpdate({
-        target: [calendarEvents.accountId, calendarEvents.googleEventId],
+        target: [calendarEvents.tenantId, calendarEvents.googleEventId],
         set: eventValues,
       });
   }
 
-  logger.info({ accountId, eventId: event.id, summary }, 'Calendar event created via Google Calendar');
+  logger.info({ tenantId, eventId: event.id, summary }, 'Calendar event created via Google Calendar');
   return event;
 }

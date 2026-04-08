@@ -7,10 +7,10 @@ import { logger } from '../../../utils/logger';
 export async function listSavedViews(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const section = req.query.section as string | undefined;
 
-    const views = await crmService.listSavedViews(userId, accountId, section);
+    const views = await crmService.listSavedViews(userId, tenantId, section);
     res.json({ success: true, data: { views } });
   } catch (error) {
     logger.error({ error }, 'Failed to list CRM saved views');
@@ -21,7 +21,7 @@ export async function listSavedViews(req: Request, res: Response) {
 export async function createSavedView(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { appSection, name, filters, isPinned, isShared } = req.body;
 
     if (!name?.trim()) {
@@ -33,7 +33,7 @@ export async function createSavedView(req: Request, res: Response) {
       return;
     }
 
-    const view = await crmService.createSavedView(userId, accountId, {
+    const view = await crmService.createSavedView(userId, tenantId, {
       appSection, name: name.trim(), filters: filters ?? {}, isPinned, isShared,
     });
     res.json({ success: true, data: view });
@@ -46,11 +46,11 @@ export async function createSavedView(req: Request, res: Response) {
 export async function updateSavedView(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
     const { name, filters, isPinned, isShared, sortOrder } = req.body;
 
-    const view = await crmService.updateSavedView(userId, accountId, id, {
+    const view = await crmService.updateSavedView(userId, tenantId, id, {
       name, filters, isPinned, isShared, sortOrder,
     });
 
@@ -68,10 +68,10 @@ export async function updateSavedView(req: Request, res: Response) {
 export async function deleteSavedView(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    await crmService.deleteSavedView(userId, accountId, id);
+    await crmService.deleteSavedView(userId, tenantId, id);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete CRM saved view');

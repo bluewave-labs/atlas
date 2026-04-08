@@ -17,8 +17,8 @@ import { getAppPermission } from '../../../services/app-permissions.service';
 export async function getWidgetData(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
-    const data = await crmService.getWidgetData(userId, accountId);
+    const tenantId = req.auth!.tenantId;
+    const data = await crmService.getWidgetData(userId, tenantId);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to get CRM widget data');
@@ -31,10 +31,10 @@ export async function getWidgetData(req: Request, res: Response) {
 export async function getDashboard(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
-    const dashboard = await crmService.getDashboard(userId, accountId, perm.recordAccess);
+    const dashboard = await crmService.getDashboard(userId, tenantId, perm.recordAccess);
     res.json({ success: true, data: dashboard });
   } catch (error) {
     logger.error({ error }, 'Failed to get CRM dashboard');
@@ -45,10 +45,10 @@ export async function getDashboard(req: Request, res: Response) {
 export async function getDashboardCharts(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
-    const charts = await crmService.getDashboardCharts(userId, accountId, perm.recordAccess);
+    const charts = await crmService.getDashboardCharts(userId, tenantId, perm.recordAccess);
     res.json({ success: true, data: charts });
   } catch (error) {
     logger.error({ error }, 'Failed to get CRM dashboard charts');
@@ -61,9 +61,9 @@ export async function getDashboardCharts(req: Request, res: Response) {
 export async function seedSampleData(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
-    const result = await crmService.seedSampleData(userId, accountId);
+    const result = await crmService.seedSampleData(userId, tenantId);
     res.json({ success: true, data: { message: 'Seeded CRM sample data', ...result } });
   } catch (error) {
     logger.error({ error }, 'Failed to seed CRM sample data');
@@ -75,7 +75,7 @@ export async function seedSampleData(req: Request, res: Response) {
 
 export async function getGoogleSyncStatus(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const [account] = await db.select({
       provider: accounts.provider,
@@ -83,7 +83,7 @@ export async function getGoogleSyncStatus(req: Request, res: Response) {
       syncError: accounts.syncError,
       lastSync: accounts.lastSync,
       lastFullSync: accounts.lastFullSync,
-    }).from(accounts).where(eq(accounts.id, accountId)).limit(1);
+    }).from(accounts).where(eq(accounts.id, tenantId)).limit(1);
 
     res.json({
       success: true,
@@ -105,15 +105,15 @@ export async function getGoogleSyncStatus(req: Request, res: Response) {
 
 export async function startGoogleSync(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     if (!getRedisClient()) {
       res.status(503).json({ success: false, error: 'Redis is not available. Background sync requires Redis.' });
       return;
     }
 
-    await enqueueSyncJob(SyncJobType.FULL_EMAIL, accountId);
-    await enqueueSyncJob(SyncJobType.FULL_CALENDAR, accountId);
+    await enqueueSyncJob(SyncJobType.FULL_EMAIL, tenantId);
+    await enqueueSyncJob(SyncJobType.FULL_CALENDAR, tenantId);
 
     res.json({ success: true, data: { message: 'Sync jobs enqueued' } });
   } catch (error) {
@@ -124,13 +124,13 @@ export async function startGoogleSync(req: Request, res: Response) {
 
 export async function stopGoogleSync(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     await db.update(accounts).set({
       syncStatus: 'idle',
       syncError: null,
       updatedAt: new Date(),
-    }).where(eq(accounts.id, accountId));
+    }).where(eq(accounts.id, tenantId));
 
     res.json({ success: true, data: null });
   } catch (error) {
@@ -143,11 +143,11 @@ export async function stopGoogleSync(req: Request, res: Response) {
 
 export async function getContactEmails(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const contactId = req.params.id as string;
     const limit = parseInt(req.query.limit as string) || 50;
 
-    const emailList = await crmEmailService.getContactEmails(accountId, contactId, limit);
+    const emailList = await crmEmailService.getContactEmails(tenantId, contactId, limit);
     res.json({ success: true, data: { emails: emailList } });
   } catch (error) {
     logger.error({ error }, 'Failed to get contact emails');
@@ -157,11 +157,11 @@ export async function getContactEmails(req: Request, res: Response) {
 
 export async function getDealEmails(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const dealId = req.params.id as string;
     const limit = parseInt(req.query.limit as string) || 50;
 
-    const emailList = await crmEmailService.getDealEmails(accountId, dealId, limit);
+    const emailList = await crmEmailService.getDealEmails(tenantId, dealId, limit);
     res.json({ success: true, data: { emails: emailList } });
   } catch (error) {
     logger.error({ error }, 'Failed to get deal emails');
@@ -171,11 +171,11 @@ export async function getDealEmails(req: Request, res: Response) {
 
 export async function getCompanyEmails(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const companyId = req.params.id as string;
     const limit = parseInt(req.query.limit as string) || 50;
 
-    const emailList = await crmEmailService.getCompanyEmails(accountId, companyId, limit);
+    const emailList = await crmEmailService.getCompanyEmails(tenantId, companyId, limit);
     res.json({ success: true, data: { emails: emailList } });
   } catch (error) {
     logger.error({ error }, 'Failed to get company emails');
@@ -185,7 +185,7 @@ export async function getCompanyEmails(req: Request, res: Response) {
 
 export async function sendCrmEmail(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const userId = req.auth!.userId;
     const { to, subject, body, threadGmailId, dealId, contactId, companyId } = req.body;
 
@@ -194,10 +194,10 @@ export async function sendCrmEmail(req: Request, res: Response) {
       return;
     }
 
-    const sentMessage = await crmEmailService.sendEmail(accountId, to, subject, body, threadGmailId);
+    const sentMessage = await crmEmailService.sendEmail(tenantId, to, subject, body, threadGmailId);
 
     // Create a CRM activity for the sent email
-    await createActivityService(userId, accountId, {
+    await createActivityService(userId, tenantId, {
       type: 'email',
       body: `Sent email: ${subject}`,
       dealId: dealId ?? null,
@@ -216,11 +216,11 @@ export async function sendCrmEmail(req: Request, res: Response) {
 
 export async function getContactEvents(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const contactId = req.params.id as string;
     const limit = parseInt(req.query.limit as string) || 50;
 
-    const events = await crmCalendarService.getContactEvents(accountId, contactId, limit);
+    const events = await crmCalendarService.getContactEvents(tenantId, contactId, limit);
     res.json({ success: true, data: { events } });
   } catch (error) {
     logger.error({ error }, 'Failed to get contact events');
@@ -230,11 +230,11 @@ export async function getContactEvents(req: Request, res: Response) {
 
 export async function getDealEvents(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const dealId = req.params.id as string;
     const limit = parseInt(req.query.limit as string) || 50;
 
-    const events = await crmCalendarService.getDealEvents(accountId, dealId, limit);
+    const events = await crmCalendarService.getDealEvents(tenantId, dealId, limit);
     res.json({ success: true, data: { events } });
   } catch (error) {
     logger.error({ error }, 'Failed to get deal events');
@@ -244,7 +244,7 @@ export async function getDealEvents(req: Request, res: Response) {
 
 export async function createCrmEvent(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const userId = req.auth!.userId;
     const { summary, startTime, endTime, attendees, location, description, dealId, contactId, companyId } = req.body;
 
@@ -254,12 +254,12 @@ export async function createCrmEvent(req: Request, res: Response) {
     }
 
     const event = await crmCalendarService.createCalendarEvent(
-      accountId, summary, startTime, endTime,
+      tenantId, summary, startTime, endTime,
       attendees ?? [], location, description,
     );
 
     // Create a CRM activity for the meeting
-    await createActivityService(userId, accountId, {
+    await createActivityService(userId, tenantId, {
       type: 'meeting',
       body: `Scheduled meeting: ${summary}`,
       dealId: dealId ?? null,

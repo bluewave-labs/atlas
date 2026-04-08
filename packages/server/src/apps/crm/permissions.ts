@@ -47,7 +47,7 @@ const ROLE_MATRIX: Record<CrmRole, Record<CrmEntity, Set<CrmOperation>>> = {
 
 export interface ResolvedCrmPermission {
   id: string | null;
-  accountId: string;
+  tenantId: string;
   userId: string;
   role: CrmRole;
   recordAccess: CrmRecordAccess;
@@ -59,17 +59,17 @@ export interface ResolvedCrmPermission {
  * - tenant member → CRM viewer with 'own' record access
  * - no tenant (single-user) → backward compat admin
  */
-export async function getCrmPermission(accountId: string, userId: string, tenantId?: string | null): Promise<ResolvedCrmPermission> {
+export async function getCrmPermission(tenantId: string, userId: string): Promise<ResolvedCrmPermission> {
   const [perm] = await db
     .select()
     .from(crmPermissions)
-    .where(and(eq(crmPermissions.accountId, accountId), eq(crmPermissions.userId, userId)))
+    .where(and(eq(crmPermissions.tenantId, tenantId), eq(crmPermissions.userId, userId)))
     .limit(1);
 
   if (perm) {
     return {
       id: perm.id,
-      accountId: perm.accountId,
+      tenantId: perm.tenantId,
       userId: perm.userId,
       role: perm.role as CrmRole,
       recordAccess: perm.recordAccess as CrmRecordAccess,
@@ -90,7 +90,7 @@ export async function getCrmPermission(accountId: string, userId: string, tenant
       const crmRole = (tenantRole === 'owner' || tenantRole === 'admin') ? 'admin' : 'viewer';
       return {
         id: null,
-        accountId,
+        tenantId,
         userId,
         role: crmRole as CrmRole,
         recordAccess: crmRole === 'admin' ? 'all' : 'own',
@@ -101,7 +101,7 @@ export async function getCrmPermission(accountId: string, userId: string, tenant
   // Single-user (no tenant) — backward compat
   return {
     id: null,
-    accountId,
+    tenantId,
     userId,
     role: 'admin',
     recordAccess: 'all',
@@ -131,7 +131,7 @@ export function getRecordFilter(recordAccess: CrmRecordAccess, userIdColumn: any
 
 // ─── Permission CRUD ───────────────────────────────────────────────
 
-export async function listCrmPermissions(accountId: string, tenantId: string) {
+export async function listCrmPermissions(tenantId: string, tenantId: string) {
   // Get all tenant members first
   const members = await db
     .select()
@@ -147,7 +147,7 @@ export async function listCrmPermissions(accountId: string, tenantId: string) {
     .select()
     .from(crmPermissions)
     .where(and(
-      eq(crmPermissions.accountId, accountId),
+      eq(crmPermissions.tenantId, tenantId),
       inArray(crmPermissions.userId, userIds),
     ));
 
@@ -182,7 +182,7 @@ export async function listCrmPermissions(accountId: string, tenantId: string) {
 
     return {
       id: perm?.id ?? null,
-      accountId,
+      tenantId,
       userId: m.userId,
       role: (perm?.role as CrmRole) ?? defaultCrmRole,
       recordAccess: (perm?.recordAccess as CrmRecordAccess) ?? defaultRecordAccess,
@@ -195,7 +195,7 @@ export async function listCrmPermissions(accountId: string, tenantId: string) {
 }
 
 export async function upsertCrmPermission(
-  accountId: string,
+  tenantId: string,
   userId: string,
   role: CrmRole,
   recordAccess: CrmRecordAccess,
@@ -206,7 +206,7 @@ export async function upsertCrmPermission(
   const [existing] = await db
     .select()
     .from(crmPermissions)
-    .where(and(eq(crmPermissions.accountId, accountId), eq(crmPermissions.userId, userId)))
+    .where(and(eq(crmPermissions.tenantId, tenantId), eq(crmPermissions.userId, userId)))
     .limit(1);
 
   if (existing) {
@@ -220,7 +220,7 @@ export async function upsertCrmPermission(
 
   const [created] = await db
     .insert(crmPermissions)
-    .values({ accountId, userId, role, recordAccess, createdAt: now, updatedAt: now })
+    .values({ tenantId, userId, role, recordAccess, createdAt: now, updatedAt: now })
     .returning();
 
   return created;

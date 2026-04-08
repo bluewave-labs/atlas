@@ -25,21 +25,21 @@ interface UpdateWorkflowInput {
 
 // ─── Workflow CRUD ──────────────────────────────────────────────────
 
-export async function listWorkflows(userId: string, accountId: string) {
+export async function listWorkflows(userId: string, tenantId: string) {
   return db
     .select()
     .from(crmWorkflows)
-    .where(and(eq(crmWorkflows.userId, userId), eq(crmWorkflows.accountId, accountId)))
+    .where(and(eq(crmWorkflows.userId, userId), eq(crmWorkflows.tenantId, tenantId)))
     .orderBy(desc(crmWorkflows.createdAt));
 }
 
-export async function createWorkflow(userId: string, accountId: string, input: CreateWorkflowInput) {
+export async function createWorkflow(userId: string, tenantId: string, input: CreateWorkflowInput) {
   const now = new Date();
 
   const [created] = await db
     .insert(crmWorkflows)
     .values({
-      accountId,
+      tenantId,
       userId,
       name: input.name,
       trigger: input.trigger,
@@ -113,7 +113,7 @@ export async function toggleWorkflow(userId: string, workflowId: string) {
 // ─── Workflow Execution ─────────────────────────────────────────────
 
 export async function executeWorkflows(
-  accountId: string,
+  tenantId: string,
   userId: string,
   trigger: string,
   context: Record<string, unknown>,
@@ -123,7 +123,7 @@ export async function executeWorkflows(
     .select()
     .from(crmWorkflows)
     .where(and(
-      eq(crmWorkflows.accountId, accountId),
+      eq(crmWorkflows.tenantId, tenantId),
       eq(crmWorkflows.trigger, trigger),
       eq(crmWorkflows.isActive, true),
     ));
@@ -136,7 +136,7 @@ export async function executeWorkflows(
       }
 
       // Execute the action
-      await executeAction(userId, accountId, workflow.action, workflow.actionConfig, context);
+      await executeAction(userId, tenantId, workflow.action, workflow.actionConfig, context);
 
       // Update execution stats
       const now = new Date();
@@ -177,7 +177,7 @@ function matchesTriggerConfig(
 
 async function executeAction(
   userId: string,
-  accountId: string,
+  tenantId: string,
   action: string,
   actionConfig: Record<string, unknown>,
   context: Record<string, unknown>,
@@ -187,7 +187,7 @@ async function executeAction(
       const title = (actionConfig.taskTitle as string) || 'Automated task';
       const now = new Date();
       await db.insert(tasksTable).values({
-        accountId,
+        tenantId,
         userId,
         title,
         status: 'todo',
@@ -283,7 +283,7 @@ async function executeAction(
       const companyId = context.companyId as string | undefined;
       const now = new Date();
       await db.insert(crmActivities).values({
-        accountId,
+        tenantId,
         userId,
         type: activityType,
         body,
@@ -305,16 +305,16 @@ async function executeAction(
 
 // ─── Seed Example Workflows ──────────────────────────────────────────
 
-export async function seedExampleWorkflows(userId: string, accountId: string) {
+export async function seedExampleWorkflows(userId: string, tenantId: string) {
   // Idempotency guard — skip if workflows already exist for this account
   const existing = await db.select({ id: crmWorkflows.id }).from(crmWorkflows)
-    .where(and(eq(crmWorkflows.userId, userId), eq(crmWorkflows.accountId, accountId))).limit(1);
+    .where(and(eq(crmWorkflows.userId, userId), eq(crmWorkflows.tenantId, tenantId))).limit(1);
   if (existing.length > 0) return { skipped: true };
 
   // Look up stages by name for this account
   const { crmDealStages } = await import('../../../db/schema');
   const stages = await db.select().from(crmDealStages)
-    .where(eq(crmDealStages.accountId, accountId))
+    .where(eq(crmDealStages.tenantId, tenantId))
     .orderBy(asc(crmDealStages.sequence));
 
   const stageByName: Record<string, string> = {};
@@ -406,10 +406,10 @@ export async function seedExampleWorkflows(userId: string, accountId: string) {
 
   let created = 0;
   for (const wf of workflows) {
-    await createWorkflow(userId, accountId, wf);
+    await createWorkflow(userId, tenantId, wf);
     created++;
   }
 
-  logger.info({ userId, accountId, created }, 'Seeded CRM example workflows');
+  logger.info({ userId, tenantId, created }, 'Seeded CRM example workflows');
   return { created };
 }

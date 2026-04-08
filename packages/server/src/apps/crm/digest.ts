@@ -21,38 +21,38 @@ interface DigestStats {
   activeDeals: number;
 }
 
-async function getDigestStats(accountId: string): Promise<DigestStats> {
+async function getDigestStats(tenantId: string): Promise<DigestStats> {
   const now = new Date();
   const h24 = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const d7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   const [leads24h] = await db.select({ count: sql<number>`count(*)` }).from(crmLeads)
-    .where(and(eq(crmLeads.accountId, accountId), gte(crmLeads.createdAt, h24), eq(crmLeads.isArchived, false)));
+    .where(and(eq(crmLeads.tenantId, tenantId), gte(crmLeads.createdAt, h24), eq(crmLeads.isArchived, false)));
   const [leads7d] = await db.select({ count: sql<number>`count(*)` }).from(crmLeads)
-    .where(and(eq(crmLeads.accountId, accountId), gte(crmLeads.createdAt, d7), eq(crmLeads.isArchived, false)));
+    .where(and(eq(crmLeads.tenantId, tenantId), gte(crmLeads.createdAt, d7), eq(crmLeads.isArchived, false)));
   const [leads30d] = await db.select({ count: sql<number>`count(*)` }).from(crmLeads)
-    .where(and(eq(crmLeads.accountId, accountId), gte(crmLeads.createdAt, d30), eq(crmLeads.isArchived, false)));
+    .where(and(eq(crmLeads.tenantId, tenantId), gte(crmLeads.createdAt, d30), eq(crmLeads.isArchived, false)));
 
   const [won24h] = await db.select({ count: sql<number>`count(*)` }).from(crmDeals)
-    .where(and(eq(crmDeals.accountId, accountId), gte(crmDeals.wonAt, h24)));
+    .where(and(eq(crmDeals.tenantId, tenantId), gte(crmDeals.wonAt, h24)));
   const [won7d] = await db.select({ count: sql<number>`count(*)` }).from(crmDeals)
-    .where(and(eq(crmDeals.accountId, accountId), gte(crmDeals.wonAt, d7)));
+    .where(and(eq(crmDeals.tenantId, tenantId), gte(crmDeals.wonAt, d7)));
   const [won30d] = await db.select({ count: sql<number>`count(*)` }).from(crmDeals)
-    .where(and(eq(crmDeals.accountId, accountId), gte(crmDeals.wonAt, d30)));
+    .where(and(eq(crmDeals.tenantId, tenantId), gte(crmDeals.wonAt, d30)));
 
   const [act24h] = await db.select({ count: sql<number>`count(*)` }).from(crmActivities)
-    .where(and(eq(crmActivities.accountId, accountId), gte(crmActivities.createdAt, h24), eq(crmActivities.isArchived, false)));
+    .where(and(eq(crmActivities.tenantId, tenantId), gte(crmActivities.createdAt, h24), eq(crmActivities.isArchived, false)));
   const [act7d] = await db.select({ count: sql<number>`count(*)` }).from(crmActivities)
-    .where(and(eq(crmActivities.accountId, accountId), gte(crmActivities.createdAt, d7), eq(crmActivities.isArchived, false)));
+    .where(and(eq(crmActivities.tenantId, tenantId), gte(crmActivities.createdAt, d7), eq(crmActivities.isArchived, false)));
   const [act30d] = await db.select({ count: sql<number>`count(*)` }).from(crmActivities)
-    .where(and(eq(crmActivities.accountId, accountId), gte(crmActivities.createdAt, d30), eq(crmActivities.isArchived, false)));
+    .where(and(eq(crmActivities.tenantId, tenantId), gte(crmActivities.createdAt, d30), eq(crmActivities.isArchived, false)));
 
   const [pipeline] = await db.select({
     totalValue: sql<number>`COALESCE(SUM(value), 0)`,
     count: sql<number>`count(*)`,
   }).from(crmDeals)
-    .where(and(eq(crmDeals.accountId, accountId), eq(crmDeals.isArchived, false), sql`won_at IS NULL AND lost_at IS NULL`));
+    .where(and(eq(crmDeals.tenantId, tenantId), eq(crmDeals.isArchived, false), sql`won_at IS NULL AND lost_at IS NULL`));
 
   return {
     newLeads24h: Number(leads24h?.count ?? 0),
@@ -160,7 +160,7 @@ async function sendDigests(): Promise<number> {
     // Get all accounts with CRM permissions
     const crmUsers = await db
       .select({
-        accountId: crmPermissions.accountId,
+        tenantId: crmPermissions.tenantId,
         userId: crmPermissions.userId,
         email: users.email,
         name: users.name,
@@ -172,15 +172,15 @@ async function sendDigests(): Promise<number> {
     const byAccount = new Map<string, { email: string; name: string | null }[]>();
     for (const u of crmUsers) {
       if (!u.email) continue;
-      const arr = byAccount.get(u.accountId) ?? [];
+      const arr = byAccount.get(u.tenantId) ?? [];
       arr.push({ email: u.email, name: u.name });
-      byAccount.set(u.accountId, arr);
+      byAccount.set(u.tenantId, arr);
     }
 
     const baseUrl = env.CLIENT_PUBLIC_URL || env.SERVER_PUBLIC_URL || 'http://localhost:3001';
 
-    for (const [accountId, recipients] of byAccount) {
-      const stats = await getDigestStats(accountId);
+    for (const [tenantId, recipients] of byAccount) {
+      const stats = await getDigestStats(tenantId);
 
       // Skip if no activity at all
       if (stats.newLeads30d === 0 && stats.dealsWon30d === 0 && stats.activitiesLogged30d === 0) continue;

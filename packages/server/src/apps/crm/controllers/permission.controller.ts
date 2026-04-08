@@ -8,7 +8,7 @@ import type { CrmRole, CrmRecordAccess } from '@atlasmail/shared';
 
 export async function listPermissions(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const userId = req.auth!.userId;
     const tenantId = req.auth!.tenantId;
 
@@ -24,7 +24,7 @@ export async function listPermissions(req: Request, res: Response) {
       return;
     }
 
-    const permissions = await listCrmPermissions(accountId, tenantId);
+    const permissions = await listCrmPermissions(tenantId, tenantId);
     res.json({ success: true, data: { permissions } });
   } catch (error) {
     logger.error({ error }, 'Failed to list CRM permissions');
@@ -34,7 +34,7 @@ export async function listPermissions(req: Request, res: Response) {
 
 export async function getMyPermission(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const userId = req.auth!.userId;
 
     const permission = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -47,7 +47,7 @@ export async function getMyPermission(req: Request, res: Response) {
 
 export async function updatePermission(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const currentUserId = req.auth!.userId;
     const targetUserId = req.params.userId as string;
     const { role, recordAccess } = req.body;
@@ -77,7 +77,7 @@ export async function updatePermission(req: Request, res: Response) {
       return;
     }
 
-    const updated = await upsertCrmPermission(accountId, targetUserId, role, recordAccess);
+    const updated = await upsertCrmPermission(tenantId, targetUserId, role, recordAccess);
     res.json({ success: true, data: updated });
   } catch (error) {
     logger.error({ error }, 'Failed to update CRM permission');

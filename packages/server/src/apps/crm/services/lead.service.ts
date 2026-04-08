@@ -33,13 +33,13 @@ interface UpdateLeadInput extends Partial<CreateLeadInput> {
 
 // ─── Leads ─────────────────────────────────────────────────────────
 
-export async function listLeads(userId: string, accountId: string, filters?: {
+export async function listLeads(userId: string, tenantId: string, filters?: {
   status?: string;
   source?: string;
   search?: string;
   recordAccess?: CrmRecordAccess;
 }) {
-  const conditions = [eq(crmLeads.accountId, accountId)];
+  const conditions = [eq(crmLeads.tenantId, tenantId)];
   if (!filters?.recordAccess || filters.recordAccess === 'own') {
     conditions.push(eq(crmLeads.userId, userId));
   }
@@ -61,8 +61,8 @@ export async function listLeads(userId: string, accountId: string, filters?: {
     .orderBy(asc(crmLeads.sortOrder), desc(crmLeads.createdAt));
 }
 
-export async function getLead(userId: string, accountId: string, id: string, recordAccess?: CrmRecordAccess) {
-  const conditions = [eq(crmLeads.id, id), eq(crmLeads.accountId, accountId)];
+export async function getLead(userId: string, tenantId: string, id: string, recordAccess?: CrmRecordAccess) {
+  const conditions = [eq(crmLeads.id, id), eq(crmLeads.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
     conditions.push(eq(crmLeads.userId, userId));
   }
@@ -70,7 +70,7 @@ export async function getLead(userId: string, accountId: string, id: string, rec
   return lead || null;
 }
 
-export async function createLead(userId: string, accountId: string, input: CreateLeadInput) {
+export async function createLead(userId: string, tenantId: string, input: CreateLeadInput) {
   const now = new Date();
   const [maxSort] = await db
     .select({ max: sql<number>`COALESCE(MAX(${crmLeads.sortOrder}), -1)` })
@@ -80,7 +80,7 @@ export async function createLead(userId: string, accountId: string, input: Creat
   const sortOrder = (maxSort?.max ?? -1) + 1;
 
   const [created] = await db.insert(crmLeads).values({
-    accountId,
+    tenantId,
     userId,
     name: input.name,
     email: input.email ?? null,
@@ -99,7 +99,7 @@ export async function createLead(userId: string, accountId: string, input: Creat
   return created;
 }
 
-export async function updateLead(userId: string, accountId: string, id: string, input: UpdateLeadInput, recordAccess?: CrmRecordAccess) {
+export async function updateLead(userId: string, tenantId: string, id: string, input: UpdateLeadInput, recordAccess?: CrmRecordAccess) {
   const now = new Date();
   const updates: Record<string, unknown> = { updatedAt: now };
 
@@ -118,7 +118,7 @@ export async function updateLead(userId: string, accountId: string, id: string, 
   if (input.sortOrder !== undefined) updates.sortOrder = input.sortOrder;
   if (input.isArchived !== undefined) updates.isArchived = input.isArchived;
 
-  const conditions = [eq(crmLeads.id, id), eq(crmLeads.accountId, accountId)];
+  const conditions = [eq(crmLeads.id, id), eq(crmLeads.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
     conditions.push(eq(crmLeads.userId, userId));
   }
@@ -128,17 +128,17 @@ export async function updateLead(userId: string, accountId: string, id: string, 
   return updated || null;
 }
 
-export async function deleteLead(userId: string, accountId: string, id: string, recordAccess?: CrmRecordAccess) {
-  await updateLead(userId, accountId, id, { isArchived: true }, recordAccess);
+export async function deleteLead(userId: string, tenantId: string, id: string, recordAccess?: CrmRecordAccess) {
+  await updateLead(userId, tenantId, id, { isArchived: true }, recordAccess);
 }
 
-export async function enrichLead(userId: string, accountId: string, leadId: string) {
+export async function enrichLead(userId: string, tenantId: string, leadId: string) {
   const { getProviderKeyForAccount, enrichLeadWithAI } = await import('../../../services/ai.service');
 
-  const lead = await getLead(userId, accountId, leadId, 'all');
+  const lead = await getLead(userId, tenantId, leadId, 'all');
   if (!lead) throw new Error('Lead not found');
 
-  const config = await getProviderKeyForAccount(accountId);
+  const config = await getProviderKeyForAccount(tenantId);
   const enriched = await enrichLeadWithAI(config, {
     name: lead.name,
     email: lead.email,
@@ -149,7 +149,7 @@ export async function enrichLead(userId: string, accountId: string, leadId: stri
 
   const now = new Date();
   await db.update(crmLeads).set({ enrichedData: enriched, enrichedAt: now, updatedAt: now })
-    .where(and(eq(crmLeads.id, leadId), eq(crmLeads.accountId, accountId)));
+    .where(and(eq(crmLeads.id, leadId), eq(crmLeads.tenantId, tenantId)));
 
   // Log enrichment as an activity
   const summaryParts = [];
@@ -158,7 +158,7 @@ export async function enrichLead(userId: string, accountId: string, leadId: stri
   if (enriched.leadScore) summaryParts.push(`Score: ${enriched.leadScore}/100`);
   if (enriched.companyDescription) summaryParts.push(enriched.companyDescription);
 
-  await createActivity(userId, accountId, {
+  await createActivity(userId, tenantId, {
     type: 'note',
     body: `Lead enriched via AI\n${summaryParts.join('\n')}`,
   });
@@ -167,17 +167,17 @@ export async function enrichLead(userId: string, accountId: string, leadId: stri
   return enriched;
 }
 
-export async function convertLead(userId: string, accountId: string, leadId: string, options: {
+export async function convertLead(userId: string, tenantId: string, leadId: string, options: {
   dealTitle: string;
   dealStageId: string;
   dealValue?: number;
 }) {
-  const lead = await getLead(userId, accountId, leadId, 'all');
+  const lead = await getLead(userId, tenantId, leadId, 'all');
   if (!lead) throw new Error('Lead not found');
   if (lead.status === 'converted') throw new Error('Lead is already converted');
 
   // 1. Create a contact from the lead
-  const contact = await createContact(userId, accountId, {
+  const contact = await createContact(userId, tenantId, {
     name: lead.name,
     email: lead.email ?? null,
     phone: lead.phone ?? null,
@@ -188,15 +188,15 @@ export async function convertLead(userId: string, accountId: string, leadId: str
   // 2. Optionally create a company from lead's companyName
   let company = null;
   if (lead.companyName) {
-    company = await createCompany(userId, accountId, {
+    company = await createCompany(userId, tenantId, {
       name: lead.companyName,
     });
     // Link contact to company
-    await updateContact(userId, accountId, contact.id, { companyId: company.id }, 'all');
+    await updateContact(userId, tenantId, contact.id, { companyId: company.id }, 'all');
   }
 
   // 3. Create a deal
-  const deal = await createDeal(userId, accountId, {
+  const deal = await createDeal(userId, tenantId, {
     title: options.dealTitle,
     value: options.dealValue ?? 0,
     stageId: options.dealStageId,
@@ -219,24 +219,24 @@ export async function convertLead(userId: string, accountId: string, leadId: str
 
 // ─── Seed Sample Leads (standalone) ──────────────────────────────────
 
-export async function seedSampleLeads(userId: string, accountId: string) {
+export async function seedSampleLeads(userId: string, tenantId: string) {
   // Idempotency guard
   const existing = await db.select({ id: crmLeads.id }).from(crmLeads)
-    .where(and(eq(crmLeads.accountId, accountId), eq(crmLeads.isArchived, false))).limit(1);
+    .where(and(eq(crmLeads.tenantId, tenantId), eq(crmLeads.isArchived, false))).limit(1);
   if (existing.length > 0) return { skipped: true, leads: 0 };
 
-  await createLead(userId, accountId, {
+  await createLead(userId, tenantId, {
     name: 'TechStart Inc', email: 'info@techstart.io', phone: '+1-555-0201', source: 'website', companyName: 'TechStart Inc', notes: 'Interested in starter plan',
   });
-  const metro = await createLead(userId, accountId, {
+  const metro = await createLead(userId, tenantId, {
     name: 'Metro Solutions', email: 'sales@metrosolutions.com', phone: '+1-555-0202', source: 'referral', companyName: 'Metro Solutions', notes: 'Called, scheduling demo',
   });
-  const cloud = await createLead(userId, accountId, {
+  const cloud = await createLead(userId, tenantId, {
     name: 'CloudNine Labs', email: 'hello@cloudninelabs.io', phone: '+1-555-0203', source: 'social_media', companyName: 'CloudNine Labs', notes: 'Budget approved, needs proposal',
   });
 
-  await updateLead(userId, accountId, metro.id, { status: 'contacted' });
-  await updateLead(userId, accountId, cloud.id, { status: 'qualified' });
+  await updateLead(userId, tenantId, metro.id, { status: 'contacted' });
+  await updateLead(userId, tenantId, cloud.id, { status: 'qualified' });
 
   return { leads: 3 };
 }
@@ -267,18 +267,18 @@ interface UpdateLeadFormInput {
   isActive?: boolean;
 }
 
-export async function listLeadForms(userId: string, accountId: string) {
+export async function listLeadForms(userId: string, tenantId: string) {
   return db.select().from(crmLeadForms)
-    .where(eq(crmLeadForms.accountId, accountId))
+    .where(eq(crmLeadForms.tenantId, tenantId))
     .orderBy(desc(crmLeadForms.createdAt));
 }
 
-export async function createLeadForm(userId: string, accountId: string, name: string) {
+export async function createLeadForm(userId: string, tenantId: string, name: string) {
   const now = new Date();
   const token = crypto.randomBytes(32).toString('hex');
 
   const [created] = await db.insert(crmLeadForms).values({
-    accountId,
+    tenantId,
     userId,
     name,
     token,
@@ -291,7 +291,7 @@ export async function createLeadForm(userId: string, accountId: string, name: st
   return created;
 }
 
-export async function updateLeadForm(userId: string, accountId: string, id: string, input: UpdateLeadFormInput) {
+export async function updateLeadForm(userId: string, tenantId: string, id: string, input: UpdateLeadFormInput) {
   const now = new Date();
   const updates: Record<string, unknown> = { updatedAt: now };
 
@@ -300,18 +300,18 @@ export async function updateLeadForm(userId: string, accountId: string, id: stri
   if (input.isActive !== undefined) updates.isActive = input.isActive;
 
   await db.update(crmLeadForms).set(updates)
-    .where(and(eq(crmLeadForms.id, id), eq(crmLeadForms.accountId, accountId)));
+    .where(and(eq(crmLeadForms.id, id), eq(crmLeadForms.tenantId, tenantId)));
 
   const [updated] = await db.select().from(crmLeadForms)
-    .where(and(eq(crmLeadForms.id, id), eq(crmLeadForms.accountId, accountId)))
+    .where(and(eq(crmLeadForms.id, id), eq(crmLeadForms.tenantId, tenantId)))
     .limit(1);
 
   return updated || null;
 }
 
-export async function deleteLeadForm(userId: string, accountId: string, id: string) {
+export async function deleteLeadForm(userId: string, tenantId: string, id: string) {
   await db.delete(crmLeadForms)
-    .where(and(eq(crmLeadForms.id, id), eq(crmLeadForms.accountId, accountId)));
+    .where(and(eq(crmLeadForms.id, id), eq(crmLeadForms.tenantId, tenantId)));
 }
 
 export async function submitLeadForm(token: string, formData: Record<string, string>) {
@@ -338,7 +338,7 @@ export async function submitLeadForm(token: string, formData: Record<string, str
   if (!mapped.message && formData.message) mapped.message = formData.message;
 
   // Create lead using existing createLead function
-  const lead = await createLead(form.userId, form.accountId, {
+  const lead = await createLead(form.userId, form.tenantId, {
     name: mapped.name || 'Web form submission',
     email: mapped.email ?? null,
     phone: mapped.phone ?? null,

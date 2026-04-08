@@ -22,12 +22,12 @@ interface UpdateNoteInput {
 
 // ─── Notes (rich text) ─────────────────────────────────────────────
 
-export async function listNotes(userId: string, accountId: string, filters?: {
+export async function listNotes(userId: string, tenantId: string, filters?: {
   dealId?: string;
   contactId?: string;
   companyId?: string;
 }) {
-  const conditions = [eq(crmNotes.accountId, accountId), eq(crmNotes.isArchived, false)];
+  const conditions = [eq(crmNotes.tenantId, tenantId), eq(crmNotes.isArchived, false)];
 
   if (filters?.dealId) conditions.push(eq(crmNotes.dealId, filters.dealId));
   if (filters?.contactId) conditions.push(eq(crmNotes.contactId, filters.contactId));
@@ -38,10 +38,10 @@ export async function listNotes(userId: string, accountId: string, filters?: {
     .orderBy(desc(crmNotes.isPinned), desc(crmNotes.createdAt));
 }
 
-export async function createNote(userId: string, accountId: string, input: CreateNoteInput) {
+export async function createNote(userId: string, tenantId: string, input: CreateNoteInput) {
   const now = new Date();
   const [created] = await db.insert(crmNotes).values({
-    accountId,
+    tenantId,
     userId,
     title: input.title ?? '',
     content: input.content,

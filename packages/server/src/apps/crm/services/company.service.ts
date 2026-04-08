@@ -23,13 +23,13 @@ interface UpdateCompanyInput extends Partial<CreateCompanyInput> {
 
 // ─── Companies ──────────────────────────────────────────────────────
 
-export async function listCompanies(userId: string, accountId: string, filters?: {
+export async function listCompanies(userId: string, tenantId: string, filters?: {
   search?: string;
   industry?: string;
   includeArchived?: boolean;
   recordAccess?: CrmRecordAccess;
 }) {
-  const conditions = [eq(crmCompanies.accountId, accountId)];
+  const conditions = [eq(crmCompanies.tenantId, tenantId)];
   if (!filters?.recordAccess || filters.recordAccess === 'own') {
     conditions.push(eq(crmCompanies.userId, userId));
   }
@@ -44,7 +44,7 @@ export async function listCompanies(userId: string, accountId: string, filters?:
   let query = db
     .select({
       id: crmCompanies.id,
-      accountId: crmCompanies.accountId,
+      tenantId: crmCompanies.tenantId,
       userId: crmCompanies.userId,
       name: crmCompanies.name,
       domain: crmCompanies.domain,
@@ -71,7 +71,7 @@ export async function listCompanies(userId: string, accountId: string, filters?:
     query = db
       .select({
         id: crmCompanies.id,
-        accountId: crmCompanies.accountId,
+        tenantId: crmCompanies.tenantId,
         userId: crmCompanies.userId,
         name: crmCompanies.name,
         domain: crmCompanies.domain,
@@ -96,8 +96,8 @@ export async function listCompanies(userId: string, accountId: string, filters?:
   return query;
 }
 
-export async function getCompany(userId: string, accountId: string, id: string, recordAccess?: CrmRecordAccess) {
-  const conditions = [eq(crmCompanies.id, id), eq(crmCompanies.accountId, accountId)];
+export async function getCompany(userId: string, tenantId: string, id: string, recordAccess?: CrmRecordAccess) {
+  const conditions = [eq(crmCompanies.id, id), eq(crmCompanies.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
     conditions.push(eq(crmCompanies.userId, userId));
   }
@@ -105,7 +105,7 @@ export async function getCompany(userId: string, accountId: string, id: string, 
   const [company] = await db
     .select({
       id: crmCompanies.id,
-      accountId: crmCompanies.accountId,
+      tenantId: crmCompanies.tenantId,
       userId: crmCompanies.userId,
       name: crmCompanies.name,
       domain: crmCompanies.domain,
@@ -128,7 +128,7 @@ export async function getCompany(userId: string, accountId: string, id: string, 
   return company || null;
 }
 
-export async function createCompany(userId: string, accountId: string, input: CreateCompanyInput) {
+export async function createCompany(userId: string, tenantId: string, input: CreateCompanyInput) {
   const now = new Date();
 
   const [maxSort] = await db
@@ -141,7 +141,7 @@ export async function createCompany(userId: string, accountId: string, input: Cr
   const [created] = await db
     .insert(crmCompanies)
     .values({
-      accountId,
+      tenantId,
       userId,
       name: input.name,
       domain: input.domain ?? null,
@@ -160,7 +160,7 @@ export async function createCompany(userId: string, accountId: string, input: Cr
   return created;
 }
 
-export async function updateCompany(userId: string, accountId: string, id: string, input: UpdateCompanyInput, recordAccess?: CrmRecordAccess) {
+export async function updateCompany(userId: string, tenantId: string, id: string, input: UpdateCompanyInput, recordAccess?: CrmRecordAccess) {
   const now = new Date();
   const updates: Record<string, unknown> = { updatedAt: now };
 
@@ -174,7 +174,7 @@ export async function updateCompany(userId: string, accountId: string, id: strin
   if (input.sortOrder !== undefined) updates.sortOrder = input.sortOrder;
   if (input.isArchived !== undefined) updates.isArchived = input.isArchived;
 
-  const updateConditions = [eq(crmCompanies.id, id), eq(crmCompanies.accountId, accountId)];
+  const updateConditions = [eq(crmCompanies.id, id), eq(crmCompanies.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
     updateConditions.push(eq(crmCompanies.userId, userId));
   }
@@ -193,15 +193,15 @@ export async function updateCompany(userId: string, accountId: string, id: strin
   return updated || null;
 }
 
-export async function deleteCompany(userId: string, accountId: string, id: string, recordAccess?: CrmRecordAccess) {
-  await updateCompany(userId, accountId, id, { isArchived: true }, recordAccess);
+export async function deleteCompany(userId: string, tenantId: string, id: string, recordAccess?: CrmRecordAccess) {
+  await updateCompany(userId, tenantId, id, { isArchived: true }, recordAccess);
 }
 
 // ─── Bulk Import ───────────────────────────────────────────────────────
 
 export async function bulkCreateCompanies(
   userId: string,
-  accountId: string,
+  tenantId: string,
   rows: Array<Record<string, string>>,
 ): Promise<{ imported: number; failed: number; errors: string[] }> {
   let imported = 0;
@@ -216,7 +216,7 @@ export async function bulkCreateCompanies(
         failed++;
         continue;
       }
-      await createCompany(userId, accountId, {
+      await createCompany(userId, tenantId, {
         name: row.name.trim(),
         domain: row.domain?.trim() || null,
         industry: row.industry?.trim() || null,
@@ -231,17 +231,17 @@ export async function bulkCreateCompanies(
     }
   }
 
-  logger.info({ userId, accountId, imported, failed }, 'Bulk imported CRM companies');
+  logger.info({ userId, tenantId, imported, failed }, 'Bulk imported CRM companies');
   return { imported, failed, errors };
 }
 
 // ─── Merge Companies ─────────────────────────────────────────────────
 
-export async function mergeCompanies(userId: string, accountId: string, primaryId: string, secondaryId: string) {
+export async function mergeCompanies(userId: string, tenantId: string, primaryId: string, secondaryId: string) {
   const [primary] = await db.select().from(crmCompanies)
-    .where(and(eq(crmCompanies.id, primaryId), eq(crmCompanies.accountId, accountId))).limit(1);
+    .where(and(eq(crmCompanies.id, primaryId), eq(crmCompanies.tenantId, tenantId))).limit(1);
   const [secondary] = await db.select().from(crmCompanies)
-    .where(and(eq(crmCompanies.id, secondaryId), eq(crmCompanies.accountId, accountId))).limit(1);
+    .where(and(eq(crmCompanies.id, secondaryId), eq(crmCompanies.tenantId, tenantId))).limit(1);
 
   if (!primary || !secondary) throw new Error('Company not found');
 
@@ -279,5 +279,5 @@ export async function mergeCompanies(userId: string, accountId: string, primaryI
     .where(eq(crmCompanies.id, secondaryId));
 
   logger.info({ userId, primaryId, secondaryId }, 'CRM companies merged');
-  return getCompany(userId, accountId, primaryId, 'all');
+  return getCompany(userId, tenantId, primaryId, 'all');
 }

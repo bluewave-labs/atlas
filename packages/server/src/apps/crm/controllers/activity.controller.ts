@@ -10,7 +10,7 @@ import { getDealAssigneeInfo } from '../services/deal.service';
 export async function listActivities(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { dealId, contactId, companyId, includeArchived } = req.query;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -19,7 +19,7 @@ export async function listActivities(req: Request, res: Response) {
       return;
     }
 
-    const activities = await crmService.listActivities(userId, accountId, {
+    const activities = await crmService.listActivities(userId, tenantId, {
       dealId: dealId as string | undefined,
       contactId: contactId as string | undefined,
       companyId: companyId as string | undefined,
@@ -37,7 +37,7 @@ export async function listActivities(req: Request, res: Response) {
 export async function createActivity(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { type, body, dealId, contactId, companyId, scheduledAt } = req.body;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -51,7 +51,7 @@ export async function createActivity(req: Request, res: Response) {
       return;
     }
 
-    const activity = await crmService.createActivity(userId, accountId, {
+    const activity = await crmService.createActivity(userId, tenantId, {
       type: type ?? 'note', body: body.trim(), dealId, contactId, companyId, scheduledAt,
     });
 
@@ -82,7 +82,7 @@ export async function createActivity(req: Request, res: Response) {
 export async function updateActivity(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
     if (!canAccessEntity(perm.role, 'activities', 'update', perm.entityPermissions)) {
       res.status(403).json({ success: false, error: 'No permission to update activities' });
@@ -91,7 +91,7 @@ export async function updateActivity(req: Request, res: Response) {
     const id = req.params.id as string;
     const { type, body, dealId, contactId, companyId, scheduledAt, completedAt, isArchived } = req.body;
 
-    const activity = await crmService.updateActivity(userId, accountId, id, {
+    const activity = await crmService.updateActivity(userId, tenantId, id, {
       type, body, dealId, contactId, companyId, scheduledAt, completedAt, isArchived,
     });
 
@@ -110,10 +110,10 @@ export async function updateActivity(req: Request, res: Response) {
 export async function deleteActivity(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    await crmService.deleteActivity(userId, accountId, id);
+    await crmService.deleteActivity(userId, tenantId, id);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete CRM activity');
@@ -124,11 +124,11 @@ export async function deleteActivity(req: Request, res: Response) {
 export async function completeActivity(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { id } = req.params;
     const { scheduleNext } = req.body;
 
-    const result = await crmService.completeAndScheduleNext(userId, accountId, id as string, scheduleNext);
+    const result = await crmService.completeAndScheduleNext(userId, tenantId, id as string, scheduleNext);
     res.json({ success: true, data: result });
   } catch (error) {
     logger.error({ error }, 'Failed to complete CRM activity');
@@ -140,7 +140,7 @@ export async function completeActivity(req: Request, res: Response) {
 
 export async function listActivityTypes(req: Request, res: Response) {
   try {
-    const data = await crmService.listActivityTypes(req.auth!.accountId);
+    const data = await crmService.listActivityTypes(req.auth!.tenantId);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to list CRM activity types');
@@ -150,7 +150,7 @@ export async function listActivityTypes(req: Request, res: Response) {
 
 export async function createActivityType(req: Request, res: Response) {
   try {
-    const data = await crmService.createActivityType(req.auth!.accountId, req.body);
+    const data = await crmService.createActivityType(req.auth!.tenantId, req.body);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to create CRM activity type');
@@ -161,7 +161,7 @@ export async function createActivityType(req: Request, res: Response) {
 export async function updateActivityType(req: Request, res: Response) {
   try {
     const id = req.params.id as string;
-    const data = await crmService.updateActivityType(req.auth!.accountId, id, req.body);
+    const data = await crmService.updateActivityType(req.auth!.tenantId, id, req.body);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to update CRM activity type');
@@ -172,7 +172,7 @@ export async function updateActivityType(req: Request, res: Response) {
 export async function deleteActivityType(req: Request, res: Response) {
   try {
     const id = req.params.id as string;
-    await crmService.deleteActivityType(req.auth!.accountId, id);
+    await crmService.deleteActivityType(req.auth!.tenantId, id);
     res.json({ success: true });
   } catch (error) {
     logger.error({ error }, 'Failed to delete CRM activity type');
@@ -182,7 +182,7 @@ export async function deleteActivityType(req: Request, res: Response) {
 
 export async function reorderActivityTypes(req: Request, res: Response) {
   try {
-    await crmService.reorderActivityTypes(req.auth!.accountId, req.body.typeIds);
+    await crmService.reorderActivityTypes(req.auth!.tenantId, req.body.typeIds);
     res.json({ success: true });
   } catch (error) {
     logger.error({ error }, 'Failed to reorder CRM activity types');
@@ -192,7 +192,7 @@ export async function reorderActivityTypes(req: Request, res: Response) {
 
 export async function seedActivityTypes(req: Request, res: Response) {
   try {
-    const data = await crmService.seedDefaultActivityTypes(req.auth!.accountId);
+    const data = await crmService.seedDefaultActivityTypes(req.auth!.tenantId);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to seed CRM activity types');

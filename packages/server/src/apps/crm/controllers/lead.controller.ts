@@ -9,7 +9,7 @@ import { emitAppEvent, getTenantMemberUserIds } from '../../../services/event.se
 export async function listLeads(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { status, source, search } = req.query;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -18,7 +18,7 @@ export async function listLeads(req: Request, res: Response) {
       return;
     }
 
-    const leads = await crmService.listLeads(userId, accountId, {
+    const leads = await crmService.listLeads(userId, tenantId, {
       status: status as string | undefined,
       source: source as string | undefined,
       search: search as string | undefined,
@@ -34,11 +34,11 @@ export async function listLeads(req: Request, res: Response) {
 export async function getLead(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
-    const lead = await crmService.getLead(userId, accountId, id, perm.recordAccess);
+    const lead = await crmService.getLead(userId, tenantId, id, perm.recordAccess);
     if (!lead) {
       res.status(404).json({ success: false, error: 'Lead not found' });
       return;
@@ -53,7 +53,7 @@ export async function getLead(req: Request, res: Response) {
 export async function createLead(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { name, email, phone, companyName, source, notes } = req.body;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -67,7 +67,7 @@ export async function createLead(req: Request, res: Response) {
       return;
     }
 
-    const lead = await crmService.createLead(userId, accountId, {
+    const lead = await crmService.createLead(userId, tenantId, {
       name: name.trim(), email, phone, companyName, source, notes,
     });
 
@@ -93,7 +93,7 @@ export async function createLead(req: Request, res: Response) {
 export async function updateLead(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
     const { name, email, phone, companyName, source, status, notes, tags, sortOrder, isArchived } = req.body;
 
@@ -103,7 +103,7 @@ export async function updateLead(req: Request, res: Response) {
       return;
     }
 
-    const lead = await crmService.updateLead(userId, accountId, id, {
+    const lead = await crmService.updateLead(userId, tenantId, id, {
       name, email, phone, companyName, source, status, notes, tags, sortOrder, isArchived,
     }, perm.recordAccess);
 
@@ -121,7 +121,7 @@ export async function updateLead(req: Request, res: Response) {
 export async function deleteLead(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -130,7 +130,7 @@ export async function deleteLead(req: Request, res: Response) {
       return;
     }
 
-    await crmService.deleteLead(userId, accountId, id, perm.recordAccess);
+    await crmService.deleteLead(userId, tenantId, id, perm.recordAccess);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete CRM lead');
@@ -141,10 +141,10 @@ export async function deleteLead(req: Request, res: Response) {
 export async function enrichLead(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const data = await crmService.enrichLead(userId, accountId, id);
+    const data = await crmService.enrichLead(userId, tenantId, id);
     res.json({ success: true, data });
   } catch (error: any) {
     const message = error?.message || 'Failed to enrich lead';
@@ -157,7 +157,7 @@ export async function enrichLead(req: Request, res: Response) {
 export async function convertLead(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
     const { dealTitle, dealStageId, dealValue } = req.body;
 
@@ -171,9 +171,9 @@ export async function convertLead(req: Request, res: Response) {
     }
 
     // Fetch lead name before conversion for the notification title
-    const leadBeforeConvert = await crmService.getLead(userId, accountId, id, 'all');
+    const leadBeforeConvert = await crmService.getLead(userId, tenantId, id, 'all');
 
-    const result = await crmService.convertLead(userId, accountId, id, {
+    const result = await crmService.convertLead(userId, tenantId, id, {
       dealTitle: dealTitle.trim(), dealStageId, dealValue,
     });
 
@@ -202,8 +202,8 @@ export async function convertLead(req: Request, res: Response) {
 export async function seedSampleLeads(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
-    const result = await crmService.seedSampleLeads(userId, accountId);
+    const tenantId = req.auth!.tenantId;
+    const result = await crmService.seedSampleLeads(userId, tenantId);
     res.json({ success: true, data: { message: 'Seeded CRM sample leads', ...result } });
   } catch (error) {
     logger.error({ error }, 'Failed to seed CRM sample leads');
@@ -216,9 +216,9 @@ export async function seedSampleLeads(req: Request, res: Response) {
 export async function listLeadForms(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
-    const forms = await crmService.listLeadForms(userId, accountId);
+    const forms = await crmService.listLeadForms(userId, tenantId);
     res.json({ success: true, data: { forms } });
   } catch (error) {
     logger.error({ error }, 'Failed to list CRM lead forms');
@@ -229,10 +229,10 @@ export async function listLeadForms(req: Request, res: Response) {
 export async function createLeadForm(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { name } = req.body;
 
-    const form = await crmService.createLeadForm(userId, accountId, name || 'Default Lead Form');
+    const form = await crmService.createLeadForm(userId, tenantId, name || 'Default Lead Form');
     res.json({ success: true, data: form });
   } catch (error) {
     logger.error({ error }, 'Failed to create CRM lead form');
@@ -243,11 +243,11 @@ export async function createLeadForm(req: Request, res: Response) {
 export async function updateLeadForm(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
     const { name, fields, isActive } = req.body;
 
-    const form = await crmService.updateLeadForm(userId, accountId, id, {
+    const form = await crmService.updateLeadForm(userId, tenantId, id, {
       name, fields, isActive,
     });
 
@@ -265,10 +265,10 @@ export async function updateLeadForm(req: Request, res: Response) {
 export async function deleteLeadForm(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    await crmService.deleteLeadForm(userId, accountId, id);
+    await crmService.deleteLeadForm(userId, tenantId, id);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete CRM lead form');

@@ -24,7 +24,7 @@ interface UpdateActivityInput extends Partial<CreateActivityInput> {
 
 // ─── Activities ─────────────────────────────────────────────────────
 
-export async function listActivities(userId: string, accountId: string, filters?: {
+export async function listActivities(userId: string, tenantId: string, filters?: {
   dealId?: string;
   contactId?: string;
   companyId?: string;
@@ -34,7 +34,7 @@ export async function listActivities(userId: string, accountId: string, filters?
   dueAfter?: string;
   sortBy?: 'createdAt' | 'scheduledAt';
 }) {
-  const conditions = [eq(crmActivities.accountId, accountId)];
+  const conditions = [eq(crmActivities.tenantId, tenantId)];
   if (!filters?.recordAccess || filters.recordAccess === 'own') {
     conditions.push(eq(crmActivities.userId, userId));
   }
@@ -63,7 +63,7 @@ export async function listActivities(userId: string, accountId: string, filters?
   return db
     .select({
       id: crmActivities.id,
-      accountId: crmActivities.accountId,
+      tenantId: crmActivities.tenantId,
       userId: crmActivities.userId,
       type: crmActivities.type,
       body: crmActivities.body,
@@ -84,13 +84,13 @@ export async function listActivities(userId: string, accountId: string, filters?
     .orderBy(desc(orderCol));
 }
 
-export async function createActivity(userId: string, accountId: string, input: CreateActivityInput) {
+export async function createActivity(userId: string, tenantId: string, input: CreateActivityInput) {
   const now = new Date();
 
   const [created] = await db
     .insert(crmActivities)
     .values({
-      accountId,
+      tenantId,
       userId,
       type: input.type ?? 'note',
       body: input.body,
@@ -107,7 +107,7 @@ export async function createActivity(userId: string, accountId: string, input: C
   logger.info({ userId, activityId: created.id }, 'CRM activity created');
 
   // Fire workflow trigger
-  executeWorkflows(accountId, userId, 'activity_logged', {
+  executeWorkflows(tenantId, userId, 'activity_logged', {
     activityId: created.id,
     dealId: created.dealId,
     contactId: created.contactId,
@@ -117,7 +117,7 @@ export async function createActivity(userId: string, accountId: string, input: C
   return created;
 }
 
-export async function updateActivity(userId: string, accountId: string, id: string, input: UpdateActivityInput, recordAccess?: CrmRecordAccess) {
+export async function updateActivity(userId: string, tenantId: string, id: string, input: UpdateActivityInput, recordAccess?: CrmRecordAccess) {
   const now = new Date();
   const updates: Record<string, unknown> = { updatedAt: now };
 
@@ -131,7 +131,7 @@ export async function updateActivity(userId: string, accountId: string, id: stri
   if (input.completedAt !== undefined) updates.completedAt = input.completedAt ? new Date(input.completedAt) : null;
   if (input.isArchived !== undefined) updates.isArchived = input.isArchived;
 
-  const updateConditions = [eq(crmActivities.id, id), eq(crmActivities.accountId, accountId)];
+  const updateConditions = [eq(crmActivities.id, id), eq(crmActivities.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
     updateConditions.push(eq(crmActivities.userId, userId));
   }
@@ -150,24 +150,24 @@ export async function updateActivity(userId: string, accountId: string, id: stri
   return updated || null;
 }
 
-export async function deleteActivity(userId: string, accountId: string, id: string, recordAccess?: CrmRecordAccess) {
-  await updateActivity(userId, accountId, id, { isArchived: true }, recordAccess);
+export async function deleteActivity(userId: string, tenantId: string, id: string, recordAccess?: CrmRecordAccess) {
+  await updateActivity(userId, tenantId, id, { isArchived: true }, recordAccess);
 }
 
 export async function completeAndScheduleNext(
   userId: string,
-  accountId: string,
+  tenantId: string,
   activityId: string,
   nextInput?: { type: string; body?: string; scheduledAt: string },
   recordAccess?: CrmRecordAccess,
 ) {
   // Complete the current activity
-  const completed = await updateActivity(userId, accountId, activityId, { completedAt: new Date().toISOString() }, recordAccess);
+  const completed = await updateActivity(userId, tenantId, activityId, { completedAt: new Date().toISOString() }, recordAccess);
   if (!completed) throw new Error('Activity not found');
 
   let next = null;
   if (nextInput) {
-    next = await createActivity(userId, accountId, {
+    next = await createActivity(userId, tenantId, {
       type: nextInput.type,
       body: nextInput.body || '',
       dealId: completed.dealId ?? undefined,
@@ -182,25 +182,25 @@ export async function completeAndScheduleNext(
 
 // ─── Activity Types ─────────────────────────────────────────────────
 
-export async function listActivityTypes(accountId: string) {
+export async function listActivityTypes(tenantId: string) {
   return db
     .select()
     .from(crmActivityTypes)
-    .where(and(eq(crmActivityTypes.accountId, accountId), eq(crmActivityTypes.isArchived, false)))
+    .where(and(eq(crmActivityTypes.tenantId, tenantId), eq(crmActivityTypes.isArchived, false)))
     .orderBy(asc(crmActivityTypes.sortOrder));
 }
 
-export async function createActivityType(accountId: string, input: { name: string; icon?: string; color?: string }) {
+export async function createActivityType(tenantId: string, input: { name: string; icon?: string; color?: string }) {
   const now = new Date();
   const [maxSort] = await db
     .select({ max: sql<number>`COALESCE(MAX(${crmActivityTypes.sortOrder}), -1)` })
     .from(crmActivityTypes)
-    .where(eq(crmActivityTypes.accountId, accountId));
+    .where(eq(crmActivityTypes.tenantId, tenantId));
 
   const [created] = await db
     .insert(crmActivityTypes)
     .values({
-      accountId,
+      tenantId,
       name: input.name,
       icon: input.icon ?? 'sticky-note',
       color: input.color ?? '#6b7280',
@@ -213,7 +213,7 @@ export async function createActivityType(accountId: string, input: { name: strin
   return created;
 }
 
-export async function updateActivityType(accountId: string, id: string, input: Partial<{ name: string; icon: string; color: string; sortOrder: number; isArchived: boolean }>) {
+export async function updateActivityType(tenantId: string, id: string, input: Partial<{ name: string; icon: string; color: string; sortOrder: number; isArchived: boolean }>) {
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (input.name !== undefined) updates.name = input.name;
   if (input.icon !== undefined) updates.icon = input.icon;
@@ -222,21 +222,21 @@ export async function updateActivityType(accountId: string, id: string, input: P
   if (input.isArchived !== undefined) updates.isArchived = input.isArchived;
 
   await db.update(crmActivityTypes).set(updates)
-    .where(and(eq(crmActivityTypes.id, id), eq(crmActivityTypes.accountId, accountId)));
+    .where(and(eq(crmActivityTypes.id, id), eq(crmActivityTypes.tenantId, tenantId)));
 
   const [updated] = await db.select().from(crmActivityTypes)
-    .where(and(eq(crmActivityTypes.id, id), eq(crmActivityTypes.accountId, accountId))).limit(1);
+    .where(and(eq(crmActivityTypes.id, id), eq(crmActivityTypes.tenantId, tenantId))).limit(1);
   return updated || null;
 }
 
-export async function deleteActivityType(accountId: string, id: string) {
-  return updateActivityType(accountId, id, { isArchived: true });
+export async function deleteActivityType(tenantId: string, id: string) {
+  return updateActivityType(tenantId, id, { isArchived: true });
 }
 
-export async function reorderActivityTypes(accountId: string, typeIds: string[]) {
+export async function reorderActivityTypes(tenantId: string, typeIds: string[]) {
   for (let i = 0; i < typeIds.length; i++) {
     await db.update(crmActivityTypes).set({ sortOrder: i })
-      .where(and(eq(crmActivityTypes.id, typeIds[i]), eq(crmActivityTypes.accountId, accountId)));
+      .where(and(eq(crmActivityTypes.id, typeIds[i]), eq(crmActivityTypes.tenantId, tenantId)));
   }
 }
 
@@ -247,17 +247,17 @@ const DEFAULT_ACTIVITY_TYPES = [
   { name: 'meeting', icon: 'calendar-days', color: '#f59e0b' },
 ];
 
-export async function seedDefaultActivityTypes(accountId: string) {
-  const existing = await listActivityTypes(accountId);
+export async function seedDefaultActivityTypes(tenantId: string) {
+  const existing = await listActivityTypes(tenantId);
   if (existing.length > 0) return existing;
 
   const now = new Date();
   for (let i = 0; i < DEFAULT_ACTIVITY_TYPES.length; i++) {
     const t = DEFAULT_ACTIVITY_TYPES[i];
     await db.insert(crmActivityTypes).values({
-      accountId, name: t.name, icon: t.icon, color: t.color,
+      tenantId, name: t.name, icon: t.icon, color: t.color,
       isDefault: true, sortOrder: i, createdAt: now, updatedAt: now,
     });
   }
-  return listActivityTypes(accountId);
+  return listActivityTypes(tenantId);
 }

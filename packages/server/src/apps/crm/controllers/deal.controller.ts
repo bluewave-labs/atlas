@@ -8,9 +8,9 @@ import { getAppPermission, canAccessEntity } from '../../../services/app-permiss
 
 export async function listDealStages(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
-    const stages = await crmService.listDealStages(accountId);
+    const stages = await crmService.listDealStages(tenantId);
     res.json({ success: true, data: { stages } });
   } catch (error) {
     logger.error({ error }, 'Failed to list CRM deal stages');
@@ -20,7 +20,7 @@ export async function listDealStages(req: Request, res: Response) {
 
 export async function createDealStage(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { name, color, probability, sequence, isDefault } = req.body;
 
     if (!name?.trim()) {
@@ -28,7 +28,7 @@ export async function createDealStage(req: Request, res: Response) {
       return;
     }
 
-    const stage = await crmService.createDealStage(accountId, {
+    const stage = await crmService.createDealStage(tenantId, {
       name: name.trim(), color, probability, sequence, isDefault,
     });
 
@@ -41,11 +41,11 @@ export async function createDealStage(req: Request, res: Response) {
 
 export async function updateDealStage(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
     const { name, color, probability, sequence, isDefault } = req.body;
 
-    const stage = await crmService.updateDealStage(accountId, id, {
+    const stage = await crmService.updateDealStage(tenantId, id, {
       name, color, probability, sequence, isDefault,
     });
 
@@ -63,10 +63,10 @@ export async function updateDealStage(req: Request, res: Response) {
 
 export async function deleteDealStage(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    await crmService.deleteDealStage(accountId, id);
+    await crmService.deleteDealStage(tenantId, id);
     res.json({ success: true, data: null });
   } catch (error: any) {
     if (error?.message?.includes('Cannot delete')) {
@@ -81,7 +81,7 @@ export async function deleteDealStage(req: Request, res: Response) {
 export async function reorderDealStages(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
     if (!canAccessEntity(perm.role, 'deals', 'update', perm.entityPermissions)) {
       res.status(403).json({ success: false, error: 'No permission to reorder stages' });
@@ -94,8 +94,8 @@ export async function reorderDealStages(req: Request, res: Response) {
       return;
     }
 
-    await crmService.reorderDealStages(accountId, stageIds);
-    const stages = await crmService.listDealStages(accountId);
+    await crmService.reorderDealStages(tenantId, stageIds);
+    const stages = await crmService.listDealStages(tenantId);
     res.json({ success: true, data: { stages } });
   } catch (error) {
     logger.error({ error }, 'Failed to reorder CRM deal stages');
@@ -105,9 +105,9 @@ export async function reorderDealStages(req: Request, res: Response) {
 
 export async function seedDefaultStages(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
-    const stages = await crmService.seedDefaultStages(accountId);
+    const stages = await crmService.seedDefaultStages(tenantId);
     res.json({ success: true, data: { stages } });
   } catch (error) {
     logger.error({ error }, 'Failed to seed CRM default stages');
@@ -120,7 +120,7 @@ export async function seedDefaultStages(req: Request, res: Response) {
 export async function listDeals(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { stageId, contactId, companyId, includeArchived } = req.query;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -129,7 +129,7 @@ export async function listDeals(req: Request, res: Response) {
       return;
     }
 
-    const deals = await crmService.listDeals(userId, accountId, {
+    const deals = await crmService.listDeals(userId, tenantId, {
       stageId: stageId as string | undefined,
       contactId: contactId as string | undefined,
       companyId: companyId as string | undefined,
@@ -147,11 +147,11 @@ export async function listDeals(req: Request, res: Response) {
 export async function getDeal(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
-    const deal = await crmService.getDeal(userId, accountId, id, perm.recordAccess);
+    const deal = await crmService.getDeal(userId, tenantId, id, perm.recordAccess);
     if (!deal) {
       res.status(404).json({ success: false, error: 'Deal not found' });
       return;
@@ -167,7 +167,7 @@ export async function getDeal(req: Request, res: Response) {
 export async function createDeal(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { title, value, stageId, contactId, companyId, assignedUserId, probability, expectedCloseDate, tags } = req.body;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -185,7 +185,7 @@ export async function createDeal(req: Request, res: Response) {
       return;
     }
 
-    const deal = await crmService.createDeal(userId, accountId, {
+    const deal = await crmService.createDeal(userId, tenantId, {
       title: title.trim(), value: value ?? 0, stageId, contactId, companyId,
       assignedUserId, probability, expectedCloseDate, tags,
     });
@@ -211,7 +211,7 @@ export async function createDeal(req: Request, res: Response) {
 export async function updateDeal(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
     const { title, value, stageId, contactId, companyId, assignedUserId, probability, expectedCloseDate, tags, sortOrder, isArchived } = req.body;
 
@@ -224,11 +224,11 @@ export async function updateDeal(req: Request, res: Response) {
     // Capture old deal state before update for change detection
     let oldDeal: { stageId: string; assignedUserId: string | null } | null = null;
     if (stageId || assignedUserId !== undefined) {
-      const existing = await crmService.getDeal(userId, accountId, id, perm.recordAccess);
+      const existing = await crmService.getDeal(userId, tenantId, id, perm.recordAccess);
       if (existing) oldDeal = { stageId: existing.stageId, assignedUserId: existing.assignedUserId };
     }
 
-    const deal = await crmService.updateDeal(userId, accountId, id, {
+    const deal = await crmService.updateDeal(userId, tenantId, id, {
       title, value, stageId, contactId, companyId, assignedUserId,
       probability, expectedCloseDate, tags, sortOrder, isArchived,
     }, perm.recordAccess);
@@ -242,7 +242,7 @@ export async function updateDeal(req: Request, res: Response) {
     if (req.auth!.tenantId && oldDeal) {
       // Stage change notification
       if (stageId && oldDeal.stageId && oldDeal.stageId !== stageId) {
-        const stages = await crmService.listDealStages(accountId);
+        const stages = await crmService.listDealStages(tenantId);
         const newStageName = stages.find(s => s.id === stageId)?.name ?? 'Unknown';
         emitAppEvent({
           tenantId: req.auth!.tenantId,
@@ -280,7 +280,7 @@ export async function updateDeal(req: Request, res: Response) {
 export async function deleteDeal(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -289,7 +289,7 @@ export async function deleteDeal(req: Request, res: Response) {
       return;
     }
 
-    await crmService.deleteDeal(userId, accountId, id, perm.recordAccess);
+    await crmService.deleteDeal(userId, tenantId, id, perm.recordAccess);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete CRM deal');
@@ -300,7 +300,7 @@ export async function deleteDeal(req: Request, res: Response) {
 export async function markDealWon(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -309,7 +309,7 @@ export async function markDealWon(req: Request, res: Response) {
       return;
     }
 
-    const deal = await crmService.markDealWon(userId, accountId, id, perm.recordAccess);
+    const deal = await crmService.markDealWon(userId, tenantId, id, perm.recordAccess);
     if (!deal) {
       res.status(404).json({ success: false, error: 'Deal not found' });
       return;
@@ -339,7 +339,7 @@ export async function markDealWon(req: Request, res: Response) {
 export async function markDealLost(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
     const { reason } = req.body;
 
@@ -349,7 +349,7 @@ export async function markDealLost(req: Request, res: Response) {
       return;
     }
 
-    const deal = await crmService.markDealLost(userId, accountId, id, reason, perm.recordAccess);
+    const deal = await crmService.markDealLost(userId, tenantId, id, reason, perm.recordAccess);
     if (!deal) {
       res.status(404).json({ success: false, error: 'Deal not found' });
       return;
@@ -379,10 +379,10 @@ export async function markDealLost(req: Request, res: Response) {
 export async function countsByStage(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
-    const counts = await crmService.countsByStage(userId, accountId, perm.recordAccess);
+    const counts = await crmService.countsByStage(userId, tenantId, perm.recordAccess);
     res.json({ success: true, data: counts });
   } catch (error) {
     logger.error({ error }, 'Failed to get CRM deal counts by stage');
@@ -393,10 +393,10 @@ export async function countsByStage(req: Request, res: Response) {
 export async function pipelineValue(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
-    const value = await crmService.pipelineValue(userId, accountId, perm.recordAccess);
+    const value = await crmService.pipelineValue(userId, tenantId, perm.recordAccess);
     res.json({ success: true, data: value });
   } catch (error) {
     logger.error({ error }, 'Failed to get CRM pipeline value');
@@ -407,7 +407,7 @@ export async function pipelineValue(req: Request, res: Response) {
 export async function importDeals(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { rows } = req.body;
 
     if (!Array.isArray(rows)) {
@@ -415,7 +415,7 @@ export async function importDeals(req: Request, res: Response) {
       return;
     }
 
-    const result = await crmService.bulkCreateDeals(userId, accountId, rows);
+    const result = await crmService.bulkCreateDeals(userId, tenantId, rows);
     res.json({ success: true, data: result });
   } catch (error) {
     logger.error({ error }, 'Failed to bulk import CRM deals');
@@ -425,8 +425,8 @@ export async function importDeals(req: Request, res: Response) {
 
 export async function getForecast(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
-    const forecast = await crmService.getForecast(accountId);
+    const tenantId = req.auth!.tenantId;
+    const forecast = await crmService.getForecast(tenantId);
     res.json({ success: true, data: forecast });
   } catch (error) {
     logger.error({ error }, 'Failed to get CRM forecast');

@@ -23,8 +23,8 @@ interface UpdateSavedViewInput {
 
 // ─── Saved Views ──────────────────────────────────────────────────
 
-export async function listSavedViews(userId: string, accountId: string, appSection?: string) {
-  const conditions = [eq(crmSavedViews.accountId, accountId)];
+export async function listSavedViews(userId: string, tenantId: string, appSection?: string) {
+  const conditions = [eq(crmSavedViews.tenantId, tenantId)];
 
   // Return user's own views + shared views from other users
   conditions.push(
@@ -43,10 +43,10 @@ export async function listSavedViews(userId: string, accountId: string, appSecti
     .orderBy(desc(crmSavedViews.isPinned), asc(crmSavedViews.sortOrder), desc(crmSavedViews.createdAt));
 }
 
-export async function createSavedView(userId: string, accountId: string, input: CreateSavedViewInput) {
+export async function createSavedView(userId: string, tenantId: string, input: CreateSavedViewInput) {
   const now = new Date();
   const [created] = await db.insert(crmSavedViews).values({
-    accountId,
+    tenantId,
     userId,
     appSection: input.appSection,
     name: input.name,
@@ -61,7 +61,7 @@ export async function createSavedView(userId: string, accountId: string, input: 
   return created;
 }
 
-export async function updateSavedView(userId: string, accountId: string, id: string, input: UpdateSavedViewInput) {
+export async function updateSavedView(userId: string, tenantId: string, id: string, input: UpdateSavedViewInput) {
   const now = new Date();
   const updates: Record<string, unknown> = { updatedAt: now };
 
@@ -72,16 +72,16 @@ export async function updateSavedView(userId: string, accountId: string, id: str
   if (input.sortOrder !== undefined) updates.sortOrder = input.sortOrder;
 
   await db.update(crmSavedViews).set(updates)
-    .where(and(eq(crmSavedViews.id, id), eq(crmSavedViews.userId, userId), eq(crmSavedViews.accountId, accountId)));
+    .where(and(eq(crmSavedViews.id, id), eq(crmSavedViews.userId, userId), eq(crmSavedViews.tenantId, tenantId)));
 
   const [updated] = await db.select().from(crmSavedViews)
-    .where(and(eq(crmSavedViews.id, id), eq(crmSavedViews.accountId, accountId)))
+    .where(and(eq(crmSavedViews.id, id), eq(crmSavedViews.tenantId, tenantId)))
     .limit(1);
 
   return updated || null;
 }
 
-export async function deleteSavedView(userId: string, accountId: string, id: string) {
+export async function deleteSavedView(userId: string, tenantId: string, id: string) {
   await db.delete(crmSavedViews)
-    .where(and(eq(crmSavedViews.id, id), eq(crmSavedViews.userId, userId), eq(crmSavedViews.accountId, accountId)));
+    .where(and(eq(crmSavedViews.id, id), eq(crmSavedViews.userId, userId), eq(crmSavedViews.tenantId, tenantId)));
 }

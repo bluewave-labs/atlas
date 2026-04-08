@@ -7,10 +7,10 @@ import { logger } from '../../utils/logger';
 
 // ─── Get emails for a CRM contact ─────────────────────────────────────
 
-export async function getContactEmails(accountId: string, contactId: string, limit = 50) {
+export async function getContactEmails(tenantId: string, contactId: string, limit = 50) {
   const [contact] = await db.select({ email: crmContacts.email })
     .from(crmContacts)
-    .where(and(eq(crmContacts.id, contactId), eq(crmContacts.accountId, accountId)))
+    .where(and(eq(crmContacts.id, contactId), eq(crmContacts.tenantId, tenantId)))
     .limit(1);
 
   if (!contact?.email) return [];
@@ -23,7 +23,7 @@ export async function getContactEmails(accountId: string, contactId: string, lim
            e.subject, e.snippet, e.body_text, e.internal_date,
            e.is_unread, e.is_starred, e.gmail_labels
     FROM emails e
-    WHERE e.account_id = ${accountId}
+    WHERE e.account_id = ${tenantId}
     AND (
       e.from_address = ${contactEmail}
       OR e.to_addresses @> ${JSON.stringify([{ address: contactEmail }])}::jsonb
@@ -38,25 +38,25 @@ export async function getContactEmails(accountId: string, contactId: string, lim
 
 // ─── Get emails for a CRM deal ─────────────────────────────────────────
 
-export async function getDealEmails(accountId: string, dealId: string, limit = 50) {
+export async function getDealEmails(tenantId: string, dealId: string, limit = 50) {
   const [deal] = await db.select({
     contactId: crmDeals.contactId,
     companyId: crmDeals.companyId,
   })
     .from(crmDeals)
-    .where(and(eq(crmDeals.id, dealId), eq(crmDeals.accountId, accountId)))
+    .where(and(eq(crmDeals.id, dealId), eq(crmDeals.tenantId, tenantId)))
     .limit(1);
 
   if (!deal) return [];
 
   // If deal has a contact, use contact emails
   if (deal.contactId) {
-    return getContactEmails(accountId, deal.contactId, limit);
+    return getContactEmails(tenantId, deal.contactId, limit);
   }
 
   // If deal has a company but no contact, get all company contact emails
   if (deal.companyId) {
-    return getCompanyEmails(accountId, deal.companyId, limit);
+    return getCompanyEmails(tenantId, deal.companyId, limit);
   }
 
   return [];
@@ -64,13 +64,13 @@ export async function getDealEmails(accountId: string, dealId: string, limit = 5
 
 // ─── Get emails for a CRM company ──────────────────────────────────────
 
-export async function getCompanyEmails(accountId: string, companyId: string, limit = 50) {
+export async function getCompanyEmails(tenantId: string, companyId: string, limit = 50) {
   // Get all contacts for this company
   const contacts = await db.select({ email: crmContacts.email })
     .from(crmContacts)
     .where(and(
       eq(crmContacts.companyId, companyId),
-      eq(crmContacts.accountId, accountId),
+      eq(crmContacts.tenantId, tenantId),
       eq(crmContacts.isArchived, false),
     ));
 
@@ -93,7 +93,7 @@ export async function getCompanyEmails(accountId: string, companyId: string, lim
            e.subject, e.snippet, e.body_text, e.internal_date,
            e.is_unread, e.is_starred, e.gmail_labels
     FROM emails e
-    WHERE e.account_id = ${accountId}
+    WHERE e.account_id = ${tenantId}
     AND (${combinedCondition})
     ORDER BY e.internal_date DESC
     LIMIT ${limit}
@@ -105,13 +105,13 @@ export async function getCompanyEmails(accountId: string, companyId: string, lim
 // ─── Send email via Gmail ──────────────────────────────────────────────
 
 export async function sendEmail(
-  accountId: string,
+  tenantId: string,
   to: string,
   subject: string,
   bodyText: string,
   threadGmailId?: string,
 ) {
-  const client = await getAuthenticatedClient(accountId);
+  const client = await getAuthenticatedClient(tenantId);
   const gmail = google.gmail({ version: 'v1', auth: client });
 
   // Build RFC 2822 message
@@ -137,6 +137,6 @@ export async function sendEmail(
     requestBody,
   });
 
-  logger.info({ accountId, to, subject, messageId: sendRes.data.id }, 'Email sent via Gmail');
+  logger.info({ tenantId, to, subject, messageId: sendRes.data.id }, 'Email sent via Gmail');
   return sendRes.data;
 }

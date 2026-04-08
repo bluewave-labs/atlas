@@ -8,7 +8,7 @@ import { getAppPermission, canAccessEntity } from '../../../services/app-permiss
 export async function listWorkflows(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
     if (!canAccessEntity(perm.role, 'workflows', 'view', perm.entityPermissions)) {
@@ -16,7 +16,7 @@ export async function listWorkflows(req: Request, res: Response) {
       return;
     }
 
-    const workflows = await crmService.listWorkflows(userId, accountId);
+    const workflows = await crmService.listWorkflows(userId, tenantId);
     res.json({ success: true, data: { workflows } });
   } catch (error) {
     logger.error({ error }, 'Failed to list CRM workflows');
@@ -27,7 +27,7 @@ export async function listWorkflows(req: Request, res: Response) {
 export async function createWorkflow(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { name, trigger, triggerConfig, action, actionConfig } = req.body;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -49,7 +49,7 @@ export async function createWorkflow(req: Request, res: Response) {
       return;
     }
 
-    const workflow = await crmService.createWorkflow(userId, accountId, {
+    const workflow = await crmService.createWorkflow(userId, tenantId, {
       name: name.trim(), trigger, triggerConfig, action, actionConfig: actionConfig ?? {},
     });
 
@@ -116,9 +116,9 @@ export async function toggleWorkflow(req: Request, res: Response) {
 export async function seedExampleWorkflows(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
-    const result = await crmService.seedExampleWorkflows(userId, accountId);
+    const result = await crmService.seedExampleWorkflows(userId, tenantId);
     res.json({ success: true, data: { message: 'Seeded example workflows', ...result } });
   } catch (error) {
     logger.error({ error }, 'Failed to seed CRM example workflows');

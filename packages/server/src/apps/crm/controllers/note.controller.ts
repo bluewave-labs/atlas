@@ -9,10 +9,10 @@ import { getDealAssigneeInfo } from '../services/deal.service';
 export async function listNotes(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { dealId, contactId, companyId } = req.query;
 
-    const notes = await crmService.listNotes(userId, accountId, {
+    const notes = await crmService.listNotes(userId, tenantId, {
       dealId: dealId as string | undefined,
       contactId: contactId as string | undefined,
       companyId: companyId as string | undefined,
@@ -27,7 +27,7 @@ export async function listNotes(req: Request, res: Response) {
 export async function createNote(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { title, content, dealId, contactId, companyId } = req.body;
 
     if (!content) {
@@ -35,7 +35,7 @@ export async function createNote(req: Request, res: Response) {
       return;
     }
 
-    const note = await crmService.createNote(userId, accountId, {
+    const note = await crmService.createNote(userId, tenantId, {
       title, content, dealId, contactId, companyId,
     });
 

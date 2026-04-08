@@ -9,7 +9,7 @@ import { getAppPermission, canAccessEntity } from '../../../services/app-permiss
 export async function listCompanies(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { search, industry, includeArchived } = req.query;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -18,7 +18,7 @@ export async function listCompanies(req: Request, res: Response) {
       return;
     }
 
-    const companies = await crmService.listCompanies(userId, accountId, {
+    const companies = await crmService.listCompanies(userId, tenantId, {
       search: search as string | undefined,
       industry: industry as string | undefined,
       includeArchived: includeArchived === 'true',
@@ -35,7 +35,7 @@ export async function listCompanies(req: Request, res: Response) {
 export async function getCompany(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -44,7 +44,7 @@ export async function getCompany(req: Request, res: Response) {
       return;
     }
 
-    const company = await crmService.getCompany(userId, accountId, id, perm.recordAccess);
+    const company = await crmService.getCompany(userId, tenantId, id, perm.recordAccess);
     if (!company) {
       res.status(404).json({ success: false, error: 'Company not found' });
       return;
@@ -60,7 +60,7 @@ export async function getCompany(req: Request, res: Response) {
 export async function createCompany(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { name, domain, industry, size, address, phone, tags } = req.body;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -74,7 +74,7 @@ export async function createCompany(req: Request, res: Response) {
       return;
     }
 
-    const company = await crmService.createCompany(userId, accountId, {
+    const company = await crmService.createCompany(userId, tenantId, {
       name: name.trim(), domain, industry, size, address, phone, tags,
     });
 
@@ -99,7 +99,7 @@ export async function createCompany(req: Request, res: Response) {
 export async function updateCompany(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
     const { name, domain, industry, size, address, phone, tags, sortOrder, isArchived } = req.body;
 
@@ -109,7 +109,7 @@ export async function updateCompany(req: Request, res: Response) {
       return;
     }
 
-    const company = await crmService.updateCompany(userId, accountId, id, {
+    const company = await crmService.updateCompany(userId, tenantId, id, {
       name, domain, industry, size, address, phone, tags, sortOrder, isArchived,
     }, perm.recordAccess);
 
@@ -128,7 +128,7 @@ export async function updateCompany(req: Request, res: Response) {
 export async function deleteCompany(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -137,7 +137,7 @@ export async function deleteCompany(req: Request, res: Response) {
       return;
     }
 
-    await crmService.deleteCompany(userId, accountId, id, perm.recordAccess);
+    await crmService.deleteCompany(userId, tenantId, id, perm.recordAccess);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete CRM company');
@@ -148,7 +148,7 @@ export async function deleteCompany(req: Request, res: Response) {
 export async function importCompanies(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { rows } = req.body;
 
     if (!Array.isArray(rows)) {
@@ -156,7 +156,7 @@ export async function importCompanies(req: Request, res: Response) {
       return;
     }
 
-    const result = await crmService.bulkCreateCompanies(userId, accountId, rows);
+    const result = await crmService.bulkCreateCompanies(userId, tenantId, rows);
     res.json({ success: true, data: result });
   } catch (error) {
     logger.error({ error }, 'Failed to bulk import CRM companies');
@@ -167,7 +167,7 @@ export async function importCompanies(req: Request, res: Response) {
 export async function mergeCompanies(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { primaryId, secondaryId } = req.body;
 
     if (!primaryId || !secondaryId) {
@@ -185,7 +185,7 @@ export async function mergeCompanies(req: Request, res: Response) {
       return;
     }
 
-    const merged = await crmService.mergeCompanies(userId, accountId, primaryId, secondaryId);
+    const merged = await crmService.mergeCompanies(userId, tenantId, primaryId, secondaryId);
     res.json({ success: true, data: merged });
   } catch (error: any) {
     if (error?.message?.includes('not found')) {

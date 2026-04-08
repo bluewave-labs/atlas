@@ -24,13 +24,13 @@ interface UpdateContactInput extends Partial<CreateContactInput> {
 
 // ─── Contacts ───────────────────────────────────────────────────────
 
-export async function listContacts(userId: string, accountId: string, filters?: {
+export async function listContacts(userId: string, tenantId: string, filters?: {
   search?: string;
   companyId?: string;
   includeArchived?: boolean;
   recordAccess?: CrmRecordAccess;
 }) {
-  const conditions = [eq(crmContacts.accountId, accountId)];
+  const conditions = [eq(crmContacts.tenantId, tenantId)];
   if (!filters?.recordAccess || filters.recordAccess === 'own') {
     conditions.push(eq(crmContacts.userId, userId));
   }
@@ -49,7 +49,7 @@ export async function listContacts(userId: string, accountId: string, filters?: 
   return db
     .select({
       id: crmContacts.id,
-      accountId: crmContacts.accountId,
+      tenantId: crmContacts.tenantId,
       userId: crmContacts.userId,
       name: crmContacts.name,
       email: crmContacts.email,
@@ -70,8 +70,8 @@ export async function listContacts(userId: string, accountId: string, filters?: 
     .orderBy(asc(crmContacts.sortOrder), asc(crmContacts.createdAt));
 }
 
-export async function getContact(userId: string, accountId: string, id: string, recordAccess?: CrmRecordAccess) {
-  const conditions = [eq(crmContacts.id, id), eq(crmContacts.accountId, accountId)];
+export async function getContact(userId: string, tenantId: string, id: string, recordAccess?: CrmRecordAccess) {
+  const conditions = [eq(crmContacts.id, id), eq(crmContacts.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
     conditions.push(eq(crmContacts.userId, userId));
   }
@@ -79,7 +79,7 @@ export async function getContact(userId: string, accountId: string, id: string, 
   const [contact] = await db
     .select({
       id: crmContacts.id,
-      accountId: crmContacts.accountId,
+      tenantId: crmContacts.tenantId,
       userId: crmContacts.userId,
       name: crmContacts.name,
       email: crmContacts.email,
@@ -102,7 +102,7 @@ export async function getContact(userId: string, accountId: string, id: string, 
   return contact || null;
 }
 
-export async function createContact(userId: string, accountId: string, input: CreateContactInput) {
+export async function createContact(userId: string, tenantId: string, input: CreateContactInput) {
   const now = new Date();
 
   const [maxSort] = await db
@@ -115,7 +115,7 @@ export async function createContact(userId: string, accountId: string, input: Cr
   const [created] = await db
     .insert(crmContacts)
     .values({
-      accountId,
+      tenantId,
       userId,
       name: input.name,
       email: input.email ?? null,
@@ -133,12 +133,12 @@ export async function createContact(userId: string, accountId: string, input: Cr
   logger.info({ userId, contactId: created.id }, 'CRM contact created');
 
   // Fire workflow trigger
-  executeWorkflows(accountId, userId, 'contact_created', { contactId: created.id }).catch(() => {});
+  executeWorkflows(tenantId, userId, 'contact_created', { contactId: created.id }).catch(() => {});
 
   return created;
 }
 
-export async function updateContact(userId: string, accountId: string, id: string, input: UpdateContactInput, recordAccess?: CrmRecordAccess) {
+export async function updateContact(userId: string, tenantId: string, id: string, input: UpdateContactInput, recordAccess?: CrmRecordAccess) {
   const now = new Date();
   const updates: Record<string, unknown> = { updatedAt: now };
 
@@ -152,7 +152,7 @@ export async function updateContact(userId: string, accountId: string, id: strin
   if (input.sortOrder !== undefined) updates.sortOrder = input.sortOrder;
   if (input.isArchived !== undefined) updates.isArchived = input.isArchived;
 
-  const updateConditions = [eq(crmContacts.id, id), eq(crmContacts.accountId, accountId)];
+  const updateConditions = [eq(crmContacts.id, id), eq(crmContacts.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
     updateConditions.push(eq(crmContacts.userId, userId));
   }
@@ -171,15 +171,15 @@ export async function updateContact(userId: string, accountId: string, id: strin
   return updated || null;
 }
 
-export async function deleteContact(userId: string, accountId: string, id: string, recordAccess?: CrmRecordAccess) {
-  await updateContact(userId, accountId, id, { isArchived: true }, recordAccess);
+export async function deleteContact(userId: string, tenantId: string, id: string, recordAccess?: CrmRecordAccess) {
+  await updateContact(userId, tenantId, id, { isArchived: true }, recordAccess);
 }
 
 // ─── Bulk Import ───────────────────────────────────────────────────────
 
 export async function bulkCreateContacts(
   userId: string,
-  accountId: string,
+  tenantId: string,
   rows: Array<Record<string, string>>,
 ): Promise<{ imported: number; failed: number; errors: string[] }> {
   let imported = 0;
@@ -194,7 +194,7 @@ export async function bulkCreateContacts(
         failed++;
         continue;
       }
-      await createContact(userId, accountId, {
+      await createContact(userId, tenantId, {
         name: row.name.trim(),
         email: row.email?.trim() || null,
         phone: row.phone?.trim() || null,
@@ -209,17 +209,17 @@ export async function bulkCreateContacts(
     }
   }
 
-  logger.info({ userId, accountId, imported, failed }, 'Bulk imported CRM contacts');
+  logger.info({ userId, tenantId, imported, failed }, 'Bulk imported CRM contacts');
   return { imported, failed, errors };
 }
 
 // ─── Merge Contacts ─────────────────────────────────────────────────
 
-export async function mergeContacts(userId: string, accountId: string, primaryId: string, secondaryId: string) {
+export async function mergeContacts(userId: string, tenantId: string, primaryId: string, secondaryId: string) {
   const [primary] = await db.select().from(crmContacts)
-    .where(and(eq(crmContacts.id, primaryId), eq(crmContacts.accountId, accountId))).limit(1);
+    .where(and(eq(crmContacts.id, primaryId), eq(crmContacts.tenantId, tenantId))).limit(1);
   const [secondary] = await db.select().from(crmContacts)
-    .where(and(eq(crmContacts.id, secondaryId), eq(crmContacts.accountId, accountId))).limit(1);
+    .where(and(eq(crmContacts.id, secondaryId), eq(crmContacts.tenantId, tenantId))).limit(1);
 
   if (!primary || !secondary) throw new Error('Contact not found');
 
@@ -255,5 +255,5 @@ export async function mergeContacts(userId: string, accountId: string, primaryId
     .where(eq(crmContacts.id, secondaryId));
 
   logger.info({ userId, primaryId, secondaryId }, 'CRM contacts merged');
-  return getContact(userId, accountId, primaryId, 'all');
+  return getContact(userId, tenantId, primaryId, 'all');
 }

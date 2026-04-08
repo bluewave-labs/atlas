@@ -9,7 +9,7 @@ import { getAppPermission, canAccessEntity } from '../../../services/app-permiss
 export async function listContacts(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { search, companyId, includeArchived } = req.query;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -18,7 +18,7 @@ export async function listContacts(req: Request, res: Response) {
       return;
     }
 
-    const contacts = await crmService.listContacts(userId, accountId, {
+    const contacts = await crmService.listContacts(userId, tenantId, {
       search: search as string | undefined,
       companyId: companyId as string | undefined,
       includeArchived: includeArchived === 'true',
@@ -35,11 +35,11 @@ export async function listContacts(req: Request, res: Response) {
 export async function getContact(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
-    const contact = await crmService.getContact(userId, accountId, id, perm.recordAccess);
+    const contact = await crmService.getContact(userId, tenantId, id, perm.recordAccess);
     if (!contact) {
       res.status(404).json({ success: false, error: 'Contact not found' });
       return;
@@ -55,7 +55,7 @@ export async function getContact(req: Request, res: Response) {
 export async function createContact(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { name, email, phone, companyId, position, source, tags } = req.body;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -69,7 +69,7 @@ export async function createContact(req: Request, res: Response) {
       return;
     }
 
-    const contact = await crmService.createContact(userId, accountId, {
+    const contact = await crmService.createContact(userId, tenantId, {
       name: name.trim(), email, phone, companyId, position, source, tags,
     });
 
@@ -94,7 +94,7 @@ export async function createContact(req: Request, res: Response) {
 export async function updateContact(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
     const { name, email, phone, companyId, position, source, tags, sortOrder, isArchived } = req.body;
 
@@ -104,7 +104,7 @@ export async function updateContact(req: Request, res: Response) {
       return;
     }
 
-    const contact = await crmService.updateContact(userId, accountId, id, {
+    const contact = await crmService.updateContact(userId, tenantId, id, {
       name, email, phone, companyId, position, source, tags, sortOrder, isArchived,
     }, perm.recordAccess);
 
@@ -123,7 +123,7 @@ export async function updateContact(req: Request, res: Response) {
 export async function deleteContact(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'crm');
@@ -132,7 +132,7 @@ export async function deleteContact(req: Request, res: Response) {
       return;
     }
 
-    await crmService.deleteContact(userId, accountId, id, perm.recordAccess);
+    await crmService.deleteContact(userId, tenantId, id, perm.recordAccess);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete CRM contact');
@@ -143,7 +143,7 @@ export async function deleteContact(req: Request, res: Response) {
 export async function importContacts(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { rows } = req.body;
 
     if (!Array.isArray(rows)) {
@@ -151,7 +151,7 @@ export async function importContacts(req: Request, res: Response) {
       return;
     }
 
-    const result = await crmService.bulkCreateContacts(userId, accountId, rows);
+    const result = await crmService.bulkCreateContacts(userId, tenantId, rows);
     res.json({ success: true, data: result });
   } catch (error) {
     logger.error({ error }, 'Failed to bulk import CRM contacts');
@@ -162,7 +162,7 @@ export async function importContacts(req: Request, res: Response) {
 export async function mergeContacts(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { primaryId, secondaryId } = req.body;
 
     if (!primaryId || !secondaryId) {
@@ -180,7 +180,7 @@ export async function mergeContacts(req: Request, res: Response) {
       return;
     }
 
-    const merged = await crmService.mergeContacts(userId, accountId, primaryId, secondaryId);
+    const merged = await crmService.mergeContacts(userId, tenantId, primaryId, secondaryId);
     res.json({ success: true, data: merged });
   } catch (error: any) {
     if (error?.message?.includes('not found')) {

@@ -47,26 +47,26 @@ interface UpdateDealInput extends Partial<CreateDealInput> {
 
 // ─── Deal Stages ────────────────────────────────────────────────────
 
-export async function listDealStages(accountId: string) {
+export async function listDealStages(tenantId: string) {
   return db
     .select()
     .from(crmDealStages)
-    .where(eq(crmDealStages.accountId, accountId))
+    .where(eq(crmDealStages.tenantId, tenantId))
     .orderBy(asc(crmDealStages.sequence));
 }
 
-export async function createDealStage(accountId: string, input: CreateDealStageInput) {
+export async function createDealStage(tenantId: string, input: CreateDealStageInput) {
   const [maxSeq] = await db
     .select({ max: sql<number>`COALESCE(MAX(${crmDealStages.sequence}), -1)` })
     .from(crmDealStages)
-    .where(eq(crmDealStages.accountId, accountId));
+    .where(eq(crmDealStages.tenantId, tenantId));
 
   const sequence = input.sequence ?? ((maxSeq?.max ?? -1) + 1);
 
   const [created] = await db
     .insert(crmDealStages)
     .values({
-      accountId,
+      tenantId,
       name: input.name,
       color: input.color ?? '#6b7280',
       probability: input.probability ?? 0,
@@ -75,11 +75,11 @@ export async function createDealStage(accountId: string, input: CreateDealStageI
     })
     .returning();
 
-  logger.info({ accountId, stageId: created.id }, 'CRM deal stage created');
+  logger.info({ tenantId, stageId: created.id }, 'CRM deal stage created');
   return created;
 }
 
-export async function updateDealStage(accountId: string, id: string, input: UpdateDealStageInput) {
+export async function updateDealStage(tenantId: string, id: string, input: UpdateDealStageInput) {
   const updates: Record<string, unknown> = {};
 
   if (input.name !== undefined) updates.name = input.name;
@@ -92,18 +92,18 @@ export async function updateDealStage(accountId: string, id: string, input: Upda
   await db
     .update(crmDealStages)
     .set(updates)
-    .where(and(eq(crmDealStages.id, id), eq(crmDealStages.accountId, accountId)));
+    .where(and(eq(crmDealStages.id, id), eq(crmDealStages.tenantId, tenantId)));
 
   const [updated] = await db
     .select()
     .from(crmDealStages)
-    .where(and(eq(crmDealStages.id, id), eq(crmDealStages.accountId, accountId)))
+    .where(and(eq(crmDealStages.id, id), eq(crmDealStages.tenantId, tenantId)))
     .limit(1);
 
   return updated || null;
 }
 
-export async function deleteDealStage(accountId: string, id: string) {
+export async function deleteDealStage(tenantId: string, id: string) {
   // Check if there are deals in this stage
   const [dealCount] = await db
     .select({ count: sql<number>`COUNT(*)` })
@@ -116,22 +116,22 @@ export async function deleteDealStage(accountId: string, id: string) {
 
   await db
     .delete(crmDealStages)
-    .where(and(eq(crmDealStages.id, id), eq(crmDealStages.accountId, accountId)));
+    .where(and(eq(crmDealStages.id, id), eq(crmDealStages.tenantId, tenantId)));
 }
 
-export async function reorderDealStages(accountId: string, stageIds: string[]) {
+export async function reorderDealStages(tenantId: string, stageIds: string[]) {
   for (let i = 0; i < stageIds.length; i++) {
     await db
       .update(crmDealStages)
       .set({ sequence: i })
-      .where(and(eq(crmDealStages.id, stageIds[i]), eq(crmDealStages.accountId, accountId)));
+      .where(and(eq(crmDealStages.id, stageIds[i]), eq(crmDealStages.tenantId, tenantId)));
   }
 }
 
-export async function seedDefaultStages(accountId: string) {
+export async function seedDefaultStages(tenantId: string) {
   // Idempotency guard
   const existing = await db.select({ id: crmDealStages.id }).from(crmDealStages)
-    .where(eq(crmDealStages.accountId, accountId)).limit(1);
+    .where(eq(crmDealStages.tenantId, tenantId)).limit(1);
   if (existing.length > 0) return existing;
 
   const defaults = [
@@ -145,24 +145,24 @@ export async function seedDefaultStages(accountId: string) {
 
   const stages = [];
   for (const d of defaults) {
-    const stage = await createDealStage(accountId, d);
+    const stage = await createDealStage(tenantId, d);
     stages.push(stage);
   }
 
-  logger.info({ accountId }, 'Seeded default CRM deal stages');
+  logger.info({ tenantId }, 'Seeded default CRM deal stages');
   return stages;
 }
 
 // ─── Deals ──────────────────────────────────────────────────────────
 
-export async function listDeals(userId: string, accountId: string, filters?: {
+export async function listDeals(userId: string, tenantId: string, filters?: {
   stageId?: string;
   contactId?: string;
   companyId?: string;
   includeArchived?: boolean;
   recordAccess?: CrmRecordAccess;
 }) {
-  const conditions = [eq(crmDeals.accountId, accountId)];
+  const conditions = [eq(crmDeals.tenantId, tenantId)];
   if (!filters?.recordAccess || filters.recordAccess === 'own') {
     conditions.push(eq(crmDeals.userId, userId));
   }
@@ -183,7 +183,7 @@ export async function listDeals(userId: string, accountId: string, filters?: {
   return db
     .select({
       id: crmDeals.id,
-      accountId: crmDeals.accountId,
+      tenantId: crmDeals.tenantId,
       userId: crmDeals.userId,
       title: crmDeals.title,
       value: crmDeals.value,
@@ -216,8 +216,8 @@ export async function listDeals(userId: string, accountId: string, filters?: {
     .orderBy(asc(crmDeals.sortOrder), asc(crmDeals.createdAt));
 }
 
-export async function getDeal(userId: string, accountId: string, id: string, recordAccess?: CrmRecordAccess) {
-  const conditions = [eq(crmDeals.id, id), eq(crmDeals.accountId, accountId)];
+export async function getDeal(userId: string, tenantId: string, id: string, recordAccess?: CrmRecordAccess) {
+  const conditions = [eq(crmDeals.id, id), eq(crmDeals.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
     conditions.push(eq(crmDeals.userId, userId));
   }
@@ -225,7 +225,7 @@ export async function getDeal(userId: string, accountId: string, id: string, rec
   const [deal] = await db
     .select({
       id: crmDeals.id,
-      accountId: crmDeals.accountId,
+      tenantId: crmDeals.tenantId,
       userId: crmDeals.userId,
       title: crmDeals.title,
       value: crmDeals.value,
@@ -258,7 +258,7 @@ export async function getDeal(userId: string, accountId: string, id: string, rec
   return deal || null;
 }
 
-export async function createDeal(userId: string, accountId: string, input: CreateDealInput) {
+export async function createDeal(userId: string, tenantId: string, input: CreateDealInput) {
   const now = new Date();
 
   const [maxSort] = await db
@@ -271,7 +271,7 @@ export async function createDeal(userId: string, accountId: string, input: Creat
   const [created] = await db
     .insert(crmDeals)
     .values({
-      accountId,
+      tenantId,
       userId,
       title: input.title,
       value: input.value,
@@ -292,16 +292,16 @@ export async function createDeal(userId: string, accountId: string, input: Creat
   logger.info({ userId, dealId: created.id }, 'CRM deal created');
 
   // Fire workflow trigger
-  executeWorkflows(accountId, userId, 'deal_created', { dealId: created.id }).catch(() => {});
+  executeWorkflows(tenantId, userId, 'deal_created', { dealId: created.id }).catch(() => {});
 
   return created;
 }
 
-export async function updateDeal(userId: string, accountId: string, id: string, input: UpdateDealInput, recordAccess?: CrmRecordAccess) {
+export async function updateDeal(userId: string, tenantId: string, id: string, input: UpdateDealInput, recordAccess?: CrmRecordAccess) {
   const now = new Date();
   const updates: Record<string, unknown> = { updatedAt: now };
 
-  const updateConditions = [eq(crmDeals.id, id), eq(crmDeals.accountId, accountId)];
+  const updateConditions = [eq(crmDeals.id, id), eq(crmDeals.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
     updateConditions.push(eq(crmDeals.userId, userId));
   }
@@ -339,7 +339,7 @@ export async function updateDeal(userId: string, accountId: string, id: string, 
 
   // Fire workflow trigger + log activity if stage changed
   if (input.stageId !== undefined && oldStageId && oldStageId !== input.stageId) {
-    executeWorkflows(accountId, userId, 'deal_stage_changed', {
+    executeWorkflows(tenantId, userId, 'deal_stage_changed', {
       dealId: id, fromStage: oldStageId, toStage: input.stageId,
     }).catch(() => {});
 
@@ -350,23 +350,23 @@ export async function updateDeal(userId: string, accountId: string, id: string, 
     ]);
     const fromName = oldStage[0]?.name ?? 'Unknown';
     const toName = newStage[0]?.name ?? 'Unknown';
-    createActivity(userId, accountId, {
+    createActivity(userId, tenantId, {
       type: 'stage_change',
       body: `Stage changed from ${fromName} to ${toName}`,
       dealId: id,
     }).catch(() => {});
   }
 
-  return getDeal(userId, accountId, id, recordAccess);
+  return getDeal(userId, tenantId, id, recordAccess);
 }
 
-export async function deleteDeal(userId: string, accountId: string, id: string, recordAccess?: CrmRecordAccess) {
-  await updateDeal(userId, accountId, id, { isArchived: true }, recordAccess);
+export async function deleteDeal(userId: string, tenantId: string, id: string, recordAccess?: CrmRecordAccess) {
+  await updateDeal(userId, tenantId, id, { isArchived: true }, recordAccess);
 }
 
-export async function markDealWon(userId: string, accountId: string, id: string, recordAccess?: CrmRecordAccess) {
+export async function markDealWon(userId: string, tenantId: string, id: string, recordAccess?: CrmRecordAccess) {
   const now = new Date();
-  const conditions = [eq(crmDeals.id, id), eq(crmDeals.accountId, accountId)];
+  const conditions = [eq(crmDeals.id, id), eq(crmDeals.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
     conditions.push(eq(crmDeals.userId, userId));
   }
@@ -376,15 +376,15 @@ export async function markDealWon(userId: string, accountId: string, id: string,
     .where(and(...conditions));
 
   // Fire workflow trigger + log activity
-  executeWorkflows(accountId, userId, 'deal_won', { dealId: id }).catch(() => {});
-  createActivity(userId, accountId, { type: 'deal_won', body: 'Deal marked as won', dealId: id }).catch(() => {});
+  executeWorkflows(tenantId, userId, 'deal_won', { dealId: id }).catch(() => {});
+  createActivity(userId, tenantId, { type: 'deal_won', body: 'Deal marked as won', dealId: id }).catch(() => {});
 
-  return getDeal(userId, accountId, id, recordAccess);
+  return getDeal(userId, tenantId, id, recordAccess);
 }
 
-export async function markDealLost(userId: string, accountId: string, id: string, reason?: string, recordAccess?: CrmRecordAccess) {
+export async function markDealLost(userId: string, tenantId: string, id: string, reason?: string, recordAccess?: CrmRecordAccess) {
   const now = new Date();
-  const conditions = [eq(crmDeals.id, id), eq(crmDeals.accountId, accountId)];
+  const conditions = [eq(crmDeals.id, id), eq(crmDeals.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
     conditions.push(eq(crmDeals.userId, userId));
   }
@@ -394,14 +394,14 @@ export async function markDealLost(userId: string, accountId: string, id: string
     .where(and(...conditions));
 
   // Fire workflow trigger + log activity
-  executeWorkflows(accountId, userId, 'deal_lost', { dealId: id }).catch(() => {});
-  createActivity(userId, accountId, { type: 'deal_lost', body: reason ? `Deal lost: ${reason}` : 'Deal marked as lost', dealId: id }).catch(() => {});
+  executeWorkflows(tenantId, userId, 'deal_lost', { dealId: id }).catch(() => {});
+  createActivity(userId, tenantId, { type: 'deal_lost', body: reason ? `Deal lost: ${reason}` : 'Deal marked as lost', dealId: id }).catch(() => {});
 
-  return getDeal(userId, accountId, id, recordAccess);
+  return getDeal(userId, tenantId, id, recordAccess);
 }
 
-export async function countsByStage(userId: string, accountId: string, recordAccess?: CrmRecordAccess) {
-  const conditions = [eq(crmDeals.accountId, accountId), eq(crmDeals.isArchived, false)];
+export async function countsByStage(userId: string, tenantId: string, recordAccess?: CrmRecordAccess) {
+  const conditions = [eq(crmDeals.tenantId, tenantId), eq(crmDeals.isArchived, false)];
   if (!recordAccess || recordAccess === 'own') {
     conditions.push(eq(crmDeals.userId, userId));
   }
@@ -419,9 +419,9 @@ export async function countsByStage(userId: string, accountId: string, recordAcc
     .groupBy(crmDeals.stageId, crmDealStages.name, crmDealStages.color);
 }
 
-export async function pipelineValue(userId: string, accountId: string, recordAccess?: CrmRecordAccess) {
+export async function pipelineValue(userId: string, tenantId: string, recordAccess?: CrmRecordAccess) {
   const conditions = [
-    eq(crmDeals.accountId, accountId),
+    eq(crmDeals.tenantId, tenantId),
     eq(crmDeals.isArchived, false),
     sql`${crmDeals.wonAt} IS NULL AND ${crmDeals.lostAt} IS NULL`,
   ];
@@ -444,7 +444,7 @@ export async function pipelineValue(userId: string, accountId: string, recordAcc
 
 export async function bulkCreateDeals(
   userId: string,
-  accountId: string,
+  tenantId: string,
   rows: Array<Record<string, string>>,
 ): Promise<{ imported: number; failed: number; errors: string[] }> {
   let imported = 0;
@@ -452,7 +452,7 @@ export async function bulkCreateDeals(
   const errors: string[] = [];
 
   // Get default stage for deals without a stage
-  const stages = await listDealStages(accountId);
+  const stages = await listDealStages(tenantId);
   const defaultStage = stages.find((s) => s.isDefault) ?? stages[0];
 
   if (!defaultStage) {
@@ -481,7 +481,7 @@ export async function bulkCreateDeals(
         if (matchedStageId) stageId = matchedStageId;
       }
 
-      await createDeal(userId, accountId, {
+      await createDeal(userId, tenantId, {
         title: row.title.trim(),
         value: Number(row.value) || 0,
         stageId,
@@ -497,13 +497,13 @@ export async function bulkCreateDeals(
     }
   }
 
-  logger.info({ userId, accountId, imported, failed }, 'Bulk imported CRM deals');
+  logger.info({ userId, tenantId, imported, failed }, 'Bulk imported CRM deals');
   return { imported, failed, errors };
 }
 
 // ─── Forecasting ───────────────────────────────────────────────────
 
-export async function getForecast(accountId: string) {
+export async function getForecast(tenantId: string) {
   const now = new Date();
   const months: { month: string; weightedValue: number }[] = [];
 
@@ -518,7 +518,7 @@ export async function getForecast(accountId: string) {
       })
       .from(crmDeals)
       .where(and(
-        eq(crmDeals.accountId, accountId),
+        eq(crmDeals.tenantId, tenantId),
         eq(crmDeals.isArchived, false),
         isNull(crmDeals.wonAt),
         isNull(crmDeals.lostAt),
@@ -538,7 +538,7 @@ export async function getForecast(accountId: string) {
     })
     .from(crmDeals)
     .where(and(
-      eq(crmDeals.accountId, accountId),
+      eq(crmDeals.tenantId, tenantId),
       eq(crmDeals.isArchived, false),
       isNull(crmDeals.wonAt),
       isNull(crmDeals.lostAt),
@@ -551,7 +551,7 @@ export async function getForecast(accountId: string) {
     })
     .from(crmDeals)
     .where(and(
-      eq(crmDeals.accountId, accountId),
+      eq(crmDeals.tenantId, tenantId),
       eq(crmDeals.isArchived, false),
       sql`${crmDeals.wonAt} IS NOT NULL`,
     ));

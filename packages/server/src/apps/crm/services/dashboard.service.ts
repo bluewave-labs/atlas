@@ -11,7 +11,7 @@ import { createLead, updateLead, listLeads } from './lead.service';
 
 // ─── Dashboard ─────────────────────────────────────────────────────
 
-export async function getDashboard(userId: string, accountId: string, recordAccess?: CrmRecordAccess) {
+export async function getDashboard(userId: string, tenantId: string, recordAccess?: CrmRecordAccess) {
   // Build base ownership condition
   const ownerFilter = (!recordAccess || recordAccess === 'own')
     ? eq(crmDeals.userId, userId)
@@ -26,7 +26,7 @@ export async function getDashboard(userId: string, accountId: string, recordAcce
     .from(crmDeals)
     .where(and(
       ownerFilter,
-      eq(crmDeals.accountId, accountId),
+      eq(crmDeals.tenantId, tenantId),
       eq(crmDeals.isArchived, false),
       sql`${crmDeals.wonAt} IS NULL AND ${crmDeals.lostAt} IS NULL`,
     ));
@@ -47,7 +47,7 @@ export async function getDashboard(userId: string, accountId: string, recordAcce
     .from(crmDeals)
     .where(and(
       ownerFilter,
-      eq(crmDeals.accountId, accountId),
+      eq(crmDeals.tenantId, tenantId),
       eq(crmDeals.isArchived, false),
       sql`${crmDeals.wonAt} IS NOT NULL`,
       gte(crmDeals.wonAt, monthStart),
@@ -64,7 +64,7 @@ export async function getDashboard(userId: string, accountId: string, recordAcce
     .from(crmDeals)
     .where(and(
       ownerFilter,
-      eq(crmDeals.accountId, accountId),
+      eq(crmDeals.tenantId, tenantId),
       eq(crmDeals.isArchived, false),
       sql`${crmDeals.lostAt} IS NOT NULL`,
       gte(crmDeals.lostAt, monthStart),
@@ -89,7 +89,7 @@ export async function getDashboard(userId: string, accountId: string, recordAcce
     .leftJoin(crmDealStages, eq(crmDeals.stageId, crmDealStages.id))
     .where(and(
       ownerFilter,
-      eq(crmDeals.accountId, accountId),
+      eq(crmDeals.tenantId, tenantId),
       eq(crmDeals.isArchived, false),
     ))
     .groupBy(crmDeals.stageId, crmDealStages.name, crmDealStages.color, crmDealStages.sequence)
@@ -104,7 +104,7 @@ export async function getDashboard(userId: string, accountId: string, recordAcce
     .from(crmActivities)
     .where(and(
       activityOwnerFilter,
-      eq(crmActivities.accountId, accountId),
+      eq(crmActivities.tenantId, tenantId),
       eq(crmActivities.isArchived, false),
     ))
     .orderBy(desc(crmActivities.createdAt))
@@ -115,7 +115,7 @@ export async function getDashboard(userId: string, accountId: string, recordAcce
   const dealsClosingSoon = await db
     .select({
       id: crmDeals.id,
-      accountId: crmDeals.accountId,
+      tenantId: crmDeals.tenantId,
       userId: crmDeals.userId,
       title: crmDeals.title,
       value: crmDeals.value,
@@ -144,7 +144,7 @@ export async function getDashboard(userId: string, accountId: string, recordAcce
     .leftJoin(crmCompanies, eq(crmDeals.companyId, crmCompanies.id))
     .where(and(
       ownerFilter,
-      eq(crmDeals.accountId, accountId),
+      eq(crmDeals.tenantId, tenantId),
       eq(crmDeals.isArchived, false),
       sql`${crmDeals.wonAt} IS NULL AND ${crmDeals.lostAt} IS NULL`,
       sql`${crmDeals.expectedCloseDate} IS NOT NULL`,
@@ -157,7 +157,7 @@ export async function getDashboard(userId: string, accountId: string, recordAcce
   const topDeals = await db
     .select({
       id: crmDeals.id,
-      accountId: crmDeals.accountId,
+      tenantId: crmDeals.tenantId,
       userId: crmDeals.userId,
       title: crmDeals.title,
       value: crmDeals.value,
@@ -186,7 +186,7 @@ export async function getDashboard(userId: string, accountId: string, recordAcce
     .leftJoin(crmCompanies, eq(crmDeals.companyId, crmCompanies.id))
     .where(and(
       ownerFilter,
-      eq(crmDeals.accountId, accountId),
+      eq(crmDeals.tenantId, tenantId),
       eq(crmDeals.isArchived, false),
       sql`${crmDeals.wonAt} IS NULL AND ${crmDeals.lostAt} IS NULL`,
     ))
@@ -216,7 +216,7 @@ export async function getDashboard(userId: string, accountId: string, recordAcce
 
 // ─── Dashboard Charts (extended) ──────────────────────────────────
 
-export async function getDashboardCharts(userId: string, accountId: string, recordAccess?: CrmRecordAccess) {
+export async function getDashboardCharts(userId: string, tenantId: string, recordAccess?: CrmRecordAccess) {
   const ownerFilter = (!recordAccess || recordAccess === 'own')
     ? eq(crmDeals.userId, userId)
     : sql`TRUE`;
@@ -230,11 +230,11 @@ export async function getDashboardCharts(userId: string, accountId: string, reco
     const monthLabel = monthDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 
     const [wonAgg] = await db.select({ count: sql<number>`COUNT(*)` }).from(crmDeals)
-      .where(and(ownerFilter, eq(crmDeals.accountId, accountId), eq(crmDeals.isArchived, false),
+      .where(and(ownerFilter, eq(crmDeals.tenantId, tenantId), eq(crmDeals.isArchived, false),
         sql`${crmDeals.wonAt} IS NOT NULL`, gte(crmDeals.wonAt, monthDate), lte(crmDeals.wonAt, monthEnd)));
 
     const [lostAgg] = await db.select({ count: sql<number>`COUNT(*)` }).from(crmDeals)
-      .where(and(ownerFilter, eq(crmDeals.accountId, accountId), eq(crmDeals.isArchived, false),
+      .where(and(ownerFilter, eq(crmDeals.tenantId, tenantId), eq(crmDeals.isArchived, false),
         sql`${crmDeals.lostAt} IS NOT NULL`, gte(crmDeals.lostAt, monthDate), lte(crmDeals.lostAt, monthEnd)));
 
     winLossByMonth.push({
@@ -254,7 +254,7 @@ export async function getDashboardCharts(userId: string, accountId: string, reco
     const [revAgg] = await db.select({
       revenue: sql<number>`COALESCE(SUM(${crmDeals.value}), 0)`,
     }).from(crmDeals)
-      .where(and(ownerFilter, eq(crmDeals.accountId, accountId), eq(crmDeals.isArchived, false),
+      .where(and(ownerFilter, eq(crmDeals.tenantId, tenantId), eq(crmDeals.isArchived, false),
         sql`${crmDeals.wonAt} IS NOT NULL`, gte(crmDeals.wonAt, monthDate), lte(crmDeals.wonAt, monthEnd)));
 
     revenueTrend.push({ month: monthLabel, revenue: Number(revAgg?.revenue ?? 0) });
@@ -270,7 +270,7 @@ export async function getDashboardCharts(userId: string, accountId: string, reco
     const [cycleAgg] = await db.select({
       avgDays: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${crmDeals.wonAt} - ${crmDeals.createdAt})) / 86400), 0)`,
     }).from(crmDeals)
-      .where(and(ownerFilter, eq(crmDeals.accountId, accountId), eq(crmDeals.isArchived, false),
+      .where(and(ownerFilter, eq(crmDeals.tenantId, tenantId), eq(crmDeals.isArchived, false),
         sql`${crmDeals.wonAt} IS NOT NULL`, gte(crmDeals.wonAt, monthDate), lte(crmDeals.wonAt, monthEnd)));
 
     salesCycleLength.push({ month: monthLabel, avgDays: Math.round(Number(cycleAgg?.avgDays ?? 0)) });
@@ -284,7 +284,7 @@ export async function getDashboardCharts(userId: string, accountId: string, reco
     sequence: crmDealStages.sequence,
   }).from(crmDeals)
     .leftJoin(crmDealStages, eq(crmDeals.stageId, crmDealStages.id))
-    .where(and(ownerFilter, eq(crmDeals.accountId, accountId), eq(crmDeals.isArchived, false)))
+    .where(and(ownerFilter, eq(crmDeals.tenantId, tenantId), eq(crmDeals.isArchived, false)))
     .groupBy(crmDealStages.name, crmDealStages.color, crmDealStages.sequence)
     .orderBy(asc(crmDealStages.sequence));
 
@@ -302,7 +302,7 @@ export async function getDashboardCharts(userId: string, accountId: string, reco
     value: sql<number>`COALESCE(SUM(${crmDeals.value}), 0)`,
   }).from(crmDeals)
     .leftJoin(crmContacts, eq(crmDeals.contactId, crmContacts.id))
-    .where(and(ownerFilter, eq(crmDeals.accountId, accountId), eq(crmDeals.isArchived, false)))
+    .where(and(ownerFilter, eq(crmDeals.tenantId, tenantId), eq(crmDeals.isArchived, false)))
     .groupBy(crmContacts.source);
 
   const dealsBySource = sourceData.map((r) => ({
@@ -316,7 +316,7 @@ export async function getDashboardCharts(userId: string, accountId: string, reco
 
 // ─── Widget summary (lightweight) ──────────────────────────────────
 
-export async function getWidgetData(userId: string, accountId: string) {
+export async function getWidgetData(userId: string, tenantId: string) {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -328,7 +328,7 @@ export async function getWidgetData(userId: string, accountId: string) {
     })
     .from(crmDeals)
     .where(and(
-      eq(crmDeals.accountId, accountId),
+      eq(crmDeals.tenantId, tenantId),
       eq(crmDeals.isArchived, false),
       sql`${crmDeals.wonAt} IS NULL AND ${crmDeals.lostAt} IS NULL`,
     ));
@@ -338,7 +338,7 @@ export async function getWidgetData(userId: string, accountId: string) {
     .select({ count: sql<number>`COUNT(*)`.as('count') })
     .from(crmDeals)
     .where(and(
-      eq(crmDeals.accountId, accountId),
+      eq(crmDeals.tenantId, tenantId),
       eq(crmDeals.isArchived, false),
       sql`${crmDeals.wonAt} IS NOT NULL`,
       gte(crmDeals.wonAt, monthStart),
@@ -349,7 +349,7 @@ export async function getWidgetData(userId: string, accountId: string) {
     .select({ count: sql<number>`COUNT(*)`.as('count') })
     .from(crmDeals)
     .where(and(
-      eq(crmDeals.accountId, accountId),
+      eq(crmDeals.tenantId, tenantId),
       eq(crmDeals.isArchived, false),
       sql`${crmDeals.lostAt} IS NOT NULL`,
       gte(crmDeals.lostAt, monthStart),
@@ -365,21 +365,21 @@ export async function getWidgetData(userId: string, accountId: string) {
 
 // ─── Seed Sample Data ───────────────────────────────────────────────
 
-export async function seedSampleData(userId: string, accountId: string) {
+export async function seedSampleData(userId: string, tenantId: string) {
   // Seed default pipeline stages
-  const stages = await seedDefaultStages(accountId);
+  const stages = await seedDefaultStages(tenantId);
 
   // Idempotency guard — skip sample data if contacts already exist
   const existingContacts = await db.select({ id: crmContacts.id }).from(crmContacts)
-    .where(and(eq(crmContacts.accountId, accountId), eq(crmContacts.isArchived, false))).limit(1);
+    .where(and(eq(crmContacts.tenantId, tenantId), eq(crmContacts.isArchived, false))).limit(1);
   if (existingContacts.length > 0) {
-    logger.info({ userId, accountId }, 'Seeded CRM default stages (sample data already exists)');
+    logger.info({ userId, tenantId }, 'Seeded CRM default stages (sample data already exists)');
     return { stages: stages.length };
   }
 
   // Build a stage lookup by name
   const allStages = await db.select().from(crmDealStages)
-    .where(eq(crmDealStages.accountId, accountId))
+    .where(eq(crmDealStages.tenantId, tenantId))
     .orderBy(asc(crmDealStages.sequence));
   const stageByName: Record<string, string> = {};
   for (const s of allStages) {
@@ -387,33 +387,33 @@ export async function seedSampleData(userId: string, accountId: string) {
   }
 
   // --- Companies ---
-  const acme = await createCompany(userId, accountId, {
+  const acme = await createCompany(userId, tenantId, {
     name: 'Acme Corp', industry: 'Technology', size: '50', domain: 'acmecorp.com',
   });
-  const globalTech = await createCompany(userId, accountId, {
+  const globalTech = await createCompany(userId, tenantId, {
     name: 'GlobalTech Solutions', industry: 'Consulting', size: '200', domain: 'globaltech.io',
   });
-  const brightStar = await createCompany(userId, accountId, {
+  const brightStar = await createCompany(userId, tenantId, {
     name: 'BrightStar Media', industry: 'Marketing', size: '25', domain: 'brightstarmedia.com',
   });
 
   // --- Contacts (2 per company) ---
-  const johnSmith = await createContact(userId, accountId, {
+  const johnSmith = await createContact(userId, tenantId, {
     name: 'John Smith', email: 'john@acmecorp.com', position: 'CEO', companyId: acme.id,
   });
-  const sarahJohnson = await createContact(userId, accountId, {
+  const sarahJohnson = await createContact(userId, tenantId, {
     name: 'Sarah Johnson', email: 'sarah@acmecorp.com', position: 'CTO', companyId: acme.id,
   });
-  const michaelChen = await createContact(userId, accountId, {
+  const michaelChen = await createContact(userId, tenantId, {
     name: 'Michael Chen', email: 'michael@globaltech.io', position: 'VP Sales', companyId: globalTech.id,
   });
-  const emilyDavis = await createContact(userId, accountId, {
+  const emilyDavis = await createContact(userId, tenantId, {
     name: 'Emily Davis', email: 'emily@globaltech.io', position: 'Marketing Director', companyId: globalTech.id,
   });
-  const davidWilson = await createContact(userId, accountId, {
+  const davidWilson = await createContact(userId, tenantId, {
     name: 'David Wilson', email: 'david@brightstarmedia.com', position: 'Founder', companyId: brightStar.id,
   });
-  const lisaAnderson = await createContact(userId, accountId, {
+  const lisaAnderson = await createContact(userId, tenantId, {
     name: 'Lisa Anderson', email: 'lisa@brightstarmedia.com', position: 'Creative Director', companyId: brightStar.id,
   });
 
@@ -423,62 +423,62 @@ export async function seedSampleData(userId: string, accountId: string) {
   const negotiationStageId = stageByName['negotiation'] ?? allStages[3]?.id;
   const wonStageId = stageByName['closed won'] ?? allStages[4]?.id;
 
-  const deal1 = await createDeal(userId, accountId, {
+  const deal1 = await createDeal(userId, tenantId, {
     title: 'Acme Enterprise License', value: 45000, stageId: proposalStageId,
     contactId: johnSmith.id, companyId: acme.id, probability: 60,
   });
-  await createDeal(userId, accountId, {
+  await createDeal(userId, tenantId, {
     title: 'GlobalTech Consulting Package', value: 120000, stageId: qualifiedStageId,
     contactId: michaelChen.id, companyId: globalTech.id, probability: 40,
   });
-  const deal3 = await createDeal(userId, accountId, {
+  const deal3 = await createDeal(userId, tenantId, {
     title: 'BrightStar Social Campaign', value: 15000, stageId: negotiationStageId,
     contactId: davidWilson.id, companyId: brightStar.id, probability: 80,
   });
-  const deal4 = await createDeal(userId, accountId, {
+  const deal4 = await createDeal(userId, tenantId, {
     title: 'Acme Support Add-on', value: 8000, stageId: wonStageId,
     contactId: sarahJohnson.id, companyId: acme.id, probability: 100,
   });
   // Mark the won deal
-  await markDealWon(userId, accountId, deal4.id, 'all');
+  await markDealWon(userId, tenantId, deal4.id, 'all');
 
   // --- Leads ---
-  await createLead(userId, accountId, {
+  await createLead(userId, tenantId, {
     name: 'TechStart Inc', email: 'info@techstart.io', phone: '+1-555-0201', source: 'website', companyName: 'TechStart Inc', notes: 'Interested in starter plan',
   });
-  await createLead(userId, accountId, {
+  await createLead(userId, tenantId, {
     name: 'Metro Solutions', email: 'sales@metrosolutions.com', phone: '+1-555-0202', source: 'referral', companyName: 'Metro Solutions', notes: 'Called, scheduling demo',
   });
-  await createLead(userId, accountId, {
+  await createLead(userId, tenantId, {
     name: 'CloudNine Labs', email: 'hello@cloudninelabs.io', phone: '+1-555-0203', source: 'social_media', companyName: 'CloudNine Labs', notes: 'Budget approved, needs proposal',
   });
-  await createLead(userId, accountId, {
+  await createLead(userId, tenantId, {
     name: 'Peak Performance', email: 'contact@peakperf.com', source: 'website', companyName: 'Peak Performance', notes: 'Filled out lead form',
   });
   // Update statuses for non-new leads
-  const allLeads = await listLeads(userId, accountId, {});
+  const allLeads = await listLeads(userId, tenantId, {});
   for (const lead of allLeads) {
     if (lead.name === 'Metro Solutions') {
-      await updateLead(userId, accountId, lead.id, { status: 'contacted' });
+      await updateLead(userId, tenantId, lead.id, { status: 'contacted' });
     } else if (lead.name === 'CloudNine Labs') {
-      await updateLead(userId, accountId, lead.id, { status: 'qualified' });
+      await updateLead(userId, tenantId, lead.id, { status: 'qualified' });
     }
   }
 
   // --- Activities ---
-  await createActivity(userId, accountId, {
+  await createActivity(userId, tenantId, {
     type: 'call', body: 'Discussed enterprise requirements', contactId: johnSmith.id, dealId: deal1.id,
   });
-  await createActivity(userId, accountId, {
+  await createActivity(userId, tenantId, {
     type: 'meeting', body: 'Product demo scheduled', contactId: michaelChen.id,
   });
-  await createActivity(userId, accountId, {
+  await createActivity(userId, tenantId, {
     type: 'note', body: 'Waiting for creative brief', dealId: deal3.id,
   });
-  await createActivity(userId, accountId, {
+  await createActivity(userId, tenantId, {
     type: 'email', body: 'Sent proposal deck', contactId: lisaAnderson.id,
   });
 
-  logger.info({ userId, accountId }, 'Seeded CRM sample data (stages, companies, contacts, deals, leads, activities)');
+  logger.info({ userId, tenantId }, 'Seeded CRM sample data (stages, companies, contacts, deals, leads, activities)');
   return { stages: stages.length, companies: 3, contacts: 6, deals: 4, leads: 4, activities: 4 };
 }
