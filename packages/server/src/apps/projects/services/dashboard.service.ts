@@ -6,7 +6,7 @@ import { eq, and, asc, desc, gte, lte, sql } from 'drizzle-orm';
 
 // ─── Widget ─────────────────────────────────────────────────────────
 
-export async function getWidgetData(accountId: string) {
+export async function getWidgetData(tenantId: string) {
   const now = new Date();
   const weekStart = new Date(now);
   const day = weekStart.getDay();
@@ -21,7 +21,7 @@ export async function getWidgetData(accountId: string) {
     db.select({ count: sql<number>`COUNT(*)`.as('count') })
       .from(projectProjects)
       .where(and(
-        eq(projectProjects.accountId, accountId),
+        eq(projectProjects.tenantId, tenantId),
         eq(projectProjects.isArchived, false),
         eq(projectProjects.status, 'active'),
       )),
@@ -32,7 +32,7 @@ export async function getWidgetData(accountId: string) {
     })
       .from(projectTimeEntries)
       .where(and(
-        eq(projectTimeEntries.accountId, accountId),
+        eq(projectTimeEntries.tenantId, tenantId),
         eq(projectTimeEntries.isArchived, false),
         gte(projectTimeEntries.workDate, weekStartStr),
         lte(projectTimeEntries.workDate, todayStr),
@@ -44,7 +44,7 @@ export async function getWidgetData(accountId: string) {
     })
       .from(projectInvoices)
       .where(and(
-        eq(projectInvoices.accountId, accountId),
+        eq(projectInvoices.tenantId, tenantId),
         eq(projectInvoices.isArchived, false),
         sql`${projectInvoices.status} IN ('sent', 'viewed', 'overdue')`,
       )),
@@ -53,7 +53,7 @@ export async function getWidgetData(accountId: string) {
     db.select({ count: sql<number>`COUNT(*)`.as('count') })
       .from(projectInvoices)
       .where(and(
-        eq(projectInvoices.accountId, accountId),
+        eq(projectInvoices.tenantId, tenantId),
         eq(projectInvoices.isArchived, false),
         eq(projectInvoices.status, 'overdue'),
       )),
@@ -74,7 +74,7 @@ export async function getWidgetData(accountId: string) {
 
 // ─── Enhanced Dashboard ─────────────────────────────────────────────
 
-export async function getDashboardData(userId: string, accountId: string) {
+export async function getDashboardData(userId: string, tenantId: string) {
   const now = new Date();
   const weekStart = new Date(now);
   const day = weekStart.getDay();
@@ -101,7 +101,7 @@ export async function getDashboardData(userId: string, accountId: string) {
     db.select({ count: sql<number>`COUNT(*)`.as('count') })
       .from(projectProjects)
       .where(and(
-        eq(projectProjects.accountId, accountId),
+        eq(projectProjects.tenantId, tenantId),
         eq(projectProjects.isArchived, false),
         eq(projectProjects.status, 'active'),
       )),
@@ -112,7 +112,7 @@ export async function getDashboardData(userId: string, accountId: string) {
     })
       .from(projectTimeEntries)
       .where(and(
-        eq(projectTimeEntries.accountId, accountId),
+        eq(projectTimeEntries.tenantId, tenantId),
         eq(projectTimeEntries.isArchived, false),
         gte(projectTimeEntries.workDate, weekStartStr),
         lte(projectTimeEntries.workDate, todayStr),
@@ -125,7 +125,7 @@ export async function getDashboardData(userId: string, accountId: string) {
     })
       .from(projectInvoices)
       .where(and(
-        eq(projectInvoices.accountId, accountId),
+        eq(projectInvoices.tenantId, tenantId),
         eq(projectInvoices.isArchived, false),
         sql`${projectInvoices.status} IN ('sent', 'viewed', 'overdue')`,
       )),
@@ -137,7 +137,7 @@ export async function getDashboardData(userId: string, accountId: string) {
     })
       .from(projectInvoices)
       .where(and(
-        eq(projectInvoices.accountId, accountId),
+        eq(projectInvoices.tenantId, tenantId),
         eq(projectInvoices.isArchived, false),
         eq(projectInvoices.status, 'overdue'),
       )),
@@ -150,7 +150,7 @@ export async function getDashboardData(userId: string, accountId: string) {
     })
       .from(projectInvoices)
       .where(and(
-        eq(projectInvoices.accountId, accountId),
+        eq(projectInvoices.tenantId, tenantId),
         eq(projectInvoices.isArchived, false),
       )),
 
@@ -161,7 +161,7 @@ export async function getDashboardData(userId: string, accountId: string) {
     })
       .from(projectTimeEntries)
       .where(and(
-        eq(projectTimeEntries.accountId, accountId),
+        eq(projectTimeEntries.tenantId, tenantId),
         eq(projectTimeEntries.isArchived, false),
         gte(projectTimeEntries.workDate, weekStartStr),
         lte(projectTimeEntries.workDate, weekEndStr),
@@ -183,7 +183,7 @@ export async function getDashboardData(userId: string, accountId: string) {
       .from(projectTimeEntries)
       .innerJoin(projectProjects, eq(projectTimeEntries.projectId, projectProjects.id))
       .where(and(
-        eq(projectTimeEntries.accountId, accountId),
+        eq(projectTimeEntries.tenantId, tenantId),
         eq(projectTimeEntries.isArchived, false),
       ))
       .orderBy(desc(projectTimeEntries.createdAt))
@@ -201,7 +201,7 @@ export async function getDashboardData(userId: string, accountId: string) {
       .from(projectInvoices)
       .leftJoin(projectClients, eq(projectInvoices.clientId, projectClients.id))
       .where(and(
-        eq(projectInvoices.accountId, accountId),
+        eq(projectInvoices.tenantId, tenantId),
         eq(projectInvoices.isArchived, false),
       ))
       .orderBy(desc(projectInvoices.updatedAt))
@@ -213,7 +213,7 @@ export async function getDashboardData(userId: string, accountId: string) {
     })
       .from(projectTimeEntries)
       .where(and(
-        eq(projectTimeEntries.accountId, accountId),
+        eq(projectTimeEntries.tenantId, tenantId),
         eq(projectTimeEntries.isArchived, false),
         eq(projectTimeEntries.billable, true),
         sql`NOT EXISTS (SELECT 1 FROM project_invoice_line_items pli WHERE pli.time_entry_id = ${projectTimeEntries.id})`,

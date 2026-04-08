@@ -27,7 +27,7 @@ interface UpdateTimeEntryInput extends Partial<CreateTimeEntryInput> {
 
 // ─── Time Entries ───────────────────────────────────────────────────
 
-export async function listTimeEntries(userId: string, accountId: string, filters?: {
+export async function listTimeEntries(userId: string, tenantId: string, filters?: {
   projectId?: string;
   startDate?: string;
   endDate?: string;
@@ -37,7 +37,7 @@ export async function listTimeEntries(userId: string, accountId: string, filters
   includeArchived?: boolean;
   isAdmin?: boolean;
 }) {
-  const conditions = [eq(projectTimeEntries.accountId, accountId)];
+  const conditions = [eq(projectTimeEntries.tenantId, tenantId)];
 
   // Non-admin users can only see their own time entries
   if (!filters?.isAdmin) {
@@ -68,7 +68,7 @@ export async function listTimeEntries(userId: string, accountId: string, filters
   return db
     .select({
       id: projectTimeEntries.id,
-      accountId: projectTimeEntries.accountId,
+      tenantId: projectTimeEntries.tenantId,
       userId: projectTimeEntries.userId,
       projectId: projectTimeEntries.projectId,
       durationMinutes: projectTimeEntries.durationMinutes,
@@ -96,11 +96,11 @@ export async function listTimeEntries(userId: string, accountId: string, filters
     .orderBy(desc(projectTimeEntries.workDate), desc(projectTimeEntries.createdAt));
 }
 
-export async function getTimeEntry(userId: string, accountId: string, id: string) {
+export async function getTimeEntry(userId: string, tenantId: string, id: string) {
   const [entry] = await db
     .select({
       id: projectTimeEntries.id,
-      accountId: projectTimeEntries.accountId,
+      tenantId: projectTimeEntries.tenantId,
       userId: projectTimeEntries.userId,
       projectId: projectTimeEntries.projectId,
       durationMinutes: projectTimeEntries.durationMinutes,
@@ -124,25 +124,25 @@ export async function getTimeEntry(userId: string, accountId: string, id: string
     .from(projectTimeEntries)
     .innerJoin(projectProjects, eq(projectTimeEntries.projectId, projectProjects.id))
     .innerJoin(users, eq(projectTimeEntries.userId, users.id))
-    .where(and(eq(projectTimeEntries.id, id), eq(projectTimeEntries.accountId, accountId)))
+    .where(and(eq(projectTimeEntries.id, id), eq(projectTimeEntries.tenantId, tenantId)))
     .limit(1);
 
   return entry || null;
 }
 
-export async function createTimeEntry(userId: string, accountId: string, input: CreateTimeEntryInput) {
+export async function createTimeEntry(userId: string, tenantId: string, input: CreateTimeEntryInput) {
   const now = new Date();
   const [maxSort] = await db
     .select({ max: sql<number>`COALESCE(MAX(${projectTimeEntries.sortOrder}), -1)` })
     .from(projectTimeEntries)
-    .where(eq(projectTimeEntries.accountId, accountId));
+    .where(eq(projectTimeEntries.tenantId, tenantId));
 
   const sortOrder = (maxSort?.max ?? -1) + 1;
 
   const [created] = await db
     .insert(projectTimeEntries)
     .values({
-      accountId,
+      tenantId,
       userId,
       projectId: input.projectId,
       durationMinutes: input.durationMinutes,
@@ -162,9 +162,9 @@ export async function createTimeEntry(userId: string, accountId: string, input: 
   return created;
 }
 
-export async function updateTimeEntry(userId: string, accountId: string, id: string, input: UpdateTimeEntryInput) {
+export async function updateTimeEntry(userId: string, tenantId: string, id: string, input: UpdateTimeEntryInput) {
   // Check if the entry is locked before allowing edits
-  const existing = await getTimeEntry(userId, accountId, id);
+  const existing = await getTimeEntry(userId, tenantId, id);
   if (!existing) return null;
   if (existing.locked) {
     throw new Error('Cannot edit a locked time entry');
@@ -186,7 +186,7 @@ export async function updateTimeEntry(userId: string, accountId: string, id: str
   if (input.sortOrder !== undefined) updates.sortOrder = input.sortOrder;
   if (input.isArchived !== undefined) updates.isArchived = input.isArchived;
 
-  const conditions = [eq(projectTimeEntries.id, id), eq(projectTimeEntries.accountId, accountId)];
+  const conditions = [eq(projectTimeEntries.id, id), eq(projectTimeEntries.tenantId, tenantId)];
 
   const [updated] = await db
     .update(projectTimeEntries)
@@ -197,22 +197,22 @@ export async function updateTimeEntry(userId: string, accountId: string, id: str
   return updated || null;
 }
 
-export async function deleteTimeEntry(userId: string, accountId: string, id: string) {
-  await updateTimeEntry(userId, accountId, id, { isArchived: true });
+export async function deleteTimeEntry(userId: string, tenantId: string, id: string) {
+  await updateTimeEntry(userId, tenantId, id, { isArchived: true });
 }
 
-export async function bulkLockEntries(userId: string, accountId: string, entryIds: string[], locked: boolean) {
+export async function bulkLockEntries(userId: string, tenantId: string, entryIds: string[], locked: boolean) {
   const now = new Date();
   await db
     .update(projectTimeEntries)
     .set({ locked, updatedAt: now })
     .where(and(
-      eq(projectTimeEntries.accountId, accountId),
+      eq(projectTimeEntries.tenantId, tenantId),
       inArray(projectTimeEntries.id, entryIds),
     ));
 }
 
-export async function getWeeklyView(userId: string, accountId: string, weekStart: string) {
+export async function getWeeklyView(userId: string, tenantId: string, weekStart: string) {
   // weekStart is a YYYY-MM-DD string for Monday of the week
   const startDate = new Date(weekStart);
   const endDate = new Date(startDate);
@@ -239,7 +239,7 @@ export async function getWeeklyView(userId: string, accountId: string, weekStart
     .from(projectTimeEntries)
     .innerJoin(projectProjects, eq(projectTimeEntries.projectId, projectProjects.id))
     .where(and(
-      eq(projectTimeEntries.accountId, accountId),
+      eq(projectTimeEntries.tenantId, tenantId),
       eq(projectTimeEntries.userId, userId),
       eq(projectTimeEntries.isArchived, false),
       gte(projectTimeEntries.workDate, weekStart),
@@ -252,7 +252,7 @@ export async function getWeeklyView(userId: string, accountId: string, weekStart
 
 export async function bulkSaveTimeEntries(
   userId: string,
-  accountId: string,
+  tenantId: string,
   entries: Array<{ projectId: string; date: string; hours: number; description?: string | null; isBillable?: boolean }>,
 ) {
   const now = new Date();
@@ -265,7 +265,7 @@ export async function bulkSaveTimeEntries(
         .delete(projectTimeEntries)
         .where(and(
           eq(projectTimeEntries.userId, userId),
-          eq(projectTimeEntries.accountId, accountId),
+          eq(projectTimeEntries.tenantId, tenantId),
           eq(projectTimeEntries.workDate, date),
           eq(projectTimeEntries.locked, false),
         ));
@@ -280,7 +280,7 @@ export async function bulkSaveTimeEntries(
     const [row] = await db
       .insert(projectTimeEntries)
       .values({
-        accountId,
+        tenantId,
         userId,
         projectId: entry.projectId,
         durationMinutes,
@@ -303,7 +303,7 @@ export async function bulkSaveTimeEntries(
 
 export async function copyLastWeek(
   userId: string,
-  accountId: string,
+  tenantId: string,
   weekStart: string,
 ) {
   // Calculate previous week start
@@ -321,7 +321,7 @@ export async function copyLastWeek(
     .from(projectTimeEntries)
     .where(and(
       eq(projectTimeEntries.userId, userId),
-      eq(projectTimeEntries.accountId, accountId),
+      eq(projectTimeEntries.tenantId, tenantId),
       eq(projectTimeEntries.isArchived, false),
       gte(projectTimeEntries.workDate, prevStartStr),
       lte(projectTimeEntries.workDate, prevEndStr),
@@ -339,7 +339,7 @@ export async function copyLastWeek(
     const [row] = await db
       .insert(projectTimeEntries)
       .values({
-        accountId,
+        tenantId,
         userId,
         projectId: entry.projectId,
         durationMinutes: entry.durationMinutes,

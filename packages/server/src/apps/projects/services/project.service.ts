@@ -27,13 +27,13 @@ interface UpdateProjectInput extends Partial<CreateProjectInput> {
 
 // ─── Projects ───────────────────────────────────────────────────────
 
-export async function listProjects(userId: string, accountId: string, filters?: {
+export async function listProjects(userId: string, tenantId: string, filters?: {
   search?: string;
   clientId?: string;
   status?: string;
   includeArchived?: boolean;
 }) {
-  const conditions = [eq(projectProjects.accountId, accountId)];
+  const conditions = [eq(projectProjects.tenantId, tenantId)];
   if (!filters?.includeArchived) {
     conditions.push(eq(projectProjects.isArchived, false));
   }
@@ -51,7 +51,7 @@ export async function listProjects(userId: string, accountId: string, filters?: 
   return db
     .select({
       id: projectProjects.id,
-      accountId: projectProjects.accountId,
+      tenantId: projectProjects.tenantId,
       userId: projectProjects.userId,
       clientId: projectProjects.clientId,
       name: projectProjects.name,
@@ -78,11 +78,11 @@ export async function listProjects(userId: string, accountId: string, filters?: 
     .orderBy(asc(projectProjects.sortOrder), asc(projectProjects.createdAt));
 }
 
-export async function getProject(userId: string, accountId: string, id: string) {
+export async function getProject(userId: string, tenantId: string, id: string) {
   const [project] = await db
     .select({
       id: projectProjects.id,
-      accountId: projectProjects.accountId,
+      tenantId: projectProjects.tenantId,
       userId: projectProjects.userId,
       clientId: projectProjects.clientId,
       name: projectProjects.name,
@@ -104,25 +104,25 @@ export async function getProject(userId: string, accountId: string, id: string) 
     })
     .from(projectProjects)
     .leftJoin(projectClients, eq(projectProjects.clientId, projectClients.id))
-    .where(and(eq(projectProjects.id, id), eq(projectProjects.accountId, accountId)))
+    .where(and(eq(projectProjects.id, id), eq(projectProjects.tenantId, tenantId)))
     .limit(1);
 
   return project || null;
 }
 
-export async function createProject(userId: string, accountId: string, input: CreateProjectInput) {
+export async function createProject(userId: string, tenantId: string, input: CreateProjectInput) {
   const now = new Date();
   const [maxSort] = await db
     .select({ max: sql<number>`COALESCE(MAX(${projectProjects.sortOrder}), -1)` })
     .from(projectProjects)
-    .where(eq(projectProjects.accountId, accountId));
+    .where(eq(projectProjects.tenantId, tenantId));
 
   const sortOrder = (maxSort?.max ?? -1) + 1;
 
   const [created] = await db
     .insert(projectProjects)
     .values({
-      accountId,
+      tenantId,
       userId,
       clientId: input.clientId ?? null,
       name: input.name,
@@ -144,7 +144,7 @@ export async function createProject(userId: string, accountId: string, input: Cr
   return created;
 }
 
-export async function updateProject(userId: string, accountId: string, id: string, input: UpdateProjectInput) {
+export async function updateProject(userId: string, tenantId: string, id: string, input: UpdateProjectInput) {
   const now = new Date();
   const updates: Record<string, unknown> = { updatedAt: now };
 
@@ -161,7 +161,7 @@ export async function updateProject(userId: string, accountId: string, id: strin
   if (input.sortOrder !== undefined) updates.sortOrder = input.sortOrder;
   if (input.isArchived !== undefined) updates.isArchived = input.isArchived;
 
-  const conditions = [eq(projectProjects.id, id), eq(projectProjects.accountId, accountId)];
+  const conditions = [eq(projectProjects.id, id), eq(projectProjects.tenantId, tenantId)];
 
   const [updated] = await db
     .update(projectProjects)
@@ -172,13 +172,13 @@ export async function updateProject(userId: string, accountId: string, id: strin
   return updated ?? null;
 }
 
-export async function deleteProject(userId: string, accountId: string, id: string) {
-  await updateProject(userId, accountId, id, { isArchived: true });
+export async function deleteProject(userId: string, tenantId: string, id: string) {
+  await updateProject(userId, tenantId, id, { isArchived: true });
 }
 
 // ─── Members ────────────────────────────────────────────────────────
 
-export async function listProjectMembers(userId: string, accountId: string, projectId: string) {
+export async function listProjectMembers(userId: string, tenantId: string, projectId: string) {
   return db
     .select({
       id: projectMembers.id,

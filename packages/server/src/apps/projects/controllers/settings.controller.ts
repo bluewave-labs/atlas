@@ -13,8 +13,8 @@ export async function getWidgetData(req: Request, res: Response) {
       return;
     }
 
-    const accountId = req.auth!.accountId;
-    const data = await projectService.getWidgetData(accountId);
+    const tenantId = req.auth!.tenantId;
+    const data = await projectService.getWidgetData(tenantId);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to get Projects widget data');
@@ -31,8 +31,8 @@ export async function getDashboardData(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
-    const data = await projectService.getDashboardData(userId, accountId);
+    const tenantId = req.auth!.tenantId;
+    const data = await projectService.getDashboardData(userId, tenantId);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to get Projects dashboard data');
@@ -50,8 +50,8 @@ export async function getSettings(req: Request, res: Response) {
       return;
     }
 
-    const accountId = req.auth!.accountId;
-    const settings = await projectService.getSettings(accountId);
+    const tenantId = req.auth!.tenantId;
+    const settings = await projectService.getSettings(tenantId);
     res.json({ success: true, data: settings });
   } catch (error) {
     logger.error({ error }, 'Failed to get project settings');
@@ -67,10 +67,10 @@ export async function updateSettings(req: Request, res: Response) {
       return;
     }
 
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { invoicePrefix, defaultHourlyRate, companyName, companyAddress, companyLogo, nextInvoiceNumber, eFaturaEnabled, companyTaxId, companyTaxOffice, companyCity, companyCountry } = req.body;
 
-    const settings = await projectService.updateSettings(accountId, {
+    const settings = await projectService.updateSettings(tenantId, {
       invoicePrefix, defaultHourlyRate, companyName, companyAddress, companyLogo, nextInvoiceNumber, eFaturaEnabled, companyTaxId, companyTaxOffice, companyCity, companyCountry,
     });
 
@@ -86,8 +86,8 @@ export async function updateSettings(req: Request, res: Response) {
 export async function seedSampleData(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
-    const result = await projectService.seedSampleData(userId, accountId);
+    const tenantId = req.auth!.tenantId;
+    const result = await projectService.seedSampleData(userId, tenantId);
     res.json({ success: true, data: { message: 'Seeded Projects sample data', ...result } });
   } catch (error) {
     logger.error({ error }, 'Failed to seed Projects sample data');

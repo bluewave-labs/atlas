@@ -31,14 +31,14 @@ interface UpdateInvoiceInput extends Partial<CreateInvoiceInput> {
 
 // ─── Invoices ───────────────────────────────────────────────────────
 
-export async function listInvoices(userId: string, accountId: string, filters?: {
+export async function listInvoices(userId: string, tenantId: string, filters?: {
   clientId?: string;
   status?: string;
   search?: string;
   includeArchived?: boolean;
   isAdmin?: boolean;
 }) {
-  const conditions = [eq(projectInvoices.accountId, accountId)];
+  const conditions = [eq(projectInvoices.tenantId, tenantId)];
 
   // Non-admin users can only see invoices they created
   if (!filters?.isAdmin) {
@@ -61,7 +61,7 @@ export async function listInvoices(userId: string, accountId: string, filters?: 
   return db
     .select({
       id: projectInvoices.id,
-      accountId: projectInvoices.accountId,
+      tenantId: projectInvoices.tenantId,
       userId: projectInvoices.userId,
       clientId: projectInvoices.clientId,
       invoiceNumber: projectInvoices.invoiceNumber,
@@ -93,11 +93,11 @@ export async function listInvoices(userId: string, accountId: string, filters?: 
     .orderBy(desc(projectInvoices.createdAt));
 }
 
-export async function getInvoice(userId: string, accountId: string, id: string) {
+export async function getInvoice(userId: string, tenantId: string, id: string) {
   const [invoice] = await db
     .select({
       id: projectInvoices.id,
-      accountId: projectInvoices.accountId,
+      tenantId: projectInvoices.tenantId,
       userId: projectInvoices.userId,
       clientId: projectInvoices.clientId,
       invoiceNumber: projectInvoices.invoiceNumber,
@@ -124,7 +124,7 @@ export async function getInvoice(userId: string, accountId: string, id: string) 
     })
     .from(projectInvoices)
     .leftJoin(projectClients, eq(projectInvoices.clientId, projectClients.id))
-    .where(and(eq(projectInvoices.id, id), eq(projectInvoices.accountId, accountId)))
+    .where(and(eq(projectInvoices.id, id), eq(projectInvoices.tenantId, tenantId)))
     .limit(1);
 
   if (!invoice) return null;
@@ -139,21 +139,21 @@ export async function getInvoice(userId: string, accountId: string, id: string) 
   return { ...invoice, lineItems };
 }
 
-export async function getNextInvoiceNumber(accountId: string): Promise<string> {
+export async function getNextInvoiceNumber(tenantId: string): Promise<string> {
   // Read the prefix first (needed for formatting)
-  const settings = await getSettings(accountId);
+  const settings = await getSettings(tenantId);
   const prefix = settings?.invoicePrefix || 'INV';
 
   // Atomically increment and return the number in a single query to avoid race conditions
   const [updated] = await db
     .update(projectSettings)
     .set({ nextInvoiceNumber: sql`COALESCE(${projectSettings.nextInvoiceNumber}, 1) + 1`, updatedAt: new Date() })
-    .where(eq(projectSettings.accountId, accountId))
+    .where(eq(projectSettings.tenantId, tenantId))
     .returning({ num: projectSettings.nextInvoiceNumber });
 
   if (!updated) {
     // No settings row exists yet -- create one with nextInvoiceNumber = 2 (we use 1 now)
-    await db.insert(projectSettings).values({ accountId, nextInvoiceNumber: 2 }).onConflictDoNothing();
+    await db.insert(projectSettings).values({ tenantId, nextInvoiceNumber: 2 }).onConflictDoNothing();
     return `${prefix}-${String(1).padStart(3, '0')}`;
   }
 
@@ -162,14 +162,14 @@ export async function getNextInvoiceNumber(accountId: string): Promise<string> {
   return `${prefix}-${String(num).padStart(3, '0')}`;
 }
 
-export async function createInvoice(userId: string, accountId: string, input: CreateInvoiceInput) {
+export async function createInvoice(userId: string, tenantId: string, input: CreateInvoiceInput) {
   const now = new Date();
-  const invoiceNumber = input.invoiceNumber || await getNextInvoiceNumber(accountId);
+  const invoiceNumber = input.invoiceNumber || await getNextInvoiceNumber(tenantId);
 
   const [created] = await db
     .insert(projectInvoices)
     .values({
-      accountId,
+      tenantId,
       userId,
       clientId: input.clientId,
       invoiceNumber,
@@ -192,7 +192,7 @@ export async function createInvoice(userId: string, accountId: string, input: Cr
   return created;
 }
 
-export async function updateInvoice(userId: string, accountId: string, id: string, input: UpdateInvoiceInput) {
+export async function updateInvoice(userId: string, tenantId: string, id: string, input: UpdateInvoiceInput) {
   const now = new Date();
   const updates: Record<string, unknown> = { updatedAt: now };
 
@@ -210,7 +210,7 @@ export async function updateInvoice(userId: string, accountId: string, id: strin
   if (input.notes !== undefined) updates.notes = input.notes;
   if (input.isArchived !== undefined) updates.isArchived = input.isArchived;
 
-  const conditions = [eq(projectInvoices.id, id), eq(projectInvoices.accountId, accountId)];
+  const conditions = [eq(projectInvoices.id, id), eq(projectInvoices.tenantId, tenantId)];
 
   const [updated] = await db
     .update(projectInvoices)
@@ -221,7 +221,7 @@ export async function updateInvoice(userId: string, accountId: string, id: strin
   return updated ?? null;
 }
 
-export async function deleteInvoice(userId: string, accountId: string, id: string) {
+export async function deleteInvoice(userId: string, tenantId: string, id: string) {
   // When an invoice is deleted, unmark all linked time entries
   const lineItems = await db
     .select({ timeEntryId: projectInvoiceLineItems.timeEntryId })
@@ -239,54 +239,54 @@ export async function deleteInvoice(userId: string, accountId: string, id: strin
       .where(inArray(projectTimeEntries.id, timeEntryIds));
   }
 
-  await updateInvoice(userId, accountId, id, { isArchived: true });
+  await updateInvoice(userId, tenantId, id, { isArchived: true });
 }
 
-export async function sendInvoice(userId: string, accountId: string, id: string) {
+export async function sendInvoice(userId: string, tenantId: string, id: string) {
   const now = new Date();
   const [invoice] = await db
     .update(projectInvoices)
     .set({ status: 'sent', sentAt: now, updatedAt: now })
-    .where(and(eq(projectInvoices.id, id), eq(projectInvoices.accountId, accountId)))
+    .where(and(eq(projectInvoices.id, id), eq(projectInvoices.tenantId, tenantId)))
     .returning();
 
   return invoice ?? null;
 }
 
-export async function markInvoiceViewed(accountId: string, id: string) {
+export async function markInvoiceViewed(tenantId: string, id: string) {
   const now = new Date();
   await db
     .update(projectInvoices)
     .set({ status: 'viewed', viewedAt: now, updatedAt: now })
     .where(and(
       eq(projectInvoices.id, id),
-      eq(projectInvoices.accountId, accountId),
+      eq(projectInvoices.tenantId, tenantId),
       sql`${projectInvoices.viewedAt} IS NULL`,
     ));
 }
 
-export async function markInvoicePaid(userId: string, accountId: string, id: string) {
+export async function markInvoicePaid(userId: string, tenantId: string, id: string) {
   const now = new Date();
   const [invoice] = await db
     .update(projectInvoices)
     .set({ status: 'paid', paidAt: now, updatedAt: now })
-    .where(and(eq(projectInvoices.id, id), eq(projectInvoices.accountId, accountId)))
+    .where(and(eq(projectInvoices.id, id), eq(projectInvoices.tenantId, tenantId)))
     .returning();
 
   return invoice ?? null;
 }
 
-export async function duplicateInvoice(userId: string, accountId: string, id: string) {
-  const existing = await getInvoice(userId, accountId, id);
+export async function duplicateInvoice(userId: string, tenantId: string, id: string) {
+  const existing = await getInvoice(userId, tenantId, id);
   if (!existing) return null;
 
-  const invoiceNumber = await getNextInvoiceNumber(accountId);
+  const invoiceNumber = await getNextInvoiceNumber(tenantId);
   const now = new Date();
 
   const [newInvoice] = await db
     .insert(projectInvoices)
     .values({
-      accountId,
+      tenantId,
       userId,
       clientId: existing.clientId,
       invoiceNumber,
@@ -321,13 +321,13 @@ export async function duplicateInvoice(userId: string, accountId: string, id: st
   return newInvoice;
 }
 
-export async function waiveInvoice(userId: string, accountId: string, id: string) {
+export async function waiveInvoice(userId: string, tenantId: string, id: string) {
   const [invoice] = await db
     .update(projectInvoices)
     .set({ status: 'waived', updatedAt: new Date() })
     .where(and(
       eq(projectInvoices.id, id),
-      eq(projectInvoices.accountId, accountId),
+      eq(projectInvoices.tenantId, tenantId),
       eq(projectInvoices.isArchived, false),
     ))
     .returning();

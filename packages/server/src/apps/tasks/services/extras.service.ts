@@ -67,7 +67,7 @@ export async function listTemplates(userId: string) {
     .orderBy(asc(taskTemplates.sortOrder));
 }
 
-export async function createTemplate(userId: string, accountId: string, input: {
+export async function createTemplate(userId: string, tenantId: string, input: {
   title: string; description?: string | null; icon?: string | null;
   defaultWhen?: string; defaultPriority?: string; defaultTags?: string[]; subtaskTitles?: string[];
 }) {
@@ -75,7 +75,7 @@ export async function createTemplate(userId: string, accountId: string, input: {
   const [maxSort] = await db.select({ max: sql<number>`COALESCE(MAX(${taskTemplates.sortOrder}), -1)` })
     .from(taskTemplates).where(eq(taskTemplates.userId, userId));
   const [created] = await db.insert(taskTemplates).values({
-    userId, accountId,
+    userId, tenantId,
     title: input.title, description: input.description ?? null, icon: input.icon ?? null,
     defaultWhen: input.defaultWhen ?? 'inbox', defaultPriority: input.defaultPriority ?? 'none',
     defaultTags: input.defaultTags ?? [], subtaskTitles: input.subtaskTitles ?? [],
@@ -103,12 +103,12 @@ export async function deleteTemplate(userId: string, templateId: string) {
   await db.delete(taskTemplates).where(and(eq(taskTemplates.id, templateId), eq(taskTemplates.userId, userId)));
 }
 
-export async function createTaskFromTemplate(userId: string, accountId: string, templateId: string) {
+export async function createTaskFromTemplate(userId: string, tenantId: string, templateId: string) {
   const [template] = await db.select().from(taskTemplates)
     .where(and(eq(taskTemplates.id, templateId), eq(taskTemplates.userId, userId))).limit(1);
   if (!template) return null;
 
-  const task = await createTask(userId, accountId, {
+  const task = await createTask(userId, tenantId, {
     title: template.title,
     when: template.defaultWhen as any,
     priority: template.defaultPriority as any,
@@ -129,7 +129,7 @@ export async function listComments(taskId: string) {
   return db
     .select({
       id: taskComments.id, taskId: taskComments.taskId,
-      accountId: taskComments.accountId, userId: taskComments.userId,
+      tenantId: taskComments.tenantId, userId: taskComments.userId,
       body: taskComments.body, userName: users.name, userEmail: users.email,
       createdAt: taskComments.createdAt, updatedAt: taskComments.updatedAt,
     })
@@ -139,17 +139,17 @@ export async function listComments(taskId: string) {
     .orderBy(asc(taskComments.createdAt));
 }
 
-export async function createComment(userId: string, accountId: string, taskId: string, body: string) {
+export async function createComment(userId: string, tenantId: string, taskId: string, body: string) {
   const now = new Date();
   const [created] = await db
     .insert(taskComments)
-    .values({ taskId, accountId, userId, body, createdAt: now, updatedAt: now })
+    .values({ taskId, tenantId, userId, body, createdAt: now, updatedAt: now })
     .returning();
 
   const [result] = await db
     .select({
       id: taskComments.id, taskId: taskComments.taskId,
-      accountId: taskComments.accountId, userId: taskComments.userId,
+      tenantId: taskComments.tenantId, userId: taskComments.userId,
       body: taskComments.body, userName: users.name, userEmail: users.email,
       createdAt: taskComments.createdAt, updatedAt: taskComments.updatedAt,
     })
@@ -181,11 +181,11 @@ export async function listAttachments(taskId: string) {
 }
 
 export async function addAttachment(
-  userId: string, accountId: string, taskId: string,
+  userId: string, tenantId: string, taskId: string,
   file: { originalname: string; path: string; mimetype: string; size: number; filename: string },
 ) {
   const [created] = await db.insert(taskAttachments).values({
-    taskId, accountId, userId,
+    taskId, tenantId, userId,
     fileName: file.originalname,
     storagePath: file.filename,
     mimeType: file.mimetype || null,

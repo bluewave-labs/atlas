@@ -106,7 +106,7 @@ export async function deleteLineItem(id: string) {
 }
 
 export async function populateFromTimeEntries(
-  accountId: string,
+  tenantId: string,
   invoiceId: string,
   clientId: string,
   startDate: string,
@@ -118,7 +118,7 @@ export async function populateFromTimeEntries(
     .from(projectProjects)
     .where(and(
       eq(projectProjects.clientId, clientId),
-      eq(projectProjects.accountId, accountId),
+      eq(projectProjects.tenantId, tenantId),
     ));
 
   const projectIds = clientProjects.map(p => p.id);
@@ -137,7 +137,7 @@ export async function populateFromTimeEntries(
     })
     .from(projectTimeEntries)
     .where(and(
-      eq(projectTimeEntries.accountId, accountId),
+      eq(projectTimeEntries.tenantId, tenantId),
       eq(projectTimeEntries.billable, true),
       eq(projectTimeEntries.billed, false),
       eq(projectTimeEntries.isArchived, false),
@@ -176,7 +176,7 @@ export async function populateFromTimeEntries(
   }
 
   // Load settings once for the default rate fallback
-  const settings = await getSettings(accountId);
+  const settings = await getSettings(tenantId);
   const defaultRate = settings?.defaultHourlyRate ?? 0;
 
   // Prepare all line items for batch insert
@@ -249,7 +249,7 @@ export async function populateFromTimeEntries(
 }
 
 export async function previewTimeEntryLineItems(
-  accountId: string,
+  tenantId: string,
   clientId: string,
   startDate: string,
   endDate: string,
@@ -260,7 +260,7 @@ export async function previewTimeEntryLineItems(
     .from(projectProjects)
     .where(and(
       eq(projectProjects.clientId, clientId),
-      eq(projectProjects.accountId, accountId),
+      eq(projectProjects.tenantId, tenantId),
     ));
 
   const projectIds = clientProjects.map(p => p.id);
@@ -279,7 +279,7 @@ export async function previewTimeEntryLineItems(
     })
     .from(projectTimeEntries)
     .where(and(
-      eq(projectTimeEntries.accountId, accountId),
+      eq(projectTimeEntries.tenantId, tenantId),
       eq(projectTimeEntries.billable, true),
       eq(projectTimeEntries.billed, false),
       eq(projectTimeEntries.isArchived, false),
@@ -316,7 +316,7 @@ export async function previewTimeEntryLineItems(
   }
 
   // Load settings once for default rate fallback
-  const settings = await getSettings(accountId);
+  const settings = await getSettings(tenantId);
   const defaultRate = settings?.defaultHourlyRate ?? 0;
 
   const lineItems = entries.map(entry => {

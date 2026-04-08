@@ -8,12 +8,12 @@ import { logger } from '../../../utils/logger';
 
 // ─── e-Fatura Service ──────────────────────────────────────────────
 
-export async function getEFaturaContext(accountId: string, invoiceId: string) {
+export async function getEFaturaContext(tenantId: string, invoiceId: string) {
   // Load invoice
   const [invoice] = await db
     .select()
     .from(projectInvoices)
-    .where(and(eq(projectInvoices.id, invoiceId), eq(projectInvoices.accountId, accountId)))
+    .where(and(eq(projectInvoices.id, invoiceId), eq(projectInvoices.tenantId, tenantId)))
     .limit(1);
 
   if (!invoice) return null;
@@ -36,14 +36,14 @@ export async function getEFaturaContext(accountId: string, invoiceId: string) {
   const [settings] = await db
     .select()
     .from(projectSettings)
-    .where(eq(projectSettings.accountId, accountId))
+    .where(eq(projectSettings.tenantId, tenantId))
     .limit(1);
 
   return { invoice, lineItems, client: client || null, settings: settings || null };
 }
 
-export async function generateEFatura(accountId: string, invoiceId: string, eFaturaType?: string) {
-  const ctx = await getEFaturaContext(accountId, invoiceId);
+export async function generateEFatura(tenantId: string, invoiceId: string, eFaturaType?: string) {
+  const ctx = await getEFaturaContext(tenantId, invoiceId);
   if (!ctx) return null;
 
   const { invoice, lineItems, client, settings } = ctx;
@@ -83,7 +83,7 @@ export async function generateEFatura(accountId: string, invoiceId: string, eFat
       eFaturaXml: xml,
       updatedAt: now,
     })
-    .where(and(eq(projectInvoices.id, invoiceId), eq(projectInvoices.accountId, accountId)))
+    .where(and(eq(projectInvoices.id, invoiceId), eq(projectInvoices.tenantId, tenantId)))
     .returning();
 
   logger.info({ invoiceId, eFaturaUuid }, 'e-Fatura XML generated');
@@ -91,18 +91,18 @@ export async function generateEFatura(accountId: string, invoiceId: string, eFat
   return updated;
 }
 
-export async function getEFaturaXml(accountId: string, invoiceId: string): Promise<string | null> {
+export async function getEFaturaXml(tenantId: string, invoiceId: string): Promise<string | null> {
   const [invoice] = await db
     .select({ eFaturaXml: projectInvoices.eFaturaXml })
     .from(projectInvoices)
-    .where(and(eq(projectInvoices.id, invoiceId), eq(projectInvoices.accountId, accountId)))
+    .where(and(eq(projectInvoices.id, invoiceId), eq(projectInvoices.tenantId, tenantId)))
     .limit(1);
 
   return invoice?.eFaturaXml || null;
 }
 
-export async function getEFaturaPreviewHtml(accountId: string, invoiceId: string): Promise<string | null> {
-  const ctx = await getEFaturaContext(accountId, invoiceId);
+export async function getEFaturaPreviewHtml(tenantId: string, invoiceId: string): Promise<string | null> {
+  const ctx = await getEFaturaContext(tenantId, invoiceId);
   if (!ctx) return null;
 
   const { invoice, lineItems, client, settings } = ctx;

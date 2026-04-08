@@ -14,11 +14,11 @@ export async function listTimeEntries(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { projectId, startDate, endDate, billed, billable, entryUserId, includeArchived } = req.query;
 
     const isAdmin = perm.role === 'admin' || perm.role === 'manager';
-    const entries = await projectService.listTimeEntries(userId, accountId, {
+    const entries = await projectService.listTimeEntries(userId, tenantId, {
       projectId: projectId as string | undefined,
       startDate: startDate as string | undefined,
       endDate: endDate as string | undefined,
@@ -45,10 +45,10 @@ export async function getTimeEntry(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const entry = await projectService.getTimeEntry(userId, accountId, id);
+    const entry = await projectService.getTimeEntry(userId, tenantId, id);
     if (!entry) {
       res.status(404).json({ success: false, error: 'Time entry not found' });
       return;
@@ -70,7 +70,7 @@ export async function createTimeEntry(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { projectId, durationMinutes, workDate, startTime, endTime, billable, notes, taskDescription } = req.body;
 
     if (!projectId || !workDate) {
@@ -78,7 +78,7 @@ export async function createTimeEntry(req: Request, res: Response) {
       return;
     }
 
-    const entry = await projectService.createTimeEntry(userId, accountId, {
+    const entry = await projectService.createTimeEntry(userId, tenantId, {
       projectId, durationMinutes: durationMinutes || 0, workDate, startTime, endTime, billable, notes, taskDescription,
     });
 
@@ -98,11 +98,11 @@ export async function updateTimeEntry(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
     const { projectId, durationMinutes, workDate, startTime, endTime, billable, billed, locked, notes, taskDescription, sortOrder, isArchived } = req.body;
 
-    const entry = await projectService.updateTimeEntry(userId, accountId, id, {
+    const entry = await projectService.updateTimeEntry(userId, tenantId, id, {
       projectId, durationMinutes, workDate, startTime, endTime, billable, billed, locked, notes, taskDescription, sortOrder, isArchived,
     });
 
@@ -131,10 +131,10 @@ export async function deleteTimeEntry(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    await projectService.deleteTimeEntry(userId, accountId, id);
+    await projectService.deleteTimeEntry(userId, tenantId, id);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete time entry');
@@ -151,7 +151,7 @@ export async function bulkLockEntries(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { entryIds, locked } = req.body;
 
     if (!Array.isArray(entryIds) || entryIds.length === 0) {
@@ -159,7 +159,7 @@ export async function bulkLockEntries(req: Request, res: Response) {
       return;
     }
 
-    await projectService.bulkLockEntries(userId, accountId, entryIds, locked ?? true);
+    await projectService.bulkLockEntries(userId, tenantId, entryIds, locked ?? true);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to bulk lock entries');
@@ -176,7 +176,7 @@ export async function getWeeklyView(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const weekStart = req.query.weekStart as string;
 
     if (!weekStart) {
@@ -184,7 +184,7 @@ export async function getWeeklyView(req: Request, res: Response) {
       return;
     }
 
-    const entries = await projectService.getWeeklyView(userId, accountId, weekStart);
+    const entries = await projectService.getWeeklyView(userId, tenantId, weekStart);
     res.json({ success: true, data: { entries } });
   } catch (error) {
     logger.error({ error }, 'Failed to get weekly view');
@@ -203,7 +203,7 @@ export async function bulkSaveTimeEntries(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { entries } = req.body;
 
     if (!Array.isArray(entries)) {
@@ -211,7 +211,7 @@ export async function bulkSaveTimeEntries(req: Request, res: Response) {
       return;
     }
 
-    const created = await projectService.bulkSaveTimeEntries(userId, accountId, entries);
+    const created = await projectService.bulkSaveTimeEntries(userId, tenantId, entries);
     res.json({ success: true, data: created });
   } catch (error) {
     logger.error({ error }, 'Failed to bulk save time entries');
@@ -228,7 +228,7 @@ export async function copyLastWeek(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { weekStart } = req.body;
 
     if (!weekStart) {
@@ -236,7 +236,7 @@ export async function copyLastWeek(req: Request, res: Response) {
       return;
     }
 
-    const created = await projectService.copyLastWeek(userId, accountId, weekStart);
+    const created = await projectService.copyLastWeek(userId, tenantId, weekStart);
     res.json({ success: true, data: created });
   } catch (error) {
     logger.error({ error }, 'Failed to copy last week entries');

@@ -86,12 +86,12 @@ export async function createTask(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { title, notes, description, icon, type, headingId, projectId, when, priority, dueDate, tags, recurrenceRule, assigneeId, visibility } = req.body;
 
-    const task = await taskService.createTask(userId, accountId, {
+    const task = await taskService.createTask(userId, tenantId, {
       title, notes, description, icon, type, headingId, projectId, when, priority, dueDate, tags, recurrenceRule, assigneeId, visibility,
-    }, req.auth!.tenantId ?? null);
+    });
 
     res.json({ success: true, data: task });
   } catch (error) {
@@ -287,10 +287,10 @@ export async function createProject(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { title, color, description, icon } = req.body;
 
-    const project = await taskService.createProject(userId, accountId, { title, color, description, icon }, req.auth!.tenantId ?? null);
+    const project = await taskService.createProject(userId, tenantId, { title, color, description, icon });
     res.json({ success: true, data: project });
   } catch (error) {
     logger.error({ error }, 'Failed to create project');
@@ -350,7 +350,7 @@ export async function deleteProject(req: Request, res: Response) {
 export async function seedSampleTasks(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const existing = await taskService.listTasks(userId, {});
     if (existing.length > 0) {
@@ -358,16 +358,16 @@ export async function seedSampleTasks(req: Request, res: Response) {
       return;
     }
 
-    const work = await taskService.createProject(userId, accountId, { title: 'Work', color: '#3b82f6' });
-    const personal = await taskService.createProject(userId, accountId, { title: 'Personal', color: '#10b981' });
-    await taskService.createProject(userId, accountId, { title: 'Health', color: '#ef4444' });
+    const work = await taskService.createProject(userId, tenantId, { title: 'Work', color: '#3b82f6' });
+    const personal = await taskService.createProject(userId, tenantId, { title: 'Personal', color: '#10b981' });
+    await taskService.createProject(userId, tenantId, { title: 'Health', color: '#ef4444' });
 
-    await taskService.createTask(userId, accountId, { title: 'Review team updates', when: 'inbox' });
-    await taskService.createTask(userId, accountId, { title: 'Plan this week\'s priorities', when: 'today', projectId: work.id });
-    await taskService.createTask(userId, accountId, { title: 'Organize shared drive folders', when: 'anytime', projectId: work.id });
-    await taskService.createTask(userId, accountId, { title: 'Learn a new skill', when: 'someday', projectId: personal.id });
+    await taskService.createTask(userId, tenantId, { title: 'Review team updates', when: 'inbox' });
+    await taskService.createTask(userId, tenantId, { title: 'Plan this week\'s priorities', when: 'today', projectId: work.id });
+    await taskService.createTask(userId, tenantId, { title: 'Organize shared drive folders', when: 'anytime', projectId: work.id });
+    await taskService.createTask(userId, tenantId, { title: 'Learn a new skill', when: 'someday', projectId: personal.id });
 
-    const completed = await taskService.createTask(userId, accountId, { title: 'Set up Atlas', when: 'today', projectId: work.id });
+    const completed = await taskService.createTask(userId, tenantId, { title: 'Set up Atlas', when: 'today', projectId: work.id });
     await taskService.updateTask(userId, completed.id, { status: 'completed' });
 
     res.json({ success: true, data: { message: 'Seeded sample tasks and projects' } });
@@ -436,13 +436,13 @@ export async function createTaskFromEmail(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { emailId, subject, snippet } = req.body;
-    const task = await taskService.createTask(userId, accountId, {
+    const task = await taskService.createTask(userId, tenantId, {
       title: subject || snippet || 'Task from email',
       sourceEmailId: emailId,
       sourceEmailSubject: subject || null,
-    } as any, req.auth!.tenantId ?? null);
+    } as any);
     res.json({ success: true, data: task });
   } catch (error) {
     logger.error({ error }, 'Failed to create task from email');

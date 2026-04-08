@@ -15,11 +15,11 @@ export async function listInvoices(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { clientId, status, search, includeArchived } = req.query;
 
     const isAdmin = perm.role === 'admin' || perm.role === 'manager';
-    const invoices = await projectService.listInvoices(userId, accountId, {
+    const invoices = await projectService.listInvoices(userId, tenantId, {
       clientId: clientId as string | undefined,
       status: status as string | undefined,
       search: search as string | undefined,
@@ -43,10 +43,10 @@ export async function getInvoice(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const invoice = await projectService.getInvoice(userId, accountId, id);
+    const invoice = await projectService.getInvoice(userId, tenantId, id);
     if (!invoice) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
       return;
@@ -68,7 +68,7 @@ export async function createInvoice(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { clientId, invoiceNumber, status, amount, tax, taxAmount, discount, discountAmount, currency, issueDate, dueDate, notes } = req.body;
 
     if (!clientId) {
@@ -76,7 +76,7 @@ export async function createInvoice(req: Request, res: Response) {
       return;
     }
 
-    const invoice = await projectService.createInvoice(userId, accountId, {
+    const invoice = await projectService.createInvoice(userId, tenantId, {
       clientId, invoiceNumber, status, amount, tax, taxAmount, discount, discountAmount, currency, issueDate, dueDate, notes,
     });
 
@@ -96,11 +96,11 @@ export async function updateInvoice(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
     const { clientId, invoiceNumber, status, amount, tax, taxAmount, discount, discountAmount, currency, issueDate, dueDate, notes, isArchived } = req.body;
 
-    const invoice = await projectService.updateInvoice(userId, accountId, id, {
+    const invoice = await projectService.updateInvoice(userId, tenantId, id, {
       clientId, invoiceNumber, status, amount, tax, taxAmount, discount, discountAmount, currency, issueDate, dueDate, notes, isArchived,
     });
 
@@ -125,10 +125,10 @@ export async function deleteInvoice(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    await projectService.deleteInvoice(userId, accountId, id);
+    await projectService.deleteInvoice(userId, tenantId, id);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete invoice');
@@ -145,17 +145,17 @@ export async function sendInvoice(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const invoice = await projectService.sendInvoice(userId, accountId, id);
+    const invoice = await projectService.sendInvoice(userId, tenantId, id);
     if (!invoice) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
       return;
     }
 
     // Get client name for event
-    const fullInvoice = await projectService.getInvoice(userId, accountId, id);
+    const fullInvoice = await projectService.getInvoice(userId, tenantId, id);
 
     if (req.auth!.tenantId) {
       emitAppEvent({
@@ -184,10 +184,10 @@ export async function markInvoicePaid(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const invoice = await projectService.markInvoicePaid(userId, accountId, id);
+    const invoice = await projectService.markInvoicePaid(userId, tenantId, id);
     if (!invoice) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
       return;
@@ -220,10 +220,10 @@ export async function duplicateInvoice(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const invoice = await projectService.duplicateInvoice(userId, accountId, id);
+    const invoice = await projectService.duplicateInvoice(userId, tenantId, id);
     if (!invoice) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
       return;
@@ -244,8 +244,8 @@ export async function getNextInvoiceNumber(req: Request, res: Response) {
       return;
     }
 
-    const accountId = req.auth!.accountId;
-    const invoiceNumber = await projectService.getNextInvoiceNumber(accountId);
+    const tenantId = req.auth!.tenantId;
+    const invoiceNumber = await projectService.getNextInvoiceNumber(tenantId);
     res.json({ success: true, data: { invoiceNumber } });
   } catch (error) {
     logger.error({ error }, 'Failed to get next invoice number');
@@ -262,10 +262,10 @@ export async function waiveInvoice(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const invoice = await projectService.waiveInvoice(userId, accountId, id);
+    const invoice = await projectService.waiveInvoice(userId, tenantId, id);
     if (!invoice) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
       return;
@@ -289,11 +289,11 @@ export async function listLineItems(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const invoiceId = req.params.invoiceId as string;
 
     // Verify the invoice belongs to the authenticated user's account
-    const invoice = await projectService.getInvoice(userId, accountId, invoiceId);
+    const invoice = await projectService.getInvoice(userId, tenantId, invoiceId);
     if (!invoice) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
       return;
@@ -316,12 +316,12 @@ export async function createLineItem(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const invoiceId = req.params.invoiceId as string;
     const { timeEntryId, description, quantity, unitPrice, amount, taxRate } = req.body;
 
     // Verify the invoice belongs to the authenticated user's account
-    const invoice = await projectService.getInvoice(userId, accountId, invoiceId);
+    const invoice = await projectService.getInvoice(userId, tenantId, invoiceId);
     if (!invoice) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
       return;
@@ -352,7 +352,7 @@ export async function updateLineItem(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
     const { description, quantity, unitPrice, amount, taxRate } = req.body;
 
@@ -362,7 +362,7 @@ export async function updateLineItem(req: Request, res: Response) {
       res.status(404).json({ success: false, error: 'Line item not found' });
       return;
     }
-    const invoice = await projectService.getInvoice(userId, accountId, existingLineItem.invoiceId);
+    const invoice = await projectService.getInvoice(userId, tenantId, existingLineItem.invoiceId);
     if (!invoice) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
       return;
@@ -390,7 +390,7 @@ export async function deleteLineItem(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
     // Verify the line item's invoice belongs to the authenticated user's account
@@ -399,7 +399,7 @@ export async function deleteLineItem(req: Request, res: Response) {
       res.status(404).json({ success: false, error: 'Line item not found' });
       return;
     }
-    const invoice = await projectService.getInvoice(userId, accountId, existingLineItem.invoiceId);
+    const invoice = await projectService.getInvoice(userId, tenantId, existingLineItem.invoiceId);
     if (!invoice) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
       return;
@@ -421,7 +421,7 @@ export async function populateFromTimeEntries(req: Request, res: Response) {
       return;
     }
 
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const invoiceId = req.params.invoiceId as string;
     const { clientId, startDate, endDate } = req.body;
 
@@ -430,7 +430,7 @@ export async function populateFromTimeEntries(req: Request, res: Response) {
       return;
     }
 
-    const lineItems = await projectService.populateFromTimeEntries(accountId, invoiceId, clientId, startDate, endDate);
+    const lineItems = await projectService.populateFromTimeEntries(tenantId, invoiceId, clientId, startDate, endDate);
     res.json({ success: true, data: { lineItems } });
   } catch (error) {
     logger.error({ error }, 'Failed to populate from time entries');
@@ -446,7 +446,7 @@ export async function previewTimeEntryLineItems(req: Request, res: Response) {
       return;
     }
 
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { clientId, startDate, endDate } = req.body;
 
     if (!clientId || !startDate || !endDate) {
@@ -454,7 +454,7 @@ export async function previewTimeEntryLineItems(req: Request, res: Response) {
       return;
     }
 
-    const lineItems = await projectService.previewTimeEntryLineItems(accountId, clientId, startDate, endDate);
+    const lineItems = await projectService.previewTimeEntryLineItems(tenantId, clientId, startDate, endDate);
     res.json({ success: true, data: { lineItems } });
   } catch (error) {
     logger.error({ error }, 'Failed to preview time entry line items');

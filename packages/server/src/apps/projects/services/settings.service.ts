@@ -6,17 +6,17 @@ import { eq, sql } from 'drizzle-orm';
 
 // ─── Settings ───────────────────────────────────────────────────────
 
-export async function getSettings(accountId: string) {
+export async function getSettings(tenantId: string) {
   const [settings] = await db
     .select()
     .from(projectSettings)
-    .where(eq(projectSettings.accountId, accountId))
+    .where(eq(projectSettings.tenantId, tenantId))
     .limit(1);
 
   return settings || null;
 }
 
-export async function updateSettings(accountId: string, input: {
+export async function updateSettings(tenantId: string, input: {
   invoicePrefix?: string;
   defaultHourlyRate?: number;
   companyName?: string | null;
@@ -35,14 +35,14 @@ export async function updateSettings(accountId: string, input: {
   let [existing] = await db
     .select()
     .from(projectSettings)
-    .where(eq(projectSettings.accountId, accountId))
+    .where(eq(projectSettings.tenantId, tenantId))
     .limit(1);
 
   if (!existing) {
     const [created] = await db
       .insert(projectSettings)
       .values({
-        accountId,
+        tenantId,
         ...input,
         createdAt: now,
         updatedAt: now,
@@ -67,7 +67,7 @@ export async function updateSettings(accountId: string, input: {
   const [updated] = await db
     .update(projectSettings)
     .set(updates)
-    .where(eq(projectSettings.accountId, accountId))
+    .where(eq(projectSettings.tenantId, tenantId))
     .returning();
 
   return updated ?? null;
@@ -75,6 +75,6 @@ export async function updateSettings(accountId: string, input: {
 
 // ─── Seed Sample Data ───────────────────────────────────────────────
 
-export async function seedSampleData(userId: string, accountId: string) {
+export async function seedSampleData(userId: string, tenantId: string) {
   return { skipped: true };
 }

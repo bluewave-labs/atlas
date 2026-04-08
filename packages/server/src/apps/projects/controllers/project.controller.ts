@@ -15,10 +15,10 @@ export async function listProjects(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { search, clientId, status, includeArchived } = req.query;
 
-    const projects = await projectService.listProjects(userId, accountId, {
+    const projects = await projectService.listProjects(userId, tenantId, {
       search: search as string | undefined,
       clientId: clientId as string | undefined,
       status: status as string | undefined,
@@ -41,10 +41,10 @@ export async function getProject(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const project = await projectService.getProject(userId, accountId, id);
+    const project = await projectService.getProject(userId, tenantId, id);
     if (!project) {
       res.status(404).json({ success: false, error: 'Project not found' });
       return;
@@ -66,7 +66,7 @@ export async function createProject(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { name, clientId, description, billable, status, estimatedHours, estimatedAmount, startDate, endDate, color } = req.body;
 
     if (!name?.trim()) {
@@ -74,7 +74,7 @@ export async function createProject(req: Request, res: Response) {
       return;
     }
 
-    const project = await projectService.createProject(userId, accountId, {
+    const project = await projectService.createProject(userId, tenantId, {
       name: name.trim(), clientId, description, billable, status, estimatedHours, estimatedAmount, startDate, endDate, color,
     });
 
@@ -105,11 +105,11 @@ export async function updateProject(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
     const { name, clientId, description, billable, status, estimatedHours, estimatedAmount, startDate, endDate, color, sortOrder, isArchived } = req.body;
 
-    const project = await projectService.updateProject(userId, accountId, id, {
+    const project = await projectService.updateProject(userId, tenantId, id, {
       name, clientId, description, billable, status, estimatedHours, estimatedAmount, startDate, endDate, color, sortOrder, isArchived,
     });
 
@@ -134,10 +134,10 @@ export async function deleteProject(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    await projectService.deleteProject(userId, accountId, id);
+    await projectService.deleteProject(userId, tenantId, id);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete project');
@@ -156,10 +156,10 @@ export async function listProjectMembers(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const projectId = req.params.projectId as string;
 
-    const members = await projectService.listProjectMembers(userId, accountId, projectId);
+    const members = await projectService.listProjectMembers(userId, tenantId, projectId);
     res.json({ success: true, data: { members } });
   } catch (error) {
     logger.error({ error }, 'Failed to list project members');
@@ -176,12 +176,12 @@ export async function addProjectMember(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const projectId = req.params.projectId as string;
     const { userId: memberUserId, hourlyRate, role } = req.body;
 
     // Verify the project belongs to the authenticated user's account
-    const project = await projectService.getProject(userId, accountId, projectId);
+    const project = await projectService.getProject(userId, tenantId, projectId);
     if (!project) {
       res.status(404).json({ success: false, error: 'Project not found' });
       return;
@@ -209,12 +209,12 @@ export async function removeProjectMember(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const projectId = req.params.projectId as string;
     const memberId = req.params.memberId as string;
 
     // Verify the project belongs to the authenticated user's account
-    const project = await projectService.getProject(userId, accountId, projectId);
+    const project = await projectService.getProject(userId, tenantId, projectId);
     if (!project) {
       res.status(404).json({ success: false, error: 'Project not found' });
       return;
@@ -237,13 +237,13 @@ export async function updateProjectMemberRate(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const projectId = req.params.projectId as string;
     const memberId = req.params.memberId as string;
     const { hourlyRate } = req.body;
 
     // Verify the project belongs to the authenticated user's account
-    const project = await projectService.getProject(userId, accountId, projectId);
+    const project = await projectService.getProject(userId, tenantId, projectId);
     if (!project) {
       res.status(404).json({ success: false, error: 'Project not found' });
       return;

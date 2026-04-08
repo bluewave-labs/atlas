@@ -14,10 +14,10 @@ export async function listClients(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { search, includeArchived } = req.query;
 
-    const clients = await projectService.listClients(userId, accountId, {
+    const clients = await projectService.listClients(userId, tenantId, {
       search: search as string | undefined,
       includeArchived: includeArchived === 'true',
     });
@@ -38,10 +38,10 @@ export async function getClient(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const client = await projectService.getClient(userId, accountId, id);
+    const client = await projectService.getClient(userId, tenantId, id);
     if (!client) {
       res.status(404).json({ success: false, error: 'Client not found' });
       return;
@@ -63,7 +63,7 @@ export async function createClient(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { name, email, phone, address, city, state, country, postalCode, currency, logo, notes } = req.body;
 
     if (!name?.trim()) {
@@ -71,7 +71,7 @@ export async function createClient(req: Request, res: Response) {
       return;
     }
 
-    const client = await projectService.createClient(userId, accountId, {
+    const client = await projectService.createClient(userId, tenantId, {
       name: name.trim(), email, phone, address, city, state, country, postalCode, currency, logo, notes,
     });
 
@@ -91,11 +91,11 @@ export async function updateClient(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
     const { name, email, phone, address, city, state, country, postalCode, currency, logo, notes, sortOrder, isArchived } = req.body;
 
-    const client = await projectService.updateClient(userId, accountId, id, {
+    const client = await projectService.updateClient(userId, tenantId, id, {
       name, email, phone, address, city, state, country, postalCode, currency, logo, notes, sortOrder, isArchived,
     });
 
@@ -120,10 +120,10 @@ export async function deleteClient(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    await projectService.deleteClient(userId, accountId, id);
+    await projectService.deleteClient(userId, tenantId, id);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete project client');
@@ -140,10 +140,10 @@ export async function regeneratePortalToken(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const client = await projectService.regeneratePortalToken(userId, accountId, id);
+    const client = await projectService.regeneratePortalToken(userId, tenantId, id);
     if (!client) {
       res.status(404).json({ success: false, error: 'Client not found' });
       return;

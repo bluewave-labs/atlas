@@ -6,13 +6,13 @@ import { eq, and, asc, gte, lte, sql } from 'drizzle-orm';
 
 // ─── Reports ────────────────────────────────────────────────────────
 
-export async function getTimeReport(userId: string, accountId: string, filters?: {
+export async function getTimeReport(userId: string, tenantId: string, filters?: {
   startDate?: string;
   endDate?: string;
   projectId?: string;
 }) {
   const conditions = [
-    eq(projectTimeEntries.accountId, accountId),
+    eq(projectTimeEntries.tenantId, tenantId),
     eq(projectTimeEntries.isArchived, false),
   ];
   if (filters?.startDate) conditions.push(gte(projectTimeEntries.workDate, filters.startDate));
@@ -77,12 +77,12 @@ export async function getTimeReport(userId: string, accountId: string, filters?:
   };
 }
 
-export async function getRevenueReport(userId: string, accountId: string, filters?: {
+export async function getRevenueReport(userId: string, tenantId: string, filters?: {
   startDate?: string;
   endDate?: string;
 }) {
   const conditions = [
-    eq(projectInvoices.accountId, accountId),
+    eq(projectInvoices.tenantId, tenantId),
     eq(projectInvoices.isArchived, false),
   ];
   if (filters?.startDate) conditions.push(gte(projectInvoices.issueDate, new Date(filters.startDate)));
@@ -134,7 +134,7 @@ export async function getRevenueReport(userId: string, accountId: string, filter
   };
 }
 
-export async function getProjectProfitability(userId: string, accountId: string) {
+export async function getProjectProfitability(userId: string, tenantId: string) {
   const projects = await db
     .select({
       projectId: projectProjects.id,
@@ -147,7 +147,7 @@ export async function getProjectProfitability(userId: string, accountId: string)
     })
     .from(projectProjects)
     .where(and(
-      eq(projectProjects.accountId, accountId),
+      eq(projectProjects.tenantId, tenantId),
       eq(projectProjects.isArchived, false),
     ))
     .orderBy(asc(projectProjects.name));
@@ -163,12 +163,12 @@ export async function getProjectProfitability(userId: string, accountId: string)
   }));
 }
 
-export async function getTeamUtilization(userId: string, accountId: string, filters?: {
+export async function getTeamUtilization(userId: string, tenantId: string, filters?: {
   startDate?: string;
   endDate?: string;
 }) {
   const conditions = [
-    eq(projectTimeEntries.accountId, accountId),
+    eq(projectTimeEntries.tenantId, tenantId),
     eq(projectTimeEntries.isArchived, false),
   ];
   if (filters?.startDate) conditions.push(gte(projectTimeEntries.workDate, filters.startDate));

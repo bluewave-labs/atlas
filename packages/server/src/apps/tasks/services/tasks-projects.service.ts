@@ -98,7 +98,7 @@ export async function listTasks(userId: string, filters?: {
 
   return db
     .select({
-      id: tasks.id, accountId: tasks.accountId, userId: tasks.userId,
+      id: tasks.id, tenantId: tasks.tenantId, userId: tasks.userId,
       projectId: tasks.projectId, title: tasks.title, notes: tasks.notes,
       description: tasks.description, icon: tasks.icon, type: tasks.type,
       headingId: tasks.headingId, status: tasks.status, when: tasks.when,
@@ -129,7 +129,7 @@ export async function getTask(userId: string, taskId: string, tenantId?: string 
   return task || null;
 }
 
-export async function createTask(userId: string, accountId: string, input: CreateTaskInput, tenantId?: string | null) {
+export async function createTask(userId: string, tenantId: string, input: CreateTaskInput) {
   const now = new Date();
 
   const [maxSort] = await db
@@ -142,7 +142,7 @@ export async function createTask(userId: string, accountId: string, input: Creat
   const [created] = await db
     .insert(tasks)
     .values({
-      accountId, userId,
+      tenantId, userId,
       title: input.title || '',
       notes: input.notes ?? null,
       description: input.description ?? null,
@@ -159,7 +159,6 @@ export async function createTask(userId: string, accountId: string, input: Creat
       visibility: input.visibility ?? 'team',
       sourceEmailId: (input as any).sourceEmailId ?? null,
       sourceEmailSubject: (input as any).sourceEmailSubject ?? null,
-      tenantId: tenantId ?? null,
       sortOrder,
       createdAt: now,
       updatedAt: now,
@@ -240,7 +239,7 @@ export async function updateTask(userId: string, taskId: string, input: UpdateTa
     const [nextTask] = await db
       .insert(tasks)
       .values({
-        accountId: updated.accountId, userId: updated.userId,
+        tenantId: updated.tenantId, userId: updated.userId,
         title: updated.title, notes: updated.notes, description: updated.description,
         icon: updated.icon, type: updated.type, headingId: updated.headingId,
         projectId: updated.projectId, when: updated.when, priority: updated.priority,
@@ -333,7 +332,7 @@ export async function getProject(userId: string, projectId: string, tenantId?: s
   return project || null;
 }
 
-export async function createProject(userId: string, accountId: string, input: CreateProjectInput, tenantId?: string | null) {
+export async function createProject(userId: string, tenantId: string, input: CreateProjectInput) {
   const now = new Date();
 
   const [maxSort] = await db
@@ -346,12 +345,11 @@ export async function createProject(userId: string, accountId: string, input: Cr
   const [created] = await db
     .insert(taskProjects)
     .values({
-      accountId, userId,
+      tenantId, userId,
       title: input.title || 'Untitled project',
       description: input.description ?? null,
       icon: input.icon ?? null,
       color: input.color ?? '#5a7fa0',
-      tenantId: tenantId ?? null,
       sortOrder,
       createdAt: now,
       updatedAt: now,

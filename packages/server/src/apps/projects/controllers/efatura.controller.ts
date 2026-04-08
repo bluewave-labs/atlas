@@ -13,11 +13,11 @@ export async function generateEFatura(req: Request, res: Response) {
       return;
     }
 
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
     const { eFaturaType } = req.body || {};
 
-    const invoice = await projectService.generateEFatura(accountId, id, eFaturaType);
+    const invoice = await projectService.generateEFatura(tenantId, id, eFaturaType);
     if (!invoice) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
       return;
@@ -43,10 +43,10 @@ export async function getEFaturaXml(req: Request, res: Response) {
       return;
     }
 
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const xml = await projectService.getEFaturaXml(accountId, id);
+    const xml = await projectService.getEFaturaXml(tenantId, id);
     if (!xml) {
       res.status(404).json({ success: false, error: 'e-Fatura XML not found. Generate it first.' });
       return;
@@ -68,10 +68,10 @@ export async function getEFaturaPreview(req: Request, res: Response) {
       return;
     }
 
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const html = await projectService.getEFaturaPreviewHtml(accountId, id);
+    const html = await projectService.getEFaturaPreviewHtml(tenantId, id);
     if (!html) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
       return;
@@ -93,10 +93,10 @@ export async function getEFaturaPdf(req: Request, res: Response) {
       return;
     }
 
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const html = await projectService.getEFaturaPreviewHtml(accountId, id);
+    const html = await projectService.getEFaturaPreviewHtml(tenantId, id);
     if (!html) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
       return;

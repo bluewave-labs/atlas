@@ -141,7 +141,7 @@ export async function createTemplate(req: Request, res: Response) {
       return;
     }
 
-    const template = await taskService.createTemplate(req.auth!.userId, req.auth!.accountId, req.body);
+    const template = await taskService.createTemplate(req.auth!.userId, req.auth!.tenantId, req.body);
     res.json({ success: true, data: template });
   } catch (error) {
     logger.error({ error }, 'Failed to create template');
@@ -190,7 +190,7 @@ export async function createTaskFromTemplate(req: Request, res: Response) {
       return;
     }
 
-    const task = await taskService.createTaskFromTemplate(req.auth!.userId, req.auth!.accountId, req.params.templateId as string);
+    const task = await taskService.createTaskFromTemplate(req.auth!.userId, req.auth!.tenantId, req.params.templateId as string);
     if (!task) { res.status(404).json({ success: false, error: 'Template not found' }); return; }
     res.json({ success: true, data: task });
   } catch (error) {
@@ -227,7 +227,7 @@ export async function createComment(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const taskId = req.params.taskId as string;
     const { body } = req.body;
 
@@ -236,7 +236,7 @@ export async function createComment(req: Request, res: Response) {
       return;
     }
 
-    const comment = await taskService.createComment(userId, accountId, taskId, body.trim());
+    const comment = await taskService.createComment(userId, tenantId, taskId, body.trim());
     res.json({ success: true, data: comment });
 
     if (req.auth?.tenantId) {
@@ -307,7 +307,7 @@ export async function uploadAttachment(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const taskId = req.params.taskId as string;
     const file = req.file;
 
@@ -316,7 +316,7 @@ export async function uploadAttachment(req: Request, res: Response) {
       return;
     }
 
-    const attachment = await taskService.addAttachment(userId, accountId, taskId, file as any);
+    const attachment = await taskService.addAttachment(userId, tenantId, taskId, file as any);
     res.json({ success: true, data: attachment });
   } catch (error) {
     logger.error({ error }, 'Failed to upload task attachment');

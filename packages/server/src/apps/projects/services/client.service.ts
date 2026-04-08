@@ -30,11 +30,11 @@ interface UpdateClientInput extends Partial<CreateClientInput> {
 
 // ─── Clients ────────────────────────────────────────────────────────
 
-export async function listClients(userId: string, accountId: string, filters?: {
+export async function listClients(userId: string, tenantId: string, filters?: {
   search?: string;
   includeArchived?: boolean;
 }) {
-  const conditions = [eq(projectClients.accountId, accountId)];
+  const conditions = [eq(projectClients.tenantId, tenantId)];
   if (!filters?.includeArchived) {
     conditions.push(eq(projectClients.isArchived, false));
   }
@@ -46,7 +46,7 @@ export async function listClients(userId: string, accountId: string, filters?: {
   return db
     .select({
       id: projectClients.id,
-      accountId: projectClients.accountId,
+      tenantId: projectClients.tenantId,
       userId: projectClients.userId,
       name: projectClients.name,
       email: projectClients.email,
@@ -73,11 +73,11 @@ export async function listClients(userId: string, accountId: string, filters?: {
     .orderBy(asc(projectClients.sortOrder), asc(projectClients.createdAt));
 }
 
-export async function getClient(userId: string, accountId: string, id: string) {
+export async function getClient(userId: string, tenantId: string, id: string) {
   const [client] = await db
     .select({
       id: projectClients.id,
-      accountId: projectClients.accountId,
+      tenantId: projectClients.tenantId,
       userId: projectClients.userId,
       name: projectClients.name,
       email: projectClients.email,
@@ -100,25 +100,25 @@ export async function getClient(userId: string, accountId: string, id: string) {
       outstandingAmount: sql<number>`COALESCE((SELECT SUM(amount) FROM project_invoices WHERE client_id = ${projectClients.id} AND status IN ('sent', 'viewed', 'overdue') AND is_archived = false), 0)`.as('outstanding_amount'),
     })
     .from(projectClients)
-    .where(and(eq(projectClients.id, id), eq(projectClients.accountId, accountId)))
+    .where(and(eq(projectClients.id, id), eq(projectClients.tenantId, tenantId)))
     .limit(1);
 
   return client || null;
 }
 
-export async function createClient(userId: string, accountId: string, input: CreateClientInput) {
+export async function createClient(userId: string, tenantId: string, input: CreateClientInput) {
   const now = new Date();
   const [maxSort] = await db
     .select({ max: sql<number>`COALESCE(MAX(${projectClients.sortOrder}), -1)` })
     .from(projectClients)
-    .where(eq(projectClients.accountId, accountId));
+    .where(eq(projectClients.tenantId, tenantId));
 
   const sortOrder = (maxSort?.max ?? -1) + 1;
 
   const [created] = await db
     .insert(projectClients)
     .values({
-      accountId,
+      tenantId,
       userId,
       name: input.name,
       email: input.email ?? null,
@@ -141,7 +141,7 @@ export async function createClient(userId: string, accountId: string, input: Cre
   return created;
 }
 
-export async function updateClient(userId: string, accountId: string, id: string, input: UpdateClientInput) {
+export async function updateClient(userId: string, tenantId: string, id: string, input: UpdateClientInput) {
   const now = new Date();
   const updates: Record<string, unknown> = { updatedAt: now };
 
@@ -159,7 +159,7 @@ export async function updateClient(userId: string, accountId: string, id: string
   if (input.sortOrder !== undefined) updates.sortOrder = input.sortOrder;
   if (input.isArchived !== undefined) updates.isArchived = input.isArchived;
 
-  const conditions = [eq(projectClients.id, id), eq(projectClients.accountId, accountId)];
+  const conditions = [eq(projectClients.id, id), eq(projectClients.tenantId, tenantId)];
 
   const [updated] = await db
     .update(projectClients)
@@ -170,16 +170,16 @@ export async function updateClient(userId: string, accountId: string, id: string
   return updated ?? null;
 }
 
-export async function deleteClient(userId: string, accountId: string, id: string) {
-  await updateClient(userId, accountId, id, { isArchived: true });
+export async function deleteClient(userId: string, tenantId: string, id: string) {
+  await updateClient(userId, tenantId, id, { isArchived: true });
 }
 
-export async function regeneratePortalToken(userId: string, accountId: string, id: string) {
+export async function regeneratePortalToken(userId: string, tenantId: string, id: string) {
   const now = new Date();
   const [updated] = await db
     .update(projectClients)
     .set({ portalToken: sql`gen_random_uuid()`, updatedAt: now })
-    .where(and(eq(projectClients.id, id), eq(projectClients.accountId, accountId)))
+    .where(and(eq(projectClients.id, id), eq(projectClients.tenantId, tenantId)))
     .returning();
 
   return updated || null;
@@ -191,7 +191,7 @@ export async function getClientByPortalToken(portalToken: string) {
   const [client] = await db
     .select({
       id: projectClients.id,
-      accountId: projectClients.accountId,
+      tenantId: projectClients.tenantId,
       name: projectClients.name,
       email: projectClients.email,
       currency: projectClients.currency,
@@ -248,7 +248,7 @@ export async function getClientInvoiceDetail(portalToken: string, invoiceId: str
   if (!invoice) return null;
 
   // Mark as viewed
-  await markInvoiceViewed(client.accountId, invoiceId);
+  await markInvoiceViewed(client.tenantId, invoiceId);
 
   const lineItems = await db
     .select()
@@ -257,7 +257,7 @@ export async function getClientInvoiceDetail(portalToken: string, invoiceId: str
     .orderBy(asc(projectInvoiceLineItems.createdAt));
 
   // Get company settings for header
-  const settings = await getSettings(client.accountId);
+  const settings = await getSettings(client.tenantId);
 
   return {
     invoice: { ...invoice, clientName: client.name },

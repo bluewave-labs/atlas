@@ -14,10 +14,10 @@ export async function getTimeReport(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { startDate, endDate, projectId } = req.query;
 
-    const report = await projectService.getTimeReport(userId, accountId, {
+    const report = await projectService.getTimeReport(userId, tenantId, {
       startDate: startDate as string | undefined,
       endDate: endDate as string | undefined,
       projectId: projectId as string | undefined,
@@ -39,10 +39,10 @@ export async function getRevenueReport(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { startDate, endDate } = req.query;
 
-    const report = await projectService.getRevenueReport(userId, accountId, {
+    const report = await projectService.getRevenueReport(userId, tenantId, {
       startDate: startDate as string | undefined,
       endDate: endDate as string | undefined,
     });
@@ -63,9 +63,9 @@ export async function getProjectProfitability(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
-    const report = await projectService.getProjectProfitability(userId, accountId);
+    const report = await projectService.getProjectProfitability(userId, tenantId);
     res.json({ success: true, data: report });
   } catch (error) {
     logger.error({ error }, 'Failed to get project profitability');
@@ -82,10 +82,10 @@ export async function getTeamUtilization(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const { startDate, endDate } = req.query;
 
-    const report = await projectService.getTeamUtilization(userId, accountId, {
+    const report = await projectService.getTeamUtilization(userId, tenantId, {
       startDate: startDate as string | undefined,
       endDate: endDate as string | undefined,
     });
