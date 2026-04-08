@@ -375,7 +375,7 @@ export const passwordResetTokens = pgTable('password_reset_tokens', {
 
 export const documents = pgTable('documents', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   parentId: uuid('parent_id').references((): AnyPgColumn => documents.id, { onDelete: 'set null' }),
   title: text('title').notNull().default('Untitled'),
@@ -384,22 +384,21 @@ export const documents = pgTable('documents', {
   coverImage: text('cover_image'),
   sortOrder: integer('sort_order').notNull().default(0),
   isArchived: boolean('is_archived').notNull().default(false),
-  tenantId: uuid('tenant_id'),
   visibility: varchar('visibility', { length: 10 }).notNull().default('private'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_documents_account').on(table.accountId, table.isArchived),
+  tenantIdx: index('idx_documents_tenant').on(table.tenantId, table.isArchived),
   userIdx: index('idx_documents_user').on(table.userId, table.isArchived),
   parentIdx: index('idx_documents_parent').on(table.parentId, table.sortOrder),
-  accountParentIdx: index('idx_documents_account_parent').on(table.accountId, table.parentId, table.sortOrder),
+  tenantParentIdx: index('idx_documents_tenant_parent').on(table.tenantId, table.parentId, table.sortOrder),
   userParentIdx: index('idx_documents_user_parent').on(table.userId, table.parentId, table.sortOrder),
 }));
 
 export const documentVersions = pgTable('document_versions', {
   id: uuid('id').primaryKey().defaultRandom(),
   documentId: uuid('document_id').notNull().references(() => documents.id, { onDelete: 'cascade' }),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   content: jsonb('content').$type<Record<string, unknown> | null>().default(null),
@@ -412,7 +411,7 @@ export const documentVersions = pgTable('document_versions', {
 
 export const taskProjects = pgTable('task_projects', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   title: text('title').notNull().default('Untitled project'),
   description: text('description'),
@@ -420,7 +419,6 @@ export const taskProjects = pgTable('task_projects', {
   color: text('color').notNull().default('#5a7fa0'),
   sortOrder: integer('sort_order').notNull().default(0),
   isArchived: boolean('is_archived').notNull().default(false),
-  tenantId: uuid('tenant_id'),
   visibility: varchar('visibility', { length: 10 }).notNull().default('private'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -432,7 +430,7 @@ export const taskProjects = pgTable('task_projects', {
 
 export const tasks = pgTable('tasks', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   projectId: uuid('project_id').references(() => taskProjects.id, { onDelete: 'set null' }),
   title: text('title').notNull().default(''),
@@ -455,7 +453,6 @@ export const tasks = pgTable('tasks', {
   lastReminderAt: timestamp('last_reminder_at', { withTimezone: true }),
   sortOrder: integer('sort_order').notNull().default(0),
   isArchived: boolean('is_archived').notNull().default(false),
-  tenantId: uuid('tenant_id'),
   visibility: varchar('visibility', { length: 10 }).notNull().default('team'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -470,7 +467,7 @@ export const tasks = pgTable('tasks', {
 
 export const spreadsheets = pgTable('spreadsheets', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   title: text('title').notNull().default('Untitled table'),
   columns: jsonb('columns').$type<import('@atlasmail/shared').TableColumn[]>().notNull().default([]),
@@ -485,7 +482,7 @@ export const spreadsheets = pgTable('spreadsheets', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   userIdx: index('idx_spreadsheets_user').on(table.userId, table.isArchived),
-  accountIdx: index('idx_spreadsheets_account').on(table.accountId, table.isArchived),
+  tenantIdx: index('idx_spreadsheets_tenant').on(table.tenantId, table.isArchived),
 }));
 
 // ─── Table Row Comments ─────────────────────────────────────────────
@@ -494,7 +491,7 @@ export const tableRowComments = pgTable('table_row_comments', {
   id: uuid('id').primaryKey().defaultRandom(),
   spreadsheetId: uuid('spreadsheet_id').notNull().references(() => spreadsheets.id, { onDelete: 'cascade' }),
   rowId: text('row_id').notNull(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   body: text('body').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -507,7 +504,7 @@ export const tableRowComments = pgTable('table_row_comments', {
 
 export const driveItems = pgTable('drive_items', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   type: text('type').notNull().default('file'),
@@ -522,7 +519,6 @@ export const driveItems = pgTable('drive_items', {
   isArchived: boolean('is_archived').notNull().default(false),
   tags: jsonb('tags').$type<string[]>().notNull().default([]),
   sortOrder: integer('sort_order').notNull().default(0),
-  tenantId: uuid('tenant_id'),
   visibility: varchar('visibility', { length: 10 }).notNull().default('private'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -537,7 +533,7 @@ export const driveItems = pgTable('drive_items', {
 export const driveItemVersions = pgTable('drive_item_versions', {
   id: uuid('id').primaryKey().defaultRandom(),
   driveItemId: uuid('drive_item_id').notNull().references(() => driveItems.id, { onDelete: 'cascade' }),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   mimeType: text('mime_type'),
@@ -582,7 +578,7 @@ export const driveItemShares = pgTable('drive_item_shares', {
 export const driveActivityLog = pgTable('drive_activity_log', {
   id: uuid('id').primaryKey().defaultRandom(),
   driveItemId: uuid('drive_item_id').notNull().references(() => driveItems.id, { onDelete: 'cascade' }),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   action: varchar('action', { length: 100 }).notNull(),
   metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull().default({}),
@@ -596,7 +592,7 @@ export const driveActivityLog = pgTable('drive_activity_log', {
 export const driveComments = pgTable('drive_comments', {
   id: uuid('id').primaryKey().defaultRandom(),
   driveItemId: uuid('drive_item_id').notNull().references(() => driveItems.id, { onDelete: 'cascade' }),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   body: text('body').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -607,19 +603,18 @@ export const driveComments = pgTable('drive_comments', {
 
 export const drawings = pgTable('drawings', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   title: text('title').notNull().default('Untitled drawing'),
   content: jsonb('content').$type<Record<string, unknown> | null>().default(null),
   thumbnailUrl: text('thumbnail_url'),
   sortOrder: integer('sort_order').notNull().default(0),
   isArchived: boolean('is_archived').notNull().default(false),
-  tenantId: uuid('tenant_id'),
   visibility: varchar('visibility', { length: 10 }).notNull().default('private'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_drawings_account').on(table.accountId, table.isArchived),
+  tenantIdx: index('idx_drawings_tenant').on(table.tenantId, table.isArchived),
   userIdx: index('idx_drawings_user').on(table.userId, table.isArchived),
 }));
 
@@ -628,7 +623,7 @@ export const drawings = pgTable('drawings', {
 export const notifications = pgTable('notifications', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   type: text('type').notNull().default('reminder'),
   title: text('title').notNull(),
   body: text('body'),
@@ -704,7 +699,7 @@ export const taskActivities = pgTable('task_activities', {
 export const taskTemplates = pgTable('task_templates', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   title: text('title').notNull().default('Untitled template'),
   description: text('description'),
   icon: text('icon'),
@@ -723,7 +718,7 @@ export const taskTemplates = pgTable('task_templates', {
 export const taskComments = pgTable('task_comments', {
   id: uuid('id').primaryKey().defaultRandom(),
   taskId: uuid('task_id').notNull().references(() => tasks.id, { onDelete: 'cascade' }),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   body: text('body').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -737,7 +732,7 @@ export const taskComments = pgTable('task_comments', {
 export const taskAttachments = pgTable('task_attachments', {
   id: uuid('id').primaryKey().defaultRandom(),
   taskId: uuid('task_id').notNull().references(() => tasks.id, { onDelete: 'cascade' }),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   fileName: varchar('file_name', { length: 500 }).notNull(),
   storagePath: text('storage_path').notNull(),
@@ -767,7 +762,7 @@ export const documentComments = pgTable('document_comments', {
   id: uuid('id').primaryKey().defaultRandom(),
   documentId: uuid('document_id').notNull().references(() => documents.id, { onDelete: 'cascade' }),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   content: text('content').notNull(),
   selectionFrom: integer('selection_from'),
   selectionTo: integer('selection_to'),
@@ -884,7 +879,7 @@ export const customFieldDefinitions = pgTable('custom_field_definitions', {
 
 export const customFieldValues = pgTable('custom_field_values', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   fieldDefinitionId: uuid('field_definition_id').notNull().references(() => customFieldDefinitions.id, { onDelete: 'cascade' }),
   recordId: uuid('record_id').notNull(),
   value: jsonb('value').$type<unknown>(),
@@ -894,7 +889,7 @@ export const customFieldValues = pgTable('custom_field_values', {
   recordFieldIdx: uniqueIndex('idx_cfv_record_field').on(table.recordId, table.fieldDefinitionId),
   fieldIdx: index('idx_cfv_field').on(table.fieldDefinitionId),
   recordIdx: index('idx_cfv_record').on(table.recordId),
-  accountIdx: index('idx_cfv_account').on(table.accountId),
+  tenantIdx: index('idx_cfv_tenant').on(table.tenantId),
 }));
 
 // ─── Cross-App Record Links ────────────────────────────────────────
@@ -923,7 +918,7 @@ export const recordLinks = pgTable('record_links', {
 // ─── Signature: Documents ──────────────────────────────────────────
 export const signatureDocuments = pgTable('signature_documents', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   title: varchar('title', { length: 500 }).notNull(),
   fileName: varchar('file_name', { length: 500 }).notNull(),
@@ -939,7 +934,7 @@ export const signatureDocuments = pgTable('signature_documents', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_sig_docs_account').on(table.accountId),
+  tenantIdx: index('idx_sig_docs_tenant').on(table.tenantId),
   statusIdx: index('idx_sig_docs_status').on(table.status),
 }));
 
@@ -1005,7 +1000,7 @@ export const signAuditLog = pgTable('sign_audit_log', {
 // ─── Signature: Templates ─────────────────────────────────────────
 export const signTemplates = pgTable('sign_templates', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   title: varchar('title', { length: 500 }).notNull(),
   fileName: varchar('file_name', { length: 500 }).notNull(),
@@ -1027,14 +1022,14 @@ export const signTemplates = pgTable('sign_templates', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_sign_templates_account').on(table.accountId),
+  tenantIdx: index('idx_sign_templates_tenant').on(table.tenantId),
 }));
 
 // ─── HR: Departments ──────────────────────────────────────────────
 
 export const departments = pgTable('departments', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull().default('Untitled department'),
   headEmployeeId: uuid('head_employee_id'),
@@ -1046,14 +1041,14 @@ export const departments = pgTable('departments', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   userIdx: index('idx_departments_user').on(table.userId, table.isArchived),
-  accountIdx: index('idx_departments_account').on(table.accountId, table.isArchived),
+  tenantIdx: index('idx_departments_tenant').on(table.tenantId, table.isArchived),
 }));
 
 // ─── HR: Employees ────────────────────────────────────────────────
 
 export const employees = pgTable('employees', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   linkedUserId: uuid('linked_user_id').references(() => users.id, { onDelete: 'set null' }),
   name: text('name').notNull().default(''),
@@ -1084,14 +1079,14 @@ export const employees = pgTable('employees', {
 }, (table) => ({
   userStatusIdx: index('idx_employees_user_status').on(table.userId, table.status, table.isArchived),
   departmentIdx: index('idx_employees_department').on(table.departmentId, table.sortOrder),
-  accountIdx: index('idx_employees_account').on(table.accountId, table.isArchived),
+  tenantIdx: index('idx_employees_tenant').on(table.tenantId, table.isArchived),
 }));
 
 // ─── HR: Leave Balances ──────────────────────────────────────────
 
 export const leaveBalances = pgTable('leave_balances', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   employeeId: uuid('employee_id').notNull().references(() => employees.id, { onDelete: 'cascade' }),
   leaveType: varchar('leave_type', { length: 50 }).notNull(),
   year: integer('year').notNull(),
@@ -1103,14 +1098,14 @@ export const leaveBalances = pgTable('leave_balances', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   employeeYearIdx: index('idx_leave_balances_employee_year').on(table.employeeId, table.year),
-  accountIdx: index('idx_leave_balances_account').on(table.accountId),
+  tenantIdx: index('idx_leave_balances_tenant').on(table.tenantId),
 }));
 
 // ─── HR: Onboarding Tasks ───────────────────────────────────────
 
 export const onboardingTasks = pgTable('onboarding_tasks', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   employeeId: uuid('employee_id').notNull().references(() => employees.id, { onDelete: 'cascade' }),
   title: varchar('title', { length: 500 }).notNull(),
   description: text('description'),
@@ -1124,27 +1119,27 @@ export const onboardingTasks = pgTable('onboarding_tasks', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   employeeIdx: index('idx_onboarding_tasks_employee').on(table.employeeId, table.isArchived),
-  accountIdx: index('idx_onboarding_tasks_account').on(table.accountId),
+  tenantIdx: index('idx_onboarding_tasks_tenant').on(table.tenantId),
 }));
 
 // ─── HR: Onboarding Templates ───────────────────────────────────
 
 export const onboardingTemplates = pgTable('onboarding_templates', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   name: varchar('name', { length: 255 }).notNull(),
   tasks: jsonb('tasks').$type<Array<{ title: string; description?: string; category: string }>>().notNull().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_onboarding_templates_account').on(table.accountId),
+  tenantIdx: index('idx_onboarding_templates_tenant').on(table.tenantId),
 }));
 
 // ─── HR: Employee Documents ─────────────────────────────────────
 
 export const employeeDocuments = pgTable('employee_documents', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   employeeId: uuid('employee_id').notNull().references(() => employees.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 500 }).notNull(),
   type: varchar('type', { length: 100 }).notNull().default('other'),
@@ -1159,14 +1154,14 @@ export const employeeDocuments = pgTable('employee_documents', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   employeeIdx: index('idx_employee_documents_employee').on(table.employeeId, table.isArchived),
-  accountIdx: index('idx_employee_documents_account').on(table.accountId),
+  tenantIdx: index('idx_employee_documents_tenant').on(table.tenantId),
 }));
 
 // ─── HR: Time-Off Requests ────────────────────────────────────────
 
 export const timeOffRequests = pgTable('time_off_requests', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   employeeId: uuid('employee_id').notNull().references(() => employees.id, { onDelete: 'cascade' }),
   type: text('type').notNull().default('vacation'),
@@ -1189,7 +1184,7 @@ export const timeOffRequests = pgTable('time_off_requests', {
 
 export const hrLeaveTypes = pgTable('hr_leave_types', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   name: varchar('name', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 100 }).notNull(),
   color: varchar('color', { length: 20 }).notNull().default('#3b82f6'),
@@ -1203,15 +1198,15 @@ export const hrLeaveTypes = pgTable('hr_leave_types', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountSlugIdx: uniqueIndex('idx_hr_leave_types_account_slug').on(table.accountId, table.slug),
-  accountActiveIdx: index('idx_hr_leave_types_account_active').on(table.accountId, table.isActive),
+  tenantSlugIdx: uniqueIndex('idx_hr_leave_types_tenant_slug').on(table.tenantId, table.slug),
+  tenantActiveIdx: index('idx_hr_leave_types_tenant_active').on(table.tenantId, table.isActive),
 }));
 
 // ─── HR: Leave Policies ─────────────────────────────────────────────
 
 export const hrLeavePolicies = pgTable('hr_leave_policies', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   name: varchar('name', { length: 255 }).notNull(),
   description: text('description'),
   isDefault: boolean('is_default').notNull().default(false),
@@ -1220,14 +1215,14 @@ export const hrLeavePolicies = pgTable('hr_leave_policies', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_hr_leave_policies_account').on(table.accountId),
+  tenantIdx: index('idx_hr_leave_policies_tenant').on(table.tenantId),
 }));
 
 // ─── HR: Leave Policy Assignments ───────────────────────────────────
 
 export const hrLeavePolicyAssignments = pgTable('hr_leave_policy_assignments', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   employeeId: uuid('employee_id').notNull().references(() => employees.id, { onDelete: 'cascade' }),
   policyId: uuid('policy_id').notNull().references(() => hrLeavePolicies.id, { onDelete: 'cascade' }),
   effectiveFrom: text('effective_from'),
@@ -1236,14 +1231,14 @@ export const hrLeavePolicyAssignments = pgTable('hr_leave_policy_assignments', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   employeeIdx: index('idx_hr_policy_assignments_employee').on(table.employeeId),
-  accountIdx: index('idx_hr_policy_assignments_account').on(table.accountId),
+  tenantIdx: index('idx_hr_policy_assignments_tenant').on(table.tenantId),
 }));
 
 // ─── HR: Holiday Calendars ──────────────────────────────────────────
 
 export const hrHolidayCalendars = pgTable('hr_holiday_calendars', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   name: varchar('name', { length: 255 }).notNull(),
   year: integer('year').notNull(),
   description: text('description'),
@@ -1252,14 +1247,14 @@ export const hrHolidayCalendars = pgTable('hr_holiday_calendars', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_hr_holiday_calendars_account').on(table.accountId),
+  tenantIdx: index('idx_hr_holiday_calendars_tenant').on(table.tenantId),
 }));
 
 // ─── HR: Holidays ───────────────────────────────────────────────────
 
 export const hrHolidays = pgTable('hr_holidays', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   calendarId: uuid('calendar_id').notNull().references(() => hrHolidayCalendars.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 255 }).notNull(),
   date: text('date').notNull(),
@@ -1271,14 +1266,14 @@ export const hrHolidays = pgTable('hr_holidays', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   calendarIdx: index('idx_hr_holidays_calendar').on(table.calendarId),
-  accountDateIdx: index('idx_hr_holidays_account_date').on(table.accountId, table.date),
+  tenantDateIdx: index('idx_hr_holidays_tenant_date').on(table.tenantId, table.date),
 }));
 
 // ─── HR: Leave Applications ─────────────────────────────────────────
 
 export const hrLeaveApplications = pgTable('hr_leave_applications', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   employeeId: uuid('employee_id').notNull().references(() => employees.id, { onDelete: 'cascade' }),
   leaveTypeId: uuid('leave_type_id').notNull().references(() => hrLeaveTypes.id),
   startDate: text('start_date').notNull(),
@@ -1300,14 +1295,14 @@ export const hrLeaveApplications = pgTable('hr_leave_applications', {
 }, (table) => ({
   employeeStatusIdx: index('idx_hr_leave_apps_employee_status').on(table.employeeId, table.status),
   approverStatusIdx: index('idx_hr_leave_apps_approver_status').on(table.approverId, table.status),
-  accountStatusIdx: index('idx_hr_leave_apps_account_status').on(table.accountId, table.status),
+  tenantStatusIdx: index('idx_hr_leave_apps_tenant_status').on(table.tenantId, table.status),
 }));
 
 // ─── HR: Attendance ─────────────────────────────────────────────────
 
 export const hrAttendance = pgTable('hr_attendance', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   employeeId: uuid('employee_id').notNull().references(() => employees.id, { onDelete: 'cascade' }),
   date: text('date').notNull(),
   status: varchar('status', { length: 50 }).notNull().default('present'),
@@ -1321,7 +1316,7 @@ export const hrAttendance = pgTable('hr_attendance', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   employeeDateIdx: uniqueIndex('idx_hr_attendance_employee_date').on(table.employeeId, table.date),
-  accountDateIdx: index('idx_hr_attendance_account_date').on(table.accountId, table.date),
+  tenantDateIdx: index('idx_hr_attendance_tenant_date').on(table.tenantId, table.date),
   employeeStatusIdx: index('idx_hr_attendance_employee_status').on(table.employeeId, table.status),
 }));
 
@@ -1329,7 +1324,7 @@ export const hrAttendance = pgTable('hr_attendance', {
 
 export const hrLifecycleEvents = pgTable('hr_lifecycle_events', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   employeeId: uuid('employee_id').notNull().references(() => employees.id, { onDelete: 'cascade' }),
   eventType: varchar('event_type', { length: 50 }).notNull(),
   eventDate: text('event_date').notNull(),
@@ -1345,13 +1340,13 @@ export const hrLifecycleEvents = pgTable('hr_lifecycle_events', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   employeeDateIdx: index('idx_hr_lifecycle_employee_date').on(table.employeeId, table.eventDate),
-  accountIdx: index('idx_hr_lifecycle_account').on(table.accountId),
+  tenantIdx: index('idx_hr_lifecycle_tenant').on(table.tenantId),
 }));
 
 // ─── CRM: Companies ────────────────────────────────────────────────
 export const crmCompanies = pgTable('crm_companies', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   name: varchar('name', { length: 500 }).notNull(),
   domain: varchar('domain', { length: 255 }),
@@ -1367,13 +1362,13 @@ export const crmCompanies = pgTable('crm_companies', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_crm_companies_account').on(table.accountId),
+  tenantIdx: index('idx_crm_companies_tenant').on(table.tenantId),
 }));
 
 // ─── CRM: Contacts ─────────────────────────────────────────────────
 export const crmContacts = pgTable('crm_contacts', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   name: varchar('name', { length: 500 }).notNull(),
   email: varchar('email', { length: 255 }),
@@ -1388,14 +1383,14 @@ export const crmContacts = pgTable('crm_contacts', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_crm_contacts_account').on(table.accountId),
+  tenantIdx: index('idx_crm_contacts_tenant').on(table.tenantId),
   companyIdx: index('idx_crm_contacts_company').on(table.companyId),
 }));
 
 // ─── CRM: Deal Stages ──────────────────────────────────────────────
 export const crmDealStages = pgTable('crm_deal_stages', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   name: varchar('name', { length: 100 }).notNull(),
   color: varchar('color', { length: 20 }).notNull().default('#6b7280'),
   probability: integer('probability').notNull().default(0),
@@ -1403,13 +1398,13 @@ export const crmDealStages = pgTable('crm_deal_stages', {
   isDefault: boolean('is_default').notNull().default(false),
   rottingDays: integer('rotting_days'),
 }, (table) => ({
-  accountIdx: index('idx_crm_stages_account').on(table.accountId),
+  tenantIdx: index('idx_crm_stages_tenant').on(table.tenantId),
 }));
 
 // ─── CRM: Deals ────────────────────────────────────────────────────
 export const crmDeals = pgTable('crm_deals', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   title: varchar('title', { length: 500 }).notNull(),
   value: real('value').notNull().default(0),
@@ -1430,7 +1425,7 @@ export const crmDeals = pgTable('crm_deals', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_crm_deals_account').on(table.accountId),
+  tenantIdx: index('idx_crm_deals_tenant').on(table.tenantId),
   stageIdx: index('idx_crm_deals_stage').on(table.stageId),
   contactIdx: index('idx_crm_deals_contact').on(table.contactId),
   companyIdx: index('idx_crm_deals_company').on(table.companyId),
@@ -1439,7 +1434,7 @@ export const crmDeals = pgTable('crm_deals', {
 // ─── CRM: Activity Types ──────────────────────────────────────────
 export const crmActivityTypes = pgTable('crm_activity_types', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   name: varchar('name', { length: 100 }).notNull(),
   icon: varchar('icon', { length: 50 }).notNull().default('sticky-note'),
   color: varchar('color', { length: 20 }).notNull().default('#6b7280'),
@@ -1449,13 +1444,13 @@ export const crmActivityTypes = pgTable('crm_activity_types', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_crm_activity_types_account').on(table.accountId),
+  tenantIdx: index('idx_crm_activity_types_tenant').on(table.tenantId),
 }));
 
 // ─── CRM: Activities ───────────────────────────────────────────────
 export const crmActivities = pgTable('crm_activities', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   type: varchar('type', { length: 50 }).notNull().default('note'),
   body: text('body').notNull().default(''),
@@ -1477,7 +1472,7 @@ export const crmActivities = pgTable('crm_activities', {
 // ─── CRM: Workflow Automations ────────────────────────────────────
 export const crmWorkflows = pgTable('crm_workflows', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   name: varchar('name', { length: 500 }).notNull(),
   trigger: varchar('trigger', { length: 100 }).notNull(),
@@ -1490,14 +1485,14 @@ export const crmWorkflows = pgTable('crm_workflows', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_crm_workflows_account').on(table.accountId),
+  tenantIdx: index('idx_crm_workflows_tenant').on(table.tenantId),
   triggerIdx: index('idx_crm_workflows_trigger').on(table.trigger),
 }));
 
 // ─── CRM: Sales Teams ────────────────────────────────────────────
 export const crmTeams = pgTable('crm_teams', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   name: varchar('name', { length: 100 }).notNull(),
   color: varchar('color', { length: 20 }).notNull().default('#3b82f6'),
   leaderUserId: uuid('leader_user_id'),
@@ -1505,7 +1500,7 @@ export const crmTeams = pgTable('crm_teams', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_crm_teams_account').on(table.accountId),
+  tenantIdx: index('idx_crm_teams_tenant').on(table.tenantId),
 }));
 
 export const crmTeamMembers = pgTable('crm_team_members', {
@@ -1520,20 +1515,20 @@ export const crmTeamMembers = pgTable('crm_team_members', {
 // ─── CRM: Permissions ─────────────────────────────────────────────
 export const crmPermissions = pgTable('crm_permissions', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   role: varchar('role', { length: 50 }).notNull().default('sales'),
   recordAccess: varchar('record_access', { length: 50 }).notNull().default('own'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  userIdx: uniqueIndex('idx_crm_permissions_user').on(table.accountId, table.userId),
+  userIdx: uniqueIndex('idx_crm_permissions_user').on(table.tenantId, table.userId),
 }));
 
 // ─── CRM: Leads ───────────────────────────────────────────────────
 export const crmLeads = pgTable('crm_leads', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   name: varchar('name', { length: 500 }).notNull(),
   email: varchar('email', { length: 255 }),
@@ -1557,14 +1552,14 @@ export const crmLeads = pgTable('crm_leads', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_crm_leads_account').on(table.accountId),
+  tenantIdx: index('idx_crm_leads_tenant').on(table.tenantId),
   statusIdx: index('idx_crm_leads_status').on(table.status),
 }));
 
 // ─── CRM: Notes (rich text) ──────────────────────────────────────
 export const crmNotes = pgTable('crm_notes', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   title: varchar('title', { length: 500 }).notNull().default(''),
   content: jsonb('content').$type<Record<string, unknown>>().notNull().default({}),
@@ -1584,7 +1579,7 @@ export const crmNotes = pgTable('crm_notes', {
 // ─── CRM: Saved Views ────────────────────────────────────────────
 export const crmSavedViews = pgTable('crm_saved_views', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   appSection: varchar('app_section', { length: 50 }).notNull(),
   name: varchar('name', { length: 255 }).notNull(),
@@ -1595,14 +1590,14 @@ export const crmSavedViews = pgTable('crm_saved_views', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_crm_saved_views_account').on(table.accountId),
+  tenantIdx: index('idx_crm_saved_views_tenant').on(table.tenantId),
   userIdx: index('idx_crm_saved_views_user').on(table.userId, table.appSection),
 }));
 
 // ─── CRM: Lead Forms ─────────────────────────────────────────────
 export const crmLeadForms = pgTable('crm_lead_forms', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   name: varchar('name', { length: 255 }).notNull().default('Default Lead Form'),
   token: varchar('token', { length: 64 }).notNull().unique(),
@@ -1613,13 +1608,13 @@ export const crmLeadForms = pgTable('crm_lead_forms', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   tokenIdx: index('idx_crm_lead_forms_token').on(table.token),
-  accountIdx: index('idx_crm_lead_forms_account').on(table.accountId),
+  tenantIdx: index('idx_crm_lead_forms_tenant').on(table.tenantId),
 }));
 
 // ─── Projects: Clients ────────────────────────────────────────────
 export const projectClients = pgTable('project_clients', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   name: varchar('name', { length: 500 }).notNull(),
   email: varchar('email', { length: 255 }),
@@ -1640,14 +1635,14 @@ export const projectClients = pgTable('project_clients', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_project_clients_account').on(table.accountId),
+  tenantIdx: index('idx_project_clients_tenant').on(table.tenantId),
   portalTokenIdx: uniqueIndex('idx_project_clients_portal_token').on(table.portalToken),
 }));
 
 // ─── Projects: Projects ───────────────────────────────────────────
 export const projectProjects = pgTable('project_projects', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   clientId: uuid('client_id').references(() => projectClients.id, { onDelete: 'set null' }),
   name: varchar('name', { length: 500 }).notNull(),
@@ -1664,7 +1659,7 @@ export const projectProjects = pgTable('project_projects', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_project_projects_account').on(table.accountId),
+  tenantIdx: index('idx_project_projects_tenant').on(table.tenantId),
   clientIdx: index('idx_project_projects_client').on(table.clientId),
   statusIdx: index('idx_project_projects_status').on(table.status),
 }));
@@ -1686,7 +1681,7 @@ export const projectMembers = pgTable('project_members', {
 // ─── Projects: Time Entries ───────────────────────────────────────
 export const projectTimeEntries = pgTable('project_time_entries', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   projectId: uuid('project_id').notNull().references(() => projectProjects.id, { onDelete: 'cascade' }),
   durationMinutes: integer('duration_minutes').notNull().default(0),
@@ -1704,7 +1699,7 @@ export const projectTimeEntries = pgTable('project_time_entries', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_project_time_entries_account').on(table.accountId),
+  tenantIdx: index('idx_project_time_entries_tenant').on(table.tenantId),
   projectIdx: index('idx_project_time_entries_project').on(table.projectId),
   userDateIdx: index('idx_project_time_entries_user_date').on(table.userId, table.workDate),
   billedIdx: index('idx_project_time_entries_billed').on(table.billed, table.billable),
@@ -1713,7 +1708,7 @@ export const projectTimeEntries = pgTable('project_time_entries', {
 // ─── Projects: Invoices ───────────────────────────────────────────
 export const projectInvoices = pgTable('project_invoices', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   userId: uuid('user_id').notNull(),
   clientId: uuid('client_id').notNull().references(() => projectClients.id, { onDelete: 'cascade' }),
   invoiceNumber: varchar('invoice_number', { length: 50 }).notNull(),
@@ -1738,10 +1733,10 @@ export const projectInvoices = pgTable('project_invoices', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_project_invoices_account').on(table.accountId),
+  tenantIdx: index('idx_project_invoices_tenant').on(table.tenantId),
   clientIdx: index('idx_project_invoices_client').on(table.clientId),
   statusIdx: index('idx_project_invoices_status').on(table.status),
-  invoiceNumberIdx: uniqueIndex('idx_project_invoices_number').on(table.accountId, table.invoiceNumber),
+  invoiceNumberIdx: uniqueIndex('idx_project_invoices_number').on(table.tenantId, table.invoiceNumber),
 }));
 
 // ─── Projects: Invoice Line Items ─────────────────────────────────
@@ -1764,7 +1759,7 @@ export const projectInvoiceLineItems = pgTable('project_invoice_line_items', {
 // ─── Projects: Settings ───────────────────────────────────────────
 export const projectSettings = pgTable('project_settings', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   invoicePrefix: varchar('invoice_prefix', { length: 20 }).notNull().default('INV'),
   defaultHourlyRate: real('default_hourly_rate').notNull().default(0),
   companyName: varchar('company_name', { length: 500 }),
@@ -1779,7 +1774,7 @@ export const projectSettings = pgTable('project_settings', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: uniqueIndex('idx_project_settings_account').on(table.accountId),
+  tenantIdx: uniqueIndex('idx_project_settings_tenant').on(table.tenantId),
 }));
 
 // ─── System Settings (admin-only, singleton row) ───────────────────
@@ -1803,8 +1798,7 @@ export const systemSettings = pgTable('system_settings', {
 export const auditLog = pgTable('audit_log', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id'),
-  accountId: uuid('account_id'),
-  tenantId: uuid('tenant_id'),
+  tenantId: uuid('tenant_id').references(() => tenants.id),
   action: varchar('action', { length: 20 }).notNull(), // 'create', 'update', 'delete'
   entity: varchar('entity', { length: 100 }).notNull(), // 'crm_deal', 'hr_employee', etc.
   entityId: varchar('entity_id', { length: 255 }),
@@ -1839,7 +1833,7 @@ export const appPermissions = pgTable('app_permissions', {
 
 export const marketplaceApps = pgTable('marketplace_apps', {
   id: uuid('id').primaryKey().defaultRandom(),
-  accountId: uuid('account_id').notNull(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   appId: varchar('app_id', { length: 50 }).notNull(),
   status: varchar('status', { length: 20 }).notNull().default('stopped'),
   assignedPort: integer('assigned_port').notNull(),
@@ -1851,7 +1845,7 @@ export const marketplaceApps = pgTable('marketplace_apps', {
   installedAt: timestamp('installed_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  uniqueIdx: uniqueIndex('idx_marketplace_apps_unique').on(table.accountId, table.appId),
+  uniqueIdx: uniqueIndex('idx_marketplace_apps_unique').on(table.tenantId, table.appId),
 }));
 
 // ─── Presence Heartbeats ────────────────────────────────────────────
