@@ -58,30 +58,10 @@ export function AboutPanel() {
               border: '1px solid var(--color-border-secondary)',
             }}
           >
-            1.8.1
+            1.8.3
           </span>
         </SettingsRow>
 
-        <SettingsRow label={t('settings.builtWith')} description={t('settings.coreTechnologies')}>
-          <div style={{ display: 'flex', gap: 'var(--spacing-xs)', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-            {['React', 'TypeScript', 'Express', 'PostgreSQL'].map((name) => (
-              <span
-                key={name}
-                style={{
-                  fontFamily: 'var(--font-family)',
-                  fontSize: 'var(--font-size-xs)',
-                  color: 'var(--color-text-secondary)',
-                  background: 'var(--color-bg-tertiary)',
-                  padding: '3px 10px',
-                  borderRadius: 'var(--radius-lg)',
-                  border: '1px solid var(--color-border-secondary)',
-                }}
-              >
-                {name}
-              </span>
-            ))}
-          </div>
-        </SettingsRow>
       </SettingsSection>
 
     </div>

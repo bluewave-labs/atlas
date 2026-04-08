@@ -5,7 +5,6 @@ import { api } from '../../lib/api-client';
 import { queryKeys } from '../../config/query-keys';
 import { SettingsSection, SettingsRow, SettingsToggle } from '../settings/settings-primitives';
 import { Input } from '../ui/input';
-import { Chip } from '../ui/chip';
 import { widgetRegistry } from './widgets/registry';
 import { appRegistry } from '../../config/app-registry';
 
@@ -480,10 +479,8 @@ export function HomeWidgetsPanel() {
         <SettingsSection title={t('widgets.appWidgets')} description={t('widgets.appWidgetsDesc')}>
           {Array.from(appWidgetsByApp.entries()).map(([appId, widgets]) => (
             <div key={appId} style={{ marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                <Chip color={widgets[0].appColor} height={20}>
-                  {widgets[0].appName}
-                </Chip>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)' }}>
+                {widgets[0].appName}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {widgets.map((widget) => {
