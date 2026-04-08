@@ -14,10 +14,11 @@ COPY packages/client/package.json packages/client/
 # Install all dependencies (including dev for building)
 RUN npm ci --legacy-peer-deps
 
-# Copy source code
+# Copy source code (cache-bust: changes to any source invalidates build)
 COPY packages/shared packages/shared
 COPY packages/server packages/server
 COPY packages/client packages/client
+ARG CACHE_BUST=1
 
 # Build shared types first (other packages depend on it)
 RUN cd packages/shared && npx tsc --skipLibCheck
