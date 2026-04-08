@@ -10,8 +10,6 @@ import { tasksManifest } from './tasks/manifest';
 import { docsManifest } from './docs/manifest';
 import { drawManifest } from './draw/manifest';
 import { systemManifest } from './system/manifest';
-import { marketplaceManifest } from './marketplace/manifest';
-
 appRegistry.register(crmManifest);
 appRegistry.register(hrManifest);
 appRegistry.register(calendarManifest);
@@ -23,6 +21,5 @@ appRegistry.register(tasksManifest);
 appRegistry.register(docsManifest);
 appRegistry.register(drawManifest);
 appRegistry.register(systemManifest);
-appRegistry.register(marketplaceManifest);
 
 export { appRegistry };
