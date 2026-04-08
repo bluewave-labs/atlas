@@ -7,7 +7,7 @@ import { getAppPermission, canAccess } from '../../../services/app-permissions.s
 
 export async function listLeaveTypes(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -16,7 +16,7 @@ export async function listLeaveTypes(req: Request, res: Response) {
     }
 
     const includeInactive = req.query.includeInactive === 'true';
-    const data = await hrService.listLeaveTypes(accountId, includeInactive);
+    const data = await hrService.listLeaveTypes(tenantId, includeInactive);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to list leave types');
@@ -26,7 +26,7 @@ export async function listLeaveTypes(req: Request, res: Response) {
 
 export async function createLeaveType(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'create')) {
@@ -39,7 +39,7 @@ export async function createLeaveType(req: Request, res: Response) {
       res.status(400).json({ success: false, error: 'Name and slug are required' });
       return;
     }
-    const data = await hrService.createLeaveType(accountId, {
+    const data = await hrService.createLeaveType(tenantId, {
       name: name.trim(), slug: slug.trim(), color, defaultDaysPerYear, maxCarryForward, requiresApproval, isPaid,
     });
     res.json({ success: true, data });
@@ -51,7 +51,7 @@ export async function createLeaveType(req: Request, res: Response) {
 
 export async function updateLeaveType(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'update')) {
@@ -60,7 +60,7 @@ export async function updateLeaveType(req: Request, res: Response) {
     }
 
     const id = req.params.id as string;
-    const data = await hrService.updateLeaveType(accountId, id, req.body);
+    const data = await hrService.updateLeaveType(tenantId, id, req.body);
     if (!data) { res.status(404).json({ success: false, error: 'Leave type not found' }); return; }
     res.json({ success: true, data });
   } catch (error) {
@@ -71,7 +71,7 @@ export async function updateLeaveType(req: Request, res: Response) {
 
 export async function deleteLeaveType(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'delete') && !canAccess(perm.role, 'delete_own')) {
@@ -79,7 +79,7 @@ export async function deleteLeaveType(req: Request, res: Response) {
       return;
     }
 
-    await hrService.deleteLeaveType(accountId, req.params.id as string);
+    await hrService.deleteLeaveType(tenantId, req.params.id as string);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete leave type');
@@ -91,7 +91,7 @@ export async function deleteLeaveType(req: Request, res: Response) {
 
 export async function listLeavePolicies(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -99,7 +99,7 @@ export async function listLeavePolicies(req: Request, res: Response) {
       return;
     }
 
-    const data = await hrService.listLeavePolicies(accountId);
+    const data = await hrService.listLeavePolicies(tenantId);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to list leave policies');
@@ -109,7 +109,7 @@ export async function listLeavePolicies(req: Request, res: Response) {
 
 export async function createLeavePolicy(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'create')) {
@@ -119,7 +119,7 @@ export async function createLeavePolicy(req: Request, res: Response) {
 
     const { name, description, isDefault, allocations } = req.body;
     if (!name?.trim()) { res.status(400).json({ success: false, error: 'Name is required' }); return; }
-    const data = await hrService.createLeavePolicy(accountId, {
+    const data = await hrService.createLeavePolicy(tenantId, {
       name: name.trim(), description, isDefault, allocations: allocations || [],
     });
     res.json({ success: true, data });
@@ -131,7 +131,7 @@ export async function createLeavePolicy(req: Request, res: Response) {
 
 export async function updateLeavePolicy(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'update')) {
@@ -139,7 +139,7 @@ export async function updateLeavePolicy(req: Request, res: Response) {
       return;
     }
 
-    const data = await hrService.updateLeavePolicy(accountId, req.params.id as string, req.body);
+    const data = await hrService.updateLeavePolicy(tenantId, req.params.id as string, req.body);
     if (!data) { res.status(404).json({ success: false, error: 'Leave policy not found' }); return; }
     res.json({ success: true, data });
   } catch (error) {
@@ -150,7 +150,7 @@ export async function updateLeavePolicy(req: Request, res: Response) {
 
 export async function deleteLeavePolicy(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'delete') && !canAccess(perm.role, 'delete_own')) {
@@ -158,7 +158,7 @@ export async function deleteLeavePolicy(req: Request, res: Response) {
       return;
     }
 
-    await hrService.deleteLeavePolicy(accountId, req.params.id as string);
+    await hrService.deleteLeavePolicy(tenantId, req.params.id as string);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete leave policy');
@@ -168,7 +168,7 @@ export async function deleteLeavePolicy(req: Request, res: Response) {
 
 export async function assignPolicyToEmployee(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'update')) {
@@ -179,7 +179,7 @@ export async function assignPolicyToEmployee(req: Request, res: Response) {
     const employeeId = req.params.id as string;
     const { policyId, effectiveFrom } = req.body;
     if (!policyId) { res.status(400).json({ success: false, error: 'policyId is required' }); return; }
-    const data = await hrService.assignPolicy(accountId, employeeId, policyId, effectiveFrom);
+    const data = await hrService.assignPolicy(tenantId, employeeId, policyId, effectiveFrom);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to assign policy');
@@ -189,7 +189,7 @@ export async function assignPolicyToEmployee(req: Request, res: Response) {
 
 export async function getEmployeePolicy(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -197,7 +197,7 @@ export async function getEmployeePolicy(req: Request, res: Response) {
       return;
     }
 
-    const data = await hrService.getEmployeePolicy(accountId, req.params.id as string);
+    const data = await hrService.getEmployeePolicy(tenantId, req.params.id as string);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to get employee policy');
@@ -209,7 +209,7 @@ export async function getEmployeePolicy(req: Request, res: Response) {
 
 export async function seedLeaveTypes(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'create')) {
@@ -217,7 +217,7 @@ export async function seedLeaveTypes(req: Request, res: Response) {
       return;
     }
 
-    const result = await hrService.seedDefaultLeaveTypes(accountId);
+    const result = await hrService.seedDefaultLeaveTypes(tenantId);
     res.json({ success: true, data: result });
   } catch (error) {
     logger.error({ error }, 'Failed to seed leave types');
@@ -227,7 +227,7 @@ export async function seedLeaveTypes(req: Request, res: Response) {
 
 export async function seedLeavePolicies(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'create')) {
@@ -235,7 +235,7 @@ export async function seedLeavePolicies(req: Request, res: Response) {
       return;
     }
 
-    const result = await hrService.seedDefaultPolicies(accountId);
+    const result = await hrService.seedDefaultPolicies(tenantId);
     res.json({ success: true, data: result });
   } catch (error) {
     logger.error({ error }, 'Failed to seed leave policies');
@@ -247,7 +247,7 @@ export async function seedLeavePolicies(req: Request, res: Response) {
 
 export async function triggerBalanceAllocation(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'create')) {
@@ -256,7 +256,7 @@ export async function triggerBalanceAllocation(req: Request, res: Response) {
     }
 
     const year = parseInt(req.query.year as string) || new Date().getFullYear();
-    const result = await hrService.allocateBalancesForYear(accountId, year);
+    const result = await hrService.allocateBalancesForYear(tenantId, year);
     res.json({ success: true, data: result });
   } catch (error) {
     logger.error({ error }, 'Failed to trigger balance allocation');
@@ -266,7 +266,7 @@ export async function triggerBalanceAllocation(req: Request, res: Response) {
 
 export async function resyncPolicyBalances(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const policyId = req.params.id as string;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
@@ -275,7 +275,7 @@ export async function resyncPolicyBalances(req: Request, res: Response) {
       return;
     }
 
-    const result = await hrService.resyncPolicyBalances(accountId, policyId);
+    const result = await hrService.resyncPolicyBalances(tenantId, policyId);
     res.json({ success: true, data: result });
   } catch (error) {
     logger.error({ error }, 'Failed to resync policy balances');
@@ -287,7 +287,7 @@ export async function resyncPolicyBalances(req: Request, res: Response) {
 
 export async function listHolidayCalendars(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -295,7 +295,7 @@ export async function listHolidayCalendars(req: Request, res: Response) {
       return;
     }
 
-    const data = await hrService.listHolidayCalendars(accountId);
+    const data = await hrService.listHolidayCalendars(tenantId);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to list holiday calendars');
@@ -305,7 +305,7 @@ export async function listHolidayCalendars(req: Request, res: Response) {
 
 export async function createHolidayCalendar(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'create')) {
@@ -315,7 +315,7 @@ export async function createHolidayCalendar(req: Request, res: Response) {
 
     const { name, year, description, isDefault } = req.body;
     if (!name?.trim() || !year) { res.status(400).json({ success: false, error: 'Name and year are required' }); return; }
-    const data = await hrService.createHolidayCalendar(accountId, { name: name.trim(), year, description, isDefault });
+    const data = await hrService.createHolidayCalendar(tenantId, { name: name.trim(), year, description, isDefault });
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to create holiday calendar');
@@ -325,7 +325,7 @@ export async function createHolidayCalendar(req: Request, res: Response) {
 
 export async function updateHolidayCalendar(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'update')) {
@@ -333,7 +333,7 @@ export async function updateHolidayCalendar(req: Request, res: Response) {
       return;
     }
 
-    const data = await hrService.updateHolidayCalendar(accountId, req.params.id as string, req.body);
+    const data = await hrService.updateHolidayCalendar(tenantId, req.params.id as string, req.body);
     if (!data) { res.status(404).json({ success: false, error: 'Holiday calendar not found' }); return; }
     res.json({ success: true, data });
   } catch (error) {
@@ -344,7 +344,7 @@ export async function updateHolidayCalendar(req: Request, res: Response) {
 
 export async function deleteHolidayCalendar(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'delete') && !canAccess(perm.role, 'delete_own')) {
@@ -352,7 +352,7 @@ export async function deleteHolidayCalendar(req: Request, res: Response) {
       return;
     }
 
-    await hrService.deleteHolidayCalendar(accountId, req.params.id as string);
+    await hrService.deleteHolidayCalendar(tenantId, req.params.id as string);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete holiday calendar');
@@ -362,7 +362,7 @@ export async function deleteHolidayCalendar(req: Request, res: Response) {
 
 export async function listHolidays(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -370,7 +370,7 @@ export async function listHolidays(req: Request, res: Response) {
       return;
     }
 
-    const data = await hrService.listHolidays(accountId, req.params.id as string);
+    const data = await hrService.listHolidays(tenantId, req.params.id as string);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to list holidays');
@@ -380,7 +380,7 @@ export async function listHolidays(req: Request, res: Response) {
 
 export async function createHoliday(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'create')) {
@@ -393,7 +393,7 @@ export async function createHoliday(req: Request, res: Response) {
       res.status(400).json({ success: false, error: 'calendarId, name, and date are required' });
       return;
     }
-    const data = await hrService.createHoliday(accountId, { calendarId, name: name.trim(), date, description, type, isRecurring });
+    const data = await hrService.createHoliday(tenantId, { calendarId, name: name.trim(), date, description, type, isRecurring });
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to create holiday');
@@ -403,7 +403,7 @@ export async function createHoliday(req: Request, res: Response) {
 
 export async function updateHoliday(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'update')) {
@@ -411,7 +411,7 @@ export async function updateHoliday(req: Request, res: Response) {
       return;
     }
 
-    const data = await hrService.updateHoliday(accountId, req.params.id as string, req.body);
+    const data = await hrService.updateHoliday(tenantId, req.params.id as string, req.body);
     if (!data) { res.status(404).json({ success: false, error: 'Holiday not found' }); return; }
     res.json({ success: true, data });
   } catch (error) {
@@ -422,7 +422,7 @@ export async function updateHoliday(req: Request, res: Response) {
 
 export async function deleteHoliday(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'delete') && !canAccess(perm.role, 'delete_own')) {
@@ -430,7 +430,7 @@ export async function deleteHoliday(req: Request, res: Response) {
       return;
     }
 
-    await hrService.deleteHoliday(accountId, req.params.id as string);
+    await hrService.deleteHoliday(tenantId, req.params.id as string);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete holiday');
@@ -440,7 +440,7 @@ export async function deleteHoliday(req: Request, res: Response) {
 
 export async function bulkImportHolidays(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'create')) {
@@ -453,7 +453,7 @@ export async function bulkImportHolidays(req: Request, res: Response) {
       res.status(400).json({ success: false, error: 'calendarId and a non-empty holidays array are required' });
       return;
     }
-    const data = await hrService.bulkCreateHolidays(accountId, calendarId, holidays);
+    const data = await hrService.bulkCreateHolidays(tenantId, calendarId, holidays);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to bulk import holidays');
@@ -463,7 +463,7 @@ export async function bulkImportHolidays(req: Request, res: Response) {
 
 export async function getWorkingDays(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -473,7 +473,7 @@ export async function getWorkingDays(req: Request, res: Response) {
 
     const { start, end, calendarId } = req.query;
     if (!start || !end) { res.status(400).json({ success: false, error: 'start and end are required' }); return; }
-    const days = await hrService.calculateWorkingDays(accountId, start as string, end as string, calendarId as string | undefined);
+    const days = await hrService.calculateWorkingDays(tenantId, start as string, end as string, calendarId as string | undefined);
     res.json({ success: true, data: { workingDays: days } });
   } catch (error) {
     logger.error({ error }, 'Failed to calculate working days');

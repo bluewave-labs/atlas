@@ -4,19 +4,19 @@ import { eq, and, asc, sql } from 'drizzle-orm';
 
 // ─── Onboarding Tasks ──────────────────────────────────────────────
 
-export async function listOnboardingTasks(accountId: string, employeeId: string) {
+export async function listOnboardingTasks(tenantId: string, employeeId: string) {
   return db
     .select()
     .from(onboardingTasks)
     .where(and(
-      eq(onboardingTasks.accountId, accountId),
+      eq(onboardingTasks.tenantId, tenantId),
       eq(onboardingTasks.employeeId, employeeId),
       eq(onboardingTasks.isArchived, false),
     ))
     .orderBy(asc(onboardingTasks.sortOrder), asc(onboardingTasks.createdAt));
 }
 
-export async function createOnboardingTask(accountId: string, employeeId: string, input: {
+export async function createOnboardingTask(tenantId: string, employeeId: string, input: {
   title: string;
   description?: string | null;
   category?: string;
@@ -33,7 +33,7 @@ export async function createOnboardingTask(accountId: string, employeeId: string
   const [created] = await db
     .insert(onboardingTasks)
     .values({
-      accountId,
+      tenantId,
       employeeId,
       title: input.title,
       description: input.description ?? null,
@@ -48,7 +48,7 @@ export async function createOnboardingTask(accountId: string, employeeId: string
   return created;
 }
 
-export async function updateOnboardingTask(accountId: string, taskId: string, input: {
+export async function updateOnboardingTask(tenantId: string, taskId: string, input: {
   title?: string;
   description?: string | null;
   category?: string;
@@ -73,28 +73,28 @@ export async function updateOnboardingTask(accountId: string, taskId: string, in
   const [updated] = await db
     .update(onboardingTasks)
     .set(updates)
-    .where(and(eq(onboardingTasks.id, taskId), eq(onboardingTasks.accountId, accountId)))
+    .where(and(eq(onboardingTasks.id, taskId), eq(onboardingTasks.tenantId, tenantId)))
     .returning();
 
   return updated || null;
 }
 
-export async function deleteOnboardingTask(accountId: string, taskId: string) {
-  return updateOnboardingTask(accountId, taskId, { isArchived: true });
+export async function deleteOnboardingTask(tenantId: string, taskId: string) {
+  return updateOnboardingTask(tenantId, taskId, { isArchived: true });
 }
 
-export async function createTasksFromTemplate(accountId: string, employeeId: string, templateId: string) {
+export async function createTasksFromTemplate(tenantId: string, employeeId: string, templateId: string) {
   const [template] = await db
     .select()
     .from(onboardingTemplates)
-    .where(and(eq(onboardingTemplates.id, templateId), eq(onboardingTemplates.accountId, accountId)))
+    .where(and(eq(onboardingTemplates.id, templateId), eq(onboardingTemplates.tenantId, tenantId)))
     .limit(1);
 
   if (!template) return [];
 
   const created = [];
   for (const task of template.tasks) {
-    const t = await createOnboardingTask(accountId, employeeId, {
+    const t = await createOnboardingTask(tenantId, employeeId, {
       title: task.title,
       description: task.description ?? null,
       category: task.category,
@@ -107,15 +107,15 @@ export async function createTasksFromTemplate(accountId: string, employeeId: str
 
 // ─── Onboarding Templates ──────────────────────────────────────────
 
-export async function listOnboardingTemplates(accountId: string) {
+export async function listOnboardingTemplates(tenantId: string) {
   return db
     .select()
     .from(onboardingTemplates)
-    .where(eq(onboardingTemplates.accountId, accountId))
+    .where(eq(onboardingTemplates.tenantId, tenantId))
     .orderBy(asc(onboardingTemplates.name));
 }
 
-export async function createOnboardingTemplate(accountId: string, input: {
+export async function createOnboardingTemplate(tenantId: string, input: {
   name: string;
   tasks: Array<{ title: string; description?: string; category: string }>;
 }) {
@@ -123,7 +123,7 @@ export async function createOnboardingTemplate(accountId: string, input: {
   const [created] = await db
     .insert(onboardingTemplates)
     .values({
-      accountId,
+      tenantId,
       name: input.name,
       tasks: input.tasks,
       createdAt: now,
@@ -134,16 +134,16 @@ export async function createOnboardingTemplate(accountId: string, input: {
   return created;
 }
 
-export async function seedDefaultTemplate(accountId: string) {
+export async function seedDefaultTemplate(tenantId: string) {
   const existing = await db
     .select({ id: onboardingTemplates.id })
     .from(onboardingTemplates)
-    .where(eq(onboardingTemplates.accountId, accountId))
+    .where(eq(onboardingTemplates.tenantId, tenantId))
     .limit(1);
 
   if (existing.length > 0) return null;
 
-  return createOnboardingTemplate(accountId, {
+  return createOnboardingTemplate(tenantId, {
     name: 'Default onboarding',
     tasks: [
       { title: 'Set up email account', description: 'Create company email and set up mail client', category: 'IT' },

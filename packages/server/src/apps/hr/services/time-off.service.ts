@@ -20,13 +20,13 @@ interface UpdateTimeOffRequestInput extends Partial<Omit<CreateTimeOffRequestInp
 
 // ─── Time Off Requests ──────────────────────────────────────────────
 
-export async function listTimeOffRequests(userId: string, accountId: string, filters?: {
+export async function listTimeOffRequests(userId: string, tenantId: string, filters?: {
   employeeId?: string;
   status?: string;
   type?: string;
   includeArchived?: boolean;
 }) {
-  const conditions = [eq(timeOffRequests.userId, userId), eq(timeOffRequests.accountId, accountId)];
+  const conditions = [eq(timeOffRequests.userId, userId), eq(timeOffRequests.tenantId, tenantId)];
 
   if (!filters?.includeArchived) {
     conditions.push(eq(timeOffRequests.isArchived, false));
@@ -44,7 +44,7 @@ export async function listTimeOffRequests(userId: string, accountId: string, fil
   return db
     .select({
       id: timeOffRequests.id,
-      accountId: timeOffRequests.accountId,
+      tenantId: timeOffRequests.tenantId,
       userId: timeOffRequests.userId,
       employeeId: timeOffRequests.employeeId,
       type: timeOffRequests.type,
@@ -65,7 +65,7 @@ export async function listTimeOffRequests(userId: string, accountId: string, fil
     .orderBy(desc(timeOffRequests.createdAt));
 }
 
-export async function createTimeOffRequest(userId: string, accountId: string, input: CreateTimeOffRequestInput) {
+export async function createTimeOffRequest(userId: string, tenantId: string, input: CreateTimeOffRequestInput) {
   const now = new Date();
 
   const [maxSort] = await db
@@ -78,7 +78,7 @@ export async function createTimeOffRequest(userId: string, accountId: string, in
   const [created] = await db
     .insert(timeOffRequests)
     .values({
-      accountId,
+      tenantId,
       userId,
       employeeId: input.employeeId,
       type: input.type ?? 'vacation',
@@ -97,7 +97,7 @@ export async function createTimeOffRequest(userId: string, accountId: string, in
   return created;
 }
 
-export async function updateTimeOffRequest(userId: string, accountId: string, id: string, input: UpdateTimeOffRequestInput) {
+export async function updateTimeOffRequest(userId: string, tenantId: string, id: string, input: UpdateTimeOffRequestInput) {
   const now = new Date();
   const updates: Record<string, unknown> = { updatedAt: now };
 
@@ -113,42 +113,42 @@ export async function updateTimeOffRequest(userId: string, accountId: string, id
   await db
     .update(timeOffRequests)
     .set(updates)
-    .where(and(eq(timeOffRequests.id, id), eq(timeOffRequests.userId, userId), eq(timeOffRequests.accountId, accountId)));
+    .where(and(eq(timeOffRequests.id, id), eq(timeOffRequests.userId, userId), eq(timeOffRequests.tenantId, tenantId)));
 
   const [updated] = await db
     .select()
     .from(timeOffRequests)
-    .where(and(eq(timeOffRequests.id, id), eq(timeOffRequests.userId, userId), eq(timeOffRequests.accountId, accountId)))
+    .where(and(eq(timeOffRequests.id, id), eq(timeOffRequests.userId, userId), eq(timeOffRequests.tenantId, tenantId)))
     .limit(1);
 
   return updated || null;
 }
 
-export async function deleteTimeOffRequest(userId: string, accountId: string, id: string) {
-  await updateTimeOffRequest(userId, accountId, id, { isArchived: true });
+export async function deleteTimeOffRequest(userId: string, tenantId: string, id: string) {
+  await updateTimeOffRequest(userId, tenantId, id, { isArchived: true });
 }
 
 // ─── Leave Balances ────────────────────────────────────────────────
 
-export async function getLeaveBalances(accountId: string, employeeId: string, year: number) {
+export async function getLeaveBalances(tenantId: string, employeeId: string, year: number) {
   return db
     .select()
     .from(leaveBalances)
     .where(and(
-      eq(leaveBalances.accountId, accountId),
+      eq(leaveBalances.tenantId, tenantId),
       eq(leaveBalances.employeeId, employeeId),
       eq(leaveBalances.year, year),
     ))
     .orderBy(asc(leaveBalances.leaveType));
 }
 
-export async function allocateLeave(accountId: string, employeeId: string, leaveType: string, year: number, days: number) {
+export async function allocateLeave(tenantId: string, employeeId: string, leaveType: string, year: number, days: number) {
   const now = new Date();
   const existing = await db
     .select()
     .from(leaveBalances)
     .where(and(
-      eq(leaveBalances.accountId, accountId),
+      eq(leaveBalances.tenantId, tenantId),
       eq(leaveBalances.employeeId, employeeId),
       eq(leaveBalances.leaveType, leaveType),
       eq(leaveBalances.year, year),
@@ -167,7 +167,7 @@ export async function allocateLeave(accountId: string, employeeId: string, leave
   const [created] = await db
     .insert(leaveBalances)
     .values({
-      accountId,
+      tenantId,
       employeeId,
       leaveType,
       year,
@@ -182,7 +182,7 @@ export async function allocateLeave(accountId: string, employeeId: string, leave
   return created;
 }
 
-export async function updateUsedLeave(accountId: string, employeeId: string, leaveType: string, year: number) {
+export async function updateUsedLeave(tenantId: string, employeeId: string, leaveType: string, year: number) {
   // Calculate used days from approved time-off requests in the given year
   const yearStart = `${year}-01-01`;
   const yearEnd = `${year}-12-31`;
@@ -191,7 +191,7 @@ export async function updateUsedLeave(accountId: string, employeeId: string, lea
     .select({ startDate: timeOffRequests.startDate, endDate: timeOffRequests.endDate })
     .from(timeOffRequests)
     .where(and(
-      eq(timeOffRequests.accountId, accountId),
+      eq(timeOffRequests.tenantId, tenantId),
       eq(timeOffRequests.employeeId, employeeId),
       eq(timeOffRequests.type, leaveType),
       eq(timeOffRequests.status, 'approved'),
@@ -213,7 +213,7 @@ export async function updateUsedLeave(accountId: string, employeeId: string, lea
     .update(leaveBalances)
     .set({ used: totalDays, updatedAt: now })
     .where(and(
-      eq(leaveBalances.accountId, accountId),
+      eq(leaveBalances.tenantId, tenantId),
       eq(leaveBalances.employeeId, employeeId),
       eq(leaveBalances.leaveType, leaveType),
       eq(leaveBalances.year, year),
@@ -222,10 +222,10 @@ export async function updateUsedLeave(accountId: string, employeeId: string, lea
   return totalDays;
 }
 
-export async function getLeaveBalancesSummary(accountId: string) {
+export async function getLeaveBalancesSummary(tenantId: string) {
   return db
     .select()
     .from(leaveBalances)
-    .where(eq(leaveBalances.accountId, accountId))
+    .where(eq(leaveBalances.tenantId, tenantId))
     .orderBy(asc(leaveBalances.employeeId), asc(leaveBalances.leaveType));
 }

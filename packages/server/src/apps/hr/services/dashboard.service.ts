@@ -14,21 +14,21 @@ const UNASSIGNED_DEPT_COLOR = '#94a3b8';
 
 // ─── Dashboard ─────────────────────────────────────────────────────
 
-export async function getDashboardData(userId: string, accountId: string) {
+export async function getDashboardData(userId: string, tenantId: string) {
   const allEmployees = await db
     .select()
     .from(employees)
-    .where(and(eq(employees.userId, userId), eq(employees.accountId, accountId), eq(employees.isArchived, false)));
+    .where(and(eq(employees.userId, userId), eq(employees.tenantId, tenantId), eq(employees.isArchived, false)));
 
   const allDepartments = await db
     .select()
     .from(departments)
-    .where(and(eq(departments.userId, userId), eq(departments.accountId, accountId), eq(departments.isArchived, false)));
+    .where(and(eq(departments.userId, userId), eq(departments.tenantId, tenantId), eq(departments.isArchived, false)));
 
   const allTimeOff = await db
     .select()
     .from(timeOffRequests)
-    .where(and(eq(timeOffRequests.userId, userId), eq(timeOffRequests.accountId, accountId), eq(timeOffRequests.isArchived, false)));
+    .where(and(eq(timeOffRequests.userId, userId), eq(timeOffRequests.tenantId, tenantId), eq(timeOffRequests.isArchived, false)));
 
   const now = new Date();
   const thirtyDaysFromNow = new Date(now.getTime() + 30 * 86400000);
@@ -117,7 +117,7 @@ export async function getDashboardData(userId: string, accountId: string) {
 
 // ─── Widget summary (lightweight) ──────────────────────────────────
 
-export async function getWidgetData(userId: string, accountId: string) {
+export async function getWidgetData(userId: string, tenantId: string) {
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
   // Employee count (active, non-archived)
@@ -125,7 +125,7 @@ export async function getWidgetData(userId: string, accountId: string) {
     .select({ count: sql<number>`COUNT(*)`.as('count') })
     .from(employees)
     .where(and(
-      eq(employees.accountId, accountId),
+      eq(employees.tenantId, tenantId),
       eq(employees.isArchived, false),
       eq(employees.status, 'active'),
     ));
@@ -135,7 +135,7 @@ export async function getWidgetData(userId: string, accountId: string) {
     .select({ count: sql<number>`COUNT(*)`.as('count') })
     .from(departments)
     .where(and(
-      eq(departments.accountId, accountId),
+      eq(departments.tenantId, tenantId),
       eq(departments.isArchived, false),
     ));
 
@@ -144,7 +144,7 @@ export async function getWidgetData(userId: string, accountId: string) {
     .select({ count: sql<number>`COUNT(*)`.as('count') })
     .from(hrLeaveApplications)
     .where(and(
-      eq(hrLeaveApplications.accountId, accountId),
+      eq(hrLeaveApplications.tenantId, tenantId),
       eq(hrLeaveApplications.status, 'approved'),
       lte(hrLeaveApplications.startDate, today),
       gte(hrLeaveApplications.endDate, today),
@@ -159,7 +159,7 @@ export async function getWidgetData(userId: string, accountId: string) {
 
 // ─── Seed Sample Data ───────────────────────────────────────────────
 
-export async function seedSampleData(userId: string, accountId: string) {
+export async function seedSampleData(userId: string, tenantId: string) {
   // Idempotency guard — skip if data already exists
   const existing = await db.select({ id: employees.id }).from(employees)
     .where(eq(employees.userId, userId)).limit(1);
@@ -183,32 +183,32 @@ export async function seedSampleData(userId: string, accountId: string) {
   const inFourWeeks = d(28);
 
   // ── Departments (3) ──────────────────────────────────────────────
-  const engineering = await createDepartment(userId, accountId, { name: 'Engineering', color: '#3b82f6', description: 'Product development and technical operations' });
-  const marketing = await createDepartment(userId, accountId, { name: 'Marketing', color: '#f59e0b', description: 'Brand, growth, and demand generation' });
-  const operations = await createDepartment(userId, accountId, { name: 'Operations', color: '#10b981', description: 'HR, finance, and office management' });
+  const engineering = await createDepartment(userId, tenantId, { name: 'Engineering', color: '#3b82f6', description: 'Product development and technical operations' });
+  const marketing = await createDepartment(userId, tenantId, { name: 'Marketing', color: '#f59e0b', description: 'Brand, growth, and demand generation' });
+  const operations = await createDepartment(userId, tenantId, { name: 'Operations', color: '#10b981', description: 'HR, finance, and office management' });
 
   // ── Employees (6) ────────────────────────────────────────────────
   // Engineering (2)
-  const alice = await createEmployee(userId, accountId, {
+  const alice = await createEmployee(userId, tenantId, {
     name: 'Alice Johnson', email: 'alice@company.com', role: 'Engineering Lead',
     departmentId: engineering.id, startDate: twoYearsAgo,
     jobTitle: 'Engineering Lead', employmentType: 'full-time',
     tags: ['leadership', 'backend'],
   });
-  const carol = await createEmployee(userId, accountId, {
+  const carol = await createEmployee(userId, tenantId, {
     name: 'Carol Davis', email: 'carol@company.com', role: 'Frontend Developer',
     departmentId: engineering.id, startDate: oneYearAgo,
     jobTitle: 'Frontend Developer', employmentType: 'full-time', managerId: alice.id,
     tags: ['frontend', 'react'],
   });
   // Marketing (2)
-  const bob = await createEmployee(userId, accountId, {
+  const bob = await createEmployee(userId, tenantId, {
     name: 'Bob Williams', email: 'bob@company.com', role: 'Marketing Director',
     departmentId: marketing.id, startDate: eighteenMonthsAgo,
     jobTitle: 'Marketing Director', employmentType: 'full-time',
     tags: ['marketing', 'leadership'],
   });
-  const eva = await createEmployee(userId, accountId, {
+  const eva = await createEmployee(userId, tenantId, {
     name: 'Eva Martinez', email: 'eva@company.com', role: 'Content Strategist',
     departmentId: marketing.id, startDate: sixMonthsAgo,
     jobTitle: 'Content Strategist', employmentType: 'full-time', managerId: bob.id,
@@ -216,13 +216,13 @@ export async function seedSampleData(userId: string, accountId: string) {
   });
 
   // Operations (2)
-  const david = await createEmployee(userId, accountId, {
+  const david = await createEmployee(userId, tenantId, {
     name: 'David Brown', email: 'david@company.com', role: 'Operations Manager',
     departmentId: operations.id, startDate: threeYearsAgo,
     jobTitle: 'Operations Manager', employmentType: 'full-time',
     tags: ['operations', 'finance'],
   });
-  const grace = await createEmployee(userId, accountId, {
+  const grace = await createEmployee(userId, tenantId, {
     name: 'Grace Kim', email: 'grace@company.com', role: 'HR Coordinator',
     departmentId: operations.id, startDate: nineMonthsAgo,
     jobTitle: 'HR Coordinator', employmentType: 'full-time', managerId: david.id,
@@ -230,28 +230,28 @@ export async function seedSampleData(userId: string, accountId: string) {
   });
 
   // ── Department heads ─────────────────────────────────────────────
-  await updateDepartment(userId, accountId, engineering.id, { headEmployeeId: alice.id });
-  await updateDepartment(userId, accountId, marketing.id, { headEmployeeId: bob.id });
-  await updateDepartment(userId, accountId, operations.id, { headEmployeeId: david.id });
+  await updateDepartment(userId, tenantId, engineering.id, { headEmployeeId: alice.id });
+  await updateDepartment(userId, tenantId, marketing.id, { headEmployeeId: bob.id });
+  await updateDepartment(userId, tenantId, operations.id, { headEmployeeId: david.id });
 
   // ── Time-off requests (2) ──────────────────────────────────────
-  const t1 = await createTimeOffRequest(userId, accountId, { employeeId: alice.id, type: 'vacation', startDate: nextWeek, endDate: inTwoWeeks, notes: 'Family vacation' });
-  await createTimeOffRequest(userId, accountId, { employeeId: carol.id, type: 'sick', startDate: today, endDate: today });
-  await updateTimeOffRequest(userId, accountId, t1.id, { status: 'approved', approverId: david.id });
+  const t1 = await createTimeOffRequest(userId, tenantId, { employeeId: alice.id, type: 'vacation', startDate: nextWeek, endDate: inTwoWeeks, notes: 'Family vacation' });
+  await createTimeOffRequest(userId, tenantId, { employeeId: carol.id, type: 'sick', startDate: today, endDate: today });
+  await updateTimeOffRequest(userId, tenantId, t1.id, { status: 'approved', approverId: david.id });
 
   // ── Leave balances ─────────────────────────────────────────────
   const currentYear = new Date().getFullYear();
   const allEmps = [alice, carol, bob, eva, david, grace];
   for (const emp of allEmps) {
-    await allocateLeave(accountId, emp.id, 'vacation', currentYear, 20);
-    await allocateLeave(accountId, emp.id, 'sick', currentYear, 10);
+    await allocateLeave(tenantId, emp.id, 'vacation', currentYear, 20);
+    await allocateLeave(tenantId, emp.id, 'sick', currentYear, 10);
   }
 
   // ── Leave types + holiday calendar ──────────────────────────────
-  await seedDefaultLeaveTypes(accountId);
-  await seedDefaultTemplate(accountId);
+  await seedDefaultLeaveTypes(tenantId);
+  await seedDefaultTemplate(tenantId);
 
-  logger.info({ userId, accountId }, 'Seeded HR sample data');
+  logger.info({ userId, tenantId }, 'Seeded HR sample data');
   return {
     departments: 3,
     employees: 6,

@@ -49,14 +49,14 @@ function addEmployeeScopeConditions(conditions: SQL[], userId: string, isAdmin?:
 
 // ─── Employees ──────────────────────────────────────────────────────
 
-export async function listEmployees(userId: string, accountId: string, filters?: {
+export async function listEmployees(userId: string, tenantId: string, filters?: {
   status?: string;
   departmentId?: string;
   includeArchived?: boolean;
   isAdmin?: boolean;
   userEmail?: string;
 }) {
-  const conditions = [eq(employees.accountId, accountId)];
+  const conditions = [eq(employees.tenantId, tenantId)];
   addEmployeeScopeConditions(conditions, userId, filters?.isAdmin, filters?.userEmail);
 
   if (!filters?.includeArchived) {
@@ -71,7 +71,7 @@ export async function listEmployees(userId: string, accountId: string, filters?:
 
   const employeeSelect = {
     id: employees.id,
-    accountId: employees.accountId,
+    tenantId: employees.tenantId,
     userId: employees.userId,
     linkedUserId: employees.linkedUserId,
     name: employees.name,
@@ -111,11 +111,11 @@ export async function listEmployees(userId: string, accountId: string, filters?:
     .orderBy(asc(employees.sortOrder), asc(employees.createdAt));
 }
 
-export async function getEmployee(userId: string, accountId: string, id: string) {
+export async function getEmployee(userId: string, tenantId: string, id: string) {
   const [employee] = await db
     .select({
       id: employees.id,
-      accountId: employees.accountId,
+      tenantId: employees.tenantId,
       userId: employees.userId,
       linkedUserId: employees.linkedUserId,
       name: employees.name,
@@ -148,13 +148,13 @@ export async function getEmployee(userId: string, accountId: string, id: string)
     })
     .from(employees)
     .leftJoin(departments, eq(employees.departmentId, departments.id))
-    .where(and(eq(employees.id, id), eq(employees.userId, userId), eq(employees.accountId, accountId)))
+    .where(and(eq(employees.id, id), eq(employees.userId, userId), eq(employees.tenantId, tenantId)))
     .limit(1);
 
   return employee || null;
 }
 
-export async function createEmployee(userId: string, accountId: string, input: CreateEmployeeInput) {
+export async function createEmployee(userId: string, tenantId: string, input: CreateEmployeeInput) {
   const now = new Date();
 
   const [maxSort] = await db
@@ -167,7 +167,7 @@ export async function createEmployee(userId: string, accountId: string, input: C
   const [created] = await db
     .insert(employees)
     .values({
-      accountId,
+      tenantId,
       userId,
       name: input.name,
       email: input.email,
@@ -232,13 +232,13 @@ export async function createEmployee(userId: string, accountId: string, input: C
   return created;
 }
 
-export async function updateEmployee(userId: string, id: string, input: UpdateEmployeeInput, accountId?: string) {
+export async function updateEmployee(userId: string, id: string, input: UpdateEmployeeInput, tenantId?: string) {
   const now = new Date();
   const today = now.toISOString().slice(0, 10);
 
-  // Fetch current employee — use accountId if provided (admin editing another user's record)
-  const fetchCondition = accountId
-    ? and(eq(employees.id, id), eq(employees.accountId, accountId))
+  // Fetch current employee — use tenantId if provided (admin editing another user's record)
+  const fetchCondition = tenantId
+    ? and(eq(employees.id, id), eq(employees.tenantId, tenantId))
     : and(eq(employees.id, id), eq(employees.userId, userId));
 
   const [current] = await db.select().from(employees)
@@ -284,31 +284,31 @@ export async function updateEmployee(userId: string, id: string, input: UpdateEm
 
   // Auto-create lifecycle events for tracked field changes
   if (current && updated) {
-    const accountId = current.accountId;
+    const currentTenantId = current.tenantId;
     try {
       if (input.departmentId !== undefined && input.departmentId !== current.departmentId) {
-        await createLifecycleEvent(accountId, {
+        await createLifecycleEvent(currentTenantId, {
           employeeId: id, eventType: 'transferred', eventDate: today,
           fromDepartmentId: current.departmentId, toDepartmentId: input.departmentId,
           createdBy: userId,
         });
       }
       if (input.salary !== undefined && input.salary !== current.salary) {
-        await createLifecycleEvent(accountId, {
+        await createLifecycleEvent(currentTenantId, {
           employeeId: id, eventType: 'salary-change', eventDate: today,
           fromValue: current.salary?.toString() ?? '0', toValue: input.salary?.toString() ?? '0',
           createdBy: userId,
         });
       }
       if (input.role !== undefined && input.role !== current.role) {
-        await createLifecycleEvent(accountId, {
+        await createLifecycleEvent(currentTenantId, {
           employeeId: id, eventType: 'role-change', eventDate: today,
           fromValue: current.role, toValue: input.role,
           createdBy: userId,
         });
       }
       if (input.status === 'terminated' && current.status !== 'terminated') {
-        await createLifecycleEvent(accountId, {
+        await createLifecycleEvent(currentTenantId, {
           employeeId: id, eventType: 'terminated', eventDate: today,
           fromValue: current.status, toValue: 'terminated',
           createdBy: userId,
@@ -349,7 +349,7 @@ export async function getManagerLinkedUserId(employeeId: string): Promise<string
   }
 }
 
-export async function searchEmployees(userId: string, accountId: string, query: string) {
+export async function searchEmployees(userId: string, tenantId: string, query: string) {
   const searchTerm = `%${query}%`;
   return db
     .select()
@@ -357,7 +357,7 @@ export async function searchEmployees(userId: string, accountId: string, query: 
     .where(
       and(
         eq(employees.userId, userId),
-        eq(employees.accountId, accountId),
+        eq(employees.tenantId, tenantId),
         eq(employees.isArchived, false),
         sql`(${employees.name} ILIKE ${searchTerm} OR ${employees.email} ILIKE ${searchTerm} OR ${employees.role} ILIKE ${searchTerm})`,
       ),
@@ -366,8 +366,8 @@ export async function searchEmployees(userId: string, accountId: string, query: 
     .limit(30);
 }
 
-export async function getEmployeeCounts(userId: string, accountId: string, isAdmin = false, userEmail?: string) {
-  const conditions = [eq(employees.accountId, accountId), eq(employees.isArchived, false)];
+export async function getEmployeeCounts(userId: string, tenantId: string, isAdmin = false, userEmail?: string) {
+  const conditions = [eq(employees.tenantId, tenantId), eq(employees.isArchived, false)];
   addEmployeeScopeConditions(conditions, userId, isAdmin, userEmail);
   const allEmployees = await db
     .select({ status: employees.status })

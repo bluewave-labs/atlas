@@ -7,7 +7,7 @@ import { getAppPermission, canAccess } from '../../../services/app-permissions.s
 
 export async function listOnboardingTasks(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -17,7 +17,7 @@ export async function listOnboardingTasks(req: Request, res: Response) {
 
     const employeeId = req.params.id as string;
 
-    const tasks = await hrService.listOnboardingTasks(accountId, employeeId);
+    const tasks = await hrService.listOnboardingTasks(tenantId, employeeId);
     res.json({ success: true, data: tasks });
   } catch (error) {
     logger.error({ error }, 'Failed to list onboarding tasks');
@@ -27,7 +27,7 @@ export async function listOnboardingTasks(req: Request, res: Response) {
 
 export async function createOnboardingTask(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'create')) {
@@ -43,7 +43,7 @@ export async function createOnboardingTask(req: Request, res: Response) {
       return;
     }
 
-    const task = await hrService.createOnboardingTask(accountId, employeeId, {
+    const task = await hrService.createOnboardingTask(tenantId, employeeId, {
       title: title.trim(), description, category, dueDate,
     });
     res.json({ success: true, data: task });
@@ -55,7 +55,7 @@ export async function createOnboardingTask(req: Request, res: Response) {
 
 export async function updateOnboardingTask(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'update')) {
@@ -78,7 +78,7 @@ export async function updateOnboardingTask(req: Request, res: Response) {
     if (sortOrder !== undefined) updates.sortOrder = sortOrder;
     if (isArchived !== undefined) updates.isArchived = isArchived;
 
-    const task = await hrService.updateOnboardingTask(accountId, taskId, updates as any);
+    const task = await hrService.updateOnboardingTask(tenantId, taskId, updates as any);
     if (!task) {
       res.status(404).json({ success: false, error: 'Task not found' });
       return;
@@ -92,7 +92,7 @@ export async function updateOnboardingTask(req: Request, res: Response) {
 
 export async function deleteOnboardingTask(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'delete') && !canAccess(perm.role, 'delete_own')) {
@@ -102,7 +102,7 @@ export async function deleteOnboardingTask(req: Request, res: Response) {
 
     const taskId = req.params.taskId as string;
 
-    await hrService.deleteOnboardingTask(accountId, taskId);
+    await hrService.deleteOnboardingTask(tenantId, taskId);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete onboarding task');
@@ -112,7 +112,7 @@ export async function deleteOnboardingTask(req: Request, res: Response) {
 
 export async function createTasksFromTemplate(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'create')) {
@@ -128,7 +128,7 @@ export async function createTasksFromTemplate(req: Request, res: Response) {
       return;
     }
 
-    const tasks = await hrService.createTasksFromTemplate(accountId, employeeId, templateId);
+    const tasks = await hrService.createTasksFromTemplate(tenantId, employeeId, templateId);
     res.json({ success: true, data: tasks });
   } catch (error) {
     logger.error({ error }, 'Failed to create tasks from template');
@@ -140,7 +140,7 @@ export async function createTasksFromTemplate(req: Request, res: Response) {
 
 export async function listOnboardingTemplates(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -148,7 +148,7 @@ export async function listOnboardingTemplates(req: Request, res: Response) {
       return;
     }
 
-    const templates = await hrService.listOnboardingTemplates(accountId);
+    const templates = await hrService.listOnboardingTemplates(tenantId);
     res.json({ success: true, data: templates });
   } catch (error) {
     logger.error({ error }, 'Failed to list onboarding templates');
@@ -158,7 +158,7 @@ export async function listOnboardingTemplates(req: Request, res: Response) {
 
 export async function createOnboardingTemplate(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'create')) {
@@ -173,7 +173,7 @@ export async function createOnboardingTemplate(req: Request, res: Response) {
       return;
     }
 
-    const template = await hrService.createOnboardingTemplate(accountId, {
+    const template = await hrService.createOnboardingTemplate(tenantId, {
       name: name.trim(), tasks: tasks || [],
     });
     res.json({ success: true, data: template });

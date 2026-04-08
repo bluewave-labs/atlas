@@ -7,7 +7,7 @@ import { getAppPermission, canAccess } from '../../../services/app-permissions.s
 
 export async function listEmployeeDocuments(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -17,7 +17,7 @@ export async function listEmployeeDocuments(req: Request, res: Response) {
 
     const employeeId = req.params.id as string;
 
-    const docs = await hrService.listEmployeeDocuments(accountId, employeeId);
+    const docs = await hrService.listEmployeeDocuments(tenantId, employeeId);
     res.json({ success: true, data: docs });
   } catch (error) {
     logger.error({ error }, 'Failed to list employee documents');
@@ -27,7 +27,7 @@ export async function listEmployeeDocuments(req: Request, res: Response) {
 
 export async function uploadEmployeeDocument(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const userId = req.auth!.userId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
@@ -45,7 +45,7 @@ export async function uploadEmployeeDocument(req: Request, res: Response) {
       return;
     }
 
-    const doc = await hrService.createEmployeeDocument(accountId, {
+    const doc = await hrService.createEmployeeDocument(tenantId, {
       employeeId,
       name: file.originalname,
       type: type || 'other',
@@ -66,7 +66,7 @@ export async function uploadEmployeeDocument(req: Request, res: Response) {
 
 export async function deleteEmployeeDocument(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'delete') && !canAccess(perm.role, 'delete_own')) {
@@ -76,7 +76,7 @@ export async function deleteEmployeeDocument(req: Request, res: Response) {
 
     const docId = req.params.docId as string;
 
-    await hrService.deleteEmployeeDocument(accountId, docId);
+    await hrService.deleteEmployeeDocument(tenantId, docId);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete employee document');
@@ -86,7 +86,7 @@ export async function deleteEmployeeDocument(req: Request, res: Response) {
 
 export async function downloadEmployeeDocument(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -96,7 +96,7 @@ export async function downloadEmployeeDocument(req: Request, res: Response) {
 
     const docId = req.params.docId as string;
 
-    const doc = await hrService.getEmployeeDocument(accountId, docId);
+    const doc = await hrService.getEmployeeDocument(tenantId, docId);
     if (!doc) {
       res.status(404).json({ success: false, error: 'Document not found' });
       return;

@@ -12,10 +12,10 @@ function remainingBalance(b: { allocated: number; used: number; carried: number 
 
 // ─── Leave Applications ───────────────────────────────────────────
 
-export async function listLeaveApplications(accountId: string, filters?: {
+export async function listLeaveApplications(tenantId: string, filters?: {
   employeeId?: string; status?: string; startDate?: string; endDate?: string;
 }) {
-  const conditions = [eq(hrLeaveApplications.accountId, accountId), eq(hrLeaveApplications.isArchived, false)];
+  const conditions = [eq(hrLeaveApplications.tenantId, tenantId), eq(hrLeaveApplications.isArchived, false)];
 
   if (filters?.employeeId) conditions.push(eq(hrLeaveApplications.employeeId, filters.employeeId));
   if (filters?.status) conditions.push(eq(hrLeaveApplications.status, filters.status));
@@ -24,7 +24,7 @@ export async function listLeaveApplications(accountId: string, filters?: {
 
   return db.select({
     id: hrLeaveApplications.id,
-    accountId: hrLeaveApplications.accountId,
+    tenantId: hrLeaveApplications.tenantId,
     employeeId: hrLeaveApplications.employeeId,
     leaveTypeId: hrLeaveApplications.leaveTypeId,
     startDate: hrLeaveApplications.startDate,
@@ -52,7 +52,7 @@ export async function listLeaveApplications(accountId: string, filters?: {
     .orderBy(desc(hrLeaveApplications.createdAt));
 }
 
-export async function createLeaveApplication(accountId: string, input: {
+export async function createLeaveApplication(tenantId: string, input: {
   employeeId: string; leaveTypeId: string; startDate: string; endDate: string;
   halfDay?: boolean; halfDayDate?: string; reason?: string;
 }) {
@@ -66,7 +66,7 @@ export async function createLeaveApplication(accountId: string, input: {
   // Calculate total days excluding weekends and holidays
   // Note: employee-level holiday calendar assignment is not yet supported;
   // pass undefined so the default calculation (weekdays only) is used.
-  let totalDays = await calculateWorkingDays(accountId, input.startDate, input.endDate, undefined);
+  let totalDays = await calculateWorkingDays(tenantId, input.startDate, input.endDate, undefined);
 
   // Half-day adjustment
   if (input.halfDay && totalDays >= 1) {
@@ -77,14 +77,14 @@ export async function createLeaveApplication(accountId: string, input: {
   const currentYear = new Date(input.startDate).getFullYear();
   const [balance] = await db.select().from(leaveBalances)
     .where(and(
-      eq(leaveBalances.accountId, accountId), eq(leaveBalances.employeeId, input.employeeId),
+      eq(leaveBalances.tenantId, tenantId), eq(leaveBalances.employeeId, input.employeeId),
       eq(leaveBalances.leaveType, leaveType.slug), eq(leaveBalances.year, currentYear),
     )).limit(1);
 
   const balanceBefore = remainingBalance(balance);
 
   const [created] = await db.insert(hrLeaveApplications).values({
-    accountId, employeeId: input.employeeId, leaveTypeId: input.leaveTypeId,
+    tenantId, employeeId: input.employeeId, leaveTypeId: input.leaveTypeId,
     startDate: input.startDate, endDate: input.endDate,
     halfDay: input.halfDay ?? false, halfDayDate: input.halfDayDate ?? null,
     totalDays, reason: input.reason ?? null, status: 'draft',
@@ -94,7 +94,7 @@ export async function createLeaveApplication(accountId: string, input: {
   return created;
 }
 
-export async function updateLeaveApplication(accountId: string, id: string, input: Partial<{
+export async function updateLeaveApplication(tenantId: string, id: string, input: Partial<{
   startDate: string; endDate: string; halfDay: boolean; halfDayDate: string;
   reason: string; leaveTypeId: string;
 }>) {
@@ -103,16 +103,16 @@ export async function updateLeaveApplication(accountId: string, id: string, inpu
   for (const [k, v] of Object.entries(input)) { if (v !== undefined) updates[k] = v; }
 
   const [updated] = await db.update(hrLeaveApplications).set(updates)
-    .where(and(eq(hrLeaveApplications.id, id), eq(hrLeaveApplications.accountId, accountId), eq(hrLeaveApplications.status, 'draft')))
+    .where(and(eq(hrLeaveApplications.id, id), eq(hrLeaveApplications.tenantId, tenantId), eq(hrLeaveApplications.status, 'draft')))
     .returning();
   return updated || null;
 }
 
-export async function submitLeaveApplication(accountId: string, id: string) {
+export async function submitLeaveApplication(tenantId: string, id: string) {
   const now = new Date();
 
   const [app] = await db.select().from(hrLeaveApplications)
-    .where(and(eq(hrLeaveApplications.id, id), eq(hrLeaveApplications.accountId, accountId))).limit(1);
+    .where(and(eq(hrLeaveApplications.id, id), eq(hrLeaveApplications.tenantId, tenantId))).limit(1);
   if (!app || app.status !== 'draft') return null;
 
   // Get leave type to check balance
@@ -122,7 +122,7 @@ export async function submitLeaveApplication(accountId: string, id: string) {
   const currentYear = new Date(app.startDate).getFullYear();
   const [balance] = await db.select().from(leaveBalances)
     .where(and(
-      eq(leaveBalances.accountId, accountId), eq(leaveBalances.employeeId, app.employeeId),
+      eq(leaveBalances.tenantId, tenantId), eq(leaveBalances.employeeId, app.employeeId),
       eq(leaveBalances.leaveType, leaveType.slug), eq(leaveBalances.year, currentYear),
     )).limit(1);
 
@@ -142,11 +142,11 @@ export async function submitLeaveApplication(accountId: string, id: string) {
   return updated;
 }
 
-export async function approveLeaveApplication(accountId: string, id: string, approverId: string, comment?: string) {
+export async function approveLeaveApplication(tenantId: string, id: string, approverId: string, comment?: string) {
   const now = new Date();
 
   const [app] = await db.select().from(hrLeaveApplications)
-    .where(and(eq(hrLeaveApplications.id, id), eq(hrLeaveApplications.accountId, accountId))).limit(1);
+    .where(and(eq(hrLeaveApplications.id, id), eq(hrLeaveApplications.tenantId, tenantId))).limit(1);
   if (!app || app.status !== 'pending') return null;
 
   // Get leave type slug
@@ -159,7 +159,7 @@ export async function approveLeaveApplication(accountId: string, id: string, app
     used: sql`${leaveBalances.used} + ${app.totalDays}`,
     updatedAt: now,
   }).where(and(
-    eq(leaveBalances.accountId, accountId), eq(leaveBalances.employeeId, app.employeeId),
+    eq(leaveBalances.tenantId, tenantId), eq(leaveBalances.employeeId, app.employeeId),
     eq(leaveBalances.leaveType, leaveType.slug), eq(leaveBalances.year, currentYear),
   ));
 
@@ -170,11 +170,11 @@ export async function approveLeaveApplication(accountId: string, id: string, app
   return updated;
 }
 
-export async function rejectLeaveApplication(accountId: string, id: string, approverId: string, comment?: string) {
+export async function rejectLeaveApplication(tenantId: string, id: string, approverId: string, comment?: string) {
   const now = new Date();
 
   const [app] = await db.select().from(hrLeaveApplications)
-    .where(and(eq(hrLeaveApplications.id, id), eq(hrLeaveApplications.accountId, accountId))).limit(1);
+    .where(and(eq(hrLeaveApplications.id, id), eq(hrLeaveApplications.tenantId, tenantId))).limit(1);
   if (!app || app.status !== 'pending') return null;
 
   const [updated] = await db.update(hrLeaveApplications).set({
@@ -184,11 +184,11 @@ export async function rejectLeaveApplication(accountId: string, id: string, appr
   return updated;
 }
 
-export async function cancelLeaveApplication(accountId: string, id: string) {
+export async function cancelLeaveApplication(tenantId: string, id: string) {
   const now = new Date();
 
   const [app] = await db.select().from(hrLeaveApplications)
-    .where(and(eq(hrLeaveApplications.id, id), eq(hrLeaveApplications.accountId, accountId))).limit(1);
+    .where(and(eq(hrLeaveApplications.id, id), eq(hrLeaveApplications.tenantId, tenantId))).limit(1);
   if (!app || app.status !== 'approved') return null;
 
   // Restore balance
@@ -199,7 +199,7 @@ export async function cancelLeaveApplication(accountId: string, id: string) {
       used: sql`GREATEST(${leaveBalances.used} - ${app.totalDays}, 0)`,
       updatedAt: now,
     }).where(and(
-      eq(leaveBalances.accountId, accountId), eq(leaveBalances.employeeId, app.employeeId),
+      eq(leaveBalances.tenantId, tenantId), eq(leaveBalances.employeeId, app.employeeId),
       eq(leaveBalances.leaveType, leaveType.slug), eq(leaveBalances.year, currentYear),
     ));
   }
@@ -211,7 +211,7 @@ export async function cancelLeaveApplication(accountId: string, id: string) {
   return updated;
 }
 
-export async function getLeaveCalendar(accountId: string, month: string) {
+export async function getLeaveCalendar(tenantId: string, month: string) {
   // month format: "2026-03"
   const startDate = `${month}-01`;
   const [yearStr, monStr] = month.split('-');
@@ -234,7 +234,7 @@ export async function getLeaveCalendar(accountId: string, month: string) {
     .leftJoin(employees, eq(hrLeaveApplications.employeeId, employees.id))
     .leftJoin(hrLeaveTypes, eq(hrLeaveApplications.leaveTypeId, hrLeaveTypes.id))
     .where(and(
-      eq(hrLeaveApplications.accountId, accountId),
+      eq(hrLeaveApplications.tenantId, tenantId),
       eq(hrLeaveApplications.status, 'approved'),
       eq(hrLeaveApplications.isArchived, false),
       lte(hrLeaveApplications.startDate, endDate),
@@ -243,7 +243,7 @@ export async function getLeaveCalendar(accountId: string, month: string) {
     .orderBy(asc(hrLeaveApplications.startDate));
 }
 
-export async function getPendingApprovals(accountId: string, approverId: string) {
+export async function getPendingApprovals(tenantId: string, approverId: string) {
   return db.select({
     id: hrLeaveApplications.id,
     employeeId: hrLeaveApplications.employeeId,
@@ -261,7 +261,7 @@ export async function getPendingApprovals(accountId: string, approverId: string)
     .leftJoin(employees, eq(hrLeaveApplications.employeeId, employees.id))
     .leftJoin(hrLeaveTypes, eq(hrLeaveApplications.leaveTypeId, hrLeaveTypes.id))
     .where(and(
-      eq(hrLeaveApplications.accountId, accountId),
+      eq(hrLeaveApplications.tenantId, tenantId),
       eq(hrLeaveApplications.approverId, approverId),
       eq(hrLeaveApplications.status, 'pending'),
       eq(hrLeaveApplications.isArchived, false),

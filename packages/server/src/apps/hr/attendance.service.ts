@@ -13,7 +13,7 @@ function calcWorkingHours(checkIn: string, checkOut: string): number {
 
 // ─── Attendance Tracking ──────────────────────────────────────────
 
-export async function markAttendance(accountId: string, input: {
+export async function markAttendance(tenantId: string, input: {
   employeeId: string; date: string; status: string;
   checkInTime?: string | null; checkOutTime?: string | null;
   notes?: string | null; markedBy?: string | null;
@@ -40,7 +40,7 @@ export async function markAttendance(accountId: string, input: {
   }
 
   const [created] = await db.insert(hrAttendance).values({
-    accountId, employeeId: input.employeeId, date: input.date,
+    tenantId, employeeId: input.employeeId, date: input.date,
     status: input.status, checkInTime: input.checkInTime ?? null,
     checkOutTime: input.checkOutTime ?? null, workingHours,
     notes: input.notes ?? null, markedBy: input.markedBy ?? null,
@@ -50,12 +50,12 @@ export async function markAttendance(accountId: string, input: {
   return created;
 }
 
-export async function bulkMarkAttendance(accountId: string, input: {
+export async function bulkMarkAttendance(tenantId: string, input: {
   employeeIds: string[]; date: string; status: string; markedBy?: string;
 }) {
   const results = [];
   for (const employeeId of input.employeeIds) {
-    const result = await markAttendance(accountId, {
+    const result = await markAttendance(tenantId, {
       employeeId, date: input.date, status: input.status,
       markedBy: input.markedBy ?? null,
     });
@@ -64,10 +64,10 @@ export async function bulkMarkAttendance(accountId: string, input: {
   return results;
 }
 
-export async function listAttendance(accountId: string, filters?: {
+export async function listAttendance(tenantId: string, filters?: {
   employeeId?: string; date?: string; startDate?: string; endDate?: string; status?: string;
 }) {
-  const conditions = [eq(hrAttendance.accountId, accountId), eq(hrAttendance.isArchived, false)];
+  const conditions = [eq(hrAttendance.tenantId, tenantId), eq(hrAttendance.isArchived, false)];
 
   if (filters?.employeeId) conditions.push(eq(hrAttendance.employeeId, filters.employeeId));
   if (filters?.date) conditions.push(eq(hrAttendance.date, filters.date));
@@ -77,7 +77,7 @@ export async function listAttendance(accountId: string, filters?: {
 
   return db.select({
     id: hrAttendance.id,
-    accountId: hrAttendance.accountId,
+    tenantId: hrAttendance.tenantId,
     employeeId: hrAttendance.employeeId,
     date: hrAttendance.date,
     status: hrAttendance.status,
@@ -95,7 +95,7 @@ export async function listAttendance(accountId: string, filters?: {
     .orderBy(desc(hrAttendance.date), asc(employees.name));
 }
 
-export async function updateAttendance(accountId: string, id: string, input: Partial<{
+export async function updateAttendance(tenantId: string, id: string, input: Partial<{
   status: string; checkInTime: string | null; checkOutTime: string | null;
   notes: string | null; markedBy: string | null;
 }>) {
@@ -109,16 +109,16 @@ export async function updateAttendance(accountId: string, id: string, input: Par
   }
 
   const [updated] = await db.update(hrAttendance).set(updates)
-    .where(and(eq(hrAttendance.id, id), eq(hrAttendance.accountId, accountId))).returning();
+    .where(and(eq(hrAttendance.id, id), eq(hrAttendance.tenantId, tenantId))).returning();
   return updated || null;
 }
 
-export async function getTodaySummary(accountId: string) {
+export async function getTodaySummary(tenantId: string) {
   const today = new Date().toISOString().slice(0, 10);
 
   const records = await db.select({ status: hrAttendance.status })
     .from(hrAttendance)
-    .where(and(eq(hrAttendance.accountId, accountId), eq(hrAttendance.date, today), eq(hrAttendance.isArchived, false)));
+    .where(and(eq(hrAttendance.tenantId, tenantId), eq(hrAttendance.date, today), eq(hrAttendance.isArchived, false)));
 
   const counts: Record<string, number> = { present: 0, absent: 0, 'half-day': 0, remote: 0, 'on-leave': 0 };
   for (const r of records) {
@@ -129,7 +129,7 @@ export async function getTodaySummary(accountId: string) {
   return counts;
 }
 
-export async function getMonthlyReport(accountId: string, month: string) {
+export async function getMonthlyReport(tenantId: string, month: string) {
   // month format: "2026-03"
   const startDate = `${month}-01`;
   // Get last day of month
@@ -148,7 +148,7 @@ export async function getMonthlyReport(accountId: string, month: string) {
     .from(hrAttendance)
     .leftJoin(employees, eq(hrAttendance.employeeId, employees.id))
     .where(and(
-      eq(hrAttendance.accountId, accountId), eq(hrAttendance.isArchived, false),
+      eq(hrAttendance.tenantId, tenantId), eq(hrAttendance.isArchived, false),
       gte(hrAttendance.date, startDate), lte(hrAttendance.date, endDate),
     ))
     .orderBy(asc(employees.name), asc(hrAttendance.date));
@@ -156,9 +156,9 @@ export async function getMonthlyReport(accountId: string, month: string) {
   return records;
 }
 
-export async function getEmployeeAttendance(accountId: string, employeeId: string, month?: string) {
+export async function getEmployeeAttendance(tenantId: string, employeeId: string, month?: string) {
   const conditions = [
-    eq(hrAttendance.accountId, accountId),
+    eq(hrAttendance.tenantId, tenantId),
     eq(hrAttendance.employeeId, employeeId),
     eq(hrAttendance.isArchived, false),
   ];

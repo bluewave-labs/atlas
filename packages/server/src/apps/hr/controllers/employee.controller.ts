@@ -10,7 +10,7 @@ import { getAppPermission, canAccess } from '../../../services/app-permissions.s
 export async function getWidgetData(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -18,7 +18,7 @@ export async function getWidgetData(req: Request, res: Response) {
       return;
     }
 
-    const data = await dashboardService.getWidgetData(userId, accountId);
+    const data = await dashboardService.getWidgetData(userId, tenantId);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to get HR widget data');
@@ -31,7 +31,7 @@ export async function getWidgetData(req: Request, res: Response) {
 export async function listEmployees(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -42,7 +42,7 @@ export async function listEmployees(req: Request, res: Response) {
     const { status, departmentId, includeArchived } = req.query;
 
     const isAdmin = perm.role === 'admin' || perm.role === 'manager' || perm.role === 'editor';
-    const employees = await hrService.listEmployees(userId, accountId, {
+    const employees = await hrService.listEmployees(userId, tenantId, {
       status: status as string | undefined,
       departmentId: departmentId as string | undefined,
       includeArchived: includeArchived === 'true',
@@ -60,7 +60,7 @@ export async function listEmployees(req: Request, res: Response) {
 export async function getEmployee(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -70,7 +70,7 @@ export async function getEmployee(req: Request, res: Response) {
 
     const id = req.params.id as string;
 
-    const employee = await hrService.getEmployee(userId, accountId, id);
+    const employee = await hrService.getEmployee(userId, tenantId, id);
     if (!employee) {
       res.status(404).json({ success: false, error: 'Employee not found' });
       return;
@@ -98,7 +98,7 @@ export async function getEmployee(req: Request, res: Response) {
 export async function createEmployee(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
     if (!canAccess(perm.role, 'create')) {
@@ -117,7 +117,7 @@ export async function createEmployee(req: Request, res: Response) {
       return;
     }
 
-    const employee = await hrService.createEmployee(userId, accountId, {
+    const employee = await hrService.createEmployee(userId, tenantId, {
       name: name.trim(), email: email.trim(), role, departmentId, startDate, phone, avatarUrl, status, linkedUserId, tags,
     });
 
@@ -150,7 +150,7 @@ export async function updateEmployee(req: Request, res: Response) {
 
     // If user doesn't have HR update permission, check if they're editing their own record
     if (!hasUpdatePerm) {
-      const existing = await hrService.getEmployee(userId, req.auth!.accountId, id);
+      const existing = await hrService.getEmployee(userId, req.auth!.tenantId, id);
       if (!existing || existing.email?.toLowerCase() !== userEmail?.toLowerCase()) {
         res.status(403).json({ success: false, error: 'You can only edit your own employee record' });
         return;
@@ -168,7 +168,7 @@ export async function updateEmployee(req: Request, res: Response) {
       ? { name, email, role, departmentId, startDate, phone, avatarUrl, status, linkedUserId, tags, sortOrder, isArchived, dateOfBirth, gender, emergencyContactName, emergencyContactPhone, emergencyContactRelation, employmentType, managerId, jobTitle, workLocation, salary, salaryCurrency, salaryPeriod }
       : { name, phone, dateOfBirth, gender, emergencyContactName, emergencyContactPhone, emergencyContactRelation, workLocation };
 
-    const employee = await hrService.updateEmployee(userId, id, updates, req.auth!.accountId);
+    const employee = await hrService.updateEmployee(userId, id, updates, req.auth!.tenantId);
 
     if (!employee) {
       res.status(404).json({ success: false, error: 'Employee not found' });
@@ -205,7 +205,7 @@ export async function deleteEmployee(req: Request, res: Response) {
 export async function searchEmployees(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -220,7 +220,7 @@ export async function searchEmployees(req: Request, res: Response) {
       return;
     }
 
-    const results = await hrService.searchEmployees(userId, accountId, query.trim());
+    const results = await hrService.searchEmployees(userId, tenantId, query.trim());
     res.json({ success: true, data: results });
   } catch (error) {
     logger.error({ error }, 'Failed to search employees');
@@ -231,7 +231,7 @@ export async function searchEmployees(req: Request, res: Response) {
 export async function getEmployeeCounts(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -239,7 +239,7 @@ export async function getEmployeeCounts(req: Request, res: Response) {
       return;
     }
 
-    const counts = await hrService.getEmployeeCounts(userId, accountId);
+    const counts = await hrService.getEmployeeCounts(userId, tenantId);
     res.json({ success: true, data: counts });
   } catch (error) {
     logger.error({ error }, 'Failed to get employee counts');
@@ -252,7 +252,7 @@ export async function getEmployeeCounts(req: Request, res: Response) {
 export async function getDashboard(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -260,7 +260,7 @@ export async function getDashboard(req: Request, res: Response) {
       return;
     }
 
-    const data = await dashboardService.getDashboardData(userId, accountId);
+    const data = await dashboardService.getDashboardData(userId, tenantId);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to get HR dashboard');
@@ -273,9 +273,9 @@ export async function getDashboard(req: Request, res: Response) {
 export async function seedSampleData(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
-    const result = await dashboardService.seedSampleData(userId, accountId);
+    const result = await dashboardService.seedSampleData(userId, tenantId);
     res.json({ success: true, data: { message: 'Seeded HR sample data', ...result } });
   } catch (error) {
     logger.error({ error }, 'Failed to seed HR sample data');

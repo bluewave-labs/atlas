@@ -4,19 +4,19 @@ import { eq, and, desc } from 'drizzle-orm';
 
 // ─── Employee Documents ────────────────────────────────────────────
 
-export async function listEmployeeDocuments(accountId: string, employeeId: string) {
+export async function listEmployeeDocuments(tenantId: string, employeeId: string) {
   return db
     .select()
     .from(employeeDocuments)
     .where(and(
-      eq(employeeDocuments.accountId, accountId),
+      eq(employeeDocuments.tenantId, tenantId),
       eq(employeeDocuments.employeeId, employeeId),
       eq(employeeDocuments.isArchived, false),
     ))
     .orderBy(desc(employeeDocuments.createdAt));
 }
 
-export async function createEmployeeDocument(accountId: string, input: {
+export async function createEmployeeDocument(tenantId: string, input: {
   employeeId: string;
   name: string;
   type: string;
@@ -31,7 +31,7 @@ export async function createEmployeeDocument(accountId: string, input: {
   const [created] = await db
     .insert(employeeDocuments)
     .values({
-      accountId,
+      tenantId,
       employeeId: input.employeeId,
       name: input.name,
       type: input.type || 'other',
@@ -49,22 +49,22 @@ export async function createEmployeeDocument(accountId: string, input: {
   return created;
 }
 
-export async function deleteEmployeeDocument(accountId: string, docId: string) {
+export async function deleteEmployeeDocument(tenantId: string, docId: string) {
   const now = new Date();
   const [updated] = await db
     .update(employeeDocuments)
     .set({ isArchived: true, updatedAt: now })
-    .where(and(eq(employeeDocuments.id, docId), eq(employeeDocuments.accountId, accountId)))
+    .where(and(eq(employeeDocuments.id, docId), eq(employeeDocuments.tenantId, tenantId)))
     .returning();
 
   return updated || null;
 }
 
-export async function getEmployeeDocument(accountId: string, docId: string) {
+export async function getEmployeeDocument(tenantId: string, docId: string) {
   const [doc] = await db
     .select()
     .from(employeeDocuments)
-    .where(and(eq(employeeDocuments.id, docId), eq(employeeDocuments.accountId, accountId)))
+    .where(and(eq(employeeDocuments.id, docId), eq(employeeDocuments.tenantId, tenantId)))
     .limit(1);
 
   return doc || null;

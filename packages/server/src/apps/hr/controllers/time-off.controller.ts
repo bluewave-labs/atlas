@@ -8,7 +8,7 @@ import { getAppPermission, canAccess } from '../../../services/app-permissions.s
 export async function listTimeOffRequests(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -18,7 +18,7 @@ export async function listTimeOffRequests(req: Request, res: Response) {
 
     const { employeeId, status, type, includeArchived } = req.query;
 
-    const requests = await hrService.listTimeOffRequests(userId, accountId, {
+    const requests = await hrService.listTimeOffRequests(userId, tenantId, {
       employeeId: employeeId as string | undefined,
       status: status as string | undefined,
       type: type as string | undefined,
@@ -35,7 +35,7 @@ export async function listTimeOffRequests(req: Request, res: Response) {
 export async function createTimeOffRequest(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
     if (!canAccess(perm.role, 'create')) {
@@ -62,7 +62,7 @@ export async function createTimeOffRequest(req: Request, res: Response) {
       return;
     }
 
-    const request = await hrService.createTimeOffRequest(userId, accountId, {
+    const request = await hrService.createTimeOffRequest(userId, tenantId, {
       employeeId, type, startDate, endDate, approverId, notes,
     });
 
@@ -76,7 +76,7 @@ export async function createTimeOffRequest(req: Request, res: Response) {
 export async function updateTimeOffRequest(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
     if (!canAccess(perm.role, 'update')) {
@@ -87,7 +87,7 @@ export async function updateTimeOffRequest(req: Request, res: Response) {
     const id = req.params.id as string;
     const { type, startDate, endDate, status, approverId, notes, sortOrder, isArchived } = req.body;
 
-    const request = await hrService.updateTimeOffRequest(userId, accountId, id, {
+    const request = await hrService.updateTimeOffRequest(userId, tenantId, id, {
       type, startDate, endDate, status, approverId, notes, sortOrder, isArchived,
     });
 
@@ -106,7 +106,7 @@ export async function updateTimeOffRequest(req: Request, res: Response) {
 export async function deleteTimeOffRequest(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
     if (!canAccess(perm.role, 'delete') && !canAccess(perm.role, 'delete_own')) {
@@ -116,7 +116,7 @@ export async function deleteTimeOffRequest(req: Request, res: Response) {
 
     const id = req.params.id as string;
 
-    await hrService.deleteTimeOffRequest(userId, accountId, id);
+    await hrService.deleteTimeOffRequest(userId, tenantId, id);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete time-off request');
@@ -128,7 +128,7 @@ export async function deleteTimeOffRequest(req: Request, res: Response) {
 
 export async function getLeaveBalances(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -139,7 +139,7 @@ export async function getLeaveBalances(req: Request, res: Response) {
     const employeeId = req.params.id as string;
     const year = parseInt(req.query.year as string) || new Date().getFullYear();
 
-    const balances = await hrService.getLeaveBalances(accountId, employeeId, year);
+    const balances = await hrService.getLeaveBalances(tenantId, employeeId, year);
     res.json({ success: true, data: balances });
   } catch (error) {
     logger.error({ error }, 'Failed to get leave balances');
@@ -149,7 +149,7 @@ export async function getLeaveBalances(req: Request, res: Response) {
 
 export async function allocateLeave(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'create')) {
@@ -165,7 +165,7 @@ export async function allocateLeave(req: Request, res: Response) {
       return;
     }
 
-    const balance = await hrService.allocateLeave(accountId, employeeId, leaveType, year, days);
+    const balance = await hrService.allocateLeave(tenantId, employeeId, leaveType, year, days);
     res.json({ success: true, data: balance });
   } catch (error) {
     logger.error({ error }, 'Failed to allocate leave');
@@ -175,7 +175,7 @@ export async function allocateLeave(req: Request, res: Response) {
 
 export async function getLeaveBalancesSummary(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -183,7 +183,7 @@ export async function getLeaveBalancesSummary(req: Request, res: Response) {
       return;
     }
 
-    const balances = await hrService.getLeaveBalancesSummary(accountId);
+    const balances = await hrService.getLeaveBalancesSummary(tenantId);
     res.json({ success: true, data: balances });
   } catch (error) {
     logger.error({ error }, 'Failed to get leave balances summary');

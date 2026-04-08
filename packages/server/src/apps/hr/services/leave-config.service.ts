@@ -8,26 +8,26 @@ import { logger } from '../../../utils/logger';
 
 // ─── Leave Types ──────────────────────────────────────────────────
 
-export async function listLeaveTypes(accountId: string, includeInactive = false) {
-  const conditions = [eq(hrLeaveTypes.accountId, accountId), eq(hrLeaveTypes.isArchived, false)];
+export async function listLeaveTypes(tenantId: string, includeInactive = false) {
+  const conditions = [eq(hrLeaveTypes.tenantId, tenantId), eq(hrLeaveTypes.isArchived, false)];
   if (!includeInactive) {
     conditions.push(eq(hrLeaveTypes.isActive, true));
   }
   return db.select().from(hrLeaveTypes).where(and(...conditions)).orderBy(asc(hrLeaveTypes.sortOrder));
 }
 
-export async function createLeaveType(accountId: string, input: {
+export async function createLeaveType(tenantId: string, input: {
   name: string; slug: string; color?: string; defaultDaysPerYear?: number;
   maxCarryForward?: number; requiresApproval?: boolean; isPaid?: boolean;
 }) {
   const now = new Date();
   const [maxSort] = await db
     .select({ max: sql<number>`COALESCE(MAX(${hrLeaveTypes.sortOrder}), -1)` })
-    .from(hrLeaveTypes).where(eq(hrLeaveTypes.accountId, accountId));
+    .from(hrLeaveTypes).where(eq(hrLeaveTypes.tenantId, tenantId));
   const sortOrder = (maxSort?.max ?? -1) + 1;
 
   const [created] = await db.insert(hrLeaveTypes).values({
-    accountId, name: input.name, slug: input.slug, color: input.color ?? '#3b82f6',
+    tenantId, name: input.name, slug: input.slug, color: input.color ?? '#3b82f6',
     defaultDaysPerYear: input.defaultDaysPerYear ?? 0, maxCarryForward: input.maxCarryForward ?? 0,
     requiresApproval: input.requiresApproval ?? true, isPaid: input.isPaid ?? true,
     sortOrder, createdAt: now, updatedAt: now,
@@ -35,7 +35,7 @@ export async function createLeaveType(accountId: string, input: {
   return created;
 }
 
-export async function updateLeaveType(accountId: string, id: string, input: Partial<{
+export async function updateLeaveType(tenantId: string, id: string, input: Partial<{
   name: string; slug: string; color: string; defaultDaysPerYear: number;
   maxCarryForward: number; requiresApproval: boolean; isPaid: boolean;
   isActive: boolean; sortOrder: number; isArchived: boolean;
@@ -45,12 +45,12 @@ export async function updateLeaveType(accountId: string, id: string, input: Part
   for (const [k, v] of Object.entries(input)) { if (v !== undefined) updates[k] = v; }
 
   const [updated] = await db.update(hrLeaveTypes).set(updates)
-    .where(and(eq(hrLeaveTypes.id, id), eq(hrLeaveTypes.accountId, accountId))).returning();
+    .where(and(eq(hrLeaveTypes.id, id), eq(hrLeaveTypes.tenantId, tenantId))).returning();
   return updated || null;
 }
 
-export async function deleteLeaveType(accountId: string, id: string) {
-  return updateLeaveType(accountId, id, { isArchived: true });
+export async function deleteLeaveType(tenantId: string, id: string) {
+  return updateLeaveType(tenantId, id, { isArchived: true });
 }
 
 const DEFAULT_LEAVE_TYPES = [
@@ -66,10 +66,10 @@ const DEFAULT_LEAVE_TYPES = [
   { name: 'Work from home', slug: 'wfh', color: '#6366f1', defaultDaysPerYear: 52, maxCarryForward: 0, requiresApproval: false, isPaid: true },
 ];
 
-export async function seedDefaultLeaveTypes(accountId: string) {
+export async function seedDefaultLeaveTypes(tenantId: string) {
   // Check which slugs already exist to avoid duplicates
   const existing = await db.select({ slug: hrLeaveTypes.slug }).from(hrLeaveTypes)
-    .where(and(eq(hrLeaveTypes.accountId, accountId), eq(hrLeaveTypes.isArchived, false)));
+    .where(and(eq(hrLeaveTypes.tenantId, tenantId), eq(hrLeaveTypes.isArchived, false)));
   const existingSlugs = new Set(existing.map(e => e.slug));
 
   const toCreate = DEFAULT_LEAVE_TYPES.filter(lt => !existingSlugs.has(lt.slug));
@@ -78,12 +78,12 @@ export async function seedDefaultLeaveTypes(accountId: string) {
   // Get current max sortOrder to pre-compute values
   const [maxSort] = await db
     .select({ max: sql<number>`COALESCE(MAX(${hrLeaveTypes.sortOrder}), -1)` })
-    .from(hrLeaveTypes).where(eq(hrLeaveTypes.accountId, accountId));
+    .from(hrLeaveTypes).where(eq(hrLeaveTypes.tenantId, tenantId));
   const baseSort = (maxSort?.max ?? -1) + 1;
 
   const now = new Date();
   const rows = toCreate.map((lt, i) => ({
-    accountId,
+    tenantId,
     name: lt.name,
     slug: lt.slug,
     color: lt.color,
@@ -133,15 +133,15 @@ const DEFAULT_POLICY_TEMPLATES: Array<{
   },
 ];
 
-export async function seedDefaultPolicies(accountId: string) {
+export async function seedDefaultPolicies(tenantId: string) {
   // Only seed if no policies exist
   const existing = await db.select({ id: hrLeavePolicies.id }).from(hrLeavePolicies)
-    .where(and(eq(hrLeavePolicies.accountId, accountId), eq(hrLeavePolicies.isArchived, false))).limit(1);
+    .where(and(eq(hrLeavePolicies.tenantId, tenantId), eq(hrLeavePolicies.isArchived, false))).limit(1);
   if (existing.length > 0) return null;
 
   // Get leave types to resolve slug → id
   const leaveTypes = await db.select().from(hrLeaveTypes)
-    .where(and(eq(hrLeaveTypes.accountId, accountId), eq(hrLeaveTypes.isArchived, false)));
+    .where(and(eq(hrLeaveTypes.tenantId, tenantId), eq(hrLeaveTypes.isArchived, false)));
   const slugToId = new Map(leaveTypes.map(lt => [lt.slug, lt.id]));
 
   const created = [];
@@ -150,7 +150,7 @@ export async function seedDefaultPolicies(accountId: string) {
       .filter(a => slugToId.has(a.slug))
       .map(a => ({ leaveTypeId: slugToId.get(a.slug)!, daysPerYear: a.daysPerYear }));
 
-    const policy = await createLeavePolicy(accountId, {
+    const policy = await createLeavePolicy(tenantId, {
       name: template.name, description: template.description,
       isDefault: template.isDefault, allocations,
     });
@@ -162,26 +162,26 @@ export async function seedDefaultPolicies(accountId: string) {
 
 // ─── Leave Policies ───────────────────────────────────────────────
 
-export async function listLeavePolicies(accountId: string) {
+export async function listLeavePolicies(tenantId: string) {
   return db.select().from(hrLeavePolicies)
-    .where(and(eq(hrLeavePolicies.accountId, accountId), eq(hrLeavePolicies.isArchived, false)))
+    .where(and(eq(hrLeavePolicies.tenantId, tenantId), eq(hrLeavePolicies.isArchived, false)))
     .orderBy(desc(hrLeavePolicies.isDefault), asc(hrLeavePolicies.name));
 }
 
-export async function createLeavePolicy(accountId: string, input: {
+export async function createLeavePolicy(tenantId: string, input: {
   name: string; description?: string | null; isDefault?: boolean;
   allocations: Array<{ leaveTypeId: string; daysPerYear: number }>;
 }) {
   const now = new Date();
   const [created] = await db.insert(hrLeavePolicies).values({
-    accountId, name: input.name, description: input.description ?? null,
+    tenantId, name: input.name, description: input.description ?? null,
     isDefault: input.isDefault ?? false, allocations: input.allocations,
     createdAt: now, updatedAt: now,
   }).returning();
   return created;
 }
 
-export async function updateLeavePolicy(accountId: string, id: string, input: Partial<{
+export async function updateLeavePolicy(tenantId: string, id: string, input: Partial<{
   name: string; description: string | null; isDefault: boolean;
   allocations: Array<{ leaveTypeId: string; daysPerYear: number }>; isArchived: boolean;
 }>) {
@@ -190,12 +190,12 @@ export async function updateLeavePolicy(accountId: string, id: string, input: Pa
   for (const [k, v] of Object.entries(input)) { if (v !== undefined) updates[k] = v; }
 
   const [updated] = await db.update(hrLeavePolicies).set(updates)
-    .where(and(eq(hrLeavePolicies.id, id), eq(hrLeavePolicies.accountId, accountId))).returning();
+    .where(and(eq(hrLeavePolicies.id, id), eq(hrLeavePolicies.tenantId, tenantId))).returning();
   return updated || null;
 }
 
-export async function deleteLeavePolicy(accountId: string, id: string) {
-  return updateLeavePolicy(accountId, id, { isArchived: true });
+export async function deleteLeavePolicy(tenantId: string, id: string) {
+  return updateLeavePolicy(tenantId, id, { isArchived: true });
 }
 
 /**
@@ -203,12 +203,12 @@ export async function deleteLeavePolicy(accountId: string, id: string) {
  * Updates allocated days for the current year based on the policy's allocations.
  * Does NOT change `used` or `carried` — only `allocated`.
  */
-export async function resyncPolicyBalances(accountId: string, policyId: string) {
+export async function resyncPolicyBalances(tenantId: string, policyId: string) {
   const currentYear = new Date().getFullYear();
 
   // Get the policy
   const [policy] = await db.select().from(hrLeavePolicies)
-    .where(and(eq(hrLeavePolicies.id, policyId), eq(hrLeavePolicies.accountId, accountId)))
+    .where(and(eq(hrLeavePolicies.id, policyId), eq(hrLeavePolicies.tenantId, tenantId)))
     .limit(1);
   if (!policy) return { updated: 0 };
 
@@ -216,7 +216,7 @@ export async function resyncPolicyBalances(accountId: string, policyId: string) 
   const assignments = await db.select().from(hrLeavePolicyAssignments)
     .where(and(
       eq(hrLeavePolicyAssignments.policyId, policyId),
-      eq(hrLeavePolicyAssignments.accountId, accountId),
+      eq(hrLeavePolicyAssignments.tenantId, tenantId),
       eq(hrLeavePolicyAssignments.isArchived, false),
     ));
 
@@ -224,7 +224,7 @@ export async function resyncPolicyBalances(accountId: string, policyId: string) 
 
   // Get leave types for slug lookup
   const leaveTypesData = await db.select().from(hrLeaveTypes)
-    .where(and(eq(hrLeaveTypes.accountId, accountId), eq(hrLeaveTypes.isArchived, false)));
+    .where(and(eq(hrLeaveTypes.tenantId, tenantId), eq(hrLeaveTypes.isArchived, false)));
   const leaveTypeById = new Map(leaveTypesData.map(lt => [lt.id, lt]));
 
   let updated = 0;
@@ -253,16 +253,16 @@ export async function resyncPolicyBalances(accountId: string, policyId: string) 
   return { updated };
 }
 
-export async function assignPolicy(accountId: string, employeeId: string, policyId: string, effectiveFrom?: string) {
+export async function assignPolicy(tenantId: string, employeeId: string, policyId: string, effectiveFrom?: string) {
   const now = new Date();
 
   // Archive old assignments
   await db.update(hrLeavePolicyAssignments).set({ isArchived: true, updatedAt: now })
-    .where(and(eq(hrLeavePolicyAssignments.accountId, accountId), eq(hrLeavePolicyAssignments.employeeId, employeeId), eq(hrLeavePolicyAssignments.isArchived, false)));
+    .where(and(eq(hrLeavePolicyAssignments.tenantId, tenantId), eq(hrLeavePolicyAssignments.employeeId, employeeId), eq(hrLeavePolicyAssignments.isArchived, false)));
 
   // Create new assignment
   const [assignment] = await db.insert(hrLeavePolicyAssignments).values({
-    accountId, employeeId, policyId, effectiveFrom: effectiveFrom ?? now.toISOString().slice(0, 10),
+    tenantId, employeeId, policyId, effectiveFrom: effectiveFrom ?? now.toISOString().slice(0, 10),
     createdAt: now, updatedAt: now,
   }).returning();
 
@@ -271,7 +271,7 @@ export async function assignPolicy(accountId: string, employeeId: string, policy
   if (policy) {
     const currentYear = now.getFullYear();
     const leaveTypesData = await db.select().from(hrLeaveTypes)
-      .where(and(eq(hrLeaveTypes.accountId, accountId), eq(hrLeaveTypes.isArchived, false)));
+      .where(and(eq(hrLeaveTypes.tenantId, tenantId), eq(hrLeaveTypes.isArchived, false)));
 
     // Prorate allocation if assigning mid-year
     const currentMonth = now.getMonth() + 1; // 1-12
@@ -279,7 +279,7 @@ export async function assignPolicy(accountId: string, employeeId: string, policy
     // Pre-fetch all existing balances for this employee+year to avoid N+1
     const existingBalances = await db.select().from(leaveBalances)
       .where(and(
-        eq(leaveBalances.accountId, accountId), eq(leaveBalances.employeeId, employeeId),
+        eq(leaveBalances.tenantId, tenantId), eq(leaveBalances.employeeId, employeeId),
         eq(leaveBalances.year, currentYear),
       ));
     const existingBySlug = new Map(existingBalances.map(b => [b.leaveType, b]));
@@ -302,7 +302,7 @@ export async function assignPolicy(accountId: string, employeeId: string, policy
           .where(eq(leaveBalances.id, existing.id));
       } else {
         await db.insert(leaveBalances).values({
-          accountId, employeeId, leaveType: lt.slug, year: currentYear,
+          tenantId, employeeId, leaveType: lt.slug, year: currentYear,
           allocated: allocatedDays, used: 0, carried: 0, leaveTypeId: lt.id,
           createdAt: now, updatedAt: now,
         });
@@ -313,7 +313,7 @@ export async function assignPolicy(accountId: string, employeeId: string, policy
   return assignment;
 }
 
-export async function getEmployeePolicy(accountId: string, employeeId: string) {
+export async function getEmployeePolicy(tenantId: string, employeeId: string) {
   const [assignment] = await db.select({
     id: hrLeavePolicyAssignments.id,
     policyId: hrLeavePolicyAssignments.policyId,
@@ -324,7 +324,7 @@ export async function getEmployeePolicy(accountId: string, employeeId: string) {
     .from(hrLeavePolicyAssignments)
     .innerJoin(hrLeavePolicies, eq(hrLeavePolicyAssignments.policyId, hrLeavePolicies.id))
     .where(and(
-      eq(hrLeavePolicyAssignments.accountId, accountId),
+      eq(hrLeavePolicyAssignments.tenantId, tenantId),
       eq(hrLeavePolicyAssignments.employeeId, employeeId),
       eq(hrLeavePolicyAssignments.isArchived, false),
     ))
@@ -336,7 +336,7 @@ export async function getEmployeePolicy(accountId: string, employeeId: string) {
 
 // ─── Leave Balance Allocation (Accrual Engine) ──────────────────
 
-export async function allocateBalancesForYear(accountId: string, year: number) {
+export async function allocateBalancesForYear(tenantId: string, year: number) {
   const now = new Date();
 
   // 1. Get all active policy assignments for this account
@@ -346,7 +346,7 @@ export async function allocateBalancesForYear(accountId: string, year: number) {
   })
     .from(hrLeavePolicyAssignments)
     .where(and(
-      eq(hrLeavePolicyAssignments.accountId, accountId),
+      eq(hrLeavePolicyAssignments.tenantId, tenantId),
       eq(hrLeavePolicyAssignments.isArchived, false),
     ));
 
@@ -354,13 +354,13 @@ export async function allocateBalancesForYear(accountId: string, year: number) {
 
   // 2. Get all active leave types for this account
   const leaveTypesData = await db.select().from(hrLeaveTypes)
-    .where(and(eq(hrLeaveTypes.accountId, accountId), eq(hrLeaveTypes.isArchived, false)));
+    .where(and(eq(hrLeaveTypes.tenantId, tenantId), eq(hrLeaveTypes.isArchived, false)));
   const leaveTypeById = new Map(leaveTypesData.map(lt => [lt.id, lt]));
 
   // 3. Get all policies referenced by assignments
   const policyIds = [...new Set(assignments.map(a => a.policyId))];
   const policies = await db.select().from(hrLeavePolicies)
-    .where(and(eq(hrLeavePolicies.accountId, accountId), eq(hrLeavePolicies.isArchived, false), inArray(hrLeavePolicies.id, policyIds)));
+    .where(and(eq(hrLeavePolicies.tenantId, tenantId), eq(hrLeavePolicies.isArchived, false), inArray(hrLeavePolicies.id, policyIds)));
   const policyById = new Map(policies.map(p => [p.id, p]));
 
   // 4. Get existing balances for this year to check idempotency
@@ -369,13 +369,13 @@ export async function allocateBalancesForYear(accountId: string, year: number) {
     leaveType: leaveBalances.leaveType,
   })
     .from(leaveBalances)
-    .where(and(eq(leaveBalances.accountId, accountId), eq(leaveBalances.year, year)));
+    .where(and(eq(leaveBalances.tenantId, tenantId), eq(leaveBalances.year, year)));
   const existingSet = new Set(existingBalances.map(b => `${b.employeeId}::${b.leaveType}`));
 
   // 5. Get previous year balances for carryover calculation
   const previousYear = year - 1;
   const prevBalances = await db.select().from(leaveBalances)
-    .where(and(eq(leaveBalances.accountId, accountId), eq(leaveBalances.year, previousYear)));
+    .where(and(eq(leaveBalances.tenantId, tenantId), eq(leaveBalances.year, previousYear)));
   const prevBalanceMap = new Map(prevBalances.map(b => [`${b.employeeId}::${b.leaveType}`, b]));
 
   let allocated = 0;
@@ -407,7 +407,7 @@ export async function allocateBalancesForYear(accountId: string, year: number) {
       }
 
       allNewRows.push({
-        accountId,
+        tenantId,
         employeeId: assignment.employeeId,
         leaveType: lt.slug,
         year,
@@ -429,30 +429,30 @@ export async function allocateBalancesForYear(accountId: string, year: number) {
     await db.insert(leaveBalances).values(allNewRows);
   }
 
-  logger.info({ accountId, year, allocated, skipped }, 'Leave balance allocation completed');
+  logger.info({ tenantId, year, allocated, skipped }, 'Leave balance allocation completed');
   return { allocated, skipped };
 }
 
 // ─── Holiday Calendars ────────────────────────────────────────────
 
-export async function listHolidayCalendars(accountId: string) {
+export async function listHolidayCalendars(tenantId: string) {
   return db.select().from(hrHolidayCalendars)
-    .where(and(eq(hrHolidayCalendars.accountId, accountId), eq(hrHolidayCalendars.isArchived, false)))
+    .where(and(eq(hrHolidayCalendars.tenantId, tenantId), eq(hrHolidayCalendars.isArchived, false)))
     .orderBy(desc(hrHolidayCalendars.year), asc(hrHolidayCalendars.name));
 }
 
-export async function createHolidayCalendar(accountId: string, input: {
+export async function createHolidayCalendar(tenantId: string, input: {
   name: string; year: number; description?: string | null; isDefault?: boolean;
 }) {
   const now = new Date();
   const [created] = await db.insert(hrHolidayCalendars).values({
-    accountId, name: input.name, year: input.year, description: input.description ?? null,
+    tenantId, name: input.name, year: input.year, description: input.description ?? null,
     isDefault: input.isDefault ?? false, createdAt: now, updatedAt: now,
   }).returning();
   return created;
 }
 
-export async function updateHolidayCalendar(accountId: string, id: string, input: Partial<{
+export async function updateHolidayCalendar(tenantId: string, id: string, input: Partial<{
   name: string; year: number; description: string | null; isDefault: boolean; isArchived: boolean;
 }>) {
   const now = new Date();
@@ -460,36 +460,36 @@ export async function updateHolidayCalendar(accountId: string, id: string, input
   for (const [k, v] of Object.entries(input)) { if (v !== undefined) updates[k] = v; }
 
   const [updated] = await db.update(hrHolidayCalendars).set(updates)
-    .where(and(eq(hrHolidayCalendars.id, id), eq(hrHolidayCalendars.accountId, accountId))).returning();
+    .where(and(eq(hrHolidayCalendars.id, id), eq(hrHolidayCalendars.tenantId, tenantId))).returning();
   return updated || null;
 }
 
-export async function deleteHolidayCalendar(accountId: string, id: string) {
-  return updateHolidayCalendar(accountId, id, { isArchived: true });
+export async function deleteHolidayCalendar(tenantId: string, id: string) {
+  return updateHolidayCalendar(tenantId, id, { isArchived: true });
 }
 
 // ─── Holidays ─────────────────────────────────────────────────────
 
-export async function listHolidays(accountId: string, calendarId: string) {
+export async function listHolidays(tenantId: string, calendarId: string) {
   return db.select().from(hrHolidays)
-    .where(and(eq(hrHolidays.calendarId, calendarId), eq(hrHolidays.accountId, accountId), eq(hrHolidays.isArchived, false)))
+    .where(and(eq(hrHolidays.calendarId, calendarId), eq(hrHolidays.tenantId, tenantId), eq(hrHolidays.isArchived, false)))
     .orderBy(asc(hrHolidays.date));
 }
 
-export async function createHoliday(accountId: string, input: {
+export async function createHoliday(tenantId: string, input: {
   calendarId: string; name: string; date: string; description?: string | null;
   type?: string; isRecurring?: boolean;
 }) {
   const now = new Date();
   const [created] = await db.insert(hrHolidays).values({
-    accountId, calendarId: input.calendarId, name: input.name, date: input.date,
+    tenantId, calendarId: input.calendarId, name: input.name, date: input.date,
     description: input.description ?? null, type: input.type ?? 'public',
     isRecurring: input.isRecurring ?? false, createdAt: now, updatedAt: now,
   }).returning();
   return created;
 }
 
-export async function updateHoliday(accountId: string, id: string, input: Partial<{
+export async function updateHoliday(tenantId: string, id: string, input: Partial<{
   name: string; date: string; description: string | null; type: string; isRecurring: boolean; isArchived: boolean;
 }>) {
   const now = new Date();
@@ -497,18 +497,18 @@ export async function updateHoliday(accountId: string, id: string, input: Partia
   for (const [k, v] of Object.entries(input)) { if (v !== undefined) updates[k] = v; }
 
   const [updated] = await db.update(hrHolidays).set(updates)
-    .where(and(eq(hrHolidays.id, id), eq(hrHolidays.accountId, accountId))).returning();
+    .where(and(eq(hrHolidays.id, id), eq(hrHolidays.tenantId, tenantId))).returning();
   return updated || null;
 }
 
-export async function deleteHoliday(accountId: string, id: string) {
-  return updateHoliday(accountId, id, { isArchived: true });
+export async function deleteHoliday(tenantId: string, id: string) {
+  return updateHoliday(tenantId, id, { isArchived: true });
 }
 
-export async function bulkCreateHolidays(accountId: string, calendarId: string, holidays: Array<{ name: string; date: string; type: string }>) {
+export async function bulkCreateHolidays(tenantId: string, calendarId: string, holidays: Array<{ name: string; date: string; type: string }>) {
   const now = new Date();
   const rows = holidays.map(h => ({
-    accountId,
+    tenantId,
     calendarId,
     name: h.name,
     date: h.date,
@@ -519,7 +519,7 @@ export async function bulkCreateHolidays(accountId: string, calendarId: string, 
   return db.insert(hrHolidays).values(rows).returning();
 }
 
-export async function calculateWorkingDays(accountId: string, startDate: string, endDate: string, calendarId?: string) {
+export async function calculateWorkingDays(tenantId: string, startDate: string, endDate: string, calendarId?: string) {
   const start = new Date(startDate);
   const end = new Date(endDate);
 

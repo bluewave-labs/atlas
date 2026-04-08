@@ -7,7 +7,7 @@ import { getAppPermission, canAccess } from '../../../services/app-permissions.s
 
 export async function getLifecycleTimeline(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -15,7 +15,7 @@ export async function getLifecycleTimeline(req: Request, res: Response) {
       return;
     }
 
-    const data = await hrService.getLifecycleTimeline(accountId, req.params.id as string);
+    const data = await hrService.getLifecycleTimeline(tenantId, req.params.id as string);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to get lifecycle timeline');
@@ -25,7 +25,7 @@ export async function getLifecycleTimeline(req: Request, res: Response) {
 
 export async function createLifecycleEventHandler(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const userId = req.auth!.userId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
@@ -40,7 +40,7 @@ export async function createLifecycleEventHandler(req: Request, res: Response) {
       res.status(400).json({ success: false, error: 'eventType and eventDate are required' });
       return;
     }
-    const data = await hrService.createLifecycleEvent(accountId, {
+    const data = await hrService.createLifecycleEvent(tenantId, {
       employeeId, eventType, eventDate, effectiveDate, fromValue, toValue,
       fromDepartmentId, toDepartmentId, notes, createdBy: userId,
     });
@@ -53,7 +53,7 @@ export async function createLifecycleEventHandler(req: Request, res: Response) {
 
 export async function deleteLifecycleEvent(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'delete') && !canAccess(perm.role, 'delete_own')) {
@@ -61,7 +61,7 @@ export async function deleteLifecycleEvent(req: Request, res: Response) {
       return;
     }
 
-    await hrService.deleteLifecycleEvent(accountId, req.params.id as string);
+    await hrService.deleteLifecycleEvent(tenantId, req.params.id as string);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete lifecycle event');

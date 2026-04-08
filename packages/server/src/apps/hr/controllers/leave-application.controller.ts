@@ -9,7 +9,7 @@ import { getLinkedUserIdForEmployee, getManagerLinkedUserId } from '../services/
 
 export async function listLeaveApplications(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -18,7 +18,7 @@ export async function listLeaveApplications(req: Request, res: Response) {
     }
 
     const { employeeId, status, startDate, endDate } = req.query;
-    const data = await leaveService.listLeaveApplications(accountId, {
+    const data = await leaveService.listLeaveApplications(tenantId, {
       employeeId: employeeId as string | undefined,
       status: status as string | undefined,
       startDate: startDate as string | undefined,
@@ -33,7 +33,7 @@ export async function listLeaveApplications(req: Request, res: Response) {
 
 export async function createLeaveApplication(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'create')) {
@@ -46,7 +46,7 @@ export async function createLeaveApplication(req: Request, res: Response) {
       res.status(400).json({ success: false, error: 'employeeId, leaveTypeId, startDate, endDate are required' });
       return;
     }
-    const data = await leaveService.createLeaveApplication(accountId, {
+    const data = await leaveService.createLeaveApplication(tenantId, {
       employeeId, leaveTypeId, startDate, endDate, halfDay, halfDayDate, reason,
     });
 
@@ -72,7 +72,7 @@ export async function createLeaveApplication(req: Request, res: Response) {
 
 export async function updateLeaveApplication(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'update')) {
@@ -80,7 +80,7 @@ export async function updateLeaveApplication(req: Request, res: Response) {
       return;
     }
 
-    const data = await leaveService.updateLeaveApplication(accountId, req.params.id as string, req.body);
+    const data = await leaveService.updateLeaveApplication(tenantId, req.params.id as string, req.body);
     if (!data) { res.status(404).json({ success: false, error: 'Leave application not found or not in draft' }); return; }
     res.json({ success: true, data });
   } catch (error) {
@@ -91,7 +91,7 @@ export async function updateLeaveApplication(req: Request, res: Response) {
 
 export async function submitLeaveApplication(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'update')) {
@@ -99,7 +99,7 @@ export async function submitLeaveApplication(req: Request, res: Response) {
       return;
     }
 
-    const data = await leaveService.submitLeaveApplication(accountId, req.params.id as string);
+    const data = await leaveService.submitLeaveApplication(tenantId, req.params.id as string);
     if (!data) { res.status(400).json({ success: false, error: 'Cannot submit this application' }); return; }
 
     if (req.auth!.tenantId && data.employeeId) {
@@ -124,7 +124,7 @@ export async function submitLeaveApplication(req: Request, res: Response) {
 
 export async function approveLeaveApplication(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const userId = req.auth!.userId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
@@ -134,7 +134,7 @@ export async function approveLeaveApplication(req: Request, res: Response) {
     }
 
     const { comment } = req.body;
-    const data = await leaveService.approveLeaveApplication(accountId, req.params.id as string, userId, comment);
+    const data = await leaveService.approveLeaveApplication(tenantId, req.params.id as string, userId, comment);
     if (!data) { res.status(400).json({ success: false, error: 'Cannot approve this application' }); return; }
 
     if (req.auth!.tenantId) {
@@ -159,7 +159,7 @@ export async function approveLeaveApplication(req: Request, res: Response) {
 
 export async function rejectLeaveApplication(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const userId = req.auth!.userId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
@@ -169,7 +169,7 @@ export async function rejectLeaveApplication(req: Request, res: Response) {
     }
 
     const { comment } = req.body;
-    const data = await leaveService.rejectLeaveApplication(accountId, req.params.id as string, userId, comment);
+    const data = await leaveService.rejectLeaveApplication(tenantId, req.params.id as string, userId, comment);
     if (!data) { res.status(400).json({ success: false, error: 'Cannot reject this application' }); return; }
 
     if (req.auth!.tenantId) {
@@ -194,7 +194,7 @@ export async function rejectLeaveApplication(req: Request, res: Response) {
 
 export async function cancelLeaveApplication(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'update')) {
@@ -202,7 +202,7 @@ export async function cancelLeaveApplication(req: Request, res: Response) {
       return;
     }
 
-    const data = await leaveService.cancelLeaveApplication(accountId, req.params.id as string);
+    const data = await leaveService.cancelLeaveApplication(tenantId, req.params.id as string);
     if (!data) { res.status(400).json({ success: false, error: 'Cannot cancel this application' }); return; }
     res.json({ success: true, data });
   } catch (error) {
@@ -213,7 +213,7 @@ export async function cancelLeaveApplication(req: Request, res: Response) {
 
 export async function getPendingApprovals(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
     const userId = req.auth!.userId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
@@ -222,7 +222,7 @@ export async function getPendingApprovals(req: Request, res: Response) {
       return;
     }
 
-    const data = await leaveService.getPendingApprovals(accountId, userId);
+    const data = await leaveService.getPendingApprovals(tenantId, userId);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to get pending approvals');
@@ -232,7 +232,7 @@ export async function getPendingApprovals(req: Request, res: Response) {
 
 export async function getLeaveCalendar(req: Request, res: Response) {
   try {
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -241,7 +241,7 @@ export async function getLeaveCalendar(req: Request, res: Response) {
     }
 
     const month = (req.query.month as string) || new Date().toISOString().slice(0, 7);
-    const data = await leaveService.getLeaveCalendar(accountId, month);
+    const data = await leaveService.getLeaveCalendar(tenantId, month);
     res.json({ success: true, data });
   } catch (error) {
     logger.error({ error }, 'Failed to get leave calendar');

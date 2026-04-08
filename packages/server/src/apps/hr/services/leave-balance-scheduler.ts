@@ -26,14 +26,14 @@ export async function checkLeaveBalances() {
     const currentYear = new Date().getFullYear();
 
     // Get all distinct account IDs that have active policy assignments
-    const rows = await db.selectDistinct({ accountId: hrLeavePolicyAssignments.accountId })
+    const rows = await db.selectDistinct({ tenantId: hrLeavePolicyAssignments.tenantId })
       .from(hrLeavePolicyAssignments)
       .where(eq(hrLeavePolicyAssignments.isArchived, false));
 
     await Promise.all(
       rows.map((row) =>
-        allocateBalancesForYear(row.accountId, currentYear).catch((err) =>
-          logger.error({ err, accountId: row.accountId }, 'Leave balance allocation failed for account'),
+        allocateBalancesForYear(row.tenantId, currentYear).catch((err) =>
+          logger.error({ err, tenantId: row.tenantId }, 'Leave balance allocation failed for tenant'),
         ),
       ),
     );

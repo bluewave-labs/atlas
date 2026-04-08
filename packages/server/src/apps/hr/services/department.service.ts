@@ -17,8 +17,8 @@ interface UpdateDepartmentInput extends Partial<CreateDepartmentInput> {
 
 // ─── Departments ────────────────────────────────────────────────────
 
-export async function listDepartments(userId: string, accountId: string, includeArchived = false) {
-  const conditions = [eq(departments.userId, userId), eq(departments.accountId, accountId)];
+export async function listDepartments(userId: string, tenantId: string, includeArchived = false) {
+  const conditions = [eq(departments.userId, userId), eq(departments.tenantId, tenantId)];
   if (!includeArchived) {
     conditions.push(eq(departments.isArchived, false));
   }
@@ -26,7 +26,7 @@ export async function listDepartments(userId: string, accountId: string, include
   const rows = await db
     .select({
       id: departments.id,
-      accountId: departments.accountId,
+      tenantId: departments.tenantId,
       userId: departments.userId,
       name: departments.name,
       headEmployeeId: departments.headEmployeeId,
@@ -45,11 +45,11 @@ export async function listDepartments(userId: string, accountId: string, include
   return rows;
 }
 
-export async function getDepartment(userId: string, accountId: string, id: string) {
+export async function getDepartment(userId: string, tenantId: string, id: string) {
   const [department] = await db
     .select({
       id: departments.id,
-      accountId: departments.accountId,
+      tenantId: departments.tenantId,
       userId: departments.userId,
       name: departments.name,
       headEmployeeId: departments.headEmployeeId,
@@ -62,13 +62,13 @@ export async function getDepartment(userId: string, accountId: string, id: strin
       employeeCount: sql<number>`(SELECT COUNT(*) FROM employees WHERE department_id = ${departments.id} AND is_archived = false)`.as('employee_count'),
     })
     .from(departments)
-    .where(and(eq(departments.id, id), eq(departments.userId, userId), eq(departments.accountId, accountId)))
+    .where(and(eq(departments.id, id), eq(departments.userId, userId), eq(departments.tenantId, tenantId)))
     .limit(1);
 
   return department || null;
 }
 
-export async function createDepartment(userId: string, accountId: string, input: CreateDepartmentInput) {
+export async function createDepartment(userId: string, tenantId: string, input: CreateDepartmentInput) {
   const now = new Date();
 
   const [maxSort] = await db
@@ -81,7 +81,7 @@ export async function createDepartment(userId: string, accountId: string, input:
   const [created] = await db
     .insert(departments)
     .values({
-      accountId,
+      tenantId,
       userId,
       name: input.name || 'Untitled department',
       headEmployeeId: input.headEmployeeId ?? null,
@@ -97,7 +97,7 @@ export async function createDepartment(userId: string, accountId: string, input:
   return created;
 }
 
-export async function updateDepartment(userId: string, accountId: string, id: string, input: UpdateDepartmentInput) {
+export async function updateDepartment(userId: string, tenantId: string, id: string, input: UpdateDepartmentInput) {
   const now = new Date();
   const updates: Record<string, unknown> = { updatedAt: now };
 
@@ -111,17 +111,17 @@ export async function updateDepartment(userId: string, accountId: string, id: st
   await db
     .update(departments)
     .set(updates)
-    .where(and(eq(departments.id, id), eq(departments.userId, userId), eq(departments.accountId, accountId)));
+    .where(and(eq(departments.id, id), eq(departments.userId, userId), eq(departments.tenantId, tenantId)));
 
   const [updated] = await db
     .select()
     .from(departments)
-    .where(and(eq(departments.id, id), eq(departments.userId, userId), eq(departments.accountId, accountId)))
+    .where(and(eq(departments.id, id), eq(departments.userId, userId), eq(departments.tenantId, tenantId)))
     .limit(1);
 
   return updated || null;
 }
 
-export async function deleteDepartment(userId: string, accountId: string, id: string) {
-  await updateDepartment(userId, accountId, id, { isArchived: true });
+export async function deleteDepartment(userId: string, tenantId: string, id: string) {
+  await updateDepartment(userId, tenantId, id, { isArchived: true });
 }

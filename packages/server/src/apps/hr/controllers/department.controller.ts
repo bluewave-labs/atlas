@@ -8,7 +8,7 @@ import { getAppPermission, canAccess } from '../../../services/app-permissions.s
 export async function listDepartments(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
     if (!canAccess(perm.role, 'view')) {
@@ -18,7 +18,7 @@ export async function listDepartments(req: Request, res: Response) {
 
     const includeArchived = req.query.includeArchived === 'true';
 
-    const depts = await hrService.listDepartments(userId, accountId, includeArchived);
+    const depts = await hrService.listDepartments(userId, tenantId, includeArchived);
     res.json({ success: true, data: { departments: depts } });
   } catch (error) {
     logger.error({ error }, 'Failed to list departments');
@@ -29,7 +29,7 @@ export async function listDepartments(req: Request, res: Response) {
 export async function createDepartment(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
     if (!canAccess(perm.role, 'create')) {
@@ -44,7 +44,7 @@ export async function createDepartment(req: Request, res: Response) {
       return;
     }
 
-    const department = await hrService.createDepartment(userId, accountId, {
+    const department = await hrService.createDepartment(userId, tenantId, {
       name, headEmployeeId, color, description,
     });
 
@@ -58,7 +58,7 @@ export async function createDepartment(req: Request, res: Response) {
 export async function updateDepartment(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
     if (!canAccess(perm.role, 'update')) {
@@ -69,7 +69,7 @@ export async function updateDepartment(req: Request, res: Response) {
     const id = req.params.id as string;
     const { name, headEmployeeId, color, description, sortOrder, isArchived } = req.body;
 
-    const department = await hrService.updateDepartment(userId, accountId, id, {
+    const department = await hrService.updateDepartment(userId, tenantId, id, {
       name, headEmployeeId, color, description, sortOrder, isArchived,
     });
 
@@ -88,7 +88,7 @@ export async function updateDepartment(req: Request, res: Response) {
 export async function deleteDepartment(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
-    const accountId = req.auth!.accountId;
+    const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
     if (!canAccess(perm.role, 'delete') && !canAccess(perm.role, 'delete_own')) {
@@ -98,7 +98,7 @@ export async function deleteDepartment(req: Request, res: Response) {
 
     const id = req.params.id as string;
 
-    await hrService.deleteDepartment(userId, accountId, id);
+    await hrService.deleteDepartment(userId, tenantId, id);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete department');
