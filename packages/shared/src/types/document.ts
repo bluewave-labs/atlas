@@ -1,6 +1,6 @@
 export interface Document {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   parentId: string | null;
   title: string;
@@ -50,7 +50,7 @@ export interface DocumentComment {
   id: string;
   documentId: string;
   userId: string;
-  accountId: string;
+  tenantId: string;
   content: string;
   selectionFrom: number | null;
   selectionTo: number | null;

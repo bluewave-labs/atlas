@@ -68,7 +68,7 @@ export interface TableViewConfig {
 
 export interface Spreadsheet {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   title: string;
   columns: TableColumn[];

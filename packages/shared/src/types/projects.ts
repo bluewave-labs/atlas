@@ -2,7 +2,7 @@
 
 export interface ProjectClient {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   name: string;
   email: string | null;
@@ -50,7 +50,7 @@ export type ProjectStatus = 'active' | 'paused' | 'completed' | 'archived';
 
 export interface Project {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   clientId: string | null;
   name: string;
@@ -111,7 +111,7 @@ export interface ProjectMember {
 
 export interface TimeEntry {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   projectId: string;
   durationMinutes: number;
@@ -158,7 +158,7 @@ export type InvoiceStatus = 'draft' | 'sent' | 'viewed' | 'overdue' | 'paid' | '
 
 export interface Invoice {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   clientId: string;
   invoiceNumber: string;
@@ -231,7 +231,7 @@ export interface UpdateInvoiceLineItemInput extends Partial<Omit<CreateInvoiceLi
 
 export interface ProjectSettings {
   id: string;
-  accountId: string;
+  tenantId: string;
   invoicePrefix: string;
   defaultHourlyRate: number;
   companyName: string | null;

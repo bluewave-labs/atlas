@@ -1,6 +1,6 @@
 export interface DriveItem {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   name: string;
   type: 'file' | 'folder';
@@ -41,7 +41,7 @@ export interface UpdateDriveItemInput {
 export interface DriveItemVersion {
   id: string;
   driveItemId: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   name: string;
   mimeType: string | null;

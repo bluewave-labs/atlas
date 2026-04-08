@@ -6,7 +6,7 @@ export type TimeOffStatus = 'pending' | 'approved' | 'rejected';
 
 export interface Employee {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   linkedUserId: string | null;
   name: string;
@@ -29,7 +29,7 @@ export interface Employee {
 
 export interface Department {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   name: string;
   headEmployeeId: string | null;
@@ -46,7 +46,7 @@ export interface Department {
 
 export interface TimeOffRequest {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   employeeId: string;
   type: TimeOffType;

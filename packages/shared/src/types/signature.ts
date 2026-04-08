@@ -7,7 +7,7 @@ export type SigningTokenStatus = 'pending' | 'signed' | 'expired' | 'declined';
 
 export interface SignatureDocument {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   title: string;
   fileName: string;
@@ -112,7 +112,7 @@ export interface SignAuditLogEntry {
 
 export interface SignTemplate {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   title: string;
   fileName: string;

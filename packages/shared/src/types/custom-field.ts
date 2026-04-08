@@ -28,7 +28,7 @@ export interface CustomFieldDefinition {
 
 export interface CustomFieldValue {
   id: string;
-  accountId: string;
+  tenantId: string;
   fieldDefinitionId: string;
   recordId: string;
   value: unknown;

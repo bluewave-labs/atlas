@@ -8,7 +8,7 @@ export type RecurrenceRule = 'daily' | 'weekdays' | 'weekly' | 'biweekly' | 'mon
 
 export interface Task {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   projectId: string | null;
   title: string;
@@ -62,7 +62,7 @@ export interface TaskActivity {
 export interface TaskTemplate {
   id: string;
   userId: string;
-  accountId: string;
+  tenantId: string;
   title: string;
   description: string | null;
   icon: string | null;
@@ -97,7 +97,7 @@ export interface UpdateTaskTemplateInput {
 
 export interface TaskProject {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   title: string;
   description: string | null;
@@ -113,7 +113,7 @@ export interface TaskProject {
 export interface TaskComment {
   id: string;
   taskId: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   body: string;
   userName?: string | null;

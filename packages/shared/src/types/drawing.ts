@@ -1,6 +1,6 @@
 export interface Drawing {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   title: string;
   content: Record<string, unknown> | null;

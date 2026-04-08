@@ -1,7 +1,7 @@
 export type CrmActivityType = 'note' | 'call' | 'meeting' | 'email';
 
 export interface CrmContact {
-  id: string; accountId: string; userId: string;
+  id: string; tenantId: string; userId: string;
   name: string; email: string | null; phone: string | null;
   companyId: string | null; position: string | null;
   source: string | null; tags: string[];
@@ -12,7 +12,7 @@ export interface CrmContact {
 }
 
 export interface CrmCompany {
-  id: string; accountId: string; userId: string;
+  id: string; tenantId: string; userId: string;
   name: string; domain: string | null; industry: string | null;
   size: string | null; address: string | null; phone: string | null;
   tags: string[]; isArchived: boolean; sortOrder: number;
@@ -22,14 +22,14 @@ export interface CrmCompany {
 }
 
 export interface CrmDealStage {
-  id: string; accountId: string;
+  id: string; tenantId: string;
   name: string; color: string; probability: number;
   sequence: number; isDefault: boolean;
   rottingDays: number | null;
 }
 
 export interface CrmDeal {
-  id: string; accountId: string; userId: string;
+  id: string; tenantId: string; userId: string;
   title: string; value: number; stageId: string;
   contactId: string | null; companyId: string | null;
   assignedUserId: string | null;
@@ -46,7 +46,7 @@ export interface CrmDeal {
 }
 
 export interface CrmActivity {
-  id: string; accountId: string; userId: string;
+  id: string; tenantId: string; userId: string;
   type: CrmActivityType; body: string;
   dealId: string | null; contactId: string | null; companyId: string | null;
   assignedUserId: string | null;
@@ -66,7 +66,7 @@ export interface CreateCrmActivityInput { type: CrmActivityType; body: string; d
 // ─── Activity Type Config ────────────────────────────────────────
 
 export interface CrmActivityTypeConfig {
-  id: string; accountId: string;
+  id: string; tenantId: string;
   name: string; icon: string; color: string;
   isDefault: boolean; isArchived: boolean;
   sortOrder: number;
@@ -84,7 +84,7 @@ export type CrmWorkflowAction = 'create_task' | 'update_field' | 'change_deal_st
 
 export interface CrmWorkflow {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   name: string;
   trigger: CrmWorkflowTrigger;
@@ -114,7 +114,7 @@ export type CrmRecordAccess = 'all' | 'team' | 'own';
 // ─── Sales Teams ────────────────────────────────────────────────
 
 export interface CrmTeam {
-  id: string; accountId: string;
+  id: string; tenantId: string;
   name: string; color: string;
   leaderUserId: string | null;
   isArchived: boolean;
@@ -132,7 +132,7 @@ export type CrmOperation = 'view' | 'create' | 'update' | 'delete';
 
 export interface CrmPermission {
   id: string;
-  accountId: string;
+  tenantId: string;
   userId: string;
   role: CrmRole;
   recordAccess: CrmRecordAccess;
@@ -151,7 +151,7 @@ export type CrmLeadStatus = 'new' | 'contacted' | 'qualified' | 'converted' | 'l
 export type CrmLeadSource = 'website' | 'referral' | 'cold_call' | 'social_media' | 'event' | 'other';
 
 export interface CrmLead {
-  id: string; accountId: string; userId: string;
+  id: string; tenantId: string; userId: string;
   name: string; email: string | null; phone: string | null;
   companyName: string | null; source: CrmLeadSource;
   status: CrmLeadStatus; notes: string | null;
@@ -175,7 +175,7 @@ export interface CreateCrmLeadInput {
 // ─── Notes (rich text) ──────────────────────────────────────────────
 
 export interface CrmNote {
-  id: string; accountId: string; userId: string;
+  id: string; tenantId: string; userId: string;
   title: string; content: Record<string, unknown>;
   dealId: string | null; contactId: string | null; companyId: string | null;
   isPinned: boolean; isArchived: boolean;
