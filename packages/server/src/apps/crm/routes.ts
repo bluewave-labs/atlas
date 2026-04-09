@@ -6,6 +6,9 @@ const router = Router();
 
 // ─── Public routes (no auth) — defined BEFORE authMiddleware ────────
 router.post('/forms/public/:token', crmController.submitLeadForm);
+router.get('/proposals/public/:token', crmController.getPublicProposal);
+router.post('/proposals/public/:token/accept', crmController.acceptPublicProposal);
+router.post('/proposals/public/:token/decline', crmController.declinePublicProposal);
 
 // ─── Auth middleware for all routes below ────────────────────────────
 router.use(authMiddleware);
@@ -130,6 +133,15 @@ router.get('/forms', crmController.listLeadForms);
 router.post('/forms', crmController.createLeadForm);
 router.patch('/forms/:id', crmController.updateLeadForm);
 router.delete('/forms/:id', crmController.deleteLeadForm);
+
+// Proposals
+router.get('/proposals/list', crmController.listProposals);
+router.post('/proposals', crmController.createProposal);
+router.get('/proposals/:id', crmController.getProposal);
+router.patch('/proposals/:id', crmController.updateProposal);
+router.delete('/proposals/:id', crmController.deleteProposal);
+router.post('/proposals/:id/send', crmController.sendProposal);
+router.post('/proposals/:id/duplicate', crmController.duplicateProposal);
 
 // Google sync
 router.get('/google/status', crmController.getGoogleSyncStatus);

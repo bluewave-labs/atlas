@@ -11,3 +11,4 @@ export * from './services/team.service';
 export * from './services/note.service';
 export * from './services/view.service';
 export * from './services/dashboard.service';
+export * as proposalService from './services/proposal.service';
