@@ -3338,6 +3338,28 @@
   },
   "invoices": {
     "title": "Fatture",
+    "editInvoice": "Modifica fattura",
+    "newInvoice": "Nuova fattura",
+    "invoiceBuilderSubtitle": "Crea e invia fatture professionali",
+    "company": "Azienda",
+    "selectCompany": "Seleziona un'azienda",
+    "issueDate": "Data di emissione",
+    "dueDate": "Data di scadenza",
+    "currency": "Valuta",
+    "notes": "Note",
+    "notesPlaceholder": "Aggiungi note per il cliente...",
+    "saveDraft": "Salva bozza",
+    "send": "Invia",
+    "efatura": {
+      "type": "Tipo e-Fatura",
+      "typeOptions": {
+        "satis": "Vendita",
+        "iade": "Reso",
+        "tevkifat": "Ritenuta",
+        "istisna": "Eccezione"
+      },
+      "generate": "Genera e-Fatura"
+    },
     "sidebar": {
       "all": "Tutte le fatture",
       "draft": "Bozza",

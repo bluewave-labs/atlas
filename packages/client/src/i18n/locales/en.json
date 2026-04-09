@@ -3344,6 +3344,28 @@
   },
   "invoices": {
     "title": "Invoices",
+    "editInvoice": "Edit invoice",
+    "newInvoice": "New invoice",
+    "invoiceBuilderSubtitle": "Create and send professional invoices",
+    "company": "Company",
+    "selectCompany": "Select a company",
+    "issueDate": "Issue date",
+    "dueDate": "Due date",
+    "currency": "Currency",
+    "notes": "Notes",
+    "notesPlaceholder": "Add notes for the client...",
+    "saveDraft": "Save draft",
+    "send": "Send",
+    "efatura": {
+      "type": "e-Fatura type",
+      "typeOptions": {
+        "satis": "Sales",
+        "iade": "Return",
+        "tevkifat": "Withholding",
+        "istisna": "Exception"
+      },
+      "generate": "Generate e-Fatura"
+    },
     "sidebar": {
       "all": "All invoices",
       "draft": "Draft",

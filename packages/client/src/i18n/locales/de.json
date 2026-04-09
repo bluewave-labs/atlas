@@ -3338,6 +3338,28 @@
   },
   "invoices": {
     "title": "Rechnungen",
+    "editInvoice": "Rechnung bearbeiten",
+    "newInvoice": "Neue Rechnung",
+    "invoiceBuilderSubtitle": "Erstellen und versenden Sie professionelle Rechnungen",
+    "company": "Unternehmen",
+    "selectCompany": "Unternehmen auswählen",
+    "issueDate": "Ausstellungsdatum",
+    "dueDate": "Fälligkeitsdatum",
+    "currency": "Währung",
+    "notes": "Notizen",
+    "notesPlaceholder": "Notizen für den Kunden hinzufügen...",
+    "saveDraft": "Entwurf speichern",
+    "send": "Senden",
+    "efatura": {
+      "type": "e-Fatura-Typ",
+      "typeOptions": {
+        "satis": "Verkauf",
+        "iade": "Rückgabe",
+        "tevkifat": "Einbehaltung",
+        "istisna": "Ausnahme"
+      },
+      "generate": "e-Fatura erstellen"
+    },
     "sidebar": {
       "all": "Alle Rechnungen",
       "draft": "Entwurf",

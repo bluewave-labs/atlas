@@ -3338,6 +3338,28 @@
   },
   "invoices": {
     "title": "Faturalar",
+    "editInvoice": "Faturayı düzenle",
+    "newInvoice": "Yeni fatura",
+    "invoiceBuilderSubtitle": "Profesyonel faturalar oluşturun ve gönderin",
+    "company": "Şirket",
+    "selectCompany": "Bir şirket seçin",
+    "issueDate": "Düzenleme tarihi",
+    "dueDate": "Vade tarihi",
+    "currency": "Para birimi",
+    "notes": "Notlar",
+    "notesPlaceholder": "Müşteri için notlar ekleyin...",
+    "saveDraft": "Taslak olarak kaydet",
+    "send": "Gönder",
+    "efatura": {
+      "type": "e-Fatura türü",
+      "typeOptions": {
+        "satis": "Satış",
+        "iade": "İade",
+        "tevkifat": "Tevkifat",
+        "istisna": "İstisna"
+      },
+      "generate": "e-Fatura oluştur"
+    },
     "sidebar": {
       "all": "Tüm faturalar",
       "draft": "Taslak",

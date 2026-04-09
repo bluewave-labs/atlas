@@ -3338,6 +3338,28 @@
   },
   "invoices": {
     "title": "Factures",
+    "editInvoice": "Modifier la facture",
+    "newInvoice": "Nouvelle facture",
+    "invoiceBuilderSubtitle": "Créez et envoyez des factures professionnelles",
+    "company": "Entreprise",
+    "selectCompany": "Sélectionner une entreprise",
+    "issueDate": "Date d'émission",
+    "dueDate": "Date d'échéance",
+    "currency": "Devise",
+    "notes": "Notes",
+    "notesPlaceholder": "Ajouter des notes pour le client...",
+    "saveDraft": "Enregistrer le brouillon",
+    "send": "Envoyer",
+    "efatura": {
+      "type": "Type e-Fatura",
+      "typeOptions": {
+        "satis": "Vente",
+        "iade": "Retour",
+        "tevkifat": "Retenue",
+        "istisna": "Exception"
+      },
+      "generate": "Générer e-Fatura"
+    },
     "sidebar": {
       "all": "Toutes les factures",
       "draft": "Brouillon",
