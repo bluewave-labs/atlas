@@ -1017,3 +1017,439 @@ export function useSeedHrData() {
     },
   });
 }
+
+// ─── Expense Categories ──────────────────────────────────────────
+
+import type {
+  HrExpenseCategory,
+  HrExpensePolicy,
+  HrExpensePolicyAssignment,
+  HrExpense,
+  HrExpenseReport,
+  CreateExpenseInput,
+  UpdateExpenseInput,
+  CreateExpenseReportInput,
+  CreateExpenseCategoryInput,
+  CreateExpensePolicyInput,
+} from '@atlasmail/shared';
+
+export function useExpenseCategories() {
+  return useQuery({
+    queryKey: queryKeys.hr.expenseCategories.list,
+    queryFn: async () => {
+      const { data } = await api.get('/hr/expense-categories/list');
+      return data.data as HrExpenseCategory[];
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateExpenseCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateExpenseCategoryInput) => {
+      const { data } = await api.post('/hr/expense-categories', input);
+      return data.data as HrExpenseCategory;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenseCategories.all }); },
+  });
+}
+
+export function useUpdateExpenseCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...input }: Partial<HrExpenseCategory> & { id: string }) => {
+      const { data } = await api.patch(`/hr/expense-categories/${id}`, input);
+      return data.data as HrExpenseCategory;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenseCategories.all }); },
+  });
+}
+
+export function useDeleteExpenseCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => { await api.delete(`/hr/expense-categories/${id}`); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenseCategories.all }); },
+  });
+}
+
+export function useSeedExpenseCategories() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post('/hr/expense-categories/seed');
+      return data.data;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenseCategories.all }); },
+  });
+}
+
+export function useReorderExpenseCategories() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { orderedIds: string[] }) => {
+      const { data } = await api.post('/hr/expense-categories/reorder', input);
+      return data.data;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenseCategories.all }); },
+  });
+}
+
+// ─── Expense Policies ────────────────────────────────────────────
+
+export function useExpensePolicies() {
+  return useQuery({
+    queryKey: queryKeys.hr.expensePolicies.list,
+    queryFn: async () => {
+      const { data } = await api.get('/hr/expense-policies/list');
+      return data.data as HrExpensePolicy[];
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useExpensePolicy(id: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.hr.expensePolicies.detail(id!),
+    queryFn: async () => {
+      const { data } = await api.get(`/hr/expense-policies/${id}`);
+      return data.data as HrExpensePolicy & { assignments: HrExpensePolicyAssignment[] };
+    },
+    enabled: !!id,
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateExpensePolicy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateExpensePolicyInput) => {
+      const { data } = await api.post('/hr/expense-policies', input);
+      return data.data as HrExpensePolicy;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expensePolicies.all }); },
+  });
+}
+
+export function useUpdateExpensePolicy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...input }: Partial<HrExpensePolicy> & { id: string }) => {
+      const { data } = await api.patch(`/hr/expense-policies/${id}`, input);
+      return data.data as HrExpensePolicy;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expensePolicies.all }); },
+  });
+}
+
+export function useDeleteExpensePolicy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => { await api.delete(`/hr/expense-policies/${id}`); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expensePolicies.all }); },
+  });
+}
+
+export function useAssignExpensePolicy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...input }: { id: string; employeeId?: string; departmentId?: string }) => {
+      const { data } = await api.post(`/hr/expense-policies/${id}/assign`, input);
+      return data.data as HrExpensePolicyAssignment;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expensePolicies.all }); },
+  });
+}
+
+export function useRemoveExpensePolicyAssignment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, assignmentId }: { id: string; assignmentId: string }) => {
+      await api.delete(`/hr/expense-policies/${id}/assign/${assignmentId}`);
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expensePolicies.all }); },
+  });
+}
+
+// ─── Expenses ────────────────────────────────────────────────────
+
+export function useExpenses(filters?: Record<string, unknown>) {
+  return useQuery({
+    queryKey: queryKeys.hr.expenses.list(filters),
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) params.set(key, String(value));
+        });
+      }
+      const qs = params.toString();
+      const { data } = await api.get(`/hr/expenses/list${qs ? `?${qs}` : ''}`);
+      return data.data as HrExpense[];
+    },
+    staleTime: 15_000,
+  });
+}
+
+export function useMyExpenses(filters?: Record<string, unknown>) {
+  return useQuery({
+    queryKey: queryKeys.hr.expenses.my,
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) params.set(key, String(value));
+        });
+      }
+      const qs = params.toString();
+      const { data } = await api.get(`/hr/expenses/my${qs ? `?${qs}` : ''}`);
+      return data.data as HrExpense[];
+    },
+    staleTime: 15_000,
+  });
+}
+
+export function useExpense(id: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.hr.expenses.detail(id!),
+    queryFn: async () => {
+      const { data } = await api.get(`/hr/expenses/${id}`);
+      return data.data as HrExpense;
+    },
+    enabled: !!id,
+    staleTime: 10_000,
+  });
+}
+
+export function useCreateExpense() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateExpenseInput) => {
+      const { data } = await api.post('/hr/expenses', input);
+      return data.data as HrExpense;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenses.all }); },
+  });
+}
+
+export function useUpdateExpense() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...input }: UpdateExpenseInput & { id: string }) => {
+      const { data } = await api.patch(`/hr/expenses/${id}`, input);
+      return data.data as HrExpense;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenses.all }); },
+  });
+}
+
+export function useDeleteExpense() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => { await api.delete(`/hr/expenses/${id}`); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenses.all }); },
+  });
+}
+
+export function useSubmitExpense() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.post(`/hr/expenses/${id}/submit`);
+      return data.data as HrExpense;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenses.all }); },
+  });
+}
+
+export function useRecallExpense() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.post(`/hr/expenses/${id}/recall`);
+      return data.data as HrExpense;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenses.all }); },
+  });
+}
+
+export function useApproveExpense() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.post(`/hr/expenses/${id}/approve`);
+      return data.data as HrExpense;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenses.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenses.pending });
+    },
+  });
+}
+
+export function useRefuseExpense() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, comment }: { id: string; comment?: string }) => {
+      const { data } = await api.post(`/hr/expenses/${id}/refuse`, { comment });
+      return data.data as HrExpense;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenses.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenses.pending });
+    },
+  });
+}
+
+export function useBulkPayExpenses() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (expenseIds: string[]) => {
+      const { data } = await api.post('/hr/expenses/bulk-pay', { expenseIds });
+      return data.data;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenses.all }); },
+  });
+}
+
+export function usePendingExpenses() {
+  return useQuery({
+    queryKey: queryKeys.hr.expenses.pending,
+    queryFn: async () => {
+      const { data } = await api.get('/hr/expenses/pending');
+      return data.data as HrExpense[];
+    },
+    staleTime: 10_000,
+  });
+}
+
+export function usePendingExpenseCount() {
+  return useQuery({
+    queryKey: queryKeys.hr.expenses.pendingCount,
+    queryFn: async () => {
+      const { data } = await api.get('/hr/expenses/pending/count');
+      return data.data as { count: number };
+    },
+    staleTime: 10_000,
+  });
+}
+
+// ─── Expense Reports ─────────────────────────────────────────────
+
+export function useExpenseReports(filters?: Record<string, unknown>) {
+  return useQuery({
+    queryKey: queryKeys.hr.expenseReports.list(filters),
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) params.set(key, String(value));
+        });
+      }
+      const qs = params.toString();
+      const { data } = await api.get(`/hr/expense-reports/list${qs ? `?${qs}` : ''}`);
+      return data.data as HrExpenseReport[];
+    },
+    staleTime: 15_000,
+  });
+}
+
+export function useMyExpenseReports() {
+  return useQuery({
+    queryKey: queryKeys.hr.expenseReports.my,
+    queryFn: async () => {
+      const { data } = await api.get('/hr/expense-reports/my');
+      return data.data as HrExpenseReport[];
+    },
+    staleTime: 15_000,
+  });
+}
+
+export function useExpenseReport(id: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.hr.expenseReports.detail(id!),
+    queryFn: async () => {
+      const { data } = await api.get(`/hr/expense-reports/${id}`);
+      return data.data as HrExpenseReport & { expenses: HrExpense[] };
+    },
+    enabled: !!id,
+    staleTime: 10_000,
+  });
+}
+
+export function useCreateExpenseReport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateExpenseReportInput) => {
+      const { data } = await api.post('/hr/expense-reports', input);
+      return data.data as HrExpenseReport;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenseReports.all }); },
+  });
+}
+
+export function useUpdateExpenseReport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...input }: Partial<HrExpenseReport> & { id: string }) => {
+      const { data } = await api.patch(`/hr/expense-reports/${id}`, input);
+      return data.data as HrExpenseReport;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenseReports.all }); },
+  });
+}
+
+export function useDeleteExpenseReport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => { await api.delete(`/hr/expense-reports/${id}`); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenseReports.all }); },
+  });
+}
+
+export function useSubmitExpenseReport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.post(`/hr/expense-reports/${id}/submit`);
+      return data.data as HrExpenseReport;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenseReports.all }); },
+  });
+}
+
+export function useApproveExpenseReport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await api.post(`/hr/expense-reports/${id}/approve`);
+      return data.data as HrExpenseReport;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenseReports.all }); },
+  });
+}
+
+export function useRefuseExpenseReport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, comment }: { id: string; comment?: string }) => {
+      const { data } = await api.post(`/hr/expense-reports/${id}/refuse`, { comment });
+      return data.data as HrExpenseReport;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.expenseReports.all }); },
+  });
+}
+
+// ─── Expense Dashboard ───────────────────────────────────────────
+
+export function useExpenseDashboard() {
+  return useQuery({
+    queryKey: queryKeys.hr.expenses.dashboard,
+    queryFn: async () => {
+      const { data } = await api.get('/hr/expenses/dashboard');
+      return data.data;
+    },
+    staleTime: 30_000,
+  });
+}
