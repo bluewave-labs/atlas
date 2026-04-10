@@ -1,13 +1,13 @@
-import { PenTool } from 'lucide-react';
+import { FileSignature } from 'lucide-react';
 import type { ClientAppManifest } from '../../config/app-manifest.client';
 import { SignPage } from './page';
 
 export const signManifest: ClientAppManifest = {
   id: 'sign',
-  name: 'Sign',
+  name: 'Agreements',
   labelKey: 'sidebar.sign',
-  iconName: 'PenTool',
-  icon: PenTool,
+  iconName: 'FileSignature',
+  icon: FileSignature,
   color: '#8b5cf6',
   minPlan: 'starter',
   category: 'productivity',

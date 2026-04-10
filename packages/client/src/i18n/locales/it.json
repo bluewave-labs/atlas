@@ -118,7 +118,8 @@
     "invoices": "Fatture",
     "allMail": "Tutte le email",
     "starred": "Speciali",
-    "unread": "Non letti"
+    "unread": "Non letti",
+    "sign": "Accordi"
   },
   "inbox": {
     "selectConversation": "Seleziona una conversazione",
@@ -2693,7 +2694,28 @@
     }
   },
   "sign": {
-    "title": "Sign",
+    "title": "Accordi",
+    "documentType": "Tipo di documento",
+    "counterparty": "Controparte",
+    "counterpartyOptional": "Controparte (facoltativo)",
+    "counterpartyHint": "Collega a un'azienda, un affare o un contatto CRM dalla vista del documento dopo l'invio.",
+    "types": {
+      "contract": "Contratto",
+      "nda": "Accordo di riservatezza",
+      "offer_letter": "Lettera di offerta",
+      "acknowledgment": "Conferma",
+      "waiver": "Rinuncia",
+      "other": "Altro"
+    },
+    "filters": {
+      "all": "Tutti",
+      "contracts": "Contratti",
+      "ndas": "Accordi di riservatezza",
+      "offerLetters": "Lettere di offerta",
+      "acknowledgments": "Conferme",
+      "waivers": "Rinunce",
+      "other": "Altro"
+    },
     "sidebar": {
       "allDocuments": "Tutti i documenti",
       "pending": "In attesa",
@@ -2793,7 +2815,8 @@
       "emailSubjectPlaceholder": "Oggetto personalizzato (facoltativo)",
       "emailMessagePlaceholder": "Messaggio personalizzato per l'invito alla firma (facoltativo)",
       "emailPlaceholder": "nome@esempio.it",
-      "namePlaceholder": "Mario Rossi"
+      "namePlaceholder": "Mario Rossi",
+      "counterpartyHint": "Collega a un'azienda, un affare o un contatto CRM dalla vista del documento dopo l'invio."
     },
     "reminders": {
       "lastSent": "Ultimo promemoria inviato il {{date}}",
@@ -2911,7 +2934,17 @@
       "saveAsTemplate": "Salva come modello",
       "deleteTemplate": "Elimina modello",
       "fieldCount": "{{count}} campi",
-      "createdFrom": "Creato da modello"
+      "createdFrom": "Creato da modello",
+      "loadStarter": "Carica modelli iniziali",
+      "starterLoaded": "{{count}} modelli iniziali caricati",
+      "starterLoadedSkipped": "{{count}} aggiunti, {{skipped}} già esistenti",
+      "starterNames": {
+        "mutualNda": "Accordo di riservatezza reciproco",
+        "onewayNda": "Accordo di riservatezza unilaterale",
+        "consulting": "Contratto di consulenza",
+        "sow": "Capitolato d'oneri semplice",
+        "offerLetter": "Lettera di offerta"
+      }
     },
     "widgetTitle": "Firma",
     "widgetAwaiting": "in attesa di firma",

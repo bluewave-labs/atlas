@@ -118,7 +118,8 @@
     "invoices": "Faturalar",
     "allMail": "Tüm postalar",
     "starred": "Yıldızlı",
-    "unread": "Okunmamış"
+    "unread": "Okunmamış",
+    "sign": "Sözleşmeler"
   },
   "inbox": {
     "selectConversation": "Bir görüşme seçin",
@@ -2693,7 +2694,28 @@
     }
   },
   "sign": {
-    "title": "Sign",
+    "title": "Sözleşmeler",
+    "documentType": "Belge türü",
+    "counterparty": "Karşı taraf",
+    "counterpartyOptional": "Karşı taraf (isteğe bağlı)",
+    "counterpartyHint": "Gönderdikten sonra belge görünümünden bir CRM şirketi, fırsatı veya kişisine bağlayın.",
+    "types": {
+      "contract": "Sözleşme",
+      "nda": "Gizlilik sözleşmesi",
+      "offer_letter": "Teklif mektubu",
+      "acknowledgment": "Onay",
+      "waiver": "Feragat",
+      "other": "Diğer"
+    },
+    "filters": {
+      "all": "Tümü",
+      "contracts": "Sözleşmeler",
+      "ndas": "Gizlilik sözleşmeleri",
+      "offerLetters": "Teklif mektupları",
+      "acknowledgments": "Onaylar",
+      "waivers": "Feragatler",
+      "other": "Diğer"
+    },
     "sidebar": {
       "allDocuments": "Tüm belgeler",
       "pending": "Bekliyor",
@@ -2793,7 +2815,8 @@
       "emailSubjectPlaceholder": "Özel konu satırı (isteğe bağlı)",
       "emailMessagePlaceholder": "İmza davetiyesine eklenecek özel mesaj (isteğe bağlı)",
       "emailPlaceholder": "ad@ornek.com",
-      "namePlaceholder": "Ahmet Yılmaz"
+      "namePlaceholder": "Ahmet Yılmaz",
+      "counterpartyHint": "Gönderdikten sonra belge görünümünden bir CRM şirketi, fırsatı veya kişisine bağlayın."
     },
     "reminders": {
       "lastSent": "Son hatırlatma gönderildi: {{date}}",
@@ -2911,7 +2934,17 @@
       "saveAsTemplate": "Şablon olarak kaydet",
       "deleteTemplate": "Şablonu sil",
       "fieldCount": "{{count}} alan",
-      "createdFrom": "Şablondan oluşturuldu"
+      "createdFrom": "Şablondan oluşturuldu",
+      "loadStarter": "Başlangıç şablonlarını yükle",
+      "starterLoaded": "{{count}} başlangıç şablonu yüklendi",
+      "starterLoadedSkipped": "{{count}} eklendi, {{skipped}} zaten mevcut",
+      "starterNames": {
+        "mutualNda": "Karşılıklı gizlilik sözleşmesi",
+        "onewayNda": "Tek taraflı gizlilik sözleşmesi",
+        "consulting": "Danışmanlık sözleşmesi",
+        "sow": "Basit iş tanımı",
+        "offerLetter": "Teklif mektubu"
+      }
     },
     "widgetTitle": "İmza",
     "widgetAwaiting": "imza bekliyor",

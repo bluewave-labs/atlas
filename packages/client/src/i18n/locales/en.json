@@ -118,7 +118,8 @@
     "darkMode": "Dark mode",
     "systemMode": "System mode",
     "themeAriaLabel": "Theme: {{label}}. Click to cycle theme",
-    "invoices": "Invoices"
+    "invoices": "Invoices",
+    "sign": "Agreements"
   },
   "inbox": {
     "selectConversation": "Select a conversation",
@@ -2725,7 +2726,28 @@
     }
   },
   "sign": {
-    "title": "Sign",
+    "title": "Agreements",
+    "documentType": "Document type",
+    "counterparty": "Counterparty",
+    "counterpartyOptional": "Counterparty (optional)",
+    "counterpartyHint": "Link to a CRM company, deal, or contact from the document view after sending.",
+    "types": {
+      "contract": "Contract",
+      "nda": "NDA",
+      "offer_letter": "Offer letter",
+      "acknowledgment": "Acknowledgment",
+      "waiver": "Waiver",
+      "other": "Other"
+    },
+    "filters": {
+      "all": "All",
+      "contracts": "Contracts",
+      "ndas": "NDAs",
+      "offerLetters": "Offer letters",
+      "acknowledgments": "Acknowledgments",
+      "waivers": "Waivers",
+      "other": "Other"
+    },
     "sidebar": {
       "allDocuments": "All documents",
       "pending": "Pending",
@@ -2825,7 +2847,8 @@
       "emailSubjectPlaceholder": "Custom subject line (optional)",
       "emailMessagePlaceholder": "Custom message to include in the signing invitation (optional)",
       "emailPlaceholder": "name@example.com",
-      "namePlaceholder": "John Doe"
+      "namePlaceholder": "John Doe",
+      "counterpartyHint": "Link to a CRM company, deal, or contact from the document view after sending."
     },
     "reminders": {
       "lastSent": "Last reminder sent {{date}}",
@@ -2943,7 +2966,17 @@
       "saveAsTemplate": "Save as template",
       "deleteTemplate": "Delete template",
       "fieldCount": "{{count}} fields",
-      "createdFrom": "Created from template"
+      "createdFrom": "Created from template",
+      "loadStarter": "Load starter templates",
+      "starterLoaded": "{{count}} starter templates loaded",
+      "starterLoadedSkipped": "{{count}} added, {{skipped}} already existed",
+      "starterNames": {
+        "mutualNda": "Mutual NDA",
+        "onewayNda": "One-way NDA",
+        "consulting": "Consulting Agreement",
+        "sow": "Simple SOW",
+        "offerLetter": "Offer Letter"
+      }
     },
     "widgetTitle": "Sign",
     "widgetAwaiting": "awaiting signature",

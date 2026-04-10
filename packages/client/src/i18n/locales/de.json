@@ -118,7 +118,8 @@
     "invoices": "Rechnungen",
     "allMail": "Alle E-Mails",
     "starred": "Markiert",
-    "unread": "Ungelesen"
+    "unread": "Ungelesen",
+    "sign": "Vereinbarungen"
   },
   "inbox": {
     "selectConversation": "Konversation auswählen",
@@ -2693,7 +2694,28 @@
     }
   },
   "sign": {
-    "title": "Sign",
+    "title": "Vereinbarungen",
+    "documentType": "Dokumenttyp",
+    "counterparty": "Gegenpartei",
+    "counterpartyOptional": "Gegenpartei (optional)",
+    "counterpartyHint": "Nach dem Senden in der Dokumentansicht mit einem CRM-Unternehmen, Deal oder Kontakt verknüpfen.",
+    "types": {
+      "contract": "Vertrag",
+      "nda": "Geheimhaltungsvereinbarung",
+      "offer_letter": "Angebotsschreiben",
+      "acknowledgment": "Bestätigung",
+      "waiver": "Verzicht",
+      "other": "Sonstiges"
+    },
+    "filters": {
+      "all": "Alle",
+      "contracts": "Verträge",
+      "ndas": "Geheimhaltungsvereinbarungen",
+      "offerLetters": "Angebotsschreiben",
+      "acknowledgments": "Bestätigungen",
+      "waivers": "Verzichte",
+      "other": "Sonstiges"
+    },
     "sidebar": {
       "allDocuments": "Alle Dokumente",
       "pending": "Ausstehend",
@@ -2793,7 +2815,8 @@
       "emailSubjectPlaceholder": "Benutzerdefinierte Betreffzeile (optional)",
       "emailMessagePlaceholder": "Benutzerdefinierte Nachricht für die Signatureinladung (optional)",
       "emailPlaceholder": "name@beispiel.de",
-      "namePlaceholder": "Max Mustermann"
+      "namePlaceholder": "Max Mustermann",
+      "counterpartyHint": "Nach dem Senden in der Dokumentansicht mit einem CRM-Unternehmen, Deal oder Kontakt verknüpfen."
     },
     "reminders": {
       "lastSent": "Letzte Erinnerung gesendet: {{date}}",
@@ -2911,7 +2934,17 @@
       "saveAsTemplate": "Als Vorlage speichern",
       "deleteTemplate": "Vorlage löschen",
       "fieldCount": "{{count}} Felder",
-      "createdFrom": "Aus Vorlage erstellt"
+      "createdFrom": "Aus Vorlage erstellt",
+      "loadStarter": "Startvorlagen laden",
+      "starterLoaded": "{{count}} Startvorlagen geladen",
+      "starterLoadedSkipped": "{{count}} hinzugefügt, {{skipped}} bereits vorhanden",
+      "starterNames": {
+        "mutualNda": "Gegenseitige Geheimhaltungsvereinbarung",
+        "onewayNda": "Einseitige Geheimhaltungsvereinbarung",
+        "consulting": "Beratungsvertrag",
+        "sow": "Einfache Leistungsbeschreibung",
+        "offerLetter": "Angebotsschreiben"
+      }
     },
     "widgetTitle": "Signieren",
     "widgetAwaiting": "warten auf Unterschrift",

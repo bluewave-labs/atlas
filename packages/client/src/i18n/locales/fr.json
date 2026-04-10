@@ -118,7 +118,8 @@
     "invoices": "Factures",
     "allMail": "Tous les e-mails",
     "starred": "Favoris",
-    "unread": "Non lus"
+    "unread": "Non lus",
+    "sign": "Accords"
   },
   "inbox": {
     "selectConversation": "Sélectionnez une conversation",
@@ -2693,7 +2694,28 @@
     }
   },
   "sign": {
-    "title": "Sign",
+    "title": "Accords",
+    "documentType": "Type de document",
+    "counterparty": "Contrepartie",
+    "counterpartyOptional": "Contrepartie (facultatif)",
+    "counterpartyHint": "Liez-le à une entreprise, une affaire ou un contact CRM depuis la vue du document après l'envoi.",
+    "types": {
+      "contract": "Contrat",
+      "nda": "Accord de confidentialité",
+      "offer_letter": "Lettre d'offre",
+      "acknowledgment": "Accusé de réception",
+      "waiver": "Renonciation",
+      "other": "Autre"
+    },
+    "filters": {
+      "all": "Tous",
+      "contracts": "Contrats",
+      "ndas": "Accords de confidentialité",
+      "offerLetters": "Lettres d'offre",
+      "acknowledgments": "Accusés de réception",
+      "waivers": "Renonciations",
+      "other": "Autres"
+    },
     "sidebar": {
       "allDocuments": "Tous les documents",
       "pending": "En attente",
@@ -2793,7 +2815,8 @@
       "emailSubjectPlaceholder": "Objet personnalisé (facultatif)",
       "emailMessagePlaceholder": "Message personnalisé pour l'invitation de signature (facultatif)",
       "emailPlaceholder": "nom@exemple.fr",
-      "namePlaceholder": "Jean Dupont"
+      "namePlaceholder": "Jean Dupont",
+      "counterpartyHint": "Liez-le à une entreprise, une affaire ou un contact CRM depuis la vue du document après l'envoi."
     },
     "reminders": {
       "lastSent": "Dernier rappel envoyé le {{date}}",
@@ -2911,7 +2934,17 @@
       "saveAsTemplate": "Enregistrer comme modèle",
       "deleteTemplate": "Supprimer le modèle",
       "fieldCount": "{{count}} champs",
-      "createdFrom": "Créé à partir d'un modèle"
+      "createdFrom": "Créé à partir d'un modèle",
+      "loadStarter": "Charger les modèles de démarrage",
+      "starterLoaded": "{{count}} modèles de démarrage chargés",
+      "starterLoadedSkipped": "{{count}} ajoutés, {{skipped}} existaient déjà",
+      "starterNames": {
+        "mutualNda": "Accord de confidentialité mutuel",
+        "onewayNda": "Accord de confidentialité unilatéral",
+        "consulting": "Contrat de conseil",
+        "sow": "Énoncé des travaux simple",
+        "offerLetter": "Lettre d'offre"
+      }
     },
     "widgetTitle": "Signer",
     "widgetAwaiting": "en attente de signature",

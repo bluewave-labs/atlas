@@ -73,9 +73,9 @@ const objects: EntityObjectMeta[] = [
 
 export const signServerManifest: ServerAppManifest = {
   id: 'sign',
-  name: 'Sign',
+  name: 'Agreements',
   labelKey: 'sidebar.sign',
-  iconName: 'PenTool',
+  iconName: 'FileSignature',
   color: '#8b5cf6',
   minPlan: 'starter',
   category: 'productivity',
