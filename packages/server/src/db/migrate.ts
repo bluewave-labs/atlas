@@ -1406,6 +1406,9 @@ export async function runMigrations() {
     await client.query(`ALTER TABLE invoice_settings ADD COLUMN IF NOT EXISTS bank_details TEXT`);
     await client.query(`ALTER TABLE invoice_settings ADD COLUMN IF NOT EXISTS footer_text TEXT`);
 
+    await client.query(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS last_emailed_at TIMESTAMPTZ`);
+    await client.query(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS email_sent_count INTEGER NOT NULL DEFAULT 0`);
+
     // ─── HR: New leave/attendance/lifecycle tables ─────────────────
 
     await client.query(`

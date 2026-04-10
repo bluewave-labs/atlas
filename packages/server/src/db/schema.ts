@@ -1879,6 +1879,8 @@ export const invoices = pgTable('invoices', {
   eFaturaUuid: varchar('e_fatura_uuid', { length: 50 }),
   eFaturaStatus: varchar('e_fatura_status', { length: 20 }),
   eFaturaXml: text('e_fatura_xml'),
+  lastEmailedAt: timestamp('last_emailed_at', { withTimezone: true }),
+  emailSentCount: integer('email_sent_count').notNull().default(0),
   isArchived: boolean('is_archived').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
