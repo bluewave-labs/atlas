@@ -20,3 +20,6 @@ export type { InvoiceTemplateProps };
 
 import { ClassicTemplate } from './classic';
 registerTemplate('classic', ClassicTemplate);
+
+import { ModernTemplate } from './modern';
+registerTemplate('modern', ModernTemplate);
