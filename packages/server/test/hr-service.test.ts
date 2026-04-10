@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Request, Response } from 'express';
 
-// Mock HR service
-vi.mock('../src/apps/hr/service', () => ({
+// Mock HR sub-services that controllers import from
+vi.mock('../src/apps/hr/services/employee.service', () => ({
   listEmployees: vi.fn(),
   getEmployee: vi.fn(),
   createEmployee: vi.fn(),
@@ -10,28 +10,37 @@ vi.mock('../src/apps/hr/service', () => ({
   deleteEmployee: vi.fn(),
   searchEmployees: vi.fn(),
   getEmployeeCounts: vi.fn(),
+}));
+
+vi.mock('../src/apps/hr/services/department.service', () => ({
   listDepartments: vi.fn(),
   getDepartment: vi.fn(),
   createDepartment: vi.fn(),
   updateDepartment: vi.fn(),
   deleteDepartment: vi.fn(),
-  getWidgetData: vi.fn(),
-  getDashboardData: vi.fn(),
 }));
 
-// Mock leave service
-vi.mock('../src/apps/hr/leave.service', () => ({}));
+vi.mock('../src/apps/hr/services/dashboard.service', () => ({
+  getWidgetData: vi.fn(),
+  getDashboardData: vi.fn(),
+  seedSampleData: vi.fn(),
+}));
 
-// Mock attendance service
-vi.mock('../src/apps/hr/attendance.service', () => ({}));
+// Mock permissions service — grant admin so controllers pass access checks
+vi.mock('../src/services/app-permissions.service', () => ({
+  getAppPermission: vi.fn().mockResolvedValue({ role: 'admin', recordAccess: 'all', entityPermissions: null }),
+  canAccess: vi.fn().mockReturnValue(true),
+}));
 
 // Mock event service
 vi.mock('../src/services/event.service', () => ({
   emitAppEvent: vi.fn().mockResolvedValue(undefined),
 }));
 
-import * as controller from '../src/apps/hr/controller';
-import * as hrService from '../src/apps/hr/service';
+import * as employeeController from '../src/apps/hr/controllers/employee.controller';
+import * as departmentController from '../src/apps/hr/controllers/department.controller';
+import * as employeeService from '../src/apps/hr/services/employee.service';
+import * as departmentService from '../src/apps/hr/services/department.service';
 
 function makeReq(overrides: Record<string, any> = {}): Request {
   return {
@@ -63,28 +72,28 @@ describe('hr controller — listEmployees', () => {
       { id: 'e1', name: 'Alice', email: 'alice@company.com' },
       { id: 'e2', name: 'Bob', email: 'bob@company.com' },
     ];
-    vi.mocked(hrService.listEmployees).mockResolvedValue(mockEmployees as any);
+    vi.mocked(employeeService.listEmployees).mockResolvedValue(mockEmployees as any);
 
     const req = makeReq({ query: {} });
     const res = makeRes();
 
-    await controller.listEmployees(req, res);
+    await employeeController.listEmployees(req, res);
 
-    expect(hrService.listEmployees).toHaveBeenCalledWith('u1', 'a1', expect.objectContaining({}));
+    expect(employeeService.listEmployees).toHaveBeenCalledWith('u1', 't1', expect.objectContaining({}));
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: { employees: mockEmployees } })
     );
   });
 
   it('passes filter parameters from query', async () => {
-    vi.mocked(hrService.listEmployees).mockResolvedValue([] as any);
+    vi.mocked(employeeService.listEmployees).mockResolvedValue([] as any);
 
     const req = makeReq({ query: { status: 'active', departmentId: 'dept-1' } });
     const res = makeRes();
 
-    await controller.listEmployees(req, res);
+    await employeeController.listEmployees(req, res);
 
-    expect(hrService.listEmployees).toHaveBeenCalledWith('u1', 'a1', expect.objectContaining({
+    expect(employeeService.listEmployees).toHaveBeenCalledWith('u1', 't1', expect.objectContaining({
       status: 'active',
       departmentId: 'dept-1',
     }));
@@ -97,13 +106,13 @@ describe('hr controller — getEmployee', () => {
   });
 
   it('returns employee when found', async () => {
-    const mockEmployee = { id: 'e1', name: 'Alice' };
-    vi.mocked(hrService.getEmployee).mockResolvedValue(mockEmployee as any);
+    const mockEmployee = { id: 'e1', name: 'Alice', email: 'test@test.com' };
+    vi.mocked(employeeService.getEmployee).mockResolvedValue(mockEmployee as any);
 
     const req = makeReq({ params: { id: 'e1' } });
     const res = makeRes();
 
-    await controller.getEmployee(req, res);
+    await employeeController.getEmployee(req, res);
 
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: mockEmployee })
@@ -111,12 +120,12 @@ describe('hr controller — getEmployee', () => {
   });
 
   it('returns 404 when employee is not found', async () => {
-    vi.mocked(hrService.getEmployee).mockResolvedValue(null as any);
+    vi.mocked(employeeService.getEmployee).mockResolvedValue(null as any);
 
     const req = makeReq({ params: { id: 'nonexistent' } });
     const res = makeRes();
 
-    await controller.getEmployee(req, res);
+    await employeeController.getEmployee(req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith(
@@ -132,16 +141,16 @@ describe('hr controller — createEmployee', () => {
 
   it('creates an employee and returns it', async () => {
     const mockEmployee = { id: 'e1', name: 'Alice', email: 'alice@company.com' };
-    vi.mocked(hrService.createEmployee).mockResolvedValue(mockEmployee as any);
+    vi.mocked(employeeService.createEmployee).mockResolvedValue(mockEmployee as any);
 
     const req = makeReq({
       body: { name: 'Alice', email: 'alice@company.com', role: 'Engineer' },
     });
     const res = makeRes();
 
-    await controller.createEmployee(req, res);
+    await employeeController.createEmployee(req, res);
 
-    expect(hrService.createEmployee).toHaveBeenCalledWith('u1', 'a1', expect.objectContaining({
+    expect(employeeService.createEmployee).toHaveBeenCalledWith('u1', 't1', expect.objectContaining({
       name: 'Alice',
       email: 'alice@company.com',
     }));
@@ -154,7 +163,7 @@ describe('hr controller — createEmployee', () => {
     const req = makeReq({ body: { email: 'alice@company.com' } });
     const res = makeRes();
 
-    await controller.createEmployee(req, res);
+    await employeeController.createEmployee(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith(
@@ -166,7 +175,7 @@ describe('hr controller — createEmployee', () => {
     const req = makeReq({ body: { name: 'Alice' } });
     const res = makeRes();
 
-    await controller.createEmployee(req, res);
+    await employeeController.createEmployee(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith(
@@ -182,12 +191,12 @@ describe('hr controller — updateEmployee', () => {
 
   it('updates an employee and returns it', async () => {
     const updated = { id: 'e1', name: 'Alice Smith', email: 'alice@company.com' };
-    vi.mocked(hrService.updateEmployee).mockResolvedValue(updated as any);
+    vi.mocked(employeeService.updateEmployee).mockResolvedValue(updated as any);
 
     const req = makeReq({ params: { id: 'e1' }, body: { name: 'Alice Smith' } });
     const res = makeRes();
 
-    await controller.updateEmployee(req, res);
+    await employeeController.updateEmployee(req, res);
 
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: updated })
@@ -195,12 +204,12 @@ describe('hr controller — updateEmployee', () => {
   });
 
   it('returns 404 when employee to update is not found', async () => {
-    vi.mocked(hrService.updateEmployee).mockResolvedValue(null as any);
+    vi.mocked(employeeService.updateEmployee).mockResolvedValue(null as any);
 
     const req = makeReq({ params: { id: 'missing' }, body: { name: 'X' } });
     const res = makeRes();
 
-    await controller.updateEmployee(req, res);
+    await employeeController.updateEmployee(req, res);
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith(
@@ -215,14 +224,14 @@ describe('hr controller — deleteEmployee', () => {
   });
 
   it('deletes an employee and returns success', async () => {
-    vi.mocked(hrService.deleteEmployee).mockResolvedValue(undefined as any);
+    vi.mocked(employeeService.deleteEmployee).mockResolvedValue(undefined as any);
 
     const req = makeReq({ params: { id: 'e1' } });
     const res = makeRes();
 
-    await controller.deleteEmployee(req, res);
+    await employeeController.deleteEmployee(req, res);
 
-    expect(hrService.deleteEmployee).toHaveBeenCalledWith('u1', 'e1');
+    expect(employeeService.deleteEmployee).toHaveBeenCalledWith('u1', 'e1');
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: null })
     );
@@ -241,28 +250,28 @@ describe('hr controller — listDepartments', () => {
       { id: 'dept-1', name: 'Engineering' },
       { id: 'dept-2', name: 'Design' },
     ];
-    vi.mocked(hrService.listDepartments).mockResolvedValue(mockDepts as any);
+    vi.mocked(departmentService.listDepartments).mockResolvedValue(mockDepts as any);
 
     const req = makeReq({ query: {} });
     const res = makeRes();
 
-    await controller.listDepartments(req, res);
+    await departmentController.listDepartments(req, res);
 
-    expect(hrService.listDepartments).toHaveBeenCalledWith('u1', 'a1', false);
+    expect(departmentService.listDepartments).toHaveBeenCalledWith('u1', 't1', false);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: { departments: mockDepts } })
     );
   });
 
   it('passes includeArchived flag', async () => {
-    vi.mocked(hrService.listDepartments).mockResolvedValue([] as any);
+    vi.mocked(departmentService.listDepartments).mockResolvedValue([] as any);
 
     const req = makeReq({ query: { includeArchived: 'true' } });
     const res = makeRes();
 
-    await controller.listDepartments(req, res);
+    await departmentController.listDepartments(req, res);
 
-    expect(hrService.listDepartments).toHaveBeenCalledWith('u1', 'a1', true);
+    expect(departmentService.listDepartments).toHaveBeenCalledWith('u1', 't1', true);
   });
 });
 
@@ -273,12 +282,12 @@ describe('hr controller — createDepartment', () => {
 
   it('creates a department and returns it', async () => {
     const mockDept = { id: 'dept-1', name: 'Marketing' };
-    vi.mocked(hrService.createDepartment).mockResolvedValue(mockDept as any);
+    vi.mocked(departmentService.createDepartment).mockResolvedValue(mockDept as any);
 
     const req = makeReq({ body: { name: 'Marketing' } });
     const res = makeRes();
 
-    await controller.createDepartment(req, res);
+    await departmentController.createDepartment(req, res);
 
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: mockDept })
@@ -289,7 +298,7 @@ describe('hr controller — createDepartment', () => {
     const req = makeReq({ body: {} });
     const res = makeRes();
 
-    await controller.createDepartment(req, res);
+    await departmentController.createDepartment(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith(
@@ -304,14 +313,14 @@ describe('hr controller — deleteDepartment', () => {
   });
 
   it('deletes a department and returns success', async () => {
-    vi.mocked(hrService.deleteDepartment).mockResolvedValue(undefined as any);
+    vi.mocked(departmentService.deleteDepartment).mockResolvedValue(undefined as any);
 
     const req = makeReq({ params: { id: 'dept-1' } });
     const res = makeRes();
 
-    await controller.deleteDepartment(req, res);
+    await departmentController.deleteDepartment(req, res);
 
-    expect(hrService.deleteDepartment).toHaveBeenCalledWith('u1', 'a1', 'dept-1');
+    expect(departmentService.deleteDepartment).toHaveBeenCalledWith('u1', 't1', 'dept-1');
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: null })
     );

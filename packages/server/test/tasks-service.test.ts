@@ -24,6 +24,12 @@ vi.mock('../src/services/event.service', () => ({
   emitAppEvent: vi.fn().mockResolvedValue(undefined),
 }));
 
+// Mock app permissions so controllers pass the permission gate
+vi.mock('../src/services/app-permissions.service', () => ({
+  getAppPermission: vi.fn().mockResolvedValue({ role: 'admin', recordAccess: 'all', entityPermissions: null }),
+  canAccess: vi.fn().mockReturnValue(true),
+}));
+
 import * as controller from '../src/apps/tasks/controller';
 import * as taskService from '../src/apps/tasks/service';
 
@@ -111,7 +117,7 @@ describe('tasks controller — createTask', () => {
 
     await controller.createTask(req, res);
 
-    expect(taskService.createTask).toHaveBeenCalledWith('u1', 'a1', expect.objectContaining({
+    expect(taskService.createTask).toHaveBeenCalledWith('u1', 't1', expect.objectContaining({
       title: 'New Task',
       priority: 'high',
     }));
@@ -223,7 +229,7 @@ describe('tasks controller — getTaskCounts', () => {
 
     await controller.getTaskCounts(req, res);
 
-    expect(taskService.getTaskCounts).toHaveBeenCalledWith('u1');
+    expect(taskService.getTaskCounts).toHaveBeenCalledWith('u1', 't1');
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: mockCounts })
     );

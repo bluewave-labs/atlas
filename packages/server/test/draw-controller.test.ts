@@ -11,6 +11,13 @@ vi.mock('../src/apps/draw/service', () => ({
   restoreDrawing: vi.fn(),
   searchDrawings: vi.fn(),
   seedSampleDrawings: vi.fn(),
+  updateDrawingVisibility: vi.fn(),
+}));
+
+// Mock app-permissions service so canAccess always returns true
+vi.mock('../src/services/app-permissions.service', () => ({
+  getAppPermission: vi.fn().mockResolvedValue({ role: 'owner' }),
+  canAccess: vi.fn().mockReturnValue(true),
 }));
 
 import * as controller from '../src/apps/draw/controller';
@@ -44,7 +51,6 @@ describe('draw controller - listDrawings', () => {
       { id: 'd1', title: 'Wireframe' },
       { id: 'd2', title: 'Flowchart' },
     ];
-    vi.mocked(drawingService.seedSampleDrawings).mockResolvedValue(undefined as any);
     vi.mocked(drawingService.listDrawings).mockResolvedValue(mockDrawings as any);
 
     const req = makeReq();
@@ -52,15 +58,13 @@ describe('draw controller - listDrawings', () => {
 
     await controller.listDrawings(req, res);
 
-    expect(drawingService.seedSampleDrawings).toHaveBeenCalledWith('u1', 'a1');
-    expect(drawingService.listDrawings).toHaveBeenCalledWith('u1', false);
+    expect(drawingService.listDrawings).toHaveBeenCalledWith('u1', false, 't1');
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: { drawings: mockDrawings } })
     );
   });
 
   it('passes includeArchived=true when query param is set', async () => {
-    vi.mocked(drawingService.seedSampleDrawings).mockResolvedValue(undefined as any);
     vi.mocked(drawingService.listDrawings).mockResolvedValue([]);
 
     const req = makeReq({ query: { includeArchived: 'true' } });
@@ -68,11 +72,11 @@ describe('draw controller - listDrawings', () => {
 
     await controller.listDrawings(req, res);
 
-    expect(drawingService.listDrawings).toHaveBeenCalledWith('u1', true);
+    expect(drawingService.listDrawings).toHaveBeenCalledWith('u1', true, 't1');
   });
 
   it('returns 500 when service throws', async () => {
-    vi.mocked(drawingService.seedSampleDrawings).mockRejectedValue(new Error('DB error'));
+    vi.mocked(drawingService.listDrawings).mockRejectedValue(new Error('DB error'));
 
     const req = makeReq();
     const res = makeRes();
@@ -102,7 +106,7 @@ describe('draw controller - createDrawing', () => {
 
     await controller.createDrawing(req, res);
 
-    expect(drawingService.createDrawing).toHaveBeenCalledWith('u1', 'a1', {
+    expect(drawingService.createDrawing).toHaveBeenCalledWith('u1', 't1', {
       title: 'New Drawing',
       content: '{}',
     });
@@ -154,7 +158,7 @@ describe('draw controller - getDrawing', () => {
 
     await controller.getDrawing(req, res);
 
-    expect(drawingService.getDrawing).toHaveBeenCalledWith('u1', 'd1');
+    expect(drawingService.getDrawing).toHaveBeenCalledWith('u1', 'd1', 't1');
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: mockDrawing })
     );

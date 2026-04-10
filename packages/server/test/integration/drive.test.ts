@@ -54,6 +54,9 @@ describe('Drive API (integration)', () => {
   });
 
   it('uploaded file appears in listing', async () => {
+    // Wait for any fire-and-forget activity log inserts from the previous test to settle,
+    // otherwise the TRUNCATE inside setupTestAdmin can deadlock against them.
+    await new Promise((r) => setTimeout(r, 250));
     const auth = await setupTestAdmin(app, request);
 
     await request(app)

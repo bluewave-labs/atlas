@@ -13,6 +13,22 @@ vi.mock('../src/apps/tables/service', () => ({
   seedSampleSpreadsheets: vi.fn(),
 }));
 
+// Mock app permissions — always allow access in tests
+vi.mock('../src/services/app-permissions.service', () => ({
+  getAppPermission: vi.fn().mockResolvedValue({ role: 'owner' }),
+  canAccess: vi.fn().mockReturnValue(true),
+}));
+
+// Mock logger to keep test output clean
+vi.mock('../src/utils/logger', () => ({
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
+
 import * as controller from '../src/apps/tables/controller';
 import * as tableService from '../src/apps/tables/service';
 
@@ -44,7 +60,6 @@ describe('tables controller - listSpreadsheets', () => {
       { id: 's1', title: 'Budget' },
       { id: 's2', title: 'Inventory' },
     ];
-    vi.mocked(tableService.seedSampleSpreadsheets).mockResolvedValue(undefined as any);
     vi.mocked(tableService.listSpreadsheets).mockResolvedValue(mockSheets as any);
 
     const req = makeReq();
@@ -52,7 +67,6 @@ describe('tables controller - listSpreadsheets', () => {
 
     await controller.listSpreadsheets(req, res);
 
-    expect(tableService.seedSampleSpreadsheets).toHaveBeenCalledWith('u1', 'a1');
     expect(tableService.listSpreadsheets).toHaveBeenCalledWith('u1', false);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: { spreadsheets: mockSheets } })
@@ -60,7 +74,6 @@ describe('tables controller - listSpreadsheets', () => {
   });
 
   it('passes includeArchived=true when query param is set', async () => {
-    vi.mocked(tableService.seedSampleSpreadsheets).mockResolvedValue(undefined as any);
     vi.mocked(tableService.listSpreadsheets).mockResolvedValue([]);
 
     const req = makeReq({ query: { includeArchived: 'true' } });
@@ -72,7 +85,7 @@ describe('tables controller - listSpreadsheets', () => {
   });
 
   it('returns 500 when service throws', async () => {
-    vi.mocked(tableService.seedSampleSpreadsheets).mockRejectedValue(new Error('DB error'));
+    vi.mocked(tableService.listSpreadsheets).mockRejectedValue(new Error('DB error'));
 
     const req = makeReq();
     const res = makeRes();
@@ -102,7 +115,7 @@ describe('tables controller - createSpreadsheet', () => {
 
     await controller.createSpreadsheet(req, res);
 
-    expect(tableService.createSpreadsheet).toHaveBeenCalledWith('u1', 'a1', expect.objectContaining({
+    expect(tableService.createSpreadsheet).toHaveBeenCalledWith('u1', 't1', expect.objectContaining({
       title: 'New Sheet',
       columns: [],
       rows: [],

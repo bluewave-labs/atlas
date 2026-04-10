@@ -171,7 +171,10 @@ describe('platform controller - inviteTenantUser', () => {
 
     await ctrl.inviteTenantUser(req, res);
 
-    expect(tenantUserService.inviteUser).toHaveBeenCalledWith('t1', 'new@test.com', 'member', 'u1');
+    expect(tenantUserService.inviteUser).toHaveBeenCalledWith('t1', 'new@test.com', 'member', 'u1', {
+      appPermissions: undefined,
+      crmTeamId: undefined,
+    });
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: mockInvitation })

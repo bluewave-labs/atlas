@@ -4,7 +4,6 @@ import type { Request, Response } from 'express';
 // Mock drive service
 vi.mock('../src/apps/drive/service', () => ({
   listItems: vi.fn(),
-  seedSampleFolder: vi.fn(),
   uploadFile: vi.fn(),
   deleteItem: vi.fn(),
   searchItems: vi.fn(),
@@ -13,11 +12,20 @@ vi.mock('../src/apps/drive/service', () => ({
   listFavourites: vi.fn(),
   getWidgetData: vi.fn(),
   batchDelete: vi.fn(),
+  logDriveActivity: vi.fn().mockResolvedValue(undefined),
 }));
 
 // Mock event service
 vi.mock('../src/services/event.service', () => ({
   emitAppEvent: vi.fn().mockResolvedValue(undefined),
+}));
+
+// Mock app permissions — always grant admin access
+vi.mock('../src/services/app-permissions.service', () => ({
+  getAppPermission: vi.fn().mockResolvedValue({ role: 'admin', recordAccess: 'all' }),
+  canAccess: vi.fn().mockReturnValue(true),
+  canAccessEntity: vi.fn().mockReturnValue(true),
+  getRecordFilter: vi.fn().mockReturnValue(undefined),
 }));
 
 import * as controller from '../src/apps/drive/controller';
@@ -89,7 +97,7 @@ describe('drive controller — uploadFiles', () => {
 
     await controller.uploadFiles(req, res);
 
-    expect(driveService.uploadFile).toHaveBeenCalledWith('u1', 'a1', expect.objectContaining({
+    expect(driveService.uploadFile).toHaveBeenCalledWith('u1', 't1', expect.objectContaining({
       name: 'test.txt',
       type: 'file',
       mimeType: 'text/plain',
@@ -112,15 +120,13 @@ describe('drive controller — listItems', () => {
       { id: '2', name: 'file1.txt', type: 'file' },
     ];
     vi.mocked(driveService.listItems).mockResolvedValue(mockItems as any);
-    vi.mocked(driveService.seedSampleFolder).mockResolvedValue(undefined as any);
 
     const req = makeReq({ query: {} });
     const res = makeRes();
 
     await controller.listItems(req, res);
 
-    expect(driveService.seedSampleFolder).toHaveBeenCalledWith('u1', 'a1');
-    expect(driveService.listItems).toHaveBeenCalledWith('u1', null, false, undefined, undefined);
+    expect(driveService.listItems).toHaveBeenCalledWith('u1', null, false, undefined, undefined, 't1');
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: { items: mockItems } })
     );
@@ -128,14 +134,13 @@ describe('drive controller — listItems', () => {
 
   it('passes parentId from query parameter', async () => {
     vi.mocked(driveService.listItems).mockResolvedValue([] as any);
-    vi.mocked(driveService.seedSampleFolder).mockResolvedValue(undefined as any);
 
     const req = makeReq({ query: { parentId: 'folder-123' } });
     const res = makeRes();
 
     await controller.listItems(req, res);
 
-    expect(driveService.listItems).toHaveBeenCalledWith('u1', 'folder-123', false, undefined, undefined);
+    expect(driveService.listItems).toHaveBeenCalledWith('u1', 'folder-123', false, undefined, undefined, 't1');
   });
 });
 

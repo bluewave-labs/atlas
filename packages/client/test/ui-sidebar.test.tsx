@@ -20,13 +20,11 @@ describe('SidebarItem', () => {
     expect(screen.getByRole('button', { name: /dashboard/i })).toBeInTheDocument();
   });
 
-  it('applies accent-tinted background when active', () => {
+  it('applies selected surface background when active', () => {
     render(<SidebarItem label="Active" isActive />);
     const button = screen.getByRole('button');
-    // The active background uses color-mix; happy-dom may not parse the shorthand,
-    // so check the raw style attribute string instead.
     const styleAttr = button.getAttribute('style') || '';
-    expect(styleAttr).toContain('color-accent-primary');
+    expect(styleAttr).toContain('color-surface-selected');
   });
 
   it('applies transparent background when inactive', () => {
@@ -36,10 +34,10 @@ describe('SidebarItem', () => {
     expect(styleAttr).toContain('transparent');
   });
 
-  it('applies accent text color when active', () => {
+  it('applies primary text color when active', () => {
     render(<SidebarItem label="Active" isActive />);
     const button = screen.getByRole('button');
-    expect(button.style.color).toBe('var(--color-accent-primary)');
+    expect(button.style.color).toBe('var(--color-text-primary)');
   });
 
   it('applies secondary text color when inactive', () => {

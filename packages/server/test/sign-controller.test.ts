@@ -29,6 +29,18 @@ vi.mock('../src/services/event.service', () => ({
   emitAppEvent: vi.fn().mockResolvedValue(undefined),
 }));
 
+// Mock app permissions — always allow in tests
+vi.mock('../src/services/app-permissions.service', () => ({
+  getAppPermission: vi.fn().mockResolvedValue({ role: 'owner' }),
+  canAccess: vi.fn().mockReturnValue(true),
+  canAccessEntity: vi.fn().mockReturnValue(true),
+}));
+
+// Mock reminder module (imported by documents.controller)
+vi.mock('../src/apps/sign/reminder', () => ({
+  sendPendingReminders: vi.fn().mockResolvedValue(undefined),
+}));
+
 // Mock node:fs to prevent real filesystem access
 vi.mock('node:fs', () => ({
   existsSync: vi.fn().mockReturnValue(false),
@@ -87,7 +99,7 @@ describe('sign controller — createDocument', () => {
 
     await controller.createDocument(req, res);
 
-    expect(signService.createDocument).toHaveBeenCalledWith('u1', 'a1', expect.objectContaining({
+    expect(signService.createDocument).toHaveBeenCalledWith('u1', 't1', expect.objectContaining({
       title: 'Contract',
       fileName: 'contract.pdf',
       storagePath: 'abc.pdf',
@@ -132,7 +144,7 @@ describe('sign controller — listDocuments', () => {
 
     await controller.listDocuments(req, res);
 
-    expect(signService.listDocuments).toHaveBeenCalledWith('u1', 'a1');
+    expect(signService.listDocuments).toHaveBeenCalledWith('u1', 't1');
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: { documents: mockDocs } })
     );
@@ -248,7 +260,9 @@ describe('sign controller — createSigningToken (sendForSignature)', () => {
 
     await controller.createSigningToken(req, res);
 
-    expect(signService.createSigningToken).toHaveBeenCalledWith('doc-1', 'signer@example.com', 'Jane Doe', 14);
+    expect(signService.createSigningToken).toHaveBeenCalledWith(
+      'doc-1', 'signer@example.com', 'Jane Doe', 14, 0, 'signer', undefined, undefined,
+    );
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: mockToken })
     );
@@ -267,7 +281,9 @@ describe('sign controller — createSigningToken (sendForSignature)', () => {
 
     await controller.createSigningToken(req, res);
 
-    expect(signService.createSigningToken).toHaveBeenCalledWith('doc-1', 'other@test.com', null, 30);
+    expect(signService.createSigningToken).toHaveBeenCalledWith(
+      'doc-1', 'other@test.com', null, 30, 0, 'signer', undefined, undefined,
+    );
   });
 });
 

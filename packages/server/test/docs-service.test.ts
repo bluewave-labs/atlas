@@ -58,7 +58,6 @@ describe('docs controller — listDocuments', () => {
     ];
     const mockTree = [{ id: 'd1', title: 'Doc A', children: [{ id: 'd2', title: 'Doc B' }] }];
 
-    vi.mocked(documentService.seedSampleDocuments).mockResolvedValue(undefined as any);
     vi.mocked(documentService.listDocuments).mockResolvedValue(mockDocs as any);
     vi.mocked(documentService.buildDocumentTree).mockReturnValue(mockTree as any);
 
@@ -67,8 +66,7 @@ describe('docs controller — listDocuments', () => {
 
     await controller.listDocuments(req, res);
 
-    expect(documentService.seedSampleDocuments).toHaveBeenCalledWith('u1', 'a1');
-    expect(documentService.listDocuments).toHaveBeenCalledWith('u1', false);
+    expect(documentService.listDocuments).toHaveBeenCalledWith('u1', false, 't1');
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         success: true,
@@ -78,7 +76,6 @@ describe('docs controller — listDocuments', () => {
   });
 
   it('passes includeArchived flag', async () => {
-    vi.mocked(documentService.seedSampleDocuments).mockResolvedValue(undefined as any);
     vi.mocked(documentService.listDocuments).mockResolvedValue([] as any);
     vi.mocked(documentService.buildDocumentTree).mockReturnValue([] as any);
 
@@ -87,7 +84,7 @@ describe('docs controller — listDocuments', () => {
 
     await controller.listDocuments(req, res);
 
-    expect(documentService.listDocuments).toHaveBeenCalledWith('u1', true);
+    expect(documentService.listDocuments).toHaveBeenCalledWith('u1', true, 't1');
   });
 });
 
@@ -107,7 +104,7 @@ describe('docs controller — createDocument', () => {
 
     await controller.createDocument(req, res);
 
-    expect(documentService.createDocument).toHaveBeenCalledWith('u1', 'a1', expect.objectContaining({
+    expect(documentService.createDocument).toHaveBeenCalledWith('u1', 't1', expect.objectContaining({
       title: 'New Document',
       parentId: null,
       icon: '📄',

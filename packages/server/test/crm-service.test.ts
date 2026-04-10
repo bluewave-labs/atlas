@@ -1,33 +1,49 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Request, Response } from 'express';
 
-// Mock CRM service
-vi.mock('../src/apps/crm/service', () => ({
+// Mock CRM sub-services
+vi.mock('../src/apps/crm/services/deal.service', () => ({
   listDeals: vi.fn(),
   getDeal: vi.fn(),
   createDeal: vi.fn(),
   updateDeal: vi.fn(),
   deleteDeal: vi.fn(),
+  listDealStages: vi.fn(),
+  seedDefaultStages: vi.fn(),
+  markDealWon: vi.fn(),
+  markDealLost: vi.fn(),
+  countsByStage: vi.fn(),
+  pipelineValue: vi.fn(),
+  bulkCreateDeals: vi.fn(),
+  getForecast: vi.fn(),
+  createDealStage: vi.fn(),
+  updateDealStage: vi.fn(),
+  deleteDealStage: vi.fn(),
+  reorderDealStages: vi.fn(),
+}));
+
+vi.mock('../src/apps/crm/services/contact.service', () => ({
   listContacts: vi.fn(),
   getContact: vi.fn(),
   createContact: vi.fn(),
   updateContact: vi.fn(),
   deleteContact: vi.fn(),
+  bulkCreateContacts: vi.fn(),
+  mergeContacts: vi.fn(),
+}));
+
+vi.mock('../src/apps/crm/services/company.service', () => ({
   listCompanies: vi.fn(),
   getCompany: vi.fn(),
   createCompany: vi.fn(),
   updateCompany: vi.fn(),
   deleteCompany: vi.fn(),
-  getWidgetData: vi.fn(),
-  seedSampleData: vi.fn(),
-  listDealStages: vi.fn(),
-  seedDefaultStages: vi.fn(),
 }));
 
-// Mock CRM permissions
-vi.mock('../src/apps/crm/permissions', () => ({
-  getCrmPermission: vi.fn().mockResolvedValue({ role: 'admin', recordAccess: 'all' }),
-  canAccess: vi.fn().mockReturnValue(true),
+// Mock app-permissions service
+vi.mock('../src/services/app-permissions.service', () => ({
+  getAppPermission: vi.fn().mockResolvedValue({ role: 'admin', entityPermissions: {}, recordAccess: 'all' }),
+  canAccessEntity: vi.fn().mockReturnValue(true),
 }));
 
 // Mock event service
@@ -57,8 +73,10 @@ vi.mock('../src/apps/crm/email.service', () => ({}));
 vi.mock('../src/apps/crm/calendar.service', () => ({}));
 
 import * as controller from '../src/apps/crm/controller';
-import * as crmService from '../src/apps/crm/service';
-import * as crmPermissions from '../src/apps/crm/permissions';
+import * as dealService from '../src/apps/crm/services/deal.service';
+import * as contactService from '../src/apps/crm/services/contact.service';
+import * as companyService from '../src/apps/crm/services/company.service';
+import * as appPermissions from '../src/services/app-permissions.service';
 
 function makeReq(overrides: Record<string, any> = {}): Request {
   return {
@@ -78,13 +96,17 @@ function makeRes() {
   return res as Response;
 }
 
+function resetPermMocks() {
+  vi.mocked(appPermissions.getAppPermission).mockResolvedValue({ role: 'admin', entityPermissions: {}, recordAccess: 'all' } as any);
+  vi.mocked(appPermissions.canAccessEntity).mockReturnValue(true);
+}
+
 // ─── Deals ─────────────────────────────────────────────────────────
 
 describe('crm controller — listDeals', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(crmPermissions.getCrmPermission).mockResolvedValue({ role: 'admin', recordAccess: 'all' } as any);
-    vi.mocked(crmPermissions.canAccess).mockReturnValue(true);
+    resetPermMocks();
   });
 
   it('returns deals list with success', async () => {
@@ -92,14 +114,14 @@ describe('crm controller — listDeals', () => {
       { id: 'd1', title: 'Deal A', value: 1000 },
       { id: 'd2', title: 'Deal B', value: 2000 },
     ];
-    vi.mocked(crmService.listDeals).mockResolvedValue(mockDeals as any);
+    vi.mocked(dealService.listDeals).mockResolvedValue(mockDeals as any);
 
     const req = makeReq({ query: {} });
     const res = makeRes();
 
     await controller.listDeals(req, res);
 
-    expect(crmService.listDeals).toHaveBeenCalledWith('u1', 'a1', expect.objectContaining({
+    expect(dealService.listDeals).toHaveBeenCalledWith('u1', 't1', expect.objectContaining({
       recordAccess: 'all',
     }));
     expect(res.json).toHaveBeenCalledWith(
@@ -108,7 +130,7 @@ describe('crm controller — listDeals', () => {
   });
 
   it('returns 403 when user has no deals access', async () => {
-    vi.mocked(crmPermissions.canAccess).mockReturnValue(false);
+    vi.mocked(appPermissions.canAccessEntity).mockReturnValue(false);
 
     const req = makeReq();
     const res = makeRes();
@@ -125,13 +147,12 @@ describe('crm controller — listDeals', () => {
 describe('crm controller — createDeal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(crmPermissions.getCrmPermission).mockResolvedValue({ role: 'admin', recordAccess: 'all' } as any);
-    vi.mocked(crmPermissions.canAccess).mockReturnValue(true);
+    resetPermMocks();
   });
 
   it('creates a deal and returns it', async () => {
     const mockDeal = { id: 'd1', title: 'New Deal', value: 5000 };
-    vi.mocked(crmService.createDeal).mockResolvedValue(mockDeal as any);
+    vi.mocked(dealService.createDeal).mockResolvedValue(mockDeal as any);
 
     const req = makeReq({
       body: { title: 'New Deal', value: 5000, stageId: 'stage-1' },
@@ -140,7 +161,7 @@ describe('crm controller — createDeal', () => {
 
     await controller.createDeal(req, res);
 
-    expect(crmService.createDeal).toHaveBeenCalledWith('u1', 'a1', expect.objectContaining({
+    expect(dealService.createDeal).toHaveBeenCalledWith('u1', 't1', expect.objectContaining({
       title: 'New Deal',
       value: 5000,
       stageId: 'stage-1',
@@ -178,13 +199,12 @@ describe('crm controller — createDeal', () => {
 describe('crm controller — updateDeal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(crmPermissions.getCrmPermission).mockResolvedValue({ role: 'admin', recordAccess: 'all' } as any);
-    vi.mocked(crmPermissions.canAccess).mockReturnValue(true);
+    resetPermMocks();
   });
 
   it('updates a deal and returns it', async () => {
     const updatedDeal = { id: 'd1', title: 'Updated Deal', value: 7500 };
-    vi.mocked(crmService.updateDeal).mockResolvedValue(updatedDeal as any);
+    vi.mocked(dealService.updateDeal).mockResolvedValue(updatedDeal as any);
 
     const req = makeReq({
       params: { id: 'd1' },
@@ -200,7 +220,7 @@ describe('crm controller — updateDeal', () => {
   });
 
   it('returns 404 when deal is not found', async () => {
-    vi.mocked(crmService.updateDeal).mockResolvedValue(null as any);
+    vi.mocked(dealService.updateDeal).mockResolvedValue(null as any);
 
     const req = makeReq({ params: { id: 'nonexistent' }, body: { title: 'X' } });
     const res = makeRes();
@@ -217,19 +237,18 @@ describe('crm controller — updateDeal', () => {
 describe('crm controller — deleteDeal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(crmPermissions.getCrmPermission).mockResolvedValue({ role: 'admin', recordAccess: 'all' } as any);
-    vi.mocked(crmPermissions.canAccess).mockReturnValue(true);
+    resetPermMocks();
   });
 
   it('deletes a deal (soft delete) and returns success', async () => {
-    vi.mocked(crmService.deleteDeal).mockResolvedValue(undefined as any);
+    vi.mocked(dealService.deleteDeal).mockResolvedValue(undefined as any);
 
     const req = makeReq({ params: { id: 'd1' } });
     const res = makeRes();
 
     await controller.deleteDeal(req, res);
 
-    expect(crmService.deleteDeal).toHaveBeenCalledWith('u1', 'a1', 'd1', 'all');
+    expect(dealService.deleteDeal).toHaveBeenCalledWith('u1', 't1', 'd1', 'all');
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: null })
     );
@@ -241,13 +260,12 @@ describe('crm controller — deleteDeal', () => {
 describe('crm controller — listContacts', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(crmPermissions.getCrmPermission).mockResolvedValue({ role: 'admin', recordAccess: 'all' } as any);
-    vi.mocked(crmPermissions.canAccess).mockReturnValue(true);
+    resetPermMocks();
   });
 
   it('returns contacts list', async () => {
     const mockContacts = [{ id: 'c1', name: 'John Doe' }];
-    vi.mocked(crmService.listContacts).mockResolvedValue(mockContacts as any);
+    vi.mocked(contactService.listContacts).mockResolvedValue(mockContacts as any);
 
     const req = makeReq({ query: {} });
     const res = makeRes();
@@ -265,13 +283,12 @@ describe('crm controller — listContacts', () => {
 describe('crm controller — listCompanies', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(crmPermissions.getCrmPermission).mockResolvedValue({ role: 'admin', recordAccess: 'all' } as any);
-    vi.mocked(crmPermissions.canAccess).mockReturnValue(true);
+    resetPermMocks();
   });
 
   it('returns companies list', async () => {
     const mockCompanies = [{ id: 'comp1', name: 'Acme Corp' }];
-    vi.mocked(crmService.listCompanies).mockResolvedValue(mockCompanies as any);
+    vi.mocked(companyService.listCompanies).mockResolvedValue(mockCompanies as any);
 
     const req = makeReq({ query: {} });
     const res = makeRes();
@@ -284,7 +301,7 @@ describe('crm controller — listCompanies', () => {
   });
 
   it('returns 403 when user lacks company access', async () => {
-    vi.mocked(crmPermissions.canAccess).mockReturnValue(false);
+    vi.mocked(appPermissions.canAccessEntity).mockReturnValue(false);
 
     const req = makeReq();
     const res = makeRes();
@@ -298,8 +315,7 @@ describe('crm controller — listCompanies', () => {
 describe('crm controller — createCompany', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(crmPermissions.getCrmPermission).mockResolvedValue({ role: 'admin', recordAccess: 'all' } as any);
-    vi.mocked(crmPermissions.canAccess).mockReturnValue(true);
+    resetPermMocks();
   });
 
   it('returns 400 when name is missing', async () => {
@@ -316,7 +332,7 @@ describe('crm controller — createCompany', () => {
 
   it('creates a company and returns it', async () => {
     const mockCompany = { id: 'comp1', name: 'Acme Corp' };
-    vi.mocked(crmService.createCompany).mockResolvedValue(mockCompany as any);
+    vi.mocked(companyService.createCompany).mockResolvedValue(mockCompany as any);
 
     const req = makeReq({ body: { name: 'Acme Corp', domain: 'acme.com' } });
     const res = makeRes();

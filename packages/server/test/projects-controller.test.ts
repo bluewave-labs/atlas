@@ -8,12 +8,6 @@ vi.mock('../src/apps/projects/service', () => ({
   createProject: vi.fn(),
   updateProject: vi.fn(),
   deleteProject: vi.fn(),
-  listClients: vi.fn(),
-  getClient: vi.fn(),
-  createClient: vi.fn(),
-  updateClient: vi.fn(),
-  deleteClient: vi.fn(),
-  regeneratePortalToken: vi.fn(),
   listProjectMembers: vi.fn(),
   addProjectMember: vi.fn(),
   removeProjectMember: vi.fn(),
@@ -25,13 +19,6 @@ vi.mock('../src/apps/projects/service', () => ({
   deleteTimeEntry: vi.fn(),
   bulkLockEntries: vi.fn(),
   getWeeklyView: vi.fn(),
-  listInvoices: vi.fn(),
-  getInvoice: vi.fn(),
-  createInvoice: vi.fn(),
-  updateInvoice: vi.fn(),
-  deleteInvoice: vi.fn(),
-  sendInvoice: vi.fn(),
-  markInvoicePaid: vi.fn(),
   getWidgetData: vi.fn(),
   getDashboardData: vi.fn(),
 }));
@@ -39,6 +26,12 @@ vi.mock('../src/apps/projects/service', () => ({
 // Mock event service
 vi.mock('../src/services/event.service', () => ({
   emitAppEvent: vi.fn().mockResolvedValue(undefined),
+}));
+
+// Mock app-permissions service to always grant access
+vi.mock('../src/services/app-permissions.service', () => ({
+  getAppPermission: vi.fn().mockResolvedValue({ role: 'owner' }),
+  canAccess: vi.fn().mockReturnValue(true),
 }));
 
 import * as controller from '../src/apps/projects/controller';
@@ -81,9 +74,9 @@ describe('projects controller — listProjects', () => {
 
     await controller.listProjects(req, res);
 
-    expect(projectService.listProjects).toHaveBeenCalledWith('u1', 'a1', {
+    expect(projectService.listProjects).toHaveBeenCalledWith('u1', 't1', {
       search: undefined,
-      clientId: undefined,
+      companyId: undefined,
       status: undefined,
       includeArchived: false,
     });
@@ -100,9 +93,9 @@ describe('projects controller — listProjects', () => {
 
     await controller.listProjects(req, res);
 
-    expect(projectService.listProjects).toHaveBeenCalledWith('u1', 'a1', {
+    expect(projectService.listProjects).toHaveBeenCalledWith('u1', 't1', {
       search: 'web',
-      clientId: 'c1',
+      companyId: 'c1',
       status: 'active',
       includeArchived: true,
     });
@@ -146,9 +139,9 @@ describe('projects controller — createProject', () => {
 
     await controller.createProject(req, res);
 
-    expect(projectService.createProject).toHaveBeenCalledWith('u1', 'a1', expect.objectContaining({
+    expect(projectService.createProject).toHaveBeenCalledWith('u1', 't1', expect.objectContaining({
       name: 'New Project',
-      clientId: 'c1',
+      companyId: 'c1',
       billable: true,
     }));
     expect(res.json).toHaveBeenCalledWith(
@@ -165,143 +158,6 @@ describe('projects controller — createProject', () => {
     await controller.createProject(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
-  });
-});
-
-// ─── Clients ───────────────────────────────────────────────────────
-
-describe('projects controller — listClients', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('returns clients list with success:true', async () => {
-    const mockClients = [
-      { id: 'c1', name: 'Acme Corp' },
-      { id: 'c2', name: 'Globex Inc' },
-    ];
-    vi.mocked(projectService.listClients).mockResolvedValue(mockClients as any);
-
-    const req = makeReq({ query: {} });
-    const res = makeRes();
-
-    await controller.listClients(req, res);
-
-    expect(projectService.listClients).toHaveBeenCalledWith('u1', 'a1', {
-      search: undefined,
-      includeArchived: false,
-    });
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: true, data: { clients: mockClients } })
-    );
-  });
-});
-
-describe('projects controller — createClient', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('returns 400 when name is missing', async () => {
-    const req = makeReq({ body: { email: 'client@test.com' } });
-    const res = makeRes();
-
-    await controller.createClient(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: false, error: 'Name is required' })
-    );
-  });
-
-  it('creates a client with all provided fields', async () => {
-    const mockClient = { id: 'c1', name: 'New Client', email: 'client@test.com' };
-    vi.mocked(projectService.createClient).mockResolvedValue(mockClient as any);
-
-    const req = makeReq({
-      body: { name: 'New Client', email: 'client@test.com', phone: '+1234567890', currency: 'USD' },
-    });
-    const res = makeRes();
-
-    await controller.createClient(req, res);
-
-    expect(projectService.createClient).toHaveBeenCalledWith('u1', 'a1', expect.objectContaining({
-      name: 'New Client',
-      email: 'client@test.com',
-      phone: '+1234567890',
-      currency: 'USD',
-    }));
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: true, data: mockClient })
-    );
-  });
-});
-
-// ─── Invoices ──────────────────────────────────────────────────────
-
-describe('projects controller — listInvoices', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('returns invoices with query filters', async () => {
-    const mockInvoices = [{ id: 'inv-1', invoiceNumber: 'INV-001', amount: 5000 }];
-    vi.mocked(projectService.listInvoices).mockResolvedValue(mockInvoices as any);
-
-    const req = makeReq({ query: { clientId: 'c1', status: 'sent' } });
-    const res = makeRes();
-
-    await controller.listInvoices(req, res);
-
-    expect(projectService.listInvoices).toHaveBeenCalledWith('u1', 'a1', {
-      clientId: 'c1',
-      status: 'sent',
-      search: undefined,
-      includeArchived: false,
-    });
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: true, data: { invoices: mockInvoices } })
-    );
-  });
-});
-
-describe('projects controller — createInvoice', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('returns 400 when clientId is missing', async () => {
-    const req = makeReq({ body: { amount: 1000 } });
-    const res = makeRes();
-
-    await controller.createInvoice(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: false, error: 'clientId is required' })
-    );
-  });
-
-  it('creates an invoice when clientId is provided', async () => {
-    const mockInvoice = { id: 'inv-1', clientId: 'c1', invoiceNumber: 'INV-001', amount: 2500 };
-    vi.mocked(projectService.createInvoice).mockResolvedValue(mockInvoice as any);
-
-    const req = makeReq({
-      body: { clientId: 'c1', invoiceNumber: 'INV-001', amount: 2500, currency: 'EUR', status: 'draft' },
-    });
-    const res = makeRes();
-
-    await controller.createInvoice(req, res);
-
-    expect(projectService.createInvoice).toHaveBeenCalledWith('u1', 'a1', expect.objectContaining({
-      clientId: 'c1',
-      invoiceNumber: 'INV-001',
-      amount: 2500,
-      currency: 'EUR',
-    }));
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: true, data: mockInvoice })
-    );
   });
 });
 
@@ -344,7 +200,7 @@ describe('projects controller — createTimeEntry', () => {
 
     await controller.createTimeEntry(req, res);
 
-    expect(projectService.createTimeEntry).toHaveBeenCalledWith('u1', 'a1', expect.objectContaining({
+    expect(projectService.createTimeEntry).toHaveBeenCalledWith('u1', 't1', expect.objectContaining({
       projectId: 'p1',
       durationMinutes: 120,
       workDate: '2026-03-30',
@@ -367,7 +223,7 @@ describe('projects controller — createTimeEntry', () => {
 
     await controller.createTimeEntry(req, res);
 
-    expect(projectService.createTimeEntry).toHaveBeenCalledWith('u1', 'a1', expect.objectContaining({
+    expect(projectService.createTimeEntry).toHaveBeenCalledWith('u1', 't1', expect.objectContaining({
       durationMinutes: 0,
     }));
   });

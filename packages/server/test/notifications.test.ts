@@ -117,6 +117,20 @@ describe('event.service — emitAppEvent', () => {
 describe('event.service — notification queries', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset any stale `mockReturnValueOnce` queue left over from prior
+    // describe blocks by reinstalling the default select implementation.
+    const mockDb = db as any;
+    mockDb.select.mockReset();
+    mockDb.select.mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([]),
+          orderBy: vi.fn().mockResolvedValue([]),
+        }),
+        orderBy: vi.fn().mockResolvedValue([]),
+        limit: vi.fn().mockResolvedValue([]),
+      }),
+    });
   });
 
   it('getUnreadCount returns 0 when no notifications exist', async () => {
