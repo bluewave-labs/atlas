@@ -47,7 +47,7 @@ Atlas runs as a set of containerized services orchestrated by Docker Compose. In
 
 | Service | Image | Purpose | Port |
 |---------|-------|---------|------|
-| **Atlas** | `ghcr.io/bluewave-labs/atlas:latest` | Express API server serving both the REST API and the built React client as static files | 3001 |
+| **Atlas** | `ghcr.io/gorkem-bwl/atlas:latest` | Express API server serving both the REST API and the built React client as static files | 3001 |
 | **PostgreSQL** | `postgres:16-alpine` | Primary data store for all application data | 5432 (internal) |
 | **Redis** | `redis:7-alpine` | Session caching, rate limiting, and pub/sub | 6379 (internal) |
 | **Caddy** | `caddy:2-alpine` | Automatic HTTPS reverse proxy with Let's Encrypt | 80, 443 |
@@ -135,7 +135,7 @@ ATLAS_EMAIL=admin@example.com \
 4. **Secret generation** — auto-generates `JWT_SECRET`, `JWT_REFRESH_SECRET`, and `TOKEN_ENCRYPTION_KEY` using `openssl rand -hex 32`.
 5. **Writes `.env`** — creates the environment file with all configuration values.
 6. **Downloads compose files** — fetches `docker-compose.production.yml`, `docker-compose.https.yml`, and the `atlas` CLI tool from the GitHub repository.
-7. **Pulls images** — downloads the Atlas image from `ghcr.io/bluewave-labs/atlas:latest`, plus PostgreSQL 16 and Redis 7 images.
+7. **Pulls images** — downloads the Atlas image from `ghcr.io/gorkem-bwl/atlas:latest`, plus PostgreSQL 16 and Redis 7 images.
 8. **Starts services** — runs `docker compose -f docker-compose.production.yml up -d`.
 9. **Health check** — polls `http://localhost:3001/api/v1/health` for up to 60 seconds until Atlas responds.
 10. **Starts Caddy** (if a domain was configured) — runs the HTTPS overlay compose file to start Caddy with automatic SSL.
@@ -324,7 +324,7 @@ Single job that:
    - `latest` — on every push to main or version tag.
    - Short SHA (e.g., `ad46268`) — on every build.
    - Semver tags (e.g., `1.0.0`, `1.0`, `1`) — on version tags.
-6. **Builds and pushes** a multi-platform image to `ghcr.io/bluewave-labs/atlas`.
+6. **Builds and pushes** a multi-platform image to `ghcr.io/gorkem-bwl/atlas`.
    - Uses GitHub Actions cache (`type=gha`) for layer caching.
    - Generates provenance attestations and SBOM for supply-chain security.
 7. **Runs Trivy** vulnerability scanner against the published image (warn-only, does not block the build).
@@ -332,7 +332,7 @@ Single job that:
 
 ### Image registry
 
-- **Registry:** `ghcr.io/bluewave-labs/atlas`
+- **Registry:** `ghcr.io/gorkem-bwl/atlas`
 - **Platforms:** `linux/amd64`, `linux/arm64`
 - **Tags:** `latest`, short SHA, semver (when tagged)
 
@@ -427,7 +427,7 @@ atlas update
 
 What it does:
 1. Downloads latest `docker-compose.production.yml`, `docker-compose.https.yml`, and `Dockerfile` from the main branch.
-2. Pulls `ghcr.io/bluewave-labs/atlas:latest`.
+2. Pulls `ghcr.io/gorkem-bwl/atlas:latest`.
 3. Stops and restarts all services.
 4. Waits up to 60 seconds for health check to pass.
 
@@ -633,7 +633,7 @@ atlas update
 This performs a zero-config rolling update:
 
 1. Downloads the latest compose files and Dockerfile from the main branch on GitHub.
-2. Pulls the latest Docker image from `ghcr.io/bluewave-labs/atlas:latest`.
+2. Pulls the latest Docker image from `ghcr.io/gorkem-bwl/atlas:latest`.
 3. Stops all services with `docker compose down`.
 4. Starts all services with `docker compose up -d`.
 5. Waits for health check (up to 60 seconds).

@@ -89,7 +89,7 @@ ATLAS_DIR=$(find_atlas_dir) || fail "Cannot find Atlas installation. Set ATLAS_D
     - ~/atlas, /opt/atlas, /srv/atlas
 
   Run the installer first:
-    curl -fsSL https://raw.githubusercontent.com/bluewave-labs/Atlas/main/install.sh | bash"
+    curl -fsSL https://raw.githubusercontent.com/gorkem-bwl/atlas/main/install.sh | bash"
 
 cd "$ATLAS_DIR"
 
@@ -238,7 +238,7 @@ cmd_update() {
   # Check for updates by pulling latest source
   info "Downloading latest version..."
 
-  local REPO_BASE="https://raw.githubusercontent.com/bluewave-labs/Atlas/main"
+  local REPO_BASE="https://raw.githubusercontent.com/gorkem-bwl/atlas/main"
 
   # Download latest compose files
   for FILE in docker-compose.production.yml docker-compose.https.yml Dockerfile; do
@@ -255,7 +255,7 @@ cmd_update() {
   # Pull latest image from GHCR
   info "Pulling latest Atlas image..."
   docker compose -f docker-compose.production.yml pull
-  success "Image updated (ghcr.io/bluewave-labs/atlas:latest)"
+  success "Image updated (ghcr.io/gorkem-bwl/atlas:latest)"
 
   # Restart
   info "Restarting services..."
@@ -514,7 +514,7 @@ cmd_configure() {
 
   if [[ ! -f ".env" ]]; then
     fail "No .env file found. Run the installer first:
-    curl -fsSL https://raw.githubusercontent.com/bluewave-labs/Atlas/main/install.sh | bash"
+    curl -fsSL https://raw.githubusercontent.com/gorkem-bwl/atlas/main/install.sh | bash"
   fi
 
   # Load current values
@@ -684,7 +684,7 @@ cmd_uninstall() {
   echo -e "    rm -rf ${ATLAS_DIR}"
   echo ""
   echo -e "  ${DIM}To reinstall:${NC}"
-  echo -e "    curl -fsSL https://raw.githubusercontent.com/bluewave-labs/Atlas/main/install.sh | bash"
+  echo -e "    curl -fsSL https://raw.githubusercontent.com/gorkem-bwl/atlas/main/install.sh | bash"
   echo ""
 }
 
@@ -723,7 +723,7 @@ cmd_help() {
   echo "  ATLAS_DIR             Override install directory detection"
   echo "  ATLAS_LOGS_FOLLOW     Set to empty to disable log following"
   echo ""
-  echo -e "${DIM}Documentation: https://github.com/bluewave-labs/Atlas${NC}"
+  echo -e "${DIM}Documentation: https://github.com/gorkem-bwl/atlas${NC}"
   echo ""
 }
 

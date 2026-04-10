@@ -319,7 +319,7 @@ When the user asks to "create a release", "make a new version", "tag and release
 5. **Tag**: `git tag vX.Y.Z`
 6. **Push**: `git push origin main && git push origin vX.Y.Z`
 7. **Create GitHub Release**: `gh release create vX.Y.Z` with detailed release notes
-8. **Docker images**: the tag push automatically triggers `.github/workflows/docker.yml` which builds amd64 + arm64 images and pushes to `ghcr.io/bluewave-labs/atlas`
+8. **Docker images**: the tag push automatically triggers `.github/workflows/docker.yml` which builds amd64 + arm64 images and pushes to `ghcr.io/gorkem-bwl/atlas`
 9. **Verify**: confirm the Docker workflow started and report the run URL
 - Every user-visible string MUST use `t()` — no hardcoded English text
 - Sidebar labels, view titles, button labels, form labels, empty states, error messages

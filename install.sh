@@ -3,11 +3,11 @@
 # Atlas — One-line installer
 #
 # Interactive usage (recommended):
-#   bash <(curl -fsSL https://raw.githubusercontent.com/bluewave-labs/Atlas/main/install.sh)
+#   bash <(curl -fsSL https://raw.githubusercontent.com/gorkem-bwl/atlas/main/install.sh)
 #
 # Unattended usage (set env vars):
 #   ATLAS_DOMAIN=atlas.example.com ATLAS_EMAIL=admin@example.com \
-#     bash <(curl -fsSL https://raw.githubusercontent.com/bluewave-labs/Atlas/main/install.sh)
+#     bash <(curl -fsSL https://raw.githubusercontent.com/gorkem-bwl/atlas/main/install.sh)
 #
 # Supports: Ubuntu 20.04+, Debian 11+, CentOS 8+, Amazon Linux 2
 # ──────────────────────────────────────────────────────────────────────────────
@@ -81,7 +81,7 @@ echo " / ___ \ |_| | (_| \__ \\"
 echo "/_/   \_\__|_|\__,_|___/"
 echo -e "${NC}"
 echo -e "${DIM}  Self-hosted business platform${NC}"
-echo -e "${DIM}  https://github.com/bluewave-labs/Atlas${NC}"
+echo -e "${DIM}  https://github.com/gorkem-bwl/atlas${NC}"
 echo ""
 
 # ── Pre-flight checks ───────────────────────────────────────────────────────
@@ -369,7 +369,7 @@ success "Configuration written to .env"
 
 header "Downloading Atlas"
 
-REPO_BASE="https://raw.githubusercontent.com/bluewave-labs/Atlas/main"
+REPO_BASE="https://raw.githubusercontent.com/gorkem-bwl/atlas/main"
 
 download_file() {
   local url="$1"
@@ -416,7 +416,7 @@ if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
   fail "Failed to pull Docker images. Check your network connection."
 fi
 
-success "Atlas image pulled (ghcr.io/bluewave-labs/atlas:latest)"
+success "Atlas image pulled (ghcr.io/gorkem-bwl/atlas:latest)"
 info "Pulling PostgreSQL and Redis images..."
 docker compose -f docker-compose.production.yml pull postgres redis 2>/dev/null
 success "Database images ready"
@@ -522,5 +522,5 @@ echo -e "    ${DIM}Config:${NC}    ${INSTALL_DIR}/.env"
 echo -e "    ${DIM}Data:${NC}      ${INSTALL_DIR}/atlas-data/"
 echo -e "    ${DIM}Backups:${NC}   ${INSTALL_DIR}/atlas-data/backups/"
 echo ""
-echo -e "  ${DIM}Documentation: https://github.com/bluewave-labs/Atlas${NC}"
+echo -e "  ${DIM}Documentation: https://github.com/gorkem-bwl/atlas${NC}"
 echo ""

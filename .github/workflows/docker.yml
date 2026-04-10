@@ -116,7 +116,7 @@ jobs:
           labels: |
             org.opencontainers.image.title=Atlas
             org.opencontainers.image.description=All-in-one business platform with modular app architecture
-            org.opencontainers.image.source=https://github.com/bluewave-labs/atlas
+            org.opencontainers.image.source=https://github.com/gorkem-bwl/atlas
             org.opencontainers.image.vendor=gorkem-bwl
             org.opencontainers.image.licenses=AGPL-3.0
 
