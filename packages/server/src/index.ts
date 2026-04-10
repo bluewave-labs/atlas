@@ -13,6 +13,7 @@ import { startTaskReminderScheduler, stopTaskReminderScheduler } from './apps/ta
 import { startCrmReminderScheduler, stopCrmReminderScheduler } from './apps/crm/activity-reminder';
 import { startLeaveBalanceScheduler, stopLeaveBalanceScheduler } from './apps/hr/services/leave-balance-scheduler';
 import { startRecurringInvoiceScheduler, stopRecurringInvoiceScheduler } from './apps/invoices/recurring-scheduler';
+import { startInvoiceReminderScheduler, stopInvoiceReminderScheduler } from './apps/invoices/reminder-scheduler';
 
 const PURGE_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 const BACKUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -73,6 +74,9 @@ app.listen(env.PORT, async () => {
 
   // Invoices: recurring invoice generation — runs daily
   startRecurringInvoiceScheduler();
+
+  // Invoices: overdue invoice reminders — runs hourly
+  startInvoiceReminderScheduler();
 });
 
 // Graceful shutdown
@@ -83,6 +87,7 @@ function handleShutdown(signal: string) {
   if (backupTimer) { clearInterval(backupTimer); backupTimer = null; }
   stopLeaveBalanceScheduler();
   stopRecurringInvoiceScheduler();
+  stopInvoiceReminderScheduler();
   stopUpdateChecker();
   stopReminderScheduler();
   stopTaskReminderScheduler();

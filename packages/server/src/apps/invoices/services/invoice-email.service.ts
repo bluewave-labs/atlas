@@ -17,13 +17,17 @@ import { sendEmail } from '../../../services/email.service';
 import { getInvoice } from './invoice.service';
 import { getInvoiceSettings } from './settings.service';
 import { generateInvoicePdf } from './pdf.service';
-import { buildInvoiceEmailTemplate } from '../email-templates';
+import { buildInvoiceEmailTemplate, buildInvoiceReminderTemplate } from '../email-templates';
 
 export interface SendInvoiceEmailOptions {
   customSubject?: string;
   customMessage?: string;
   ccEmails?: string[];
   recipientOverride?: string;
+  /** Which email template to render. Defaults to 'invoice' (initial delivery). */
+  template?: 'invoice' | 'reminder';
+  /** Reminder stage (1-4). Only used when template === 'reminder'. */
+  stage?: 1 | 2 | 3 | 4;
 }
 
 export interface SendInvoiceEmailResult {
@@ -122,7 +126,7 @@ export async function sendInvoiceEmail(
     const portalUrl = `${baseUrl}/api/invoices/portal/${company.portalToken}/${invoice.id}`;
 
     // 8. Build email content
-    const template = buildInvoiceEmailTemplate({
+    const templateData = {
       invoice: {
         id: invoice.id,
         invoiceNumber: invoice.invoiceNumber,
@@ -155,7 +159,12 @@ export async function sendInvoiceEmail(
       portalUrl,
       customSubject: options?.customSubject,
       customMessage: options?.customMessage,
-    });
+    };
+
+    const template =
+      options?.template === 'reminder'
+        ? buildInvoiceReminderTemplate(templateData, options.stage ?? 1)
+        : buildInvoiceEmailTemplate(templateData);
 
     // 9. Dispatch
     const sent = await sendEmail({
