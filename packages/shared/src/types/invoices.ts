@@ -108,6 +108,21 @@ export interface InvoiceSettings {
   eFaturaCompanyCountry?: string | null;
   eFaturaCompanyPhone?: string | null;
   eFaturaCompanyEmail?: string | null;
+  // Template branding
+  templateId: string;
+  logoPath?: string | null;
+  accentColor: string;
+  companyName?: string | null;
+  companyAddress?: string | null;
+  companyCity?: string | null;
+  companyCountry?: string | null;
+  companyPhone?: string | null;
+  companyEmail?: string | null;
+  companyWebsite?: string | null;
+  companyTaxId?: string | null;
+  paymentInstructions?: string | null;
+  bankDetails?: string | null;
+  footerText?: string | null;
 }
 
 export interface UpdateInvoiceSettingsInput {
@@ -123,6 +138,20 @@ export interface UpdateInvoiceSettingsInput {
   eFaturaCompanyCountry?: string | null;
   eFaturaCompanyPhone?: string | null;
   eFaturaCompanyEmail?: string | null;
+  templateId?: string;
+  logoPath?: string | null;
+  accentColor?: string;
+  companyName?: string | null;
+  companyAddress?: string | null;
+  companyCity?: string | null;
+  companyCountry?: string | null;
+  companyPhone?: string | null;
+  companyEmail?: string | null;
+  companyWebsite?: string | null;
+  companyTaxId?: string | null;
+  paymentInstructions?: string | null;
+  bankDetails?: string | null;
+  footerText?: string | null;
 }
 
 export function getInvoiceStatusVariant(status: InvoiceStatus): 'default' | 'primary' | 'success' | 'warning' | 'error' {
