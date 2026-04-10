@@ -3585,13 +3585,17 @@
       "generate": "e-Fatura erstellen"
     },
     "sidebar": {
-      "all": "Alle Rechnungen",
+      "dashboard": "Dashboard",
+      "invoices": "Rechnungen",
+      "settings": "Einstellungen"
+    },
+    "filters": {
+      "all": "Alle",
       "draft": "Entwurf",
-      "sent": "Gesendet",
+      "unpaid": "Unbezahlt",
       "overdue": "Überfällig",
       "paid": "Bezahlt",
-      "waived": "Erlassen",
-      "settings": "Einstellungen"
+      "waived": "Erlassen"
     },
     "list": {
       "invoiceNumber": "Rechnungsnummer",

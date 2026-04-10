@@ -3585,13 +3585,17 @@
       "generate": "e-Fatura oluştur"
     },
     "sidebar": {
-      "all": "Tüm faturalar",
+      "dashboard": "Kontrol paneli",
+      "invoices": "Faturalar",
+      "settings": "Ayarlar"
+    },
+    "filters": {
+      "all": "Tümü",
       "draft": "Taslak",
-      "sent": "Gönderilmiş",
+      "unpaid": "Ödenmemiş",
       "overdue": "Vadesi geçmiş",
       "paid": "Ödenmiş",
-      "waived": "Feragat edilmiş",
-      "settings": "Ayarlar"
+      "waived": "Feragat edilmiş"
     },
     "list": {
       "invoiceNumber": "Fatura numarası",

@@ -3590,13 +3590,17 @@
       "generate": "Generate e-Fatura"
     },
     "sidebar": {
-      "all": "All invoices",
+      "dashboard": "Dashboard",
+      "invoices": "Invoices",
+      "settings": "Settings"
+    },
+    "filters": {
+      "all": "All",
       "draft": "Draft",
-      "sent": "Sent",
+      "unpaid": "Unpaid",
       "overdue": "Overdue",
       "paid": "Paid",
-      "waived": "Waived",
-      "settings": "Settings"
+      "waived": "Waived"
     },
     "list": {
       "invoiceNumber": "Invoice number",

@@ -3585,13 +3585,17 @@
       "generate": "Générer e-Fatura"
     },
     "sidebar": {
-      "all": "Toutes les factures",
+      "dashboard": "Tableau de bord",
+      "invoices": "Factures",
+      "settings": "Paramètres"
+    },
+    "filters": {
+      "all": "Toutes",
       "draft": "Brouillon",
-      "sent": "Envoyée",
+      "unpaid": "Impayée",
       "overdue": "En retard",
       "paid": "Payée",
-      "waived": "Annulée",
-      "settings": "Paramètres"
+      "waived": "Annulée"
     },
     "list": {
       "invoiceNumber": "Numéro de facture",

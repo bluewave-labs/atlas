@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDate, formatCurrency } from '../../../lib/format';
 import {
@@ -11,6 +11,72 @@ import { DataTable, type DataTableColumn } from '../../../components/ui/data-tab
 import { FeatureEmptyState } from '../../../components/ui/feature-empty-state';
 import { Tooltip } from '../../../components/ui/tooltip';
 
+type StatusFilter = 'all' | 'draft' | 'unpaid' | 'overdue' | 'paid' | 'waived';
+
+function filterByStatus(invoices: Invoice[], filter: StatusFilter): Invoice[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  switch (filter) {
+    case 'all':
+      return invoices;
+    case 'draft':
+      return invoices.filter((inv) => inv.status === 'draft');
+    case 'unpaid':
+      return invoices.filter((inv) => {
+        if (inv.status !== 'sent' && inv.status !== 'viewed') return false;
+        if (!inv.dueDate) return true;
+        return new Date(inv.dueDate) >= today;
+      });
+    case 'overdue':
+      return invoices.filter((inv) => {
+        if (inv.status !== 'sent' && inv.status !== 'viewed') return false;
+        if (!inv.dueDate) return false;
+        return new Date(inv.dueDate) < today;
+      });
+    case 'paid':
+      return invoices.filter((inv) => inv.status === 'paid');
+    case 'waived':
+      return invoices.filter((inv) => inv.status === 'waived');
+    default:
+      return invoices;
+  }
+}
+
+function countByStatus(invoices: Invoice[]): Record<StatusFilter, number> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const counts: Record<StatusFilter, number> = {
+    all: invoices.length,
+    draft: 0,
+    unpaid: 0,
+    overdue: 0,
+    paid: 0,
+    waived: 0,
+  };
+
+  for (const inv of invoices) {
+    if (inv.status === 'draft') {
+      counts.draft++;
+    } else if (inv.status === 'sent' || inv.status === 'viewed') {
+      if (inv.dueDate && new Date(inv.dueDate) < today) {
+        counts.overdue++;
+      } else {
+        counts.unpaid++;
+      }
+    } else if (inv.status === 'paid') {
+      counts.paid++;
+    } else if (inv.status === 'waived') {
+      counts.waived++;
+    }
+  }
+
+  return counts;
+}
+
+const FILTER_OPTIONS: StatusFilter[] = ['all', 'draft', 'unpaid', 'overdue', 'paid', 'waived'];
+
 export function InvoicesListView({ invoices, searchQuery, onSelect, selectedId, onAdd }: {
   invoices: Invoice[];
   searchQuery: string;
@@ -19,17 +85,23 @@ export function InvoicesListView({ invoices, searchQuery, onSelect, selectedId, 
   onAdd: () => void;
 }) {
   const { t } = useTranslation();
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+
+  const counts = useMemo(() => countByStatus(invoices), [invoices]);
 
   const filtered = useMemo(() => {
-    if (!searchQuery.trim()) return invoices;
-    const q = searchQuery.toLowerCase();
-    return invoices.filter((inv) =>
-      inv.invoiceNumber.toLowerCase().includes(q) ||
-      (inv.companyName?.toLowerCase().includes(q)),
-    );
-  }, [invoices, searchQuery]);
+    let result = filterByStatus(invoices, statusFilter);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter((inv) =>
+        inv.invoiceNumber.toLowerCase().includes(q) ||
+        (inv.companyName?.toLowerCase().includes(q)),
+      );
+    }
+    return result;
+  }, [invoices, statusFilter, searchQuery]);
 
-  if (filtered.length === 0 && !searchQuery) {
+  if (invoices.length === 0 && !searchQuery) {
     return (
       <FeatureEmptyState
         illustration="documents"
@@ -141,22 +213,63 @@ export function InvoicesListView({ invoices, searchQuery, onSelect, selectedId, 
   ];
 
   return (
-    <DataTable
-      data={filtered}
-      columns={columns}
-      activeRowId={selectedId}
-      onRowClick={(invoice) => onSelect(invoice.id)}
-      onAddRow={onAdd}
-      addRowLabel={t('invoices.builder.createInvoice')}
-      emptyTitle={t('invoices.empty.noMatchingInvoices')}
-      emptyDescription={t('invoices.empty.tryDifferentSearch')}
-      emptyIcon={<FileText size={48} />}
-      aggregations={[
-        {
-          label: t('invoices.list.totalAmount'),
-          compute: () => formatCurrency(totalAmount),
-        },
-      ]}
-    />
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      {/* Filter chips */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--spacing-sm)',
+        padding: 'var(--spacing-md) var(--spacing-lg)',
+        borderBottom: '1px solid var(--color-border-secondary)',
+        flexShrink: 0,
+      }}>
+        {FILTER_OPTIONS.map((filter) => (
+          <button
+            key={filter}
+            onClick={() => setStatusFilter(filter)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '4px 12px',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: statusFilter === filter ? 'var(--font-weight-medium)' : 'var(--font-weight-normal)',
+              fontFamily: 'var(--font-family)',
+              color: statusFilter === filter ? '#fff' : 'var(--color-text-secondary)',
+              backgroundColor: statusFilter === filter ? 'var(--color-accent-primary)' : 'var(--color-bg-tertiary)',
+              border: 'none',
+              borderRadius: '999px',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'background-color 0.15s, color 0.15s',
+              lineHeight: '1.4',
+            }}
+          >
+            {t(`invoices.filters.${filter}`)} ({counts[filter]})
+          </button>
+        ))}
+      </div>
+
+      {/* Data table */}
+      <div style={{ flex: 1, overflow: 'hidden' }}>
+        <DataTable
+          data={filtered}
+          columns={columns}
+          activeRowId={selectedId}
+          onRowClick={(invoice) => onSelect(invoice.id)}
+          onAddRow={onAdd}
+          addRowLabel={t('invoices.builder.createInvoice')}
+          emptyTitle={t('invoices.empty.noMatchingInvoices')}
+          emptyDescription={t('invoices.empty.tryDifferentSearch')}
+          emptyIcon={<FileText size={48} />}
+          aggregations={[
+            {
+              label: t('invoices.list.totalAmount'),
+              compute: () => formatCurrency(totalAmount),
+            },
+          ]}
+        />
+      </div>
+    </div>
   );
 }

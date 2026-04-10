@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Plus, Search, X } from 'lucide-react';
@@ -31,21 +31,9 @@ export function InvoicesPage() {
   const prefillCompanyId = searchParams.get('companyId') ?? undefined;
   const prefillDealId = searchParams.get('dealId') ?? undefined;
 
-  // Data — filter by status when a sidebar view is selected
-  const statusFilter = activeView === 'all' ? undefined : activeView;
-  const { data: invoicesData } = useInvoices(statusFilter ? { status: statusFilter } : undefined);
+  // Data — fetch all invoices (filtering is done client-side in the list view)
+  const { data: invoicesData } = useInvoices();
   const invoices = invoicesData?.invoices ?? [];
-
-  // Counts for sidebar (fetch all to get counts)
-  const { data: allData } = useInvoices();
-  const allInvoices = allData?.invoices ?? [];
-  const counts = useMemo(() => {
-    const c: Record<string, number> = { all: allInvoices.length };
-    for (const inv of allInvoices) {
-      c[inv.status] = (c[inv.status] ?? 0) + 1;
-    }
-    return c;
-  }, [allInvoices]);
 
   // Selected invoice
   const selectedInvoice = selectedInvoiceId ? invoices.find((i) => i.id === selectedInvoiceId) : null;
@@ -80,27 +68,18 @@ export function InvoicesPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showSearch]);
 
-  const sectionTitle = useMemo(() => {
-    switch (activeView) {
-      case 'dashboard': return t('invoices.dashboard.title');
-      case 'all': return t('invoices.sidebar.all');
-      case 'draft': return t('invoices.sidebar.draft');
-      case 'sent': return t('invoices.sidebar.sent');
-      case 'overdue': return t('invoices.sidebar.overdue');
-      case 'paid': return t('invoices.sidebar.paid');
-      case 'waived': return t('invoices.sidebar.waived');
-      default: return t('invoices.title');
-    }
-  }, [activeView, t]);
+  const sectionTitle = activeView === 'dashboard'
+    ? t('invoices.sidebar.dashboard')
+    : t('invoices.sidebar.invoices');
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-      <InvoicesSidebar activeView={activeView} setActiveView={setActiveView} counts={counts} />
+      <InvoicesSidebar activeView={activeView} setActiveView={setActiveView} />
 
       <ContentArea
         title={sectionTitle}
         actions={
-          activeView !== 'dashboard' ? (
+          activeView === 'invoices' ? (
             <>
               <IconButton
                 icon={<Search size={14} />}
