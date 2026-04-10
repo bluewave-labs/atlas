@@ -98,9 +98,9 @@ export function SettingsModal() {
 
   const handleCategoryClick = useCallback((catId: string) => {
     setActiveCategoryId(catId);
-    const cat = settingsCategories.find((c) => c.id === catId)!;
-    setActivePanelId(cat.panels[0]?.id ?? '');
-  }, []);
+    const cat = settingsCategories.find((c) => c.id === catId);
+    setActivePanelId(cat?.panels[0]?.id ?? '');
+  }, [settingsCategories]);
 
   const handlePanelClick = useCallback((panId: string) => {
     setActivePanelId(panId);
