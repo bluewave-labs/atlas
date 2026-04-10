@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, Receipt, Settings2 } from 'lucide-react';
+import { LayoutDashboard, Receipt, Repeat, Settings2 } from 'lucide-react';
 import { AppSidebar, SidebarSection, SidebarItem } from '../../../components/layout/app-sidebar';
 import { useUIStore } from '../../../stores/ui-store';
 
@@ -38,6 +38,13 @@ export function InvoicesSidebar({ activeView, setActiveView }: InvoicesSidebarPr
           iconColor="#0ea5e9"
           isActive={activeView === 'invoices'}
           onClick={() => setActiveView('invoices')}
+        />
+        <SidebarItem
+          label={t('invoices.sidebar.recurring')}
+          icon={<Repeat size={14} />}
+          iconColor="#8b5cf6"
+          isActive={activeView === 'recurring'}
+          onClick={() => setActiveView('recurring')}
         />
       </SidebarSection>
     </AppSidebar>

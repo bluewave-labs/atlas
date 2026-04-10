@@ -7,6 +7,7 @@ import { InvoicesSidebar } from './components/invoices-sidebar';
 import { InvoicesListView } from './components/invoices-list-view';
 import { InvoiceDetailPanel } from './components/invoice-detail-panel';
 import { InvoicesDashboard } from './components/invoices-dashboard';
+import { RecurringInvoicesList } from './components/recurring-invoices-list';
 import { InvoicePreview } from './components/invoice-preview';
 import { InvoiceBuilderModal } from '../../components/shared/invoice-builder-modal';
 import { ContentArea } from '../../components/ui/content-area';
@@ -72,7 +73,9 @@ export function InvoicesPage() {
 
   const sectionTitle = activeView === 'dashboard'
     ? t('invoices.sidebar.dashboard')
-    : t('invoices.sidebar.invoices');
+    : activeView === 'recurring'
+      ? t('invoices.sidebar.recurring')
+      : t('invoices.sidebar.invoices');
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
@@ -102,6 +105,8 @@ export function InvoicesPage() {
       >
         {activeView === 'dashboard' ? (
           <InvoicesDashboard />
+        ) : activeView === 'recurring' ? (
+          <RecurringInvoicesList />
         ) : (
           <>
             {/* Search bar */}
