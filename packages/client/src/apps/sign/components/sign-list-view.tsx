@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   FileText,
@@ -12,6 +12,7 @@ import {
   Tag,
   Search,
   CheckCircle,
+  Building2,
 } from 'lucide-react';
 import { DataTable, type DataTableColumn } from '../../../components/ui/data-table';
 import { ListToolbar } from '../../../components/ui/list-toolbar';
@@ -25,7 +26,17 @@ import { Chip } from '../../../components/ui/chip';
 import { FeatureEmptyState } from '../../../components/ui/feature-empty-state';
 import { formatDate } from '../../../lib/format';
 import { STATUS_BADGE_MAP } from '../lib/helpers';
-import type { SignatureDocument } from '@atlasmail/shared';
+import type { DocumentType, SignatureDocument } from '@atlasmail/shared';
+
+const TYPE_FILTERS: Array<{ value: DocumentType | 'all'; labelKey: string }> = [
+  { value: 'all', labelKey: 'sign.filters.all' },
+  { value: 'contract', labelKey: 'sign.filters.contracts' },
+  { value: 'nda', labelKey: 'sign.filters.ndas' },
+  { value: 'offer_letter', labelKey: 'sign.filters.offerLetters' },
+  { value: 'acknowledgment', labelKey: 'sign.filters.acknowledgments' },
+  { value: 'waiver', labelKey: 'sign.filters.waivers' },
+  { value: 'other', labelKey: 'sign.filters.other' },
+];
 
 type DocWithSigners = SignatureDocument & {
   signerCount?: number;
@@ -63,6 +74,12 @@ export function SignListView({
   onRequestDelete: (id: string) => void;
 }) {
   const { t } = useTranslation();
+  const [typeFilter, setTypeFilter] = useState<DocumentType | 'all'>('all');
+
+  const visibleDocs = useMemo(() => {
+    if (typeFilter === 'all') return filteredDocs;
+    return filteredDocs.filter((doc) => doc.documentType === typeFilter);
+  }, [filteredDocs, typeFilter]);
 
   return (
     <>
@@ -75,6 +92,27 @@ export function SignListView({
           size="sm"
           style={{ width: 220 }}
         />
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--spacing-xs)',
+            flexWrap: 'wrap',
+          }}
+          role="group"
+          aria-label={t('sign.documentType')}
+        >
+          {TYPE_FILTERS.map((f) => (
+            <Chip
+              key={f.value}
+              active={typeFilter === f.value}
+              onClick={() => setTypeFilter(f.value)}
+              aria-pressed={typeFilter === f.value}
+            >
+              {t(f.labelKey)}
+            </Chip>
+          ))}
+        </div>
       </ListToolbar>
       <div style={{ flex: 1, overflow: 'auto' }}>
         {uploading ? (
@@ -86,7 +124,7 @@ export function SignListView({
           </div>
         ) : docsLoading ? (
           <div className="sign-empty">{t('sign.list.loading')}</div>
-        ) : filteredDocs.length === 0 ? (
+        ) : visibleDocs.length === 0 ? (
           <FeatureEmptyState
             illustration="documents"
             title={t('sign.empty.title')}
@@ -102,7 +140,7 @@ export function SignListView({
           />
         ) : (
           <DataTable<DocWithSigners>
-            data={filteredDocs}
+            data={visibleDocs}
             columns={[
               {
                 key: 'title',
@@ -119,6 +157,19 @@ export function SignListView({
                     ))}
                   </div>
                 ),
+              },
+              {
+                key: 'counterpartyName',
+                label: t('sign.counterparty'),
+                icon: <Building2 size={12} />,
+                sortable: true,
+                minWidth: 160,
+                render: (doc) =>
+                  doc.counterpartyName ? (
+                    <span>{doc.counterpartyName}</span>
+                  ) : (
+                    <span style={{ color: 'var(--color-text-tertiary)' }}>&mdash;</span>
+                  ),
               },
               {
                 key: 'status',
