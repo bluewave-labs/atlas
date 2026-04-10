@@ -97,20 +97,24 @@ export function SignListView({
             display: 'flex',
             alignItems: 'center',
             gap: 'var(--spacing-xs)',
-            flexWrap: 'wrap',
+            flexWrap: 'nowrap',
+            overflowX: 'auto',
+            minWidth: 0,
+            flex: 1,
           }}
           role="group"
           aria-label={t('sign.documentType')}
         >
           {TYPE_FILTERS.map((f) => (
-            <Chip
-              key={f.value}
-              active={typeFilter === f.value}
-              onClick={() => setTypeFilter(f.value)}
-              aria-pressed={typeFilter === f.value}
-            >
-              {t(f.labelKey)}
-            </Chip>
+            <div key={f.value} style={{ flexShrink: 0 }}>
+              <Chip
+                active={typeFilter === f.value}
+                onClick={() => setTypeFilter(f.value)}
+                aria-pressed={typeFilter === f.value}
+              >
+                {t(f.labelKey)}
+              </Chip>
+            </div>
           ))}
         </div>
       </ListToolbar>
