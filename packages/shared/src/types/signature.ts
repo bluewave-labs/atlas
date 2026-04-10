@@ -1,6 +1,7 @@
 // ─── Digital Signature Types ────────────────────────────────────────
 
 export type SignatureDocStatus = 'draft' | 'pending' | 'signed' | 'expired' | 'voided';
+export type DocumentType = 'contract' | 'nda' | 'offer_letter' | 'acknowledgment' | 'waiver' | 'other';
 export type SignatureFieldType = 'signature' | 'initials' | 'date' | 'text' | 'checkbox' | 'dropdown' | 'name' | 'email';
 export type SigningTokenRole = 'signer' | 'viewer' | 'approver' | 'cc';
 export type SigningTokenStatus = 'pending' | 'signed' | 'expired' | 'declined';
@@ -14,6 +15,8 @@ export interface SignatureDocument {
   storagePath: string;
   pageCount: number;
   status: SignatureDocStatus;
+  documentType: DocumentType;
+  counterpartyName?: string | null;
   expiresAt: string | null;
   completedAt: string | null;
   tags: string[];
@@ -70,6 +73,8 @@ export interface SigningToken {
 
 export interface CreateSignatureDocInput {
   title: string;
+  documentType?: DocumentType;
+  counterpartyName?: string | null;
 }
 
 export interface CreateSignatureFieldInput {
