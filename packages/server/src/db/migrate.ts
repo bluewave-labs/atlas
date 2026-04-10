@@ -1,6 +1,8 @@
 import pg from 'pg';
+import { getTableConfig, type PgColumn, type PgTable } from 'drizzle-orm/pg-core';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
+import * as schema from './schema';
 
 /**
  * Run all database migrations idempotently using CREATE TABLE IF NOT EXISTS.
@@ -2214,8 +2216,128 @@ export async function runMigrations() {
       ALTER TABLE crm_companies ADD COLUMN IF NOT EXISTS portal_token UUID UNIQUE;
     `);
 
+    // ─── Runtime schema sync ─────────────────────────────────────────
+    // Walks every pgTable in schema.ts and emits ALTER TABLE ADD COLUMN
+    // IF NOT EXISTS for any column missing from production. This catches
+    // drift where columns were added to a CREATE TABLE block in this file
+    // after the table was already created in production (the CREATE is a
+    // no-op once the table exists, so additive columns are silently lost).
+    await syncSchemaColumns(client);
+
     logger.info('Database migrations completed');
   } finally {
     await client.end();
   }
+}
+
+/**
+ * Drizzle-driven schema drift fix. For every exported pgTable in schema.ts,
+ * inspect its columns and emit ALTER TABLE ADD COLUMN IF NOT EXISTS for
+ * each one. Each ALTER runs in its own try/catch so a single failure
+ * doesn't abort the rest. Idempotent: running on a healthy DB is a no-op.
+ *
+ * Behavior notes:
+ * - NOT NULL columns with a default keep both clauses (Postgres backfills
+ *   the default for existing rows on ADD COLUMN).
+ * - NOT NULL columns WITHOUT a default get added as nullable (we can't
+ *   backfill safely from migration code; new code that requires the value
+ *   must handle the null OR populate explicitly via UPDATE before tightening).
+ * - Default values are emitted only for primitive constants we can serialize
+ *   safely. Drizzle SQL defaults (functions, sql`...`) are skipped — those
+ *   are handled by the original CREATE TABLE for fresh installs.
+ */
+async function syncSchemaColumns(client: pg.Client): Promise<void> {
+  let added = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  for (const exportName of Object.keys(schema)) {
+    const value = (schema as Record<string, unknown>)[exportName];
+    if (!value || typeof value !== 'object') continue;
+
+    let cfg;
+    try {
+      cfg = getTableConfig(value as PgTable);
+    } catch {
+      // Not a pgTable export — skip
+      continue;
+    }
+
+    const tableName = cfg.name;
+    for (const col of cfg.columns) {
+      const columnDef = buildColumnDefinition(col);
+      if (!columnDef) {
+        skipped++;
+        continue;
+      }
+      const sql = `ALTER TABLE "${tableName}" ADD COLUMN IF NOT EXISTS "${col.name}" ${columnDef}`;
+      try {
+        await client.query(sql);
+        added++;
+      } catch (err: any) {
+        failed++;
+        logger.warn(
+          { tableName, columnName: col.name, err: err.message },
+          'Schema sync: ALTER TABLE failed',
+        );
+      }
+    }
+  }
+
+  logger.info({ added, skipped, failed }, 'Schema sync completed');
+}
+
+/**
+ * Convert a Drizzle column definition into a Postgres type clause suitable
+ * for ALTER TABLE ADD COLUMN. Returns null if the column should be skipped
+ * (e.g. complex SQL defaults we can't safely serialize).
+ */
+function buildColumnDefinition(col: PgColumn): string | null {
+  // Skip if we can't determine SQL type
+  let sqlType: string;
+  try {
+    sqlType = col.getSQLType();
+  } catch {
+    return null;
+  }
+  if (!sqlType) return null;
+
+  // Handle default
+  let defaultClause = '';
+  if (col.hasDefault) {
+    const def = col.default;
+    if (def === undefined || def === null) {
+      // hasDefault but no value — likely a SQL default we can't serialize
+      // (e.g. .defaultRandom(), .defaultNow()). Skip default but keep
+      // adding the column nullable so the schema-sync still patches drift.
+    } else if (typeof def === 'boolean') {
+      defaultClause = ` DEFAULT ${def ? 'TRUE' : 'FALSE'}`;
+    } else if (typeof def === 'number') {
+      defaultClause = ` DEFAULT ${def}`;
+    } else if (typeof def === 'string') {
+      defaultClause = ` DEFAULT '${def.replace(/'/g, "''")}'`;
+    } else if (Array.isArray(def)) {
+      // jsonb array default
+      defaultClause = ` DEFAULT '${JSON.stringify(def).replace(/'/g, "''")}'::jsonb`;
+    } else if (typeof def === 'object') {
+      // jsonb object default — could be a SQL builder. Try JSON.stringify
+      // and skip if it produces something unparseable.
+      try {
+        const json = JSON.stringify(def);
+        if (json && json !== '{}' && !json.includes('"queryChunks"')) {
+          defaultClause = ` DEFAULT '${json.replace(/'/g, "''")}'::jsonb`;
+        } else if (json === '{}') {
+          defaultClause = " DEFAULT '{}'::jsonb";
+        }
+      } catch {
+        // skip
+      }
+    }
+  }
+
+  // Add NOT NULL only if we also have a default (to avoid blocking
+  // existing-row backfill)
+  const notNullClause = col.notNull && defaultClause ? ' NOT NULL' : '';
+
+  return `${sqlType.toUpperCase()}${defaultClause}${notNullClause}`;
 }
