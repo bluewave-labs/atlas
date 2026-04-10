@@ -2,7 +2,7 @@ import { db } from '../../../config/database';
 import { driveItems } from '../../../db/schema';
 import { eq, and, asc, desc, sql, isNull, inArray, or } from 'drizzle-orm';
 import { logger } from '../../../utils/logger';
-import { unlinkSync, existsSync, copyFileSync } from 'node:fs';
+import { unlinkSync, existsSync, copyFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import type { CreateDriveItemInput, UpdateDriveItemInput } from '@atlasmail/shared';
@@ -471,8 +471,10 @@ export async function duplicateItem(userId: string, itemId: string) {
     if (existsSync(srcPath)) {
       const ext = path.extname(item.storagePath);
       const newFilename = `${userId}_${Date.now()}_copy_${crypto.randomUUID()}${ext}`;
-      newStoragePath = newFilename;
-      copyFileSync(srcPath, path.join(UPLOADS_DIR, newFilename));
+      const tenantDir = path.join(UPLOADS_DIR, item.tenantId);
+      if (!existsSync(tenantDir)) mkdirSync(tenantDir, { recursive: true });
+      newStoragePath = `${item.tenantId}/${newFilename}`;
+      copyFileSync(srcPath, path.join(UPLOADS_DIR, newStoragePath));
     }
   }
 
@@ -547,8 +549,10 @@ export async function copyItem(userId: string, tenantId: string, itemId: string,
     if (existsSync(srcPath)) {
       const ext = path.extname(item.storagePath);
       const newFilename = `${userId}_${Date.now()}_copy_${crypto.randomUUID()}${ext}`;
-      newStoragePath = newFilename;
-      copyFileSync(srcPath, path.join(UPLOADS_DIR, newFilename));
+      const tenantDir = path.join(UPLOADS_DIR, tenantId);
+      if (!existsSync(tenantDir)) mkdirSync(tenantDir, { recursive: true });
+      newStoragePath = `${tenantId}/${newFilename}`;
+      copyFileSync(srcPath, path.join(UPLOADS_DIR, newStoragePath));
     }
   }
 

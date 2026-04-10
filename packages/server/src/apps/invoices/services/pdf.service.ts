@@ -29,14 +29,18 @@ export async function generateInvoicePdf(tenantId: string, invoiceId: string): P
   const company = companyResult[0];
 
   // Read logo file if exists, convert to base64
-  // logoPath stores just the filename from the upload endpoint; resolve under uploads/
+  // logoPath is a relative path under uploads/ (e.g. "{tenantId}/{filename}")
   let logoBase64: string | undefined;
   if (settings?.logoPath) {
     try {
-      const filename = path.basename(settings.logoPath);
-      const logoFullPath = path.join(__dirname, '../../../../uploads', filename);
+      const uploadsRoot = path.join(__dirname, '../../../../uploads');
+      const logoFullPath = path.resolve(uploadsRoot, settings.logoPath);
+      // Guard against path traversal — ensure resolved path stays within uploads/
+      if (!logoFullPath.startsWith(path.resolve(uploadsRoot))) {
+        throw new Error('logoPath escapes uploads directory');
+      }
       const logoBuffer = await fs.readFile(logoFullPath);
-      const ext = path.extname(filename).toLowerCase();
+      const ext = path.extname(settings.logoPath).toLowerCase();
       const mime = ext === '.png' ? 'image/png' : ext === '.svg' ? 'image/svg+xml' : 'image/jpeg';
       logoBase64 = `data:${mime};base64,${logoBuffer.toString('base64')}`;
     } catch (err) {

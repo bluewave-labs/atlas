@@ -108,9 +108,9 @@ export function InvoiceTemplatesPanel() {
       const formData = new FormData();
       formData.append('file', file);
       const { data } = await api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      const filename = data?.data?.url?.split('/').pop() ?? null;
-      if (filename) {
-        update({ logoPath: filename });
+      const relativePath = data?.data?.path ?? null;
+      if (relativePath) {
+        update({ logoPath: relativePath });
       }
     } catch {
       addToast({ type: 'error', message: t('common.error') });

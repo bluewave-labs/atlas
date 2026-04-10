@@ -10,7 +10,12 @@ const uploadsDir = path.join(__dirname, '../../../uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 const storage = multer.diskStorage({
-  destination: uploadsDir,
+  destination: (req, _file, cb) => {
+    // Scope uploads by tenant for isolation on disk
+    const tenantId = (req as any).auth?.tenantId || 'shared';
+    const tenantDir = path.join(uploadsDir, tenantId);
+    fs.mkdir(tenantDir, { recursive: true }, (err) => cb(err, tenantDir));
+  },
   filename: (_req, file, cb) => {
     const userId = (_req as any).auth?.userId || 'anon';
     const timestamp = Date.now();

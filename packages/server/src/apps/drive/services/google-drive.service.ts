@@ -113,7 +113,9 @@ export async function importFileFromGoogleDrive(
 
   // 3. Download the file content
   const safeName = finalName.replace(/[^a-zA-Z0-9._-]/g, '_');
-  const storagePath = `${userId}_${Date.now()}_${safeName}`;
+  const tenantDir = path.join(UPLOADS_DIR, tenantId);
+  if (!fs.existsSync(tenantDir)) fs.mkdirSync(tenantDir, { recursive: true });
+  const storagePath = `${tenantId}/${userId}_${Date.now()}_${safeName}`;
   const filePath = path.join(UPLOADS_DIR, storagePath);
 
   let fileSize: number;

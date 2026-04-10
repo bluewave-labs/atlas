@@ -1,11 +1,18 @@
 import { Router } from 'express';
 import multer from 'multer';
+import fs from 'fs';
 import path from 'path';
 import { authMiddleware } from '../middleware/auth';
 import { handleUpload } from '../controllers/upload.controller';
 
+const uploadsDir = path.join(__dirname, '../../uploads');
+
 const storage = multer.diskStorage({
-  destination: path.join(__dirname, '../../uploads'),
+  destination: (req, _file, cb) => {
+    const tenantId = (req as any).auth?.tenantId || 'shared';
+    const tenantDir = path.join(uploadsDir, tenantId);
+    fs.mkdir(tenantDir, { recursive: true }, (err) => cb(err, tenantDir));
+  },
   filename: (_req, file, cb) => {
     const userId = (_req as any).auth?.userId || 'anon';
     const timestamp = Date.now();

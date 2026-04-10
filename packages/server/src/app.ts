@@ -75,8 +75,23 @@ export function createApp() {
   // Public share routes — no auth required
   app.use('/api/v1/share', shareRoutes);
 
-  // Serve uploaded files (auth via query token)
-  app.use('/api/v1/uploads', authMiddleware, express.static(path.join(__dirname, '../uploads')));
+  // Serve uploaded files — require auth AND enforce tenant isolation.
+  // Paths are expected to be of the form /{tenantId}/{filename}. Legacy flat
+  // uploads (no tenant prefix) are allowed for backward compatibility.
+  app.use('/api/v1/uploads', authMiddleware, (req, res, next) => {
+    const urlPath = req.path.replace(/^\/+/, '');
+    const firstSegment = urlPath.split('/')[0];
+    // If the first segment looks like a tenant id (UUID), enforce it matches.
+    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRe.test(firstSegment)) {
+      const callerTenant = req.auth?.tenantId;
+      if (!callerTenant || firstSegment !== callerTenant) {
+        res.status(403).json({ success: false, error: 'Forbidden' });
+        return;
+      }
+    }
+    next();
+  }, express.static(path.join(__dirname, '../uploads')));
 
   app.use('/api/v1', auditMiddleware);
   app.use('/api/v1', apiLimiter);

@@ -7,10 +7,14 @@ export function handleUpload(req: Request, res: Response) {
     return;
   }
 
+  const tenantId = req.auth?.tenantId || 'shared';
+  const relativePath = `${tenantId}/${file.filename}`;
+
   res.json({
     success: true,
     data: {
-      url: `/api/v1/uploads/${file.filename}`,
+      url: `/api/v1/uploads/${relativePath}`,
+      path: relativePath,
       name: file.originalname,
       size: file.size,
       type: file.mimetype,

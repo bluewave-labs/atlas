@@ -67,7 +67,7 @@ export async function replaceFile(req: Request, res: Response) {
       .set({
         mimeType: file.mimetype,
         size: file.size,
-        storagePath: file.filename,
+        storagePath: `${tenantId}/${file.filename}`,
         updatedAt: now,
       })
       .where(and(eq(driveItemsTable.id, itemId), eq(driveItemsTable.userId, userId)));

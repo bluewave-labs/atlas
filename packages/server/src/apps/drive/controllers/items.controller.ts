@@ -96,7 +96,7 @@ export async function uploadFiles(req: Request, res: Response) {
         mimeType: file.mimetype,
         size: file.size,
         parentId,
-        storagePath: file.filename,
+        storagePath: `${tenantId}/${file.filename}`,
       });
       created.push(item);
     }
