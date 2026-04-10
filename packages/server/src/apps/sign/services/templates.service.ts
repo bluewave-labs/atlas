@@ -90,13 +90,18 @@ export async function saveAsTemplate(
   // Get the fields
   const fields = await listFields(documentId);
 
-  // Copy the file
+  // Copy the file into the tenant-isolated uploads directory.
+  // The source storagePath may be either a legacy flat filename or a
+  // tenant-prefixed `${tenantId}/${filename}` — path.join handles both.
   const ext = path.extname(doc.storagePath);
   const newFileName = `tpl_${userId}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}${ext}`;
+  const tenantDir = path.join(UPLOADS_DIR, tenantId);
   const srcPath = path.join(UPLOADS_DIR, doc.storagePath);
-  const dstPath = path.join(UPLOADS_DIR, newFileName);
+  const dstPath = path.join(tenantDir, newFileName);
+  const newStoragePath = `${tenantId}/${newFileName}`;
 
   try {
+    await mkdir(tenantDir, { recursive: true });
     await copyFile(srcPath, dstPath);
   } catch (err) {
     logger.warn({ err }, 'Failed to copy file for template — using same path');
@@ -106,7 +111,7 @@ export async function saveAsTemplate(
   return createTemplate(userId, tenantId, {
     title: title || `${doc.title} (template)`,
     fileName: doc.fileName,
-    storagePath: newFileName,
+    storagePath: newStoragePath,
     pageCount: doc.pageCount,
     fields: fields.map((f) => ({
       type: f.type,
@@ -143,13 +148,18 @@ export async function createDocumentFromTemplate(
 
   if (!tpl) throw new Error('Template not found');
 
-  // Copy the file
+  // Copy the file into the tenant-isolated uploads directory.
+  // The template storagePath may be either a legacy flat filename or a
+  // tenant-prefixed `${tenantId}/${filename}` — path.join handles both.
   const ext = path.extname(tpl.storagePath);
   const newFileName = `sign_${userId}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}${ext}`;
+  const tenantDir = path.join(UPLOADS_DIR, tenantId);
   const srcPath = path.join(UPLOADS_DIR, tpl.storagePath);
-  const dstPath = path.join(UPLOADS_DIR, newFileName);
+  const dstPath = path.join(tenantDir, newFileName);
+  const newStoragePath = `${tenantId}/${newFileName}`;
 
   try {
+    await mkdir(tenantDir, { recursive: true });
     await copyFile(srcPath, dstPath);
   } catch (err) {
     logger.warn({ err }, 'Failed to copy template file — using same path');
@@ -159,7 +169,7 @@ export async function createDocumentFromTemplate(
   const doc = await createDocument(userId, tenantId, {
     title: title || tpl.title,
     fileName: tpl.fileName,
-    storagePath: newFileName,
+    storagePath: newStoragePath,
     pageCount: tpl.pageCount,
   });
 

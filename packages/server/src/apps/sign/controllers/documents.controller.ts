@@ -97,8 +97,11 @@ export async function uploadPDF(req: Request, res: Response) {
     const title = req.body.title || decodedName.replace(/\.pdf$/i, '');
     const pageCount = parseInt(req.body.pageCount) || 1;
 
+    // Match the tenant-isolated on-disk layout used by multer (uploads/{tenantId}/{filename}).
+    // Fall back to 'shared' when tenantId is missing to stay consistent with multer's destination.
+    const storageTenant = tenantId || 'shared';
     const doc = await signService.createDocument(userId, tenantId, {
-      title, fileName: decodedName, storagePath: file.filename, pageCount,
+      title, fileName: decodedName, storagePath: `${storageTenant}/${file.filename}`, pageCount,
     });
 
     res.json({ success: true, data: doc });
