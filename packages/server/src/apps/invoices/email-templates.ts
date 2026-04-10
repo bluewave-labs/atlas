@@ -28,7 +28,7 @@ export interface InvoiceEmailData {
     companyCountry?: string | null;
     companyPhone?: string | null;
     companyWebsite?: string | null;
-    taxId?: string | null;
+    companyTaxId?: string | null;
     accentColor?: string | null;
     paymentInstructions?: string | null;
     bankDetails?: string | null;
@@ -102,7 +102,7 @@ function getCompanyName(data: InvoiceEmailData): string {
 }
 
 function getAccentColor(data: InvoiceEmailData): string {
-  return data.settings.accentColor || '#0ea5e9';
+  return data.settings.accentColor || '#13715B';
 }
 
 function getBalance(data: InvoiceEmailData): number {
@@ -171,7 +171,7 @@ function buildEmail(opts: RenderOptions): BuiltEmail {
   if (cityCountry) footerLines.push(cityCountry);
   if (data.settings.companyPhone) footerLines.push(`Phone: ${data.settings.companyPhone}`);
   if (data.settings.companyWebsite) footerLines.push(data.settings.companyWebsite);
-  if (data.settings.taxId) footerLines.push(`Tax ID: ${data.settings.taxId}`);
+  if (data.settings.companyTaxId) footerLines.push(`Tax ID: ${data.settings.companyTaxId}`);
   if (footerLines.length > 0) {
     textParts.push(...footerLines, '');
   }
@@ -232,7 +232,7 @@ function buildEmail(opts: RenderOptions): BuiltEmail {
     footerInfoParts.push(
       `<a href="${escapeHtml(data.settings.companyWebsite)}" style="color: #6b7280; text-decoration: underline;">${escapeHtml(data.settings.companyWebsite)}</a>`,
     );
-  if (data.settings.taxId) footerInfoParts.push(`Tax ID: ${escapeHtml(data.settings.taxId)}`);
+  if (data.settings.companyTaxId) footerInfoParts.push(`Tax ID: ${escapeHtml(data.settings.companyTaxId)}`);
 
   const footerInfoHtml =
     footerInfoParts.length > 0
