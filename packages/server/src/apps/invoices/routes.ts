@@ -18,6 +18,18 @@ router.patch('/settings', invoiceController.updateSettings);
 // Dashboard
 router.get('/dashboard', invoiceController.getInvoicesDashboard);
 
+// Recurring Invoices
+// IMPORTANT: register /recurring/... (literal) before any /:id routes so
+// Express never mistakes the literal "recurring" segment for an invoice id.
+router.get('/recurring', invoiceController.listRecurring);
+router.post('/recurring', invoiceController.createRecurring);
+router.get('/recurring/:id', invoiceController.getRecurring);
+router.patch('/recurring/:id', invoiceController.updateRecurring);
+router.delete('/recurring/:id', invoiceController.deleteRecurring);
+router.post('/recurring/:id/pause', invoiceController.pauseRecurring);
+router.post('/recurring/:id/resume', invoiceController.resumeRecurring);
+router.post('/recurring/:id/run-now', invoiceController.runRecurringNow);
+
 // Invoices
 router.get('/list', invoiceController.listInvoices);
 router.get('/next-number', invoiceController.getNextInvoiceNumber);

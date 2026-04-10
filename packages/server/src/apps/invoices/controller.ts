@@ -6,3 +6,4 @@ export * from './controllers/settings.controller';
 export * from './controllers/portal.controller';
 export * from './controllers/dashboard.controller';
 export * from './controllers/payment.controller';
+export * from './controllers/recurring-invoice.controller';
