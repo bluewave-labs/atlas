@@ -30,6 +30,7 @@
     "@ai-sdk/xai": "^3.0.59",
     "@atlasmail/shared": "*",
     "@kubernetes/client-node": "^1.4.0",
+    "@react-pdf/renderer": "^4.4.0",
     "@types/archiver": "^7.0.0",
     "ai": "^6.0.99",
     "archiver": "^7.0.1",
@@ -54,6 +55,8 @@
     "pg": "^8.19.0",
     "pino": "^9.5.0",
     "pino-pretty": "^13.0.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
     "uuid": "^11.0.0",
     "zod": "^3.24.0"
   },
