@@ -4,13 +4,10 @@
   "workspaces": [
     "packages/shared",
     "packages/server",
-    "packages/client",
-    "packages/desktop"
+    "packages/client"
   ],
   "scripts": {
     "dev": "turbo run dev --filter=@atlas-platform/client --filter=@atlas-platform/server --filter=@atlas-platform/shared",
-    "dev:web": "turbo run dev --filter=@atlas-platform/client --filter=@atlas-platform/server",
-    "dev:desktop": "concurrently --kill-others \"npm run dev:web\" \"wait-on http://localhost:5180 && npm run dev --workspace=@atlas-platform/desktop\"",
     "test": "turbo run test",
     "test:e2e": "playwright test",
     "build": "turbo run build",
@@ -22,18 +19,21 @@
   "overrides": {
     "@tiptap/extension-color": "2.27.2",
     "@tiptap/extension-highlight": "2.27.2",
-    "@tiptap/extension-text-style": "2.27.2"
+    "@tiptap/extension-text-style": "2.27.2",
+    "vite": "^8.0.8",
+    "dompurify": "^3.3.3",
+    "nanoid": "^5.1.7",
+    "@excalidraw/mermaid-to-excalidraw": "^2.2.2",
+    "lodash-es": "^4.18.1"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
     "@playwright/test": "^1.58.2",
     "@types/node": "^22.0.0",
     "@vitest/coverage-v8": "^4.1.2",
-    "concurrently": "^9.2.1",
     "prettier": "^3.4.0",
     "turbo": "^2.3.0",
-    "typescript": "^5.6.0",
-    "wait-on": "^9.0.4"
+    "typescript": "^5.6.0"
   },
   "dependencies": {
     "@preact/signals": "^2.8.1",
