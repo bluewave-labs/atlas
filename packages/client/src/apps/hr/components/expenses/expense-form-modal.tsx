@@ -107,6 +107,18 @@ export function ExpenseFormModal({ open, onClose, expense }: ExpenseFormModalPro
     receiptPath: receiptPath || undefined,
   });
 
+  // Surface the actual server error message in the toast so the user
+  // knows WHY a save failed (e.g. "No employee record found for current
+  // user"), not just a generic "Failed to save".
+  const showSaveError = (err: unknown) => {
+    const serverMsg =
+      (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+    addToast({
+      type: 'error',
+      message: serverMsg || t('hr.expenses.saveFailed'),
+    });
+  };
+
   const handleSave = (andSubmit: boolean) => {
     if (!description.trim() || !amountNum) return;
 
@@ -121,15 +133,14 @@ export function ExpenseFormModal({ open, onClose, expense }: ExpenseFormModalPro
                 addToast({ type: 'success', message: t('hr.expenses.submitted') });
                 onClose();
               },
+              onError: showSaveError,
             });
           } else {
             addToast({ type: 'success', message: t('hr.expenses.saved') });
             onClose();
           }
         },
-        onError: () => {
-          addToast({ type: 'error', message: t('hr.expenses.saveFailed') });
-        },
+        onError: showSaveError,
       });
     } else {
       createExpense.mutate(input, {
@@ -140,15 +151,14 @@ export function ExpenseFormModal({ open, onClose, expense }: ExpenseFormModalPro
                 addToast({ type: 'success', message: t('hr.expenses.submitted') });
                 onClose();
               },
+              onError: showSaveError,
             });
           } else {
             addToast({ type: 'success', message: t('hr.expenses.saved') });
             onClose();
           }
         },
-        onError: () => {
-          addToast({ type: 'error', message: t('hr.expenses.saveFailed') });
-        },
+        onError: showSaveError,
       });
     }
   };
