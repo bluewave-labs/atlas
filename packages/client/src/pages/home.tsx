@@ -24,13 +24,15 @@ import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import '../styles/home.css';
 
 // App ids that use multicolor brand SVGs in the dock instead of lucide icons.
-// They render on a light/white card so the artwork reads clearly, replacing
-// the per-app gradient. Other apps keep their gradient cards.
+// They render on a light card so the artwork reads clearly, replacing the
+// per-app gradient. Other apps keep their gradient cards. Calendar uses a
+// blue gradient because its artwork is dark-grey + white and would vanish
+// against a white card.
 const BRAND_ICON_BACKGROUNDS: Record<string, string> = {
   crm: '#ffffff',
   projects: '#ffffff',
   hr: '#fff1ea',
-  calendar: '#f4f4f5',
+  calendar: 'linear-gradient(145deg, #5dadff 0%, #2563eb 50%, #1e3a8a 100%)',
 };
 
 // ---------------------------------------------------------------------------
