@@ -10,12 +10,6 @@ export async function listTimeOffRequests(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const { employeeId, status, type, includeArchived } = req.query;
 
     const requests = await hrService.listTimeOffRequests(userId, tenantId, {
@@ -130,12 +124,6 @@ export async function getLeaveBalances(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const employeeId = req.params.id as string;
     const year = parseInt(req.query.year as string) || new Date().getFullYear();
 
@@ -176,12 +164,6 @@ export async function allocateLeave(req: Request, res: Response) {
 export async function getLeaveBalancesSummary(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
-
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
 
     const balances = await hrService.getLeaveBalancesSummary(tenantId);
     res.json({ success: true, data: balances });

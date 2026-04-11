@@ -2729,7 +2729,8 @@
         "refuseComment": "Reason for refusal",
         "refuseCommentPlaceholder": "Enter reason..."
       }
-    }
+    },
+    "readOnlyNotice": "Read-only view — contact your HR admin to make changes."
   },
   "sign": {
     "title": "Agreements",

@@ -9,12 +9,6 @@ export async function listLeaveTypes(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const includeInactive = req.query.includeInactive === 'true';
     const data = await hrService.listLeaveTypes(tenantId, includeInactive);
     res.json({ success: true, data });
@@ -92,12 +86,6 @@ export async function deleteLeaveType(req: Request, res: Response) {
 export async function listLeavePolicies(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
-
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
 
     const data = await hrService.listLeavePolicies(tenantId);
     res.json({ success: true, data });
@@ -191,12 +179,6 @@ export async function getEmployeePolicy(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const data = await hrService.getEmployeePolicy(tenantId, req.params.id as string);
     res.json({ success: true, data });
   } catch (error) {
@@ -289,12 +271,6 @@ export async function listHolidayCalendars(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const data = await hrService.listHolidayCalendars(tenantId);
     res.json({ success: true, data });
   } catch (error) {
@@ -363,12 +339,6 @@ export async function deleteHolidayCalendar(req: Request, res: Response) {
 export async function listHolidays(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
-
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
 
     const data = await hrService.listHolidays(tenantId, req.params.id as string);
     res.json({ success: true, data });
@@ -464,12 +434,6 @@ export async function bulkImportHolidays(req: Request, res: Response) {
 export async function getWorkingDays(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
-
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
 
     const { start, end, calendarId } = req.query;
     if (!start || !end) { res.status(400).json({ success: false, error: 'start and end are required' }); return; }

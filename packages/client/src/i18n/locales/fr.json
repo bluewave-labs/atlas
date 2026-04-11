@@ -2697,7 +2697,8 @@
         "refuseComment": "Motif du refus",
         "refuseCommentPlaceholder": "Saisissez le motif..."
       }
-    }
+    },
+    "readOnlyNotice": "Vue en lecture seule — contactez votre administrateur RH pour effectuer des modifications."
   },
   "sign": {
     "title": "Accords",

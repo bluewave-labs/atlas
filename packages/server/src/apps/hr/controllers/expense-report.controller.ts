@@ -10,12 +10,6 @@ export async function listExpenseReports(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const { status, employeeId } = req.query;
     const data = await expenseReportService.listExpenseReports(tenantId, {
       status: status as string | undefined,
@@ -48,12 +42,6 @@ export async function getExpenseReport(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const data = await expenseReportService.getExpenseReport(tenantId, req.params.id as string);
     if (!data) {
       res.status(404).json({ success: false, error: 'Expense report not found' });
@@ -75,12 +63,6 @@ export async function createExpenseReport(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
     const userId = req.auth!.userId;
-
-    const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to access HR records' });
-      return;
-    }
 
     const employeeId = await findEmployeeIdByLinkedUser(userId, tenantId);
     if (!employeeId) {

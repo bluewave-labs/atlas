@@ -1,12 +1,15 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Info } from 'lucide-react';
 import { useLeaveCalendar } from '../../hooks';
+import { useMyAppPermission } from '../../../../hooks/use-app-permissions';
 import { IconButton } from '../../../../components/ui/icon-button';
 import { formatDate } from '../../../../lib/format';
 
 export function TeamCalendarView() {
   const { t } = useTranslation();
+  const { data: hrPerm } = useMyAppPermission('hr');
+  const isViewer = hrPerm?.role === 'viewer';
   const [currentMonth, setCurrentMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const { data: calendarData } = useLeaveCalendar(currentMonth);
 
@@ -35,6 +38,23 @@ export function TeamCalendarView() {
 
   return (
     <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-xl)' }}>
+      {isViewer && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 'var(--spacing-xs)',
+          marginBottom: 'var(--spacing-lg)',
+          padding: 'var(--spacing-xs) var(--spacing-sm)',
+          background: 'var(--color-surface-hover)',
+          borderRadius: 'var(--radius-sm)',
+          fontSize: 'var(--font-size-xs)',
+          color: 'var(--color-text-secondary)',
+          fontFamily: 'var(--font-family)',
+        }}>
+          <Info size={14} style={{ flexShrink: 0, marginTop: 1 }} />
+          {t('hr.readOnlyNotice')}
+        </div>
+      )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-xl)' }}>
         <IconButton icon={<ChevronLeft size={14} />} label={t('common.previous')} size={28} onClick={prevMonth} />
         <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)', minWidth: 180, textAlign: 'center' }}>

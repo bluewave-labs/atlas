@@ -2697,7 +2697,8 @@
         "refuseComment": "Motivo del rifiuto",
         "refuseCommentPlaceholder": "Inserisci il motivo..."
       }
-    }
+    },
+    "readOnlyNotice": "Vista di sola lettura — contatta il tuo amministratore HR per apportare modifiche."
   },
   "sign": {
     "title": "Accordi",

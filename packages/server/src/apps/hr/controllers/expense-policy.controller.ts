@@ -9,12 +9,6 @@ export async function listExpensePolicies(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const data = await expensePolicyService.listExpensePolicies(tenantId);
     res.json({ success: true, data });
   } catch (error) {
@@ -26,12 +20,6 @@ export async function listExpensePolicies(req: Request, res: Response) {
 export async function getExpensePolicy(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
-
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
 
     const data = await expensePolicyService.getExpensePolicy(tenantId, req.params.id as string);
     if (!data) {

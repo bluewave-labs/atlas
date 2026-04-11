@@ -178,8 +178,27 @@ export function HolidaysView() {
 
   const showYearNote = selectedYear > currentYear;
 
+  const isViewer = hrPerm?.role === 'viewer';
+
   return (
     <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-xl)' }}>
+      {isViewer && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 'var(--spacing-xs)',
+          marginBottom: 'var(--spacing-lg)',
+          padding: 'var(--spacing-xs) var(--spacing-sm)',
+          background: 'var(--color-surface-hover)',
+          borderRadius: 'var(--radius-sm)',
+          fontSize: 'var(--font-size-xs)',
+          color: 'var(--color-text-secondary)',
+          fontFamily: 'var(--font-family)',
+        }}>
+          <Info size={14} style={{ flexShrink: 0, marginTop: 1 }} />
+          {t('hr.readOnlyNotice')}
+        </div>
+      )}
       {/* Year tabs */}
       <div style={{
         display: 'flex',
@@ -421,8 +440,8 @@ export function HolidaysView() {
           {showAddHoliday && (
             <div style={{ marginTop: 'var(--spacing-lg)', padding: 'var(--spacing-lg)', border: '1px solid var(--color-border-primary)', borderRadius: 'var(--radius-lg)' }}>
               <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
-                <Input label={t('hr.holidays.name')} value={hName} onChange={(e) => setHName(e.target.value)} placeholder={t('hr.placeholder.holidayName')} style={{ flex: 1 }} autoFocus />
-                <Input label={t('hr.holidays.date')} type="date" value={hDate} onChange={(e) => setHDate(e.target.value)} style={{ flex: 1 }} />
+                <Input size="sm" label={t('hr.holidays.name')} value={hName} onChange={(e) => setHName(e.target.value)} placeholder={t('hr.placeholder.holidayName')} style={{ flex: 1 }} autoFocus />
+                <Input size="sm" label={t('hr.holidays.date')} type="date" value={hDate} onChange={(e) => setHDate(e.target.value)} style={{ flex: 1 }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)', flex: 1 }}>
                   <label className="hr-field-label">{t('hr.fields.type')}</label>
                   <Select value={hType} onChange={setHType} options={[

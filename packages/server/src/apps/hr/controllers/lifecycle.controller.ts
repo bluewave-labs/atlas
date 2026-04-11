@@ -9,12 +9,6 @@ export async function getLifecycleTimeline(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const data = await hrService.getLifecycleTimeline(tenantId, req.params.id as string);
     res.json({ success: true, data });
   } catch (error) {

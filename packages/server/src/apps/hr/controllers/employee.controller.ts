@@ -12,12 +12,6 @@ export async function getWidgetData(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const data = await dashboardService.getWidgetData(userId, tenantId);
     res.json({ success: true, data });
   } catch (error) {
@@ -34,11 +28,6 @@ export async function listEmployees(req: Request, res: Response) {
     const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const { status, departmentId, includeArchived } = req.query;
 
     const isAdmin = perm.role === 'admin' || perm.role === 'manager' || perm.role === 'editor';
@@ -76,11 +65,6 @@ export async function getEmployee(req: Request, res: Response) {
     const tenantId = req.auth!.tenantId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const id = req.params.id as string;
 
     const employee = await hrService.getEmployee(userId, tenantId, id);
@@ -220,12 +204,6 @@ export async function searchEmployees(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const query = (req.query.q as string) || '';
 
     if (!query.trim()) {
@@ -246,12 +224,6 @@ export async function getEmployeeCounts(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const counts = await hrService.getEmployeeCounts(userId, tenantId);
     res.json({ success: true, data: counts });
   } catch (error) {
@@ -266,12 +238,6 @@ export async function getDashboard(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
     const tenantId = req.auth!.tenantId;
-
-    const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
 
     const data = await dashboardService.getDashboardData(userId, tenantId);
     res.json({ success: true, data });

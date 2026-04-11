@@ -9,12 +9,6 @@ export async function listEmployeeDocuments(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const employeeId = req.params.id as string;
 
     const docs = await hrService.listEmployeeDocuments(tenantId, employeeId);
@@ -87,12 +81,6 @@ export async function deleteEmployeeDocument(req: Request, res: Response) {
 export async function downloadEmployeeDocument(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
-
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
 
     const docId = req.params.docId as string;
 

@@ -15,6 +15,8 @@ import {
   useSeedHrData, useDeleteDepartment,
   usePendingApprovals,
   usePendingExpenseCount,
+  useLeaveApplications,
+  useMyExpenses,
   type HrDepartment,
 } from './hooks';
 import { AppSidebar, SidebarSection, SidebarItem } from '../../components/layout/app-sidebar';
@@ -61,8 +63,11 @@ export function HrPage() {
   // Auth
   const authAccount = useAuthStore((s) => s.account);
 
-  // Permission gating
-  const { data: hrPerm } = useMyAppPermission('hr');
+  // Permission gating. We intentionally read `isPending` here — until the
+  // permission has loaded we can't know whether to show the admin or the
+  // portal sidebar, so we render a loading shell below instead of guessing
+  // (which caused a 'flash of admin view' on page load for portal users).
+  const { data: hrPerm, isPending: hrPermPending } = useMyAppPermission('hr');
   const isPortalUser = hrPerm?.role === 'viewer';
   const canCreate = !hrPerm || hrPerm.role === 'admin' || hrPerm.role === 'editor';
 
@@ -73,7 +78,12 @@ export function HrPage() {
   // permission bugs (see audit) so we can't default to it yet.
   const portalDefault = 'my-profile';
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeNav = (searchParams.get('view') || (isPortalUser ? portalDefault : hrDefaultView)) as NavSection;
+  // When the permission is still loading, don't commit to a default view
+  // yet — otherwise admin default loads, the redirect effect fires, and
+  // the user sees a visible bounce. If no ?view= is in the URL, hold
+  // activeNav as an empty string until perm arrives.
+  const urlView = searchParams.get('view');
+  const activeNav = (urlView || (hrPermPending ? '' : (isPortalUser ? portalDefault : hrDefaultView))) as NavSection;
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const setActiveNav = useCallback((nav: NavSection) => {
     setSearchParams({ view: nav });
@@ -121,6 +131,17 @@ export function HrPage() {
   const { data: pendingExpenseCountData } = usePendingExpenseCount();
   const pendingExpenseCount = (pendingExpenseCountData as any)?.count || 0;
 
+  // Portal-only: counts of the caller's own pending items (shown as sidebar
+  // badges on the Leave / Expenses items in the portal sidebar).
+  const { data: portalLeaveData } = useLeaveApplications();
+  const { data: portalExpenseData } = useMyExpenses();
+  const portalPendingLeaveCount = isPortalUser
+    ? (portalLeaveData ?? []).filter((l: any) => l.status === 'pending').length
+    : 0;
+  const portalPendingExpenseCount = isPortalUser
+    ? (portalExpenseData ?? []).filter((e: any) => e.status === 'submitted').length
+    : 0;
+
   const updateTimeOff = useUpdateTimeOff();
   const deleteTimeOff = useDeleteTimeOff();
   const deleteDepartment = useDeleteDepartment();
@@ -159,12 +180,15 @@ export function HrPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedEmployeeId, showSearch]);
 
-  // Portal users can only access portal views — redirect if they try admin views via URL
+  // Portal users can only access portal views — redirect if they try admin views via URL.
+  // Don't fire during permission loading, otherwise the user sees a
+  // visible bounce when the role resolves.
   useEffect(() => {
+    if (hrPermPending) return;
     if (isPortalUser && !PORTAL_VIEWS.has(activeNav)) {
       setActiveNav('my-profile');
     }
-  }, [isPortalUser, activeNav, setActiveNav]);
+  }, [hrPermPending, isPortalUser, activeNav, setActiveNav]);
 
   const sectionTitle = useMemo(() => {
     if (activeNav === 'dashboard') return t('hr.sidebar.dashboard');
@@ -212,7 +236,7 @@ export function HrPage() {
       <AppSidebar
         storageKey="atlas_hr_sidebar"
         title={t('hr.title')}
-        footer={!isPortalUser ? (
+        footer={!hrPermPending && !isPortalUser ? (
           <SidebarItem
             label={t('hr.sidebar.settings')}
             icon={<Settings2 size={14} />}
@@ -221,7 +245,12 @@ export function HrPage() {
           />
         ) : undefined}
       >
-        {isPortalUser ? (
+        {hrPermPending ? (
+          /* Permission still loading — render an empty sidebar shell so we
+             don't flash the admin view and then collapse to portal (or
+             vice-versa) once the real role resolves. */
+          null
+        ) : isPortalUser ? (
           /* ─── Portal sidebar (employees / viewers) ──────────── */
           <SidebarSection>
             <SidebarItem
@@ -236,6 +265,7 @@ export function HrPage() {
               icon={<CalendarDays size={14} />}
               iconColor="#f59e0b"
               isActive={activeNav === 'leave'}
+              count={portalPendingLeaveCount > 0 ? portalPendingLeaveCount : undefined}
               onClick={() => setActiveNav('leave')}
             />
             <SidebarItem
@@ -243,6 +273,7 @@ export function HrPage() {
               icon={<Receipt size={15} />}
               iconColor="#f97316"
               isActive={activeNav === 'expenses'}
+              count={portalPendingExpenseCount > 0 ? portalPendingExpenseCount : undefined}
               onClick={() => setActiveNav('expenses')}
             />
           </SidebarSection>

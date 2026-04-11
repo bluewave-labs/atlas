@@ -9,12 +9,6 @@ export async function listAttendance(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const { employeeId, date, startDate, endDate, status } = req.query;
     const data = await attendanceService.listAttendance(tenantId, {
       employeeId: employeeId as string | undefined,
@@ -105,12 +99,6 @@ export async function getAttendanceToday(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const data = await attendanceService.getTodaySummary(tenantId);
     res.json({ success: true, data });
   } catch (error) {
@@ -122,12 +110,6 @@ export async function getAttendanceToday(req: Request, res: Response) {
 export async function getAttendanceReport(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
-
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
 
     const month = (req.query.month as string) || new Date().toISOString().slice(0, 7);
     const data = await attendanceService.getMonthlyReport(tenantId, month);
@@ -141,12 +123,6 @@ export async function getAttendanceReport(req: Request, res: Response) {
 export async function getEmployeeAttendance(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
-
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
 
     const month = (req.query.month as string) || undefined;
     const data = await attendanceService.getEmployeeAttendance(tenantId, req.params.id as string, month);

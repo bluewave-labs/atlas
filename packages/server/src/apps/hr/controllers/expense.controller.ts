@@ -10,12 +10,6 @@ export async function listExpenses(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const { status, employeeId, categoryId, projectId, startDate, endDate, search } = req.query;
     const data = await expenseService.listExpenses(tenantId, {
       status: status as string | undefined,
@@ -62,12 +56,6 @@ export async function getExpense(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const data = await expenseService.getExpense(tenantId, req.params.id as string);
     if (!data) {
       res.status(404).json({ success: false, error: 'Expense not found' });
@@ -91,12 +79,6 @@ export async function createExpense(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
     const userId = req.auth!.userId;
-
-    const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to access HR records' });
-      return;
-    }
 
     const employeeId = await findEmployeeIdByLinkedUser(userId, tenantId);
     if (!employeeId) {
@@ -122,11 +104,6 @@ export async function updateExpense(req: Request, res: Response) {
     const userId = req.auth!.userId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to access HR records' });
-      return;
-    }
-
     // If the caller doesn't have blanket update permission, verify the
     // expense belongs to them via their linked employee record.
     if (!canAccess(perm.role, 'update')) {
@@ -164,11 +141,6 @@ export async function deleteExpense(req: Request, res: Response) {
     const userId = req.auth!.userId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to access HR records' });
-      return;
-    }
-
     if (!canAccess(perm.role, 'delete') && !canAccess(perm.role, 'delete_own')) {
       const callerEmployeeId = await findEmployeeIdByLinkedUser(userId, tenantId);
       if (!callerEmployeeId) {
@@ -207,11 +179,6 @@ export async function submitExpense(req: Request, res: Response) {
     const userId = req.auth!.userId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to access HR records' });
-      return;
-    }
-
     const employeeId = await findEmployeeIdByLinkedUser(userId, tenantId);
     if (!employeeId) {
       res.status(400).json({ success: false, error: 'No employee record found for current user' });
@@ -249,11 +216,6 @@ export async function recallExpense(req: Request, res: Response) {
     const userId = req.auth!.userId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to access HR records' });
-      return;
-    }
-
     if (!canAccess(perm.role, 'update')) {
       const callerEmployeeId = await findEmployeeIdByLinkedUser(userId, tenantId);
       if (!callerEmployeeId) {
@@ -374,12 +336,6 @@ export async function getPendingExpenses(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
     const userId = req.auth!.userId;
-
-    const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
 
     const approverId = await findEmployeeIdByLinkedUser(userId, tenantId);
     if (!approverId) {

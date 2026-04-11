@@ -2697,7 +2697,8 @@
         "refuseComment": "Ablehnungsgrund",
         "refuseCommentPlaceholder": "Grund eingeben..."
       }
-    }
+    },
+    "readOnlyNotice": "Schreibgeschützte Ansicht — wenden Sie sich an Ihren HR-Admin für Änderungen."
   },
   "sign": {
     "title": "Vereinbarungen",

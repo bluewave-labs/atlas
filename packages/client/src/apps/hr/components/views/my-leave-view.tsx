@@ -169,12 +169,6 @@ export function MyLeaveView({ employees }: { employees: HrEmployee[] }) {
           </Modal.Footer>
         </Modal>
       )}
-
-      <div style={{ marginTop: 'var(--spacing-lg)' }}>
-        <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={() => setShowRequest(true)}>
-          {t('hr.myLeave.requestLeave')}
-        </Button>
-      </div>
     </div>
   );
 }

@@ -2697,7 +2697,8 @@
         "refuseComment": "Ret nedeni",
         "refuseCommentPlaceholder": "Nedenini girin..."
       }
-    }
+    },
+    "readOnlyNotice": "Salt okunur görünüm — değişiklik için İK yöneticinizle iletişime geçin."
   },
   "sign": {
     "title": "Sözleşmeler",

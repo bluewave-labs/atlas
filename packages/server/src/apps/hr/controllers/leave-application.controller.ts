@@ -22,11 +22,6 @@ export async function listLeaveApplications(req: Request, res: Response) {
     const userId = req.auth!.userId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const { employeeId, status, startDate, endDate } = req.query;
 
     // For non-privileged roles (viewers who only have 'view' perm),
@@ -64,11 +59,6 @@ export async function createLeaveApplication(req: Request, res: Response) {
     const userId = req.auth!.userId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to access HR records' });
-      return;
-    }
-
     const { leaveTypeId, startDate, endDate, halfDay, halfDayDate, reason } = req.body;
     let { employeeId } = req.body;
 
@@ -118,11 +108,6 @@ export async function updateLeaveApplication(req: Request, res: Response) {
     const userId = req.auth!.userId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to access HR records' });
-      return;
-    }
-
     // Ownership check for non-privileged roles.
     if (!canAccess(perm.role, 'update')) {
       const callerEmployeeId = await findEmployeeIdByLinkedUser(userId, tenantId);
@@ -152,11 +137,6 @@ export async function submitLeaveApplication(req: Request, res: Response) {
     const userId = req.auth!.userId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to access HR records' });
-      return;
-    }
-
     // Ownership check for non-privileged roles — a viewer may submit
     // their own draft leave application but not anyone else's.
     if (!canAccess(perm.role, 'update')) {
@@ -271,11 +251,6 @@ export async function cancelLeaveApplication(req: Request, res: Response) {
     const userId = req.auth!.userId;
 
     const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to access HR records' });
-      return;
-    }
-
     // Ownership check for non-privileged roles.
     if (!canAccess(perm.role, 'update')) {
       const callerEmployeeId = await findEmployeeIdByLinkedUser(userId, tenantId);
@@ -304,12 +279,6 @@ export async function getPendingApprovals(req: Request, res: Response) {
     const tenantId = req.auth!.tenantId;
     const userId = req.auth!.userId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const data = await leaveService.getPendingApprovals(tenantId, userId);
     res.json({ success: true, data });
   } catch (error) {
@@ -321,12 +290,6 @@ export async function getPendingApprovals(req: Request, res: Response) {
 export async function getLeaveCalendar(req: Request, res: Response) {
   try {
     const tenantId = req.auth!.tenantId;
-
-    const perm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
 
     const month = (req.query.month as string) || new Date().toISOString().slice(0, 7);
     const data = await leaveService.getLeaveCalendar(tenantId, month);

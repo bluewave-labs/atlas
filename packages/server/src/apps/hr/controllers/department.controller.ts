@@ -10,12 +10,6 @@ export async function listDepartments(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const tenantId = req.auth!.tenantId;
 
-    const perm = await getAppPermission(req.auth?.tenantId, userId, 'hr');
-    if (!canAccess(perm.role, 'view')) {
-      res.status(403).json({ success: false, error: 'No permission to view HR data' });
-      return;
-    }
-
     const includeArchived = req.query.includeArchived === 'true';
 
     const depts = await hrService.listDepartments(userId, tenantId, includeArchived);
