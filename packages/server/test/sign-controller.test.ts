@@ -34,6 +34,7 @@ vi.mock('../src/services/app-permissions.service', () => ({
   getAppPermission: vi.fn().mockResolvedValue({ role: 'owner' }),
   canAccess: vi.fn().mockReturnValue(true),
   canAccessEntity: vi.fn().mockReturnValue(true),
+  decideRecordDelete: vi.fn().mockReturnValue('allow'),
 }));
 
 // Mock reminder module (imported by documents.controller)

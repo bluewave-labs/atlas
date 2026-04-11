@@ -192,6 +192,8 @@ describe('docs controller — deleteDocument', () => {
   });
 
   it('deletes a document (soft delete) and returns success', async () => {
+    // Controller loads the document first to enforce real ownership before delete.
+    vi.mocked(documentService.getDocument).mockResolvedValue({ id: 'd1', userId: 'u1' } as any);
     vi.mocked(documentService.deleteDocument).mockResolvedValue(undefined as any);
 
     const req = makeReq({ params: { id: 'd1' } });
@@ -199,6 +201,7 @@ describe('docs controller — deleteDocument', () => {
 
     await controller.deleteDocument(req, res);
 
+    expect(documentService.getDocument).toHaveBeenCalled();
     expect(documentService.deleteDocument).toHaveBeenCalledWith('u1', 'd1');
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: null })
@@ -206,6 +209,7 @@ describe('docs controller — deleteDocument', () => {
   });
 
   it('returns 500 when service throws an error', async () => {
+    vi.mocked(documentService.getDocument).mockResolvedValue({ id: 'd1', userId: 'u1' } as any);
     vi.mocked(documentService.deleteDocument).mockRejectedValue(new Error('DB failure'));
 
     const req = makeReq({ params: { id: 'd1' } });

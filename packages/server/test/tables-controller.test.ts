@@ -17,6 +17,7 @@ vi.mock('../src/apps/tables/service', () => ({
 vi.mock('../src/services/app-permissions.service', () => ({
   getAppPermission: vi.fn().mockResolvedValue({ role: 'owner' }),
   canAccess: vi.fn().mockReturnValue(true),
+  decideRecordDelete: vi.fn().mockReturnValue('allow'),
 }));
 
 // Mock logger to keep test output clean
@@ -221,7 +222,9 @@ describe('tables controller - deleteSpreadsheet', () => {
   });
 
   it('returns 404 when spreadsheet to delete is not found', async () => {
-    vi.mocked(tableService.deleteSpreadsheet).mockResolvedValue(null as any);
+    // New flow: controller calls getSpreadsheet first. Returning null should
+    // short-circuit with a 404 before the delete service is touched.
+    vi.mocked(tableService.getSpreadsheet).mockResolvedValue(null as any);
 
     const req = makeReq({ params: { id: 'missing' } });
     const res = makeRes();
@@ -235,6 +238,7 @@ describe('tables controller - deleteSpreadsheet', () => {
   });
 
   it('deletes the spreadsheet successfully', async () => {
+    vi.mocked(tableService.getSpreadsheet).mockResolvedValue({ id: 's1', userId: 'u1' } as any);
     vi.mocked(tableService.deleteSpreadsheet).mockResolvedValue({ id: 's1' } as any);
 
     const req = makeReq({ params: { id: 's1' } });

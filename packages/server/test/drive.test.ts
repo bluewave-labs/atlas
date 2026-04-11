@@ -26,6 +26,7 @@ vi.mock('../src/services/app-permissions.service', () => ({
   canAccess: vi.fn().mockReturnValue(true),
   canAccessEntity: vi.fn().mockReturnValue(true),
   getRecordFilter: vi.fn().mockReturnValue(undefined),
+  decideRecordDelete: vi.fn().mockReturnValue('allow'),
 }));
 
 import * as controller from '../src/apps/drive/controller';
@@ -150,7 +151,10 @@ describe('drive controller — deleteItem', () => {
   });
 
   it('calls driveService.deleteItem and returns success', async () => {
+    // Controller now loads the item first to enforce ownership for delete_own.
+    vi.mocked(driveService.getItem).mockResolvedValue({ id: 'item-to-delete', userId: 'u1' } as any);
     vi.mocked(driveService.deleteItem).mockResolvedValue(undefined as any);
+    vi.mocked(driveService.logDriveActivity).mockResolvedValue(undefined as any);
 
     const req = makeReq({ params: { id: 'item-to-delete' } });
     const res = makeRes();

@@ -18,6 +18,7 @@ vi.mock('../src/apps/draw/service', () => ({
 vi.mock('../src/services/app-permissions.service', () => ({
   getAppPermission: vi.fn().mockResolvedValue({ role: 'owner' }),
   canAccess: vi.fn().mockReturnValue(true),
+  decideRecordDelete: vi.fn().mockReturnValue('allow'),
 }));
 
 import * as controller from '../src/apps/draw/controller';
@@ -213,6 +214,7 @@ describe('draw controller - deleteDrawing', () => {
   });
 
   it('deletes the drawing successfully', async () => {
+    vi.mocked(drawingService.getDrawing).mockResolvedValue({ id: 'd1', userId: 'u1' } as any);
     vi.mocked(drawingService.deleteDrawing).mockResolvedValue(undefined as any);
 
     const req = makeReq({ params: { id: 'd1' } });
@@ -227,6 +229,7 @@ describe('draw controller - deleteDrawing', () => {
   });
 
   it('returns 500 when service throws on delete', async () => {
+    vi.mocked(drawingService.getDrawing).mockResolvedValue({ id: 'd1', userId: 'u1' } as any);
     vi.mocked(drawingService.deleteDrawing).mockRejectedValue(new Error('DB error'));
 
     const req = makeReq({ params: { id: 'd1' } });
@@ -247,7 +250,8 @@ describe('draw controller - restoreDrawing', () => {
   });
 
   it('returns 404 when drawing to restore is not found', async () => {
-    vi.mocked(drawingService.restoreDrawing).mockResolvedValue(null as any);
+    // Controller now short-circuits on the pre-flight getDrawing call.
+    vi.mocked(drawingService.getDrawing).mockResolvedValue(null as any);
 
     const req = makeReq({ params: { id: 'missing' } });
     const res = makeRes();

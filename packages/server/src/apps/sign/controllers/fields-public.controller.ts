@@ -469,6 +469,22 @@ export async function deleteTemplate(req: Request, res: Response) {
     const tenantId = req.auth!.tenantId;
     const templateId = req.params.id as string;
 
+    const existing = await signService.getSignTemplateById(templateId);
+    // Templates are tenant-scoped; reject cross-tenant access outright.
+    if (!existing || existing.tenantId !== tenantId) {
+      res.status(404).json({ success: false, error: 'Template not found' });
+      return;
+    }
+    const decision = decideRecordDelete(perm.role, existing.userId, userId);
+    if (decision === 'forbid') {
+      res.status(403).json({ success: false, error: 'No permission to delete sign templates' });
+      return;
+    }
+    if (decision === 'not_own') {
+      res.status(404).json({ success: false, error: 'Template not found' });
+      return;
+    }
+
     await signService.deleteTemplate(userId, tenantId, templateId);
     res.json({ success: true, data: null });
   } catch (error) {

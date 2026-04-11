@@ -28,6 +28,7 @@ vi.mock('../src/services/event.service', () => ({
 vi.mock('../src/services/app-permissions.service', () => ({
   getAppPermission: vi.fn().mockResolvedValue({ role: 'admin', recordAccess: 'all', entityPermissions: null }),
   canAccess: vi.fn().mockReturnValue(true),
+  decideRecordDelete: vi.fn().mockReturnValue('allow'),
 }));
 
 import * as controller from '../src/apps/tasks/controller';
@@ -201,6 +202,9 @@ describe('tasks controller — deleteTask', () => {
   });
 
   it('deletes a task and returns success', async () => {
+    // The controller now loads the task first to enforce real ownership
+    // for the `delete_own` path before calling the service.
+    vi.mocked(taskService.getTask).mockResolvedValue({ id: 't1', userId: 'u1' } as any);
     vi.mocked(taskService.deleteTask).mockResolvedValue(undefined as any);
 
     const req = makeReq({ params: { id: 't1' } });
@@ -208,6 +212,7 @@ describe('tasks controller — deleteTask', () => {
 
     await controller.deleteTask(req, res);
 
+    expect(taskService.getTask).toHaveBeenCalled();
     expect(taskService.deleteTask).toHaveBeenCalledWith('u1', 't1');
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: null })
