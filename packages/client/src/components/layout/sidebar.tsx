@@ -45,6 +45,7 @@ const BRAND_ICON_BACKGROUNDS: Record<string, string> = {
   crm: '#ffffff',
   projects: '#ffffff',
   drive: '#ffffff',
+  tables: '#ffffff',
   hr: '#fff1ea',
   // Calendar artwork is dark-grey + white, so it needs a coloured backdrop.
   calendar: 'linear-gradient(145deg, #5dadff 0%, #2563eb 50%, #1e3a8a 100%)',

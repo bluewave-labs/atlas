@@ -68,14 +68,14 @@ service.ts           — Business logic + database queries
 | Sign | sign | #8b5cf6 | PenTool | 30 | /sign-app |
 | Invoices | invoices | #0ea5e9 | Receipt | 35 | /invoices |
 | Drive | drive | #64748b | DriveIcon (brand) | 40 | /drive, /drive/folder/:id |
-| Tables | tables | #2d8a6e | Table2 | 50 | /tables, /tables/:id |
+| Tables | tables | #2d8a6e | TablesIcon (brand) | 50 | /tables, /tables/:id |
 | Tasks | tasks | #6366f1 | CheckSquare | 60 | /tasks |
 | Write | docs | #c4856c | FileText | 70 | /docs, /docs/:id |
 | Draw | draw | #e06c9f | Pencil | 80 | /draw, /draw/:id |
 | Marketplace | marketplace | #8b5cf6 | Store | 85 | /marketplace |
 | System | system | #6b7280 | Monitor | 90 | /system |
 
-> **Note:** CRM, HRM, Projects, Calendar, and Drive use custom multicolor brand SVGs (defined in `packages/client/src/components/icons/app-icons.tsx`) instead of lucide icons in the dockbar. The dockbar renders them on a small white/light card via `BRAND_ICON_BACKGROUNDS` in `sidebar.tsx` and `home.tsx`. All other apps still use lucide. Calendar is **client-only** — there is no `packages/server/src/apps/calendar/`.
+> **Note:** CRM, HRM, Projects, Calendar, Drive, and Tables use custom multicolor brand SVGs (defined in `packages/client/src/components/icons/app-icons.tsx`) instead of lucide icons in the dockbar. The dockbar renders them on a small white/light card via `BRAND_ICON_BACKGROUNDS` in `sidebar.tsx` and `home.tsx`. All other apps still use lucide. Calendar is **client-only** — there is no `packages/server/src/apps/calendar/`.
 
 ---
 

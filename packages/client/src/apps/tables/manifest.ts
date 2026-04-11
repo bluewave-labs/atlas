@@ -1,5 +1,6 @@
 import { Table2, Settings, Languages } from 'lucide-react';
 import type { ClientAppManifest } from '../../config/app-manifest.client';
+import { TablesIcon } from '../../components/icons/app-icons';
 import { TablesPage } from './page';
 import { TablesGeneralPanel, TablesRegionalPanel } from './components/tables-settings-modal';
 
@@ -8,7 +9,7 @@ export const tablesManifest: ClientAppManifest = {
   name: 'Tables',
   labelKey: 'sidebar.tables',
   iconName: 'Table2',
-  icon: Table2,
+  icon: TablesIcon,
   color: '#2d8a6e',
   minPlan: 'starter',
   category: 'data',
