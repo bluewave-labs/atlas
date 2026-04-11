@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import * as taskService from '../service';
 import { logger } from '../../../utils/logger';
 import { emitAppEvent } from '../../../services/event.service';
-import { getAppPermission, canAccess } from '../../../services/app-permissions.service';
+import { getAppPermission, canAccess, decideRecordDelete } from '../../../services/app-permissions.service';
 
 // ─── Widget ─────────────────────────────────────────────────────────
 
@@ -160,7 +160,22 @@ export async function deleteTask(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const taskId = req.params.id as string;
 
-    await taskService.deleteTask(userId, taskId);
+    const existing = await taskService.getTask(userId, taskId, req.auth!.tenantId ?? null);
+    if (!existing) {
+      res.status(404).json({ success: false, error: 'Task not found' });
+      return;
+    }
+    const decision = decideRecordDelete(perm.role, existing.userId, userId);
+    if (decision === 'forbid') {
+      res.status(403).json({ success: false, error: 'No permission to delete' });
+      return;
+    }
+    if (decision === 'not_own') {
+      res.status(404).json({ success: false, error: 'Task not found' });
+      return;
+    }
+
+    await taskService.deleteTask(existing.userId, taskId);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete task');
@@ -337,7 +352,22 @@ export async function deleteProject(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const projectId = req.params.id as string;
 
-    await taskService.deleteProject(userId, projectId);
+    const existing = await taskService.getProject(userId, projectId, req.auth!.tenantId ?? null);
+    if (!existing) {
+      res.status(404).json({ success: false, error: 'Project not found' });
+      return;
+    }
+    const decision = decideRecordDelete(perm.role, existing.userId, userId);
+    if (decision === 'forbid') {
+      res.status(403).json({ success: false, error: 'No permission to delete' });
+      return;
+    }
+    if (decision === 'not_own') {
+      res.status(404).json({ success: false, error: 'Project not found' });
+      return;
+    }
+
+    await taskService.deleteProject(existing.userId, projectId);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete project');

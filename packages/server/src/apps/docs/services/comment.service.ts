@@ -37,6 +37,17 @@ export async function updateComment(userId: string, commentId: string, data: { c
   return updated || null;
 }
 
+export async function getCommentById(commentId: string) {
+  const [row] = await db.select().from(documentComments)
+    .where(eq(documentComments.id, commentId))
+    .limit(1);
+  return row || null;
+}
+
+export async function deleteCommentById(commentId: string) {
+  await db.delete(documentComments).where(eq(documentComments.id, commentId));
+}
+
 export async function deleteComment(userId: string, commentId: string) {
   await db.delete(documentComments)
     .where(and(eq(documentComments.id, commentId), eq(documentComments.userId, userId)));

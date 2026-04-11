@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api-client';
 import { queryKeys } from '../config/query-keys';
 
-export type AppRole = 'admin' | 'manager' | 'editor' | 'viewer';
+export type AppRole = 'admin' | 'editor' | 'viewer';
 export type AppRecordAccess = 'all' | 'own';
 
 export interface AppPermission {
@@ -30,8 +30,8 @@ export function useAppActions(appId: string) {
     canView: !perm || perm.role === 'admin' || perm.role === 'editor' || perm.role === 'viewer',
     canCreate: !perm || perm.role === 'admin' || perm.role === 'editor',
     canEdit: !perm || perm.role === 'admin' || perm.role === 'editor',
-    canDelete: !perm || perm.role === 'admin' || perm.role === 'manager',
-    canDeleteOwn: !perm || perm.role === 'admin' || perm.role === 'manager' || perm.role === 'editor',
+    canDelete: !perm || perm.role === 'admin',
+    canDeleteOwn: !perm || perm.role === 'admin' || perm.role === 'editor',
     role: perm?.role ?? null,
   };
 }

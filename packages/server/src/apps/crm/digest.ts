@@ -1,5 +1,5 @@
 import { db } from '../../config/database';
-import { crmLeads, crmDeals, crmActivities, crmPermissions, users, tenantMembers } from '../../db/schema';
+import { crmLeads, crmDeals, crmActivities, appPermissions, users, tenantMembers } from '../../db/schema';
 import { eq, and, gte, sql } from 'drizzle-orm';
 import { logger } from '../../utils/logger';
 import { sendEmail } from '../../services/email.service';
@@ -160,13 +160,14 @@ async function sendDigests(): Promise<number> {
     // Get all accounts with CRM permissions
     const crmUsers = await db
       .select({
-        tenantId: crmPermissions.tenantId,
-        userId: crmPermissions.userId,
+        tenantId: appPermissions.tenantId,
+        userId: appPermissions.userId,
         email: users.email,
         name: users.name,
       })
-      .from(crmPermissions)
-      .innerJoin(users, eq(crmPermissions.userId, users.id));
+      .from(appPermissions)
+      .innerJoin(users, eq(appPermissions.userId, users.id))
+      .where(eq(appPermissions.appId, 'crm'));
 
     // Group by account
     const byAccount = new Map<string, { email: string; name: string | null }[]>();

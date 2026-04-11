@@ -1,5 +1,5 @@
 import { useState, useMemo, type CSSProperties } from 'react';
-import { Shield, Users, Check, X, Eye, Plus, Pencil, Trash2, Info, Crown, Briefcase, TrendingUp, EyeIcon } from 'lucide-react';
+import { Shield, Users, Check, X, Eye, Plus, Pencil, Trash2, Info, Crown, EyeIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   useCrmPermissions,
@@ -21,9 +21,9 @@ import { StatCard } from '../../../components/ui/stat-card';
 
 // ─── Constants ──────────────────────────────────────────────────────
 
-const ROLES: CrmRole[] = ['admin', 'manager', 'sales', 'viewer'];
+const ROLES: CrmRole[] = ['admin', 'editor', 'viewer'];
 
-function getEntities(t: (key: string) => string): { id: CrmEntity; label: string; icon: typeof Eye }[] {
+function getEntities(t: any): { id: CrmEntity; label: string; icon: typeof Eye }[] {
   return [
     { id: 'deals', label: t('crm.sidebar.deals'), icon: Eye },
     { id: 'contacts', label: t('crm.sidebar.contacts'), icon: Eye },
@@ -34,7 +34,7 @@ function getEntities(t: (key: string) => string): { id: CrmEntity; label: string
   ];
 }
 
-function getOperations(t: (key: string) => string): { id: CrmOperation; label: string; icon: typeof Eye }[] {
+function getOperations(t: any): { id: CrmOperation; label: string; icon: typeof Eye }[] {
   return [
     { id: 'view', label: t('crm.permissions.view'), icon: Eye },
     { id: 'create', label: t('crm.permissions.create'), icon: Plus },
@@ -43,16 +43,15 @@ function getOperations(t: (key: string) => string): { id: CrmOperation; label: s
   ];
 }
 
-function getRoleOptions(t: (key: string) => string) {
+function getRoleOptions(t: any) {
   return [
     { value: 'admin', label: t('crm.permissions.admin') },
-    { value: 'manager', label: t('crm.permissions.manager') },
-    { value: 'sales', label: t('crm.permissions.sales') },
+    { value: 'editor', label: t('crm.permissions.editor', 'Editor') },
     { value: 'viewer', label: t('crm.permissions.viewer') },
   ];
 }
 
-function getAccessOptions(t: (key: string) => string) {
+function getAccessOptions(t: any) {
   return [
     { value: 'all', label: t('crm.permissions.allRecords') },
     { value: 'own', label: t('crm.permissions.ownRecords') },
@@ -61,24 +60,21 @@ function getAccessOptions(t: (key: string) => string) {
 
 const ROLE_COLORS: Record<CrmRole, string> = {
   admin: '#7c3aed',
-  manager: '#2563eb',
-  sales: '#f59e0b',
+  editor: '#2563eb',
   viewer: '#6b7280',
 };
 
-function getRoleDescriptions(t: (key: string) => string): Record<CrmRole, string> {
+function getRoleDescriptions(t: any): Record<CrmRole, string> {
   return {
     admin: t('crm.permissions.adminDesc'),
-    manager: t('crm.permissions.managerDesc'),
-    sales: t('crm.permissions.salesDesc'),
+    editor: t('crm.permissions.editorDesc', 'Can create, view and edit records but cannot manage permissions or workflows'),
     viewer: t('crm.permissions.viewerDesc'),
   };
 }
 
 const ROLE_ICONS: Record<CrmRole, typeof Crown> = {
   admin: Crown,
-  manager: Briefcase,
-  sales: TrendingUp,
+  editor: Pencil,
   viewer: EyeIcon,
 };
 
@@ -358,7 +354,7 @@ export function PermissionsView() {
       {/* Role descriptions */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
+        gridTemplateColumns: 'repeat(3, 1fr)',
         gap: 'var(--spacing-sm)',
         marginBottom: 'var(--spacing-xl)',
       }}>

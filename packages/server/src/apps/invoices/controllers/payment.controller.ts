@@ -23,7 +23,7 @@ export async function listPayments(req: Request, res: Response) {
   }
 
   const invoiceId = req.params.invoiceId as string;
-  const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+  const isAdmin = perm.role === 'admin';
   const parent = await invoiceService.getInvoice(req.auth!.userId, tenantId, invoiceId, isAdmin ? undefined : req.auth!.userId);
   if (!parent) {
     res.status(404).json({ success: false, error: 'Invoice not found' });
@@ -47,7 +47,7 @@ export async function recordPayment(req: Request, res: Response) {
   }
 
   const invoiceId = req.params.invoiceId as string;
-  const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+  const isAdmin = perm.role === 'admin';
   const parent = await invoiceService.getInvoice(req.auth!.userId, tenantId, invoiceId, isAdmin ? undefined : req.auth!.userId);
   if (!parent) {
     res.status(404).json({ success: false, error: 'Invoice not found' });
@@ -77,7 +77,7 @@ export async function updatePayment(req: Request, res: Response) {
     res.status(404).json({ success: false, error: 'Payment not found' });
     return;
   }
-  const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+  const isAdmin = perm.role === 'admin';
   const parent = await invoiceService.getInvoice(req.auth!.userId, tenantId, parentInvoiceId, isAdmin ? undefined : req.auth!.userId);
   if (!parent) {
     res.status(404).json({ success: false, error: 'Payment not found' });
@@ -106,7 +106,7 @@ export async function deletePayment(req: Request, res: Response) {
     res.status(404).json({ success: false, error: 'Payment not found' });
     return;
   }
-  const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+  const isAdmin = perm.role === 'admin';
   const parent = await invoiceService.getInvoice(req.auth!.userId, tenantId, parentInvoiceId, isAdmin ? undefined : req.auth!.userId);
   if (!parent) {
     res.status(404).json({ success: false, error: 'Payment not found' });

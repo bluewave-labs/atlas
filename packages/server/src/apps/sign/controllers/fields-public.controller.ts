@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import * as signService from '../service';
 import { logger } from '../../../utils/logger';
 import { emitAppEvent } from '../../../services/event.service';
-import { getAppPermission, canAccess } from '../../../services/app-permissions.service';
+import { getAppPermission, canAccess, decideRecordDelete } from '../../../services/app-permissions.service';
 import path from 'node:path';
 import { existsSync, createReadStream, statSync } from 'node:fs';
 
@@ -88,7 +88,25 @@ export async function deleteField(req: Request, res: Response) {
       return;
     }
 
+    const userId = req.auth!.userId;
     const fieldId = req.params.fieldId as string;
+
+    // Fields inherit ownership from their parent document.
+    const field = await signService.getFieldWithOwner(fieldId);
+    if (!field || !field.ownerUserId) {
+      res.status(404).json({ success: false, error: 'Field not found' });
+      return;
+    }
+    const decision = decideRecordDelete(perm.role, field.ownerUserId, userId);
+    if (decision === 'forbid') {
+      res.status(403).json({ success: false, error: 'No permission to delete sign fields' });
+      return;
+    }
+    if (decision === 'not_own') {
+      res.status(404).json({ success: false, error: 'Field not found' });
+      return;
+    }
+
     await signService.deleteField(fieldId);
     res.json({ success: true, data: null });
   } catch (error) {

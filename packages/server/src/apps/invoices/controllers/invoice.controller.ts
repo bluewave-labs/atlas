@@ -19,7 +19,7 @@ export async function listInvoices(req: Request, res: Response) {
     const tenantId = req.auth!.tenantId;
     const { companyId, contactId, dealId, status, search, includeArchived } = req.query;
 
-    const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+    const isAdmin = perm.role === 'admin';
     const invoicesList = await invoiceService.listInvoices(userId, tenantId, {
       companyId: companyId as string | undefined,
       contactId: contactId as string | undefined,
@@ -49,7 +49,7 @@ export async function getInvoice(req: Request, res: Response) {
     const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+    const isAdmin = perm.role === 'admin';
     const invoice = await invoiceService.getInvoice(userId, tenantId, id, isAdmin ? undefined : userId);
     if (!invoice) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
@@ -134,7 +134,7 @@ export async function updateInvoice(req: Request, res: Response) {
       issueDate, dueDate, notes, isArchived,
     } = req.body;
 
-    const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+    const isAdmin = perm.role === 'admin';
     const invoice = await invoiceService.updateInvoice(userId, tenantId, id, {
       companyId, contactId, dealId, proposalId,
       invoiceNumber, status, subtotal, taxPercent, taxAmount,
@@ -166,7 +166,7 @@ export async function deleteInvoice(req: Request, res: Response) {
     const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+    const isAdmin = perm.role === 'admin';
     const deleted = await invoiceService.deleteInvoice(userId, tenantId, id, isAdmin ? undefined : userId);
     if (!deleted) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
@@ -203,7 +203,7 @@ export async function sendInvoice(req: Request, res: Response) {
     };
 
     // Ownership guard: non-admins can only send their own invoices.
-    const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+    const isAdmin = perm.role === 'admin';
     const ownedCheck = await invoiceService.getInvoice(userId, tenantId, id, isAdmin ? undefined : userId);
     if (!ownedCheck) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
@@ -289,7 +289,7 @@ export async function emailInvoice(req: Request, res: Response) {
 
     // Verify the invoice exists and is not in draft status. Non-admins can
     // only re-email their own invoices.
-    const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+    const isAdmin = perm.role === 'admin';
     const existing = await invoiceService.getInvoice(userId, tenantId, id, isAdmin ? undefined : userId);
     if (!existing) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
@@ -339,7 +339,7 @@ export async function markInvoicePaid(req: Request, res: Response) {
     const id = req.params.id as string;
 
     // Ownership guard: non-admins can only mark their own invoices as paid.
-    const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+    const isAdmin = perm.role === 'admin';
     const ownedCheck = await invoiceService.getInvoice(userId, tenantId, id, isAdmin ? undefined : userId);
     if (!ownedCheck) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
@@ -383,7 +383,7 @@ export async function waiveInvoice(req: Request, res: Response) {
     const id = req.params.id as string;
 
     // Ownership guard: non-admins can only waive their own invoices.
-    const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+    const isAdmin = perm.role === 'admin';
     const ownedCheck = await invoiceService.getInvoice(userId, tenantId, id, isAdmin ? undefined : userId);
     if (!ownedCheck) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
@@ -418,7 +418,7 @@ export async function duplicateInvoice(req: Request, res: Response) {
     // Ownership guard: non-admins can only duplicate their own invoices.
     // (duplicateInvoice internally calls getInvoice; we gate it up-front.)
     const viewPerm = await getAppPermission(req.auth?.tenantId, req.auth!.userId, 'invoices');
-    const isAdmin = viewPerm.role === 'admin' || viewPerm.role === 'manager';
+    const isAdmin = viewPerm.role === 'admin';
     const ownedCheck = await invoiceService.getInvoice(userId, tenantId, id, isAdmin ? undefined : userId);
     if (!ownedCheck) {
       res.status(404).json({ success: false, error: 'Invoice not found' });

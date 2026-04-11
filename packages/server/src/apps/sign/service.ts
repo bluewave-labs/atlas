@@ -21,6 +21,7 @@ export {
   createField,
   updateField,
   deleteField,
+  getFieldWithOwner,
   createSigningToken,
   listSigningTokens,
   getNextPendingSigner,
@@ -39,5 +40,6 @@ export {
   saveAsTemplate,
   createDocumentFromTemplate,
   deleteTemplate,
+  getTemplateById as getSignTemplateById,
   seedStarterTemplates,
 } from './services/templates.service';

@@ -1,8 +1,29 @@
 import type { Request, Response } from 'express';
 import { listCrmPermissions, upsertCrmPermission } from '../permissions';
 import { logger } from '../../../utils/logger';
-import { getAppPermission } from '../../../services/app-permissions.service';
-import type { CrmRole, CrmRecordAccess } from '@atlas-platform/shared';
+import {
+  getAppPermission,
+  type AppRole,
+  type AppRecordAccess,
+} from '../../../services/app-permissions.service';
+
+// Legacy role names the old CRM admin UI might still send. Map to the
+// canonical app_permissions roles before writing.
+function normalizeRole(raw: unknown): AppRole | null {
+  if (typeof raw !== 'string') return null;
+  switch (raw) {
+    case 'admin':
+    case 'editor':
+    case 'viewer':
+      return raw;
+    case 'manager':
+      return 'admin';
+    case 'sales':
+      return 'editor';
+    default:
+      return null;
+  }
+}
 
 // ─── Permissions ──────────────────────────────────────────────────
 
@@ -58,16 +79,10 @@ export async function updatePermission(req: Request, res: Response) {
       return;
     }
 
-    // Prevent admin from removing their own admin role
-    if (targetUserId === currentUserId && role !== 'admin') {
-      res.status(400).json({ success: false, error: 'Cannot remove your own admin role' });
-      return;
-    }
+    const normalizedRole = normalizeRole(role);
+    const validAccess: AppRecordAccess[] = ['all', 'own'];
 
-    const validRoles: CrmRole[] = ['admin', 'manager', 'sales', 'viewer'];
-    const validAccess: CrmRecordAccess[] = ['all', 'own'];
-
-    if (!validRoles.includes(role)) {
+    if (!normalizedRole) {
       res.status(400).json({ success: false, error: 'Invalid role' });
       return;
     }
@@ -76,7 +91,13 @@ export async function updatePermission(req: Request, res: Response) {
       return;
     }
 
-    const updated = await upsertCrmPermission(tenantId, targetUserId, role, recordAccess);
+    // Prevent admin from removing their own admin role (re-check post-normalization)
+    if (targetUserId === currentUserId && normalizedRole !== 'admin') {
+      res.status(400).json({ success: false, error: 'Cannot remove your own admin role' });
+      return;
+    }
+
+    const updated = await upsertCrmPermission(tenantId, targetUserId, normalizedRole, recordAccess);
     res.json({ success: true, data: updated });
   } catch (error) {
     logger.error({ error }, 'Failed to update CRM permission');

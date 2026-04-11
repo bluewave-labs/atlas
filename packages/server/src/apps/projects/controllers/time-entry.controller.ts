@@ -17,7 +17,7 @@ export async function listTimeEntries(req: Request, res: Response) {
     const tenantId = req.auth!.tenantId;
     const { projectId, startDate, endDate, billed, billable, entryUserId, includeArchived } = req.query;
 
-    const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+    const isAdmin = perm.role === 'admin';
     const entries = await projectService.listTimeEntries(userId, tenantId, {
       projectId: projectId as string | undefined,
       startDate: startDate as string | undefined,

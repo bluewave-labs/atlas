@@ -2067,7 +2067,7 @@ export async function runMigrations() {
           'crm',
           CASE cp.role
             WHEN 'admin' THEN 'admin'
-            WHEN 'manager' THEN 'manager'
+            WHEN 'manager' THEN 'admin'
             WHEN 'sales' THEN 'editor'
             WHEN 'viewer' THEN 'viewer'
             ELSE 'editor'
@@ -2328,6 +2328,17 @@ export async function runMigrations() {
           `Failed to drop legacy account_id column on ${table}: ${err.message}`,
         );
       }
+    }
+
+    // ─── Collapse legacy 'manager' role into 'admin' ─────────────────
+    // manager and admin were identical in the ROLE_MATRIX with no code
+    // enforcing any difference, so the role was dropped from the AppRole
+    // union. Any existing rows get upgraded to admin (their effective
+    // permissions are unchanged).
+    try {
+      await client.query(`UPDATE app_permissions SET role = 'admin' WHERE role = 'manager'`);
+    } catch (err: any) {
+      logger.warn(`Failed to collapse manager→admin in app_permissions: ${err.message}`);
     }
 
     // ─── Runtime schema sync ─────────────────────────────────────────

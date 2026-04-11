@@ -284,6 +284,11 @@ export async function seedStarterTemplates(
   return { created, skipped, failed };
 }
 
+export async function getTemplateById(templateId: string) {
+  const [row] = await db.select().from(signTemplates).where(eq(signTemplates.id, templateId)).limit(1);
+  return row || null;
+}
+
 export async function deleteTemplate(userId: string, tenantId: string, templateId: string) {
   const now = new Date();
   await db

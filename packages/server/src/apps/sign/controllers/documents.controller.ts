@@ -3,7 +3,7 @@ import * as signService from '../service';
 import { sendPendingReminders } from '../reminder';
 import { logger } from '../../../utils/logger';
 import { emitAppEvent } from '../../../services/event.service';
-import { getAppPermission, canAccess } from '../../../services/app-permissions.service';
+import { getAppPermission, canAccess, decideRecordDelete } from '../../../services/app-permissions.service';
 import path from 'node:path';
 import { existsSync, createReadStream, statSync } from 'node:fs';
 
@@ -174,7 +174,22 @@ export async function deleteDocument(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const documentId = req.params.id as string;
 
-    await signService.deleteDocument(userId, documentId);
+    const existing = await signService.getDocument(userId, documentId);
+    if (!existing) {
+      res.status(404).json({ success: false, error: 'Document not found' });
+      return;
+    }
+    const decision = decideRecordDelete(perm.role, existing.userId, userId);
+    if (decision === 'forbid') {
+      res.status(403).json({ success: false, error: 'No permission to delete sign documents' });
+      return;
+    }
+    if (decision === 'not_own') {
+      res.status(404).json({ success: false, error: 'Document not found' });
+      return;
+    }
+
+    await signService.deleteDocument(existing.userId, documentId);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete signature document');

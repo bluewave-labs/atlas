@@ -420,7 +420,6 @@ export function OrgMemberEditPage() {
                         { value: 'no-access', label: 'No access' },
                         { value: 'viewer', label: 'View only' },
                         { value: 'editor', label: 'Can edit' },
-                        { value: 'manager', label: 'Manager' },
                         { value: 'admin', label: 'Full control' },
                       ]}
                       size="sm"

@@ -34,7 +34,7 @@ export function MyLeaveView({ employees }: { employees: HrEmployee[] }) {
   // icon buttons. Viewers can never approve; even privileged roles
   // should never approve their own records.
   const { data: hrPerm } = useMyAppPermission('hr');
-  const canApprove = hrPerm?.role === 'admin' || hrPerm?.role === 'manager' || hrPerm?.role === 'editor';
+  const canApprove = hrPerm?.role === 'admin' || hrPerm?.role === 'editor';
   const authAccount = useAuthStore((s) => s.account);
   const myEmployee = employees.find(
     (e) => e.email?.toLowerCase() === authAccount?.email?.toLowerCase(),

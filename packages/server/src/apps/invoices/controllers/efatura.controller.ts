@@ -19,7 +19,7 @@ export async function generateEFatura(req: Request, res: Response) {
     const { eFaturaType } = req.body || {};
 
     // Ownership guard: non-admins can only generate e-Fatura for their own invoices.
-    const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+    const isAdmin = perm.role === 'admin';
     const parent = await invoiceService.getInvoice(req.auth!.userId, tenantId, id, isAdmin ? undefined : req.auth!.userId);
     if (!parent) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
@@ -55,7 +55,7 @@ export async function getEFaturaXml(req: Request, res: Response) {
     const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+    const isAdmin = perm.role === 'admin';
     const parent = await invoiceService.getInvoice(req.auth!.userId, tenantId, id, isAdmin ? undefined : req.auth!.userId);
     if (!parent) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
@@ -87,7 +87,7 @@ export async function getEFaturaPreview(req: Request, res: Response) {
     const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+    const isAdmin = perm.role === 'admin';
     const parent = await invoiceService.getInvoice(req.auth!.userId, tenantId, id, isAdmin ? undefined : req.auth!.userId);
     if (!parent) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
@@ -119,7 +119,7 @@ export async function getEFaturaPdf(req: Request, res: Response) {
     const tenantId = req.auth!.tenantId;
     const id = req.params.id as string;
 
-    const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+    const isAdmin = perm.role === 'admin';
     const parent = await invoiceService.getInvoice(req.auth!.userId, tenantId, id, isAdmin ? undefined : req.auth!.userId);
     if (!parent) {
       res.status(404).json({ success: false, error: 'Invoice not found' });

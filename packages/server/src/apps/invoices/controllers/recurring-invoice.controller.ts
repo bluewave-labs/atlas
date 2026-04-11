@@ -21,7 +21,7 @@ export async function listRecurring(req: Request, res: Response) {
     return;
   }
 
-  const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+  const isAdmin = perm.role === 'admin';
   const list = await recurringService.listRecurringInvoices(tenantId, req.auth!.userId, isAdmin);
   res.json({ success: true, data: list });
 }
@@ -39,7 +39,7 @@ export async function getRecurring(req: Request, res: Response) {
   }
 
   const id = req.params.id as string;
-  const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+  const isAdmin = perm.role === 'admin';
   const data = await recurringService.getRecurringInvoice(id, tenantId, isAdmin ? undefined : req.auth!.userId);
   res.json({ success: true, data });
 }
@@ -73,7 +73,7 @@ export async function updateRecurring(req: Request, res: Response) {
   }
 
   const id = req.params.id as string;
-  const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+  const isAdmin = perm.role === 'admin';
   const data = await recurringService.updateRecurringInvoice(id, req.body, tenantId, isAdmin ? undefined : req.auth!.userId);
   res.json({ success: true, data });
 }
@@ -91,7 +91,7 @@ export async function deleteRecurring(req: Request, res: Response) {
   }
 
   const id = req.params.id as string;
-  const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+  const isAdmin = perm.role === 'admin';
   await recurringService.deleteRecurringInvoice(id, tenantId, isAdmin ? undefined : req.auth!.userId);
   res.json({ success: true });
 }
@@ -109,7 +109,7 @@ export async function pauseRecurring(req: Request, res: Response) {
   }
 
   const id = req.params.id as string;
-  const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+  const isAdmin = perm.role === 'admin';
   const data = await recurringService.pauseRecurringInvoice(id, tenantId, isAdmin ? undefined : req.auth!.userId);
   res.json({ success: true, data });
 }
@@ -127,7 +127,7 @@ export async function resumeRecurring(req: Request, res: Response) {
   }
 
   const id = req.params.id as string;
-  const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+  const isAdmin = perm.role === 'admin';
   const data = await recurringService.resumeRecurringInvoice(id, tenantId, isAdmin ? undefined : req.auth!.userId);
   res.json({ success: true, data });
 }
@@ -145,7 +145,7 @@ export async function runRecurringNow(req: Request, res: Response) {
   }
 
   const id = req.params.id as string;
-  const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+  const isAdmin = perm.role === 'admin';
   const data = await recurringService.generateInvoiceFromRecurring(id, tenantId, isAdmin ? undefined : req.auth!.userId);
   res.json({ success: true, data });
 }

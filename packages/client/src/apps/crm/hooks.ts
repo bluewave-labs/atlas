@@ -759,10 +759,13 @@ export function useToggleWorkflow() {
 
 // ─── Permission Types ────────────────────────────────────────────
 
-export type CrmRole = 'admin' | 'manager' | 'sales' | 'viewer';
+// Canonical CRM roles — match the generic app_permissions roles.
+// Legacy 'manager' and 'sales' values have been collapsed into
+// 'admin' and 'editor' respectively.
+export type CrmRole = 'admin' | 'editor' | 'viewer';
 export type CrmRecordAccess = 'all' | 'own';
-export type CrmEntity = 'deals' | 'contacts' | 'companies' | 'activities' | 'workflows' | 'dashboard';
-export type CrmOperation = 'view' | 'create' | 'update' | 'delete';
+export type CrmEntity = 'deals' | 'contacts' | 'companies' | 'activities' | 'workflows' | 'dashboard' | 'leads' | 'notes' | 'proposals';
+export type CrmOperation = 'view' | 'create' | 'update' | 'delete' | 'delete_own';
 
 export interface CrmPermissionWithUser {
   id: string | null;
@@ -784,39 +787,50 @@ export interface MyCrmPermission {
   recordAccess: CrmRecordAccess;
 }
 
-// Client-side permission matrix (mirrors the server)
+// Client-side permission matrix (mirrors the server's app_permissions
+// ROLE_MATRIX in packages/server/src/services/app-permissions.service.ts).
+// The semantics are:
+//   admin  — full CRUD on everything
+//   editor — view/create/update/delete_own on records, view-only on
+//            dashboard and workflows (workflows are admin-managed)
+//   viewer — view only
+const ADMIN_OPS: CrmOperation[] = ['view', 'create', 'update', 'delete', 'delete_own'];
+const EDITOR_OPS: CrmOperation[] = ['view', 'create', 'update', 'delete_own'];
+const VIEW_ONLY: CrmOperation[] = ['view'];
+
 const ROLE_MATRIX: Record<CrmRole, Record<CrmEntity, Set<CrmOperation>>> = {
   admin: {
-    deals: new Set(['view', 'create', 'update', 'delete']),
-    contacts: new Set(['view', 'create', 'update', 'delete']),
-    companies: new Set(['view', 'create', 'update', 'delete']),
-    activities: new Set(['view', 'create', 'update', 'delete']),
-    workflows: new Set(['view', 'create', 'update', 'delete']),
-    dashboard: new Set(['view']),
+    deals: new Set(ADMIN_OPS),
+    contacts: new Set(ADMIN_OPS),
+    companies: new Set(ADMIN_OPS),
+    activities: new Set(ADMIN_OPS),
+    leads: new Set(ADMIN_OPS),
+    notes: new Set(ADMIN_OPS),
+    proposals: new Set(ADMIN_OPS),
+    workflows: new Set(ADMIN_OPS),
+    dashboard: new Set(VIEW_ONLY),
   },
-  manager: {
-    deals: new Set(['view', 'create', 'update', 'delete']),
-    contacts: new Set(['view', 'create', 'update', 'delete']),
-    companies: new Set(['view', 'create', 'update', 'delete']),
-    activities: new Set(['view', 'create', 'update', 'delete']),
-    workflows: new Set(['view']),
-    dashboard: new Set(['view']),
-  },
-  sales: {
-    deals: new Set(['view', 'create', 'update', 'delete']),
-    contacts: new Set(['view', 'create', 'update', 'delete']),
-    companies: new Set(['view']),
-    activities: new Set(['view', 'create', 'update', 'delete']),
-    workflows: new Set<CrmOperation>(),
-    dashboard: new Set(['view']),
+  editor: {
+    deals: new Set(EDITOR_OPS),
+    contacts: new Set(EDITOR_OPS),
+    companies: new Set(EDITOR_OPS),
+    activities: new Set(EDITOR_OPS),
+    leads: new Set(EDITOR_OPS),
+    notes: new Set(EDITOR_OPS),
+    proposals: new Set(EDITOR_OPS),
+    workflows: new Set(VIEW_ONLY),
+    dashboard: new Set(VIEW_ONLY),
   },
   viewer: {
-    deals: new Set(['view']),
-    contacts: new Set(['view']),
-    companies: new Set(['view']),
-    activities: new Set(['view']),
-    workflows: new Set<CrmOperation>(),
-    dashboard: new Set(['view']),
+    deals: new Set(VIEW_ONLY),
+    contacts: new Set(VIEW_ONLY),
+    companies: new Set(VIEW_ONLY),
+    activities: new Set(VIEW_ONLY),
+    leads: new Set(VIEW_ONLY),
+    notes: new Set(VIEW_ONLY),
+    proposals: new Set(VIEW_ONLY),
+    workflows: new Set(VIEW_ONLY),
+    dashboard: new Set(VIEW_ONLY),
   },
 };
 

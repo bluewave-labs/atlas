@@ -106,6 +106,24 @@ export async function updateField(
   return updated || null;
 }
 
+/**
+ * Fetch a signature field together with the owning document's user id.
+ * Returns null when either the field or its parent document is missing.
+ */
+export async function getFieldWithOwner(fieldId: string) {
+  const rows = await db
+    .select({
+      id: signatureFields.id,
+      documentId: signatureFields.documentId,
+      ownerUserId: signatureDocuments.userId,
+    })
+    .from(signatureFields)
+    .leftJoin(signatureDocuments, eq(signatureFields.documentId, signatureDocuments.id))
+    .where(eq(signatureFields.id, fieldId))
+    .limit(1);
+  return rows[0] || null;
+}
+
 export async function deleteField(fieldId: string) {
   await db.delete(signatureFields).where(eq(signatureFields.id, fieldId));
   logger.info({ fieldId }, 'Signature field deleted');

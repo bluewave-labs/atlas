@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import * as driveService from '../service';
 import { logger } from '../../../utils/logger';
 import { emitAppEvent } from '../../../services/event.service';
-import { getAppPermission, canAccess } from '../../../services/app-permissions.service';
+import { getAppPermission, canAccess, decideRecordDelete } from '../../../services/app-permissions.service';
 
 // GET /api/drive/widget
 export async function getWidgetData(req: Request, res: Response) {
@@ -346,7 +346,22 @@ export async function deleteItem(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const itemId = req.params.id as string;
 
-    await driveService.deleteItem(userId, itemId);
+    const existing = await driveService.getItem(userId, itemId, req.auth!.tenantId ?? null);
+    if (!existing) {
+      res.status(404).json({ success: false, error: 'Item not found' });
+      return;
+    }
+    const decision = decideRecordDelete(perm.role, existing.userId, userId);
+    if (decision === 'forbid') {
+      res.status(403).json({ success: false, error: 'No permission to delete in drive' });
+      return;
+    }
+    if (decision === 'not_own') {
+      res.status(404).json({ success: false, error: 'Item not found' });
+      return;
+    }
+
+    await driveService.deleteItem(existing.userId, itemId);
     driveService.logDriveActivity({ driveItemId: itemId, tenantId: req.auth!.tenantId, userId, action: 'file.deleted' }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     res.json({ success: true, data: null });
   } catch (error) {
@@ -367,7 +382,22 @@ export async function restoreItem(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const itemId = req.params.id as string;
 
-    const item = await driveService.restoreItem(userId, itemId);
+    const existing = await driveService.getItem(userId, itemId, req.auth!.tenantId ?? null);
+    if (!existing) {
+      res.status(404).json({ success: false, error: 'Item not found' });
+      return;
+    }
+    const decision = decideRecordDelete(perm.role, existing.userId, userId);
+    if (decision === 'forbid') {
+      res.status(403).json({ success: false, error: 'No permission to delete in drive' });
+      return;
+    }
+    if (decision === 'not_own') {
+      res.status(404).json({ success: false, error: 'Item not found' });
+      return;
+    }
+
+    const item = await driveService.restoreItem(existing.userId, itemId);
     if (!item) {
       res.status(404).json({ success: false, error: 'Item not found' });
       return;
@@ -393,7 +423,22 @@ export async function permanentDelete(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const itemId = req.params.id as string;
 
-    await driveService.permanentDelete(userId, itemId);
+    const existing = await driveService.getItem(userId, itemId, req.auth!.tenantId ?? null);
+    if (!existing) {
+      res.status(404).json({ success: false, error: 'Item not found' });
+      return;
+    }
+    const decision = decideRecordDelete(perm.role, existing.userId, userId);
+    if (decision === 'forbid') {
+      res.status(403).json({ success: false, error: 'No permission to delete in drive' });
+      return;
+    }
+    if (decision === 'not_own') {
+      res.status(404).json({ success: false, error: 'Item not found' });
+      return;
+    }
+
+    await driveService.permanentDelete(existing.userId, itemId);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to permanently delete drive item');
@@ -470,7 +515,22 @@ export async function batchDelete(req: Request, res: Response) {
       return;
     }
 
-    await driveService.batchDelete(userId, itemIds);
+    // Validate each item. Viewers are already blocked above. Editors may
+    // only batch-delete items they own; silently skip any they cannot touch.
+    const allowedIds: string[] = [];
+    for (const itemId of itemIds) {
+      const item = await driveService.getItem(userId, itemId, req.auth!.tenantId ?? null);
+      if (!item) continue;
+      const decision = decideRecordDelete(perm.role, item.userId, userId);
+      if (decision === 'allow') allowedIds.push(itemId);
+    }
+
+    if (allowedIds.length === 0) {
+      res.status(404).json({ success: false, error: 'No items found to delete' });
+      return;
+    }
+
+    await driveService.batchDelete(userId, allowedIds);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to batch delete');

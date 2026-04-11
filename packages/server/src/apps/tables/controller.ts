@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import * as tableService from './service';
 import { logger } from '../../utils/logger';
-import { getAppPermission, canAccess } from '../../services/app-permissions.service';
+import { getAppPermission, canAccess, decideRecordDelete } from '../../services/app-permissions.service';
 
 // GET /api/tables
 export async function listSpreadsheets(req: Request, res: Response) {
@@ -128,7 +128,22 @@ export async function deleteSpreadsheet(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const spreadsheetId = req.params.id as string;
 
-    const result = await tableService.deleteSpreadsheet(userId, spreadsheetId);
+    const existing = await tableService.getSpreadsheet(userId, spreadsheetId);
+    if (!existing) {
+      res.status(404).json({ success: false, error: 'Spreadsheet not found' });
+      return;
+    }
+    const decision = decideRecordDelete(perm.role, existing.userId, userId);
+    if (decision === 'forbid') {
+      res.status(403).json({ success: false, error: 'No permission to delete tables' });
+      return;
+    }
+    if (decision === 'not_own') {
+      res.status(404).json({ success: false, error: 'Spreadsheet not found' });
+      return;
+    }
+
+    const result = await tableService.deleteSpreadsheet(existing.userId, spreadsheetId);
 
     if (!result) {
       res.status(404).json({ success: false, error: 'Spreadsheet not found' });

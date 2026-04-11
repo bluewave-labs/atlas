@@ -20,7 +20,7 @@ export async function listLineItems(req: Request, res: Response) {
 
     // Verify the invoice belongs to the authenticated user's tenant, and for
     // non-admins, that it belongs to them specifically.
-    const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+    const isAdmin = perm.role === 'admin';
     const invoice = await invoiceService.getInvoice(userId, tenantId, invoiceId, isAdmin ? undefined : userId);
     if (!invoice) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
@@ -50,7 +50,7 @@ export async function createLineItem(req: Request, res: Response) {
 
     // Verify the invoice belongs to the authenticated user's tenant, and for
     // non-admins, that it belongs to them specifically.
-    const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+    const isAdmin = perm.role === 'admin';
     const invoice = await invoiceService.getInvoice(userId, tenantId, invoiceId, isAdmin ? undefined : userId);
     if (!invoice) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
@@ -92,7 +92,7 @@ export async function updateLineItem(req: Request, res: Response) {
       res.status(404).json({ success: false, error: 'Line item not found' });
       return;
     }
-    const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+    const isAdmin = perm.role === 'admin';
     const invoice = await invoiceService.getInvoice(userId, tenantId, existingLineItem.invoiceId, isAdmin ? undefined : userId);
     if (!invoice) {
       res.status(404).json({ success: false, error: 'Invoice not found' });
@@ -130,7 +130,7 @@ export async function deleteLineItem(req: Request, res: Response) {
       res.status(404).json({ success: false, error: 'Line item not found' });
       return;
     }
-    const isAdmin = perm.role === 'admin' || perm.role === 'manager';
+    const isAdmin = perm.role === 'admin';
     const invoice = await invoiceService.getInvoice(userId, tenantId, existingLineItem.invoiceId, isAdmin ? undefined : userId);
     if (!invoice) {
       res.status(404).json({ success: false, error: 'Invoice not found' });

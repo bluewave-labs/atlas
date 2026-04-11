@@ -4,13 +4,12 @@ import { eq, and } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 import { logger } from '../utils/logger';
 
-export type AppRole = 'admin' | 'manager' | 'editor' | 'viewer';
+export type AppRole = 'admin' | 'editor' | 'viewer';
 export type AppOperation = 'view' | 'create' | 'update' | 'delete' | 'delete_own';
 export type AppRecordAccess = 'all' | 'own';
 
 const ROLE_MATRIX: Record<AppRole, Set<AppOperation>> = {
   admin: new Set(['view', 'create', 'update', 'delete', 'delete_own']),
-  manager: new Set(['view', 'create', 'update', 'delete', 'delete_own']),
   editor: new Set(['view', 'create', 'update', 'delete_own']),
   viewer: new Set(['view']),
 };
@@ -60,6 +59,37 @@ export async function getAppPermission(
 
 export function canAccess(role: AppRole, operation: AppOperation): boolean {
   return ROLE_MATRIX[role]?.has(operation) ?? false;
+}
+
+/**
+ * Determine whether a caller may delete a record they have already loaded.
+ *
+ * - `admin` has blanket `delete` — always allowed (including records they don't own).
+ * - `editor` has only `delete_own` — must own the record.
+ * - `viewer` has neither — never allowed.
+ *
+ * Returns:
+ *   - 'allow'    — caller can proceed with the delete
+ *   - 'not_own'  — caller has `delete_own` but does not own the record; the
+ *                  controller should respond 404 to avoid leaking existence
+ *   - 'forbid'   — caller has no delete permission at all; controller should
+ *                  respond 403
+ *
+ * Use this helper anywhere the old dead `!canAccess('delete') && !canAccess('delete_own')`
+ * idiom appeared. Load the record first, then call this, then branch.
+ */
+export type DeleteDecision = 'allow' | 'not_own' | 'forbid';
+
+export function decideRecordDelete(
+  role: AppRole,
+  recordOwnerUserId: string | null | undefined,
+  currentUserId: string,
+): DeleteDecision {
+  if (canAccess(role, 'delete')) return 'allow';
+  if (canAccess(role, 'delete_own')) {
+    return recordOwnerUserId === currentUserId ? 'allow' : 'not_own';
+  }
+  return 'forbid';
 }
 
 export function canAccessEntity(

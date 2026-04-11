@@ -37,6 +37,11 @@ export async function updateSubtask(userId: string, subtaskId: string, data: { t
   return updated || null;
 }
 
+export async function getSubtaskById(subtaskId: string) {
+  const [row] = await db.select().from(subtasks).where(eq(subtasks.id, subtaskId)).limit(1);
+  return row || null;
+}
+
 export async function deleteSubtask(subtaskId: string) {
   await db.delete(subtasks).where(eq(subtasks.id, subtaskId));
 }
@@ -97,6 +102,15 @@ export async function updateTemplate(userId: string, templateId: string, input: 
   await db.update(taskTemplates).set(updates).where(and(eq(taskTemplates.id, templateId), eq(taskTemplates.userId, userId)));
   const [updated] = await db.select().from(taskTemplates).where(and(eq(taskTemplates.id, templateId), eq(taskTemplates.userId, userId))).limit(1);
   return updated || null;
+}
+
+export async function getTemplateById(templateId: string) {
+  const [row] = await db.select().from(taskTemplates).where(eq(taskTemplates.id, templateId)).limit(1);
+  return row || null;
+}
+
+export async function deleteTemplateById(templateId: string) {
+  await db.delete(taskTemplates).where(eq(taskTemplates.id, templateId));
 }
 
 export async function deleteTemplate(userId: string, templateId: string) {

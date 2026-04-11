@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import * as drawingService from './service';
 import { logger } from '../../utils/logger';
-import { getAppPermission, canAccess } from '../../services/app-permissions.service';
+import { getAppPermission, canAccess, decideRecordDelete } from '../../services/app-permissions.service';
 
 // POST /api/drawings/seed
 export async function seedSampleData(req: Request, res: Response) {
@@ -133,7 +133,22 @@ export async function deleteDrawing(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const drawingId = req.params.id as string;
 
-    await drawingService.deleteDrawing(userId, drawingId);
+    const existing = await drawingService.getDrawing(userId, drawingId, req.auth!.tenantId ?? null);
+    if (!existing) {
+      res.status(404).json({ success: false, error: 'Drawing not found' });
+      return;
+    }
+    const decision = decideRecordDelete(perm.role, existing.userId, userId);
+    if (decision === 'forbid') {
+      res.status(403).json({ success: false, error: 'No permission to delete drawings' });
+      return;
+    }
+    if (decision === 'not_own') {
+      res.status(404).json({ success: false, error: 'Drawing not found' });
+      return;
+    }
+
+    await drawingService.deleteDrawing(existing.userId, drawingId);
 
     res.json({ success: true, data: null });
   } catch (error) {
@@ -154,7 +169,22 @@ export async function restoreDrawing(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const drawingId = req.params.id as string;
 
-    const drawing = await drawingService.restoreDrawing(userId, drawingId);
+    const existing = await drawingService.getDrawing(userId, drawingId, req.auth!.tenantId ?? null);
+    if (!existing) {
+      res.status(404).json({ success: false, error: 'Drawing not found' });
+      return;
+    }
+    const decision = decideRecordDelete(perm.role, existing.userId, userId);
+    if (decision === 'forbid') {
+      res.status(403).json({ success: false, error: 'No permission to delete drawings' });
+      return;
+    }
+    if (decision === 'not_own') {
+      res.status(404).json({ success: false, error: 'Drawing not found' });
+      return;
+    }
+
+    const drawing = await drawingService.restoreDrawing(existing.userId, drawingId);
 
     if (!drawing) {
       res.status(404).json({ success: false, error: 'Drawing not found' });

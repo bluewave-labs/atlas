@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import * as taskService from '../service';
 import { logger } from '../../../utils/logger';
-import { getAppPermission, canAccess } from '../../../services/app-permissions.service';
+import { getAppPermission, canAccess, decideRecordDelete } from '../../../services/app-permissions.service';
 import { parseMentionsAndNotify } from '../../../utils/mentions';
 
 // ─── Subtasks ────────────────────────────────────────────────────────
@@ -70,7 +70,31 @@ export async function deleteSubtask(req: Request, res: Response) {
       return;
     }
 
-    await taskService.deleteSubtask(req.params.subtaskId as string);
+    const userId = req.auth!.userId;
+    const subtaskId = req.params.subtaskId as string;
+
+    // Subtasks belong to a parent task — owner is the task owner.
+    const subtask = await taskService.getSubtaskById(subtaskId);
+    if (!subtask) {
+      res.status(404).json({ success: false, error: 'Subtask not found' });
+      return;
+    }
+    const parentTask = await taskService.getTask(userId, subtask.taskId, req.auth!.tenantId ?? null);
+    if (!parentTask) {
+      res.status(404).json({ success: false, error: 'Subtask not found' });
+      return;
+    }
+    const decision = decideRecordDelete(perm.role, parentTask.userId, userId);
+    if (decision === 'forbid') {
+      res.status(403).json({ success: false, error: 'No permission to delete' });
+      return;
+    }
+    if (decision === 'not_own') {
+      res.status(404).json({ success: false, error: 'Subtask not found' });
+      return;
+    }
+
+    await taskService.deleteSubtask(subtaskId);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete subtask');
@@ -174,7 +198,26 @@ export async function deleteTemplate(req: Request, res: Response) {
       return;
     }
 
-    await taskService.deleteTemplate(req.auth!.userId, req.params.templateId as string);
+    const userId = req.auth!.userId;
+    const templateId = req.params.templateId as string;
+
+    const existing = await taskService.getTemplateById(templateId);
+    if (!existing) {
+      res.status(404).json({ success: false, error: 'Template not found' });
+      return;
+    }
+    const decision = decideRecordDelete(perm.role, existing.userId, userId);
+    if (decision === 'forbid') {
+      res.status(403).json({ success: false, error: 'No permission to delete' });
+      return;
+    }
+    if (decision === 'not_own') {
+      res.status(404).json({ success: false, error: 'Template not found' });
+      return;
+    }
+
+    // Admin path bypasses user scoping with an id-only delete.
+    await taskService.deleteTemplateById(templateId);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete template');

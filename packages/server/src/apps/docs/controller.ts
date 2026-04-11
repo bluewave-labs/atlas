@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import * as documentService from './service';
 import { logger } from '../../utils/logger';
-import { getAppPermission, canAccess } from '../../services/app-permissions.service';
+import { getAppPermission, canAccess, decideRecordDelete } from '../../services/app-permissions.service';
 import { parseMentionsAndNotify } from '../../utils/mentions';
 
 // GET /api/docs
@@ -126,7 +126,26 @@ export async function deleteDocument(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const documentId = req.params.id as string;
 
-    await documentService.deleteDocument(userId, documentId);
+    // Load the record first so we can enforce real ownership for delete_own.
+    const existing = await documentService.getDocument(userId, documentId, req.auth!.tenantId ?? null);
+    if (!existing) {
+      res.status(404).json({ success: false, error: 'Document not found' });
+      return;
+    }
+
+    const decision = decideRecordDelete(perm.role, existing.userId, userId);
+    if (decision === 'forbid') {
+      res.status(403).json({ success: false, error: 'No permission to delete docs' });
+      return;
+    }
+    if (decision === 'not_own') {
+      // Editor trying to delete someone else's doc — 404, not 403, so we
+      // don't leak existence of records they cannot touch.
+      res.status(404).json({ success: false, error: 'Document not found' });
+      return;
+    }
+
+    await documentService.deleteDocument(existing.userId, documentId);
 
     res.json({ success: true, data: null });
   } catch (error) {
@@ -186,7 +205,23 @@ export async function restoreDocument(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const documentId = req.params.id as string;
 
-    const doc = await documentService.restoreDocument(userId, documentId);
+    // Mirror deleteDocument ownership rules: editors can only restore their own.
+    const existing = await documentService.getDocument(userId, documentId, req.auth!.tenantId ?? null);
+    if (!existing) {
+      res.status(404).json({ success: false, error: 'Document not found' });
+      return;
+    }
+    const decision = decideRecordDelete(perm.role, existing.userId, userId);
+    if (decision === 'forbid') {
+      res.status(403).json({ success: false, error: 'No permission to delete docs' });
+      return;
+    }
+    if (decision === 'not_own') {
+      res.status(404).json({ success: false, error: 'Document not found' });
+      return;
+    }
+
+    const doc = await documentService.restoreDocument(existing.userId, documentId);
 
     if (!doc) {
       res.status(404).json({ success: false, error: 'Document not found' });
@@ -385,7 +420,26 @@ export async function deleteComment(req: Request, res: Response) {
       return;
     }
 
-    await documentService.deleteComment(req.auth!.userId, req.params.commentId as string);
+    const userId = req.auth!.userId;
+    const commentId = req.params.commentId as string;
+
+    const existing = await documentService.getCommentById(commentId);
+    if (!existing) {
+      res.status(404).json({ success: false, error: 'Comment not found' });
+      return;
+    }
+    const decision = decideRecordDelete(perm.role, existing.userId, userId);
+    if (decision === 'forbid') {
+      res.status(403).json({ success: false, error: 'No permission to delete in docs' });
+      return;
+    }
+    if (decision === 'not_own') {
+      res.status(404).json({ success: false, error: 'Comment not found' });
+      return;
+    }
+
+    // Admin path bypasses the per-user scoped deleteComment by id only.
+    await documentService.deleteCommentById(commentId);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete comment');

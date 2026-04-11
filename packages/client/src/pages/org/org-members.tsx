@@ -33,7 +33,6 @@ import { ROLE_COLORS } from '../../config/role-colors';
 
 const BASE_ROLE_OPTIONS = [
   { value: 'admin', label: 'Admin' },
-  { value: 'manager', label: 'Manager' },
   { value: 'editor', label: 'Editor' },
   { value: 'viewer', label: 'Viewer' },
 ];
