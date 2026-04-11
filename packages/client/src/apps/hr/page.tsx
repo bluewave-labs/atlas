@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Users, Building2, CalendarDays, Plus, Search, Settings2, X,
@@ -57,6 +57,7 @@ const PORTAL_VIEWS = new Set<string>(['my-profile', 'leave', 'expenses']);
 
 export function HrPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { openSettings } = useUIStore();
 
   // Auth
@@ -193,6 +194,45 @@ export function HrPage() {
   const handleDeleteDepartment = (id: string) => { deleteDepartment.mutate(id); };
 
   const showAddButton = canCreate && (activeNav === 'employees' || activeNav === 'departments' || activeNav === 'time-off');
+
+  // Full-page render path for non-portal users viewing their own profile.
+  // Bypasses the AppSidebar layout entirely so the view fills the viewport
+  // with just a back button at the top (via EmployeeDetailPage). Portal
+  // users keep the in-sidebar panel rendering below so they don't lose
+  // access to their Leave / Expenses tabs.
+  if (activeNav === 'my-profile' && !isPortalUser) {
+    const myEmployee = allEmployees.find(
+      (e) => e.email?.toLowerCase() === authAccount?.email?.toLowerCase(),
+    );
+    if (!myEmployee) {
+      return (
+        <div
+          style={{
+            display: 'flex',
+            height: '100vh',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--color-text-tertiary)',
+            fontFamily: 'var(--font-family)',
+          }}
+        >
+          {t('hr.sidebar.noProfile')}
+        </div>
+      );
+    }
+    return (
+      <EmployeeDetailPage
+        employeeId={myEmployee.id}
+        // Pass a single-element employees array so the prev/next buttons
+        // in EmployeeDetailPage are effectively disabled (currentIndex 0
+        // of 1). The user is viewing their own profile, not navigating a list.
+        employees={[myEmployee]}
+        departments={departments}
+        onBack={() => navigate(-1)}
+        onNavigate={() => {}}
+      />
+    );
+  }
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
@@ -371,8 +411,13 @@ export function HrPage() {
           />
         )}
 
-        {activeNav === 'my-profile' && (() => {
-          const myEmployee = allEmployees.find(e => e.email?.toLowerCase() === authAccount?.email?.toLowerCase());
+        {/* Portal-user my-profile rendering — non-portal users hit the
+            full-page EmployeeDetailPage early-return at the top of this
+            function instead. */}
+        {activeNav === 'my-profile' && isPortalUser && (() => {
+          const myEmployee = allEmployees.find(
+            (e) => e.email?.toLowerCase() === authAccount?.email?.toLowerCase(),
+          );
           return myEmployee ? (
             <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
               <EmployeeDetailPanel

@@ -2,8 +2,9 @@ import { db } from '../../../config/database';
 import {
   hrExpenses, hrExpenseCategories,
   employees, projectProjects,
+  appPermissions, tenantMembers,
 } from '../../../db/schema';
-import { eq, and, desc, sql, ilike, gte, lte, inArray, ne } from 'drizzle-orm';
+import { eq, and, desc, sql, ilike, gte, lte, inArray, ne, or } from 'drizzle-orm';
 import { logger } from '../../../utils/logger';
 import { sendEmail } from '../../../services/email.service';
 import { getEmployeePolicy } from './expense-policy.service';
@@ -239,6 +240,90 @@ export async function deleteExpense(tenantId: string, id: string) {
 
 // ─── Submit Expense ─────────────────────────────────────────────
 
+/**
+ * Resolve an approver when the employee has no direct manager set.
+ * Tries in order:
+ *   1. Another employee in the same tenant whose linked user has an
+ *      explicit HR 'admin' app permission row.
+ *   2. Another employee in the same tenant whose linked user is the
+ *      tenant owner or tenant-level admin.
+ * Returns the employeeId to use as approver, or null if nothing matches.
+ * Excludes the submitter's own employeeId so they can't end up as their
+ * own approver through this path — that case is handled by the caller
+ * (auto-approve when the submitter IS an HR admin).
+ */
+async function findFallbackApprover(
+  tenantId: string,
+  excludeEmployeeId: string,
+): Promise<string | null> {
+  // 1. Try explicit HR admin app permission
+  const [viaAppPerm] = await db
+    .select({ id: employees.id })
+    .from(employees)
+    .innerJoin(
+      appPermissions,
+      and(
+        eq(appPermissions.userId, employees.linkedUserId),
+        eq(appPermissions.tenantId, tenantId),
+        eq(appPermissions.appId, 'hr'),
+        eq(appPermissions.role, 'admin'),
+      ),
+    )
+    .where(and(
+      eq(employees.tenantId, tenantId),
+      eq(employees.isArchived, false),
+      ne(employees.id, excludeEmployeeId),
+    ))
+    .limit(1);
+  if (viaAppPerm?.id) return viaAppPerm.id;
+
+  // 2. Try tenant owner/admin
+  const [viaTenantRole] = await db
+    .select({ id: employees.id })
+    .from(employees)
+    .innerJoin(
+      tenantMembers,
+      and(
+        eq(tenantMembers.userId, employees.linkedUserId),
+        eq(tenantMembers.tenantId, tenantId),
+        or(eq(tenantMembers.role, 'owner'), eq(tenantMembers.role, 'admin')),
+      ),
+    )
+    .where(and(
+      eq(employees.tenantId, tenantId),
+      eq(employees.isArchived, false),
+      ne(employees.id, excludeEmployeeId),
+    ))
+    .limit(1);
+  return viaTenantRole?.id ?? null;
+}
+
+/**
+ * Determine whether the submitter has an HR admin role. Used as the
+ * self-approval fallback when a top-of-hierarchy user (e.g. the CEO)
+ * submits an expense and has no one above them.
+ */
+async function isHrAdmin(tenantId: string, linkedUserId: string | null | undefined): Promise<boolean> {
+  if (!linkedUserId) return false;
+  const [perm] = await db
+    .select({ role: appPermissions.role })
+    .from(appPermissions)
+    .where(and(
+      eq(appPermissions.tenantId, tenantId),
+      eq(appPermissions.userId, linkedUserId),
+      eq(appPermissions.appId, 'hr'),
+    ))
+    .limit(1);
+  if (perm?.role === 'admin') return true;
+  // Fall back to tenant-level role (tenant owner/admin is always HR admin)
+  const [member] = await db
+    .select({ role: tenantMembers.role })
+    .from(tenantMembers)
+    .where(and(eq(tenantMembers.tenantId, tenantId), eq(tenantMembers.userId, linkedUserId)))
+    .limit(1);
+  return member?.role === 'owner' || member?.role === 'admin';
+}
+
 export async function submitExpense(tenantId: string, id: string, employeeId: string) {
   const now = new Date();
 
@@ -321,8 +406,35 @@ export async function submitExpense(tenantId: string, id: string, employeeId: st
     return updated;
   }
 
-  // e. Set status to submitted with approver = manager
-  const approverId = employee.managerId ?? null;
+  // e. Set status to submitted with approver. Normal path: employee.managerId.
+  //    Fallback chain for employees at the top of the hierarchy (CEO,
+  //    tenant owner with no manager assigned, single-user tenants):
+  //      i.  If the submitter is themselves an HR admin → auto-approve
+  //          (they are trusted to sign off on their own expenses).
+  //      ii. Otherwise find another employee in the tenant who is an
+  //          HR admin or tenant owner/admin, and route to them.
+  //      iii. If none exists → throw the original "no manager" error
+  //          (genuine misconfiguration).
+  let approverId = employee.managerId ?? null;
+
+  if (!approverId) {
+    const submitterIsAdmin = await isHrAdmin(tenantId, employee.linkedUserId);
+    if (submitterIsAdmin) {
+      // Auto-approve — the submitter is trusted to sign off on their own.
+      const [autoApproved2] = await db.update(hrExpenses).set({
+        status: 'approved',
+        approvedAt: now,
+        approverId: employee.id,
+        submittedAt: now,
+        policyViolation,
+        updatedAt: now,
+      }).where(eq(hrExpenses.id, id)).returning();
+      return autoApproved2;
+    }
+    // Try to route to any other admin in the tenant.
+    approverId = await findFallbackApprover(tenantId, employeeId);
+  }
+
   if (!approverId) {
     throw new Error('Cannot submit expense: no manager assigned to approve. Please contact your HR admin.');
   }
