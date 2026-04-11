@@ -25,12 +25,14 @@ export const FULL_BLEED_BRAND_ICONS = new Set<string>(['draw', 'docs', 'sign']);
  * default to 1.2× because the supplied artwork has more internal padding
  * than lucide line icons. A few apps need extra presence:
  *   - calendar: 1.44× (dark body + small white type needs to read at small sizes)
- *   - system:   1.56× (colourful glyph has lots of internal whitespace)
- *   - tasks:    1.56× (checklist artwork has wide internal margins) */
+ *   - system:   1.79× (colourful glyph has lots of internal whitespace, +15% bump)
+ *   - tasks:    1.56× (checklist artwork has wide internal margins)
+ *   - drive:    1.38× (folder artwork needs more presence on the tinted card) */
 export function getBrandIconScale(appId: string): number {
   if (appId === 'calendar') return 1.44;
-  if (appId === 'system') return 1.56;
+  if (appId === 'system') return 1.79;
   if (appId === 'tasks') return 1.56;
+  if (appId === 'drive') return 1.38;
   return 1.2;
 }
 

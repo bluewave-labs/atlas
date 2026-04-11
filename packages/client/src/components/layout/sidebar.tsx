@@ -45,14 +45,16 @@ function getNavItems() {
 const BRAND_ICON_BACKGROUNDS: Record<string, string> = {
   crm: '#ffffff',
   projects: '#ffffff',
-  drive: '#ffffff',
-  system: '#ffffff',
   invoices: '#ffffff',
   // Tables artwork is meant to sit on a dark slate backdrop.
   tables: '#3C444E',
   hr: '#fff1ea',
   // Tasks brand colour is indigo #6366f1 — light tint backdrop.
   tasks: '#eef0ff',
+  // System glyph is multicolour — neutral light slate keeps colours honest.
+  system: '#f5f5f7',
+  // Drive folder artwork is orange/blue gradients — soft peach tint matches.
+  drive: '#fff4e6',
   // Calendar artwork is dark-grey + white, so it needs a coloured backdrop.
   calendar: 'linear-gradient(145deg, #5dadff 0%, #2563eb 50%, #1e3a8a 100%)',
 };

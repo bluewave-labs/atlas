@@ -32,13 +32,15 @@ import '../styles/home.css';
 const BRAND_ICON_BACKGROUNDS: Record<string, string> = {
   crm: '#ffffff',
   projects: '#ffffff',
-  drive: '#ffffff',
-  system: '#ffffff',
   invoices: '#ffffff',
   tables: '#3C444E',
   hr: '#fff1ea',
   // Tasks brand colour is indigo #6366f1 — light tint backdrop.
   tasks: '#eef0ff',
+  // System glyph is multicolour — neutral light slate keeps colours honest.
+  system: '#f5f5f7',
+  // Drive folder artwork is orange/blue gradients — soft peach tint matches.
+  drive: '#fff4e6',
   calendar: 'linear-gradient(145deg, #5dadff 0%, #2563eb 50%, #1e3a8a 100%)',
 };
 
