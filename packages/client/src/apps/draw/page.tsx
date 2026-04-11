@@ -61,7 +61,7 @@ export function DrawPage() {
   const createDrawing = useCreateDrawing();
   const updateDrawing = useUpdateDrawing();
   const updateVisibility = useUpdateDrawingVisibility();
-  const { canCreate } = useAppActions('draw');
+  const { canCreate, canEdit } = useAppActions('draw');
   const { account } = useAuthStore();
   const [showTemplates, setShowTemplates] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -210,11 +210,12 @@ export function DrawPage() {
             isSaving={isSaving}
             showSaved={showSaved}
             onTitleChange={handleTitleChange}
+            canEdit={canEdit}
             visibilitySlot={
               <VisibilityToggle
                 visibility={(drawing.visibility as 'private' | 'team') || 'private'}
                 onToggle={(v) => updateVisibility.mutate({ id: drawing.id, visibility: v })}
-                disabled={drawing.userId !== account?.userId}
+                disabled={!canEdit || drawing.userId !== account?.userId}
               />
             }
           />

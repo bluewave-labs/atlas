@@ -170,7 +170,7 @@ export function TablesPage() {
 
   const columnDefs = useMemo(() => {
     const { localColumns: cols, t: tFn, handleColumnMenuOpen: menuOpen, hiddenColumnsSet: hidden, frozenColumnCount, handleRangeHeaderClicked, tablesSettings: ts, linkedTablesMap: ltm, getComputedValue: gcv } = buildColDefsParams;
-    const colSettings: BuildColDefsSettings = { dateFormat: ts.dateFormat, currencySymbol: ts.currencySymbol, showFieldTypeIcons: ts.showFieldTypeIcons };
+    const colSettings: BuildColDefsSettings = { dateFormat: ts.dateFormat, currencySymbol: ts.currencySymbol, showFieldTypeIcons: ts.showFieldTypeIcons, canEdit };
     const baseDefs = buildColDefs(cols, tFn, menuOpen, hidden, frozenColumnCount, handleRangeHeaderClicked, colSettings, ltm);
     const formulaDefs: ColDef[] = baseDefs.map((def) => {
       if (!def.field) return def;
@@ -183,7 +183,7 @@ export function TablesPage() {
       }} as ColDef;
     });
     return [ROW_NUMBER_COL, ...formulaDefs, ADD_COLUMN_COL];
-  }, [buildColDefsParams, ROW_NUMBER_COL, ADD_COLUMN_COL]);
+  }, [buildColDefsParams, ROW_NUMBER_COL, ADD_COLUMN_COL, canEdit]);
 
   return (
     <div className="tables-page">
@@ -311,12 +311,12 @@ function EmptyState({ state }: { state: ReturnType<typeof useTablesPageState> })
 }
 
 function TopBar({ state }: { state: ReturnType<typeof useTablesPageState> }) {
-  const { t, localTitle, localColor, localIcon, localGuide, handleTitleChange, triggerAutoSave, showHeaderDropdown, setShowHeaderDropdown, headerChevronRef, setLocalColor, setLocalIcon, setLocalGuide, setLocalTitle, canUndo, canRedo, handleUndo, handleRedo, handleExportExcel, handleImportCSV, showSearch, setShowSearch, setSearchText, isSaving, showSaved, currentViews, localViewConfig, handleViewToggle, handleRemoveView, showAddViewDropdown, setShowAddViewDropdown, addViewBtnRef, addViewDropdownRef, handleAddView } = state;
+  const { t, localTitle, localColor, localIcon, localGuide, handleTitleChange, triggerAutoSave, showHeaderDropdown, setShowHeaderDropdown, headerChevronRef, setLocalColor, setLocalIcon, setLocalGuide, setLocalTitle, canUndo, canRedo, handleUndo, handleRedo, handleExportExcel, handleImportCSV, showSearch, setShowSearch, setSearchText, isSaving, showSaved, currentViews, localViewConfig, handleViewToggle, handleRemoveView, showAddViewDropdown, setShowAddViewDropdown, addViewBtnRef, addViewDropdownRef, handleAddView, canEdit } = state;
   return (
     <div className="tables-topbar" style={localColor ? { background: localColor } : undefined}>
       <div className="tables-topbar-row">
-        <input className="tables-topbar-title" value={localTitle} onChange={(e) => handleTitleChange(e.target.value)} onBlur={() => triggerAutoSave({ title: localTitle })} />
-        <IconButton ref={headerChevronRef} icon={<ChevronDown size={14} />} label={t('tables.tableSettings')} onClick={() => setShowHeaderDropdown(!showHeaderDropdown)} size={28} className="tables-topbar-chevron" style={{ color: 'inherit' }} />
+        <input className="tables-topbar-title" value={localTitle} onChange={(e) => handleTitleChange(e.target.value)} onBlur={() => triggerAutoSave({ title: localTitle })} readOnly={!canEdit} disabled={!canEdit} />
+        <IconButton ref={headerChevronRef} icon={<ChevronDown size={14} />} label={t('tables.tableSettings')} onClick={() => setShowHeaderDropdown(!showHeaderDropdown)} size={28} className="tables-topbar-chevron" style={{ color: 'inherit' }} disabled={!canEdit} />
         {showHeaderDropdown && <TableHeaderDropdown title={localTitle} color={localColor} icon={localIcon} guide={localGuide} anchorRect={headerChevronRef.current?.getBoundingClientRect() ?? null} onTitleChange={(title) => { setLocalTitle(title); triggerAutoSave({ title }); }} onColorChange={(color) => { setLocalColor(color); triggerAutoSave({ color: color ?? '' }); }} onIconChange={(icon) => { setLocalIcon(icon); triggerAutoSave({ icon: icon ?? '' }); }} onGuideChange={(guide) => { setLocalGuide(guide); triggerAutoSave({ guide }); }} onClose={() => setShowHeaderDropdown(false)} />}
         <div className="tables-topbar-spacer" />
         <IconButton icon={<Undo2 size={14} />} label={t('tables.undo')} onClick={handleUndo} disabled={!canUndo} size={28} style={{ color: 'inherit' }} />

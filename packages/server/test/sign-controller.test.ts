@@ -149,7 +149,7 @@ describe('sign controller — listDocuments', () => {
 
     await controller.listDocuments(req, res);
 
-    expect(signService.listDocuments).toHaveBeenCalledWith('u1', 't1');
+    expect(signService.listDocuments).toHaveBeenCalledWith('t1', undefined);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: { documents: mockDocs } })
     );
@@ -184,7 +184,7 @@ describe('sign controller — getDocument', () => {
 
     await controller.getDocument(req, res);
 
-    expect(signService.getDocument).toHaveBeenCalledWith('u1', 'doc-1');
+    expect(signService.getDocument).toHaveBeenCalledWith('t1', 'doc-1', undefined);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: mockDoc })
     );

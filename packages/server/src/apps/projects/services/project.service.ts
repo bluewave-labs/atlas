@@ -215,7 +215,6 @@ export async function listProjectMembers(userId: string, tenantId: string, proje
       userId: projectMembers.userId,
       projectId: projectMembers.projectId,
       hourlyRate: projectMembers.hourlyRate,
-      role: projectMembers.role,
       createdAt: projectMembers.createdAt,
       updatedAt: projectMembers.updatedAt,
       userName: users.name,
@@ -228,7 +227,7 @@ export async function listProjectMembers(userId: string, tenantId: string, proje
     .orderBy(asc(projectMembers.createdAt));
 }
 
-export async function addProjectMember(projectId: string, memberUserId: string, hourlyRate: number | null, role: string) {
+export async function addProjectMember(projectId: string, memberUserId: string, hourlyRate: number | null) {
   const now = new Date();
   const [created] = await db
     .insert(projectMembers)
@@ -236,7 +235,6 @@ export async function addProjectMember(projectId: string, memberUserId: string, 
       userId: memberUserId,
       projectId,
       hourlyRate: hourlyRate ?? null,
-      role: role || 'member',
       createdAt: now,
       updatedAt: now,
     })

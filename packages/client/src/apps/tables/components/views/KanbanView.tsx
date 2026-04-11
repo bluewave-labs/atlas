@@ -1,5 +1,6 @@
 import { useCallback, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAppActions } from '../../../../hooks/use-app-permissions';
 import {
   DndContext,
   DragOverlay,
@@ -133,6 +134,7 @@ export function KanbanView({
   triggerAutoSave: (updates: { rows?: TableRow[]; viewConfig?: TableViewConfig }) => void;
 }) {
   const { t } = useTranslation();
+  const { canEdit } = useAppActions('tables');
   const [draggedRowId, setDraggedRowId] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -162,12 +164,14 @@ export function KanbanView({
   }, [effectiveKanbanCol, rows]);
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
+    if (!canEdit) return;
     setDraggedRowId(event.active.id as string);
-  }, []);
+  }, [canEdit]);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       setDraggedRowId(null);
+      if (!canEdit) return;
       if (!event.over || !effectiveKanbanCol) return;
 
       const rowId = event.active.id as string;
@@ -178,7 +182,7 @@ export function KanbanView({
       );
       triggerAutoSave({ rows: updatedRows });
     },
-    [effectiveKanbanCol, rows, triggerAutoSave],
+    [effectiveKanbanCol, rows, triggerAutoSave, canEdit],
   );
 
   const draggedRow = draggedRowId ? rows.find((r) => r._id === draggedRowId) : null;

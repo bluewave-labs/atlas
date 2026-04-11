@@ -28,6 +28,7 @@ export interface BuildColDefsSettings {
   dateFormat: string;
   currencySymbol: string;
   showFieldTypeIcons: boolean;
+  canEdit?: boolean;
 }
 
 export function buildColDefs(
@@ -40,12 +41,13 @@ export function buildColDefs(
   settings?: BuildColDefsSettings,
   linkedTableData?: Map<string, { rows: Array<{ _id: string; [key: string]: unknown }>; columns: Array<{ id: string; name: string }> }>,
 ): ColDef[] {
+  const canEdit = settings?.canEdit !== false;
   return columns.map((col, idx) => {
     const TypeIcon = settings?.showFieldTypeIcons !== false ? FIELD_TYPE_ICONS[col.type] : undefined;
     const base: ColDef = {
       field: col.id,
       headerName: col.name,
-      editable: true,
+      editable: canEdit,
       width: col.width || 180,
       resizable: true,
       sortable: true,
@@ -171,7 +173,7 @@ export function buildColDefs(
         };
         base.cellEditor = LinkedRecordEditor;
         base.cellEditorPopup = true;
-        base.editable = true;
+        base.editable = canEdit;
         break;
       }
     }

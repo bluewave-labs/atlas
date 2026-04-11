@@ -1789,7 +1789,6 @@ export const projectMembers = pgTable('project_members', {
   userId: uuid('user_id').notNull(),
   projectId: uuid('project_id').notNull().references(() => projectProjects.id, { onDelete: 'cascade' }),
   hourlyRate: real('hourly_rate'),
-  role: varchar('role', { length: 50 }).notNull().default('member'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({

@@ -416,7 +416,7 @@ export function DrawSidebar({
                 isSelected={drawing.id === selectedId}
                 onClick={() => onSelect(drawing.id)}
                 onDelete={rowCanDelete ? () => handleDelete(drawing.id) : undefined}
-                onRestore={canCreate ? () => handleRestore(drawing.id) : undefined}
+                onRestore={rowCanDelete ? () => handleRestore(drawing.id) : undefined}
                 isTrash
               />
             );

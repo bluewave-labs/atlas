@@ -13,10 +13,13 @@ const UPLOADS_DIR = path.join(__dirname, '../../../../uploads');
 
 export async function listFields(req: Request, res: Response) {
   try {
+    const perm = req.signPerm!;
+    const isAdmin = perm.role === 'admin' && perm.recordAccess === 'all';
     const userId = req.auth!.userId;
+    const tenantId = req.auth!.tenantId!;
     const documentId = req.params.id as string;
 
-    const doc = await signService.getDocument(userId, documentId);
+    const doc = await signService.getDocument(tenantId, documentId, isAdmin ? undefined : userId);
     if (!doc) {
       res.status(404).json({ success: false, error: 'Document not found' });
       return;
@@ -138,7 +141,12 @@ export async function createSigningToken(req: Request, res: Response) {
     );
 
     if (req.auth!.tenantId) {
-      const doc = await signService.getDocument(req.auth!.userId, documentId);
+      const isAdmin = perm.role === 'admin' && perm.recordAccess === 'all';
+      const doc = await signService.getDocument(
+        req.auth!.tenantId,
+        documentId,
+        isAdmin ? undefined : req.auth!.userId,
+      );
       emitAppEvent({
         tenantId: req.auth!.tenantId,
         userId: req.auth!.userId,
@@ -158,10 +166,13 @@ export async function createSigningToken(req: Request, res: Response) {
 
 export async function listSigningTokens(req: Request, res: Response) {
   try {
+    const perm = req.signPerm!;
+    const isAdmin = perm.role === 'admin' && perm.recordAccess === 'all';
     const userId = req.auth!.userId;
+    const tenantId = req.auth!.tenantId!;
     const documentId = req.params.id as string;
 
-    const doc = await signService.getDocument(userId, documentId);
+    const doc = await signService.getDocument(tenantId, documentId, isAdmin ? undefined : userId);
     if (!doc) {
       res.status(404).json({ success: false, error: 'Document not found' });
       return;
@@ -404,12 +415,19 @@ export async function saveAsTemplate(req: Request, res: Response) {
       return;
     }
 
+    const isAdmin = perm.role === 'admin' && perm.recordAccess === 'all';
     const userId = req.auth!.userId;
     const tenantId = req.auth!.tenantId;
     const documentId = req.params.id as string;
     const { title } = req.body;
 
-    const template = await signService.saveAsTemplate(userId, tenantId, documentId, title);
+    const template = await signService.saveAsTemplate(
+      userId,
+      tenantId,
+      documentId,
+      title,
+      isAdmin ? undefined : userId,
+    );
     res.json({ success: true, data: template });
   } catch (error) {
     logger.error({ error }, 'Failed to save document as template');

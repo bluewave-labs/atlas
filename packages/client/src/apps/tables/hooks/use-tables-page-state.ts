@@ -701,9 +701,10 @@ export function useTablesPageState() {
   }, []);
 
   const handleUpdateRowField = useCallback((rowId: string, colId: string, value: unknown) => {
+    if (!perm.canEdit) return;
     const updatedRows = localRows.map((r) => r._id === rowId ? { ...r, [colId]: value } : r);
     setLocalRows(updatedRows); triggerAutoSave({ rows: updatedRows });
-  }, [localRows, triggerAutoSave]);
+  }, [localRows, triggerAutoSave, perm.canEdit]);
 
   const handleAttachmentUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -748,6 +749,7 @@ export function useTablesPageState() {
   const pinnedBottomRowData = useMemo(() => [{ _id: PLACEHOLDER_ROW_ID, _createdAt: '' }], []);
 
   const handleCellEditRequest = useCallback((event: CellEditRequestEvent) => {
+    if (!perm.canEdit) return;
     const rowId = (event.data as TableRow)._id;
     const colId = event.colDef.field!;
     const newValue = event.newValue;
@@ -759,7 +761,7 @@ export function useTablesPageState() {
     }
     const updatedRows = localRows.map((r) => r._id === rowId ? { ...r, [colId]: newValue } : r);
     setLocalRows(updatedRows); triggerAutoSave({ rows: updatedRows });
-  }, [localRows, triggerAutoSave, pushUndoState]);
+  }, [localRows, triggerAutoSave, pushUndoState, perm.canEdit]);
 
   const handleCellKeyDown = useCallback((event: CellKeyDownEvent) => {
     const kbEvent = event.event as KeyboardEvent | undefined;
@@ -1066,11 +1068,12 @@ export function useTablesPageState() {
   }, [localRows, getCellsInRange, pushUndoState, triggerAutoSave, clearRange]);
 
   const handleFormulaBarEdit = useCallback((value: string) => {
+    if (!perm.canEdit) return;
     if (!focusedCellInfo) return;
     pushUndoState();
     const updatedRows = localRows.map((r) => r._id === focusedCellInfo.rowId ? { ...r, [focusedCellInfo.colId]: value } : r);
     setLocalRows(updatedRows); triggerAutoSave({ rows: updatedRows });
-  }, [focusedCellInfo, localRows, pushUndoState, triggerAutoSave]);
+  }, [focusedCellInfo, localRows, pushUndoState, triggerAutoSave, perm.canEdit]);
 
   const currentViews: TableViewTab[] = useMemo(
     () => localViewConfig.views?.length ? localViewConfig.views : [{ key: 'grid', label: 'Grid view' }],

@@ -1270,7 +1270,6 @@ export async function runMigrations() {
         user_id UUID NOT NULL,
         project_id UUID NOT NULL REFERENCES project_projects(id) ON DELETE CASCADE,
         hourly_rate REAL,
-        role VARCHAR(50) NOT NULL DEFAULT 'member',
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
@@ -2326,6 +2325,21 @@ export async function runMigrations() {
           `Failed to drop legacy account_id column on ${table}: ${err.message}`,
         );
       }
+    }
+
+    // ─── Drop legacy project_members.role column ────────────────────
+    // The column was never read for authorization or UI — authorization
+    // flows through the app-wide ROLE_MATRIX (req.projectsPerm.role)
+    // rather than a per-member role. Drop it wherever it still exists.
+    // Idempotent — safe to run on healthy databases.
+    try {
+      await client.query(
+        `ALTER TABLE IF EXISTS project_members DROP COLUMN IF EXISTS role`,
+      );
+    } catch (err: any) {
+      logger.warn(
+        `Failed to drop legacy role column on project_members: ${err.message}`,
+      );
     }
 
     // ─── Collapse legacy 'manager' role into 'admin' ─────────────────

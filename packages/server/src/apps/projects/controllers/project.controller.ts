@@ -186,7 +186,7 @@ export async function addProjectMember(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const tenantId = req.auth!.tenantId;
     const projectId = req.params.projectId as string;
-    const { userId: memberUserId, hourlyRate, role } = req.body;
+    const { userId: memberUserId, hourlyRate } = req.body;
 
     // Verify the project exists in this tenant
     const project = await projectService.getProject(userId, tenantId, projectId);
@@ -208,7 +208,7 @@ export async function addProjectMember(req: Request, res: Response) {
       return;
     }
 
-    const member = await projectService.addProjectMember(projectId, memberUserId, hourlyRate ?? null, role ?? 'member');
+    const member = await projectService.addProjectMember(projectId, memberUserId, hourlyRate ?? null);
     res.json({ success: true, data: member });
   } catch (error) {
     logger.error({ error }, 'Failed to add project member');

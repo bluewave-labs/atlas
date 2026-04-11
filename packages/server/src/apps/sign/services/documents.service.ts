@@ -64,15 +64,15 @@ export async function getUserEmail(userId: string): Promise<string> {
 
 // ─── Documents ──────────────────────────────────────────────────────
 
-export async function listDocuments(userId: string, tenantId: string) {
+export async function listDocuments(tenantId: string, userIdFilter?: string) {
   const docs = await db
     .select()
     .from(signatureDocuments)
     .where(
       and(
-        eq(signatureDocuments.userId, userId),
         eq(signatureDocuments.tenantId, tenantId),
         eq(signatureDocuments.isArchived, false),
+        ...(userIdFilter ? [eq(signatureDocuments.userId, userIdFilter)] : []),
       ),
     )
     .orderBy(desc(signatureDocuments.updatedAt));
@@ -115,14 +115,15 @@ export async function listDocuments(userId: string, tenantId: string) {
   });
 }
 
-export async function getDocument(userId: string, documentId: string) {
+export async function getDocument(tenantId: string, documentId: string, userIdFilter?: string) {
   const [doc] = await db
     .select()
     .from(signatureDocuments)
     .where(
       and(
         eq(signatureDocuments.id, documentId),
-        eq(signatureDocuments.userId, userId),
+        eq(signatureDocuments.tenantId, tenantId),
+        ...(userIdFilter ? [eq(signatureDocuments.userId, userIdFilter)] : []),
       ),
     )
     .limit(1);
@@ -186,7 +187,7 @@ export async function createDocument(
 }
 
 export async function updateDocument(
-  userId: string,
+  tenantId: string,
   documentId: string,
   data: {
     title?: string;
@@ -198,6 +199,7 @@ export async function updateDocument(
     documentType?: string;
     counterpartyName?: string | null;
   },
+  userIdFilter?: string,
 ) {
   const now = new Date();
   const updates: Record<string, unknown> = { updatedAt: now };
@@ -217,14 +219,15 @@ export async function updateDocument(
     .where(
       and(
         eq(signatureDocuments.id, documentId),
-        eq(signatureDocuments.userId, userId),
+        eq(signatureDocuments.tenantId, tenantId),
+        ...(userIdFilter ? [eq(signatureDocuments.userId, userIdFilter)] : []),
       ),
     );
 
-  return getDocument(userId, documentId);
+  return getDocument(tenantId, documentId, userIdFilter);
 }
 
-export async function deleteDocument(userId: string, documentId: string) {
+export async function deleteDocument(tenantId: string, documentId: string, userIdFilter?: string) {
   const now = new Date();
   await db
     .update(signatureDocuments)
@@ -232,13 +235,19 @@ export async function deleteDocument(userId: string, documentId: string) {
     .where(
       and(
         eq(signatureDocuments.id, documentId),
-        eq(signatureDocuments.userId, userId),
+        eq(signatureDocuments.tenantId, tenantId),
+        ...(userIdFilter ? [eq(signatureDocuments.userId, userIdFilter)] : []),
       ),
     );
-  logger.info({ userId, documentId }, 'Signature document archived');
+  logger.info({ tenantId, documentId }, 'Signature document archived');
 }
 
-export async function voidDocument(userId: string, documentId: string) {
+export async function voidDocument(
+  tenantId: string,
+  documentId: string,
+  actorUserId: string,
+  userIdFilter?: string,
+) {
   const now = new Date();
 
   // Mark document as voided
@@ -248,7 +257,8 @@ export async function voidDocument(userId: string, documentId: string) {
     .where(
       and(
         eq(signatureDocuments.id, documentId),
-        eq(signatureDocuments.userId, userId),
+        eq(signatureDocuments.tenantId, tenantId),
+        ...(userIdFilter ? [eq(signatureDocuments.userId, userIdFilter)] : []),
       ),
     );
 
@@ -263,10 +273,10 @@ export async function voidDocument(userId: string, documentId: string) {
       ),
     );
 
-  logger.info({ userId, documentId }, 'Signature document voided');
+  logger.info({ actorUserId, documentId }, 'Signature document voided');
 
-  // Audit: document.voided
-  const voider = await getUser(userId);
+  // Audit: document.voided — actor is the caller, not the owner
+  const voider = await getUser(actorUserId);
   logAuditEvent({
     documentId,
     action: 'document.voided',
@@ -274,7 +284,7 @@ export async function voidDocument(userId: string, documentId: string) {
     actorName: voider.name,
   }).catch(() => {});
 
-  return getDocument(userId, documentId);
+  return getDocument(tenantId, documentId, userIdFilter);
 }
 
 // ─── PDF Flattening (embed signatures into PDF) ────────────────────

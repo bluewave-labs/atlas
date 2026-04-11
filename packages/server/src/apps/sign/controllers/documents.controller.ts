@@ -28,9 +28,11 @@ export async function getWidgetData(req: Request, res: Response) {
 
 export async function listDocuments(req: Request, res: Response) {
   try {
+    const perm = req.signPerm!;
+    const isAdmin = perm.role === 'admin' && perm.recordAccess === 'all';
     const userId = req.auth!.userId;
-    const tenantId = req.auth!.tenantId;
-    const docs = await signService.listDocuments(userId, tenantId);
+    const tenantId = req.auth!.tenantId!;
+    const docs = await signService.listDocuments(tenantId, isAdmin ? undefined : userId);
     res.json({ success: true, data: { documents: docs } });
   } catch (error) {
     logger.error({ error }, 'Failed to list signature documents');
@@ -102,10 +104,13 @@ export async function uploadPDF(req: Request, res: Response) {
 
 export async function getDocument(req: Request, res: Response) {
   try {
+    const perm = req.signPerm!;
+    const isAdmin = perm.role === 'admin' && perm.recordAccess === 'all';
     const userId = req.auth!.userId;
+    const tenantId = req.auth!.tenantId!;
     const documentId = req.params.id as string;
 
-    const doc = await signService.getDocument(userId, documentId);
+    const doc = await signService.getDocument(tenantId, documentId, isAdmin ? undefined : userId);
     if (!doc) {
       res.status(404).json({ success: false, error: 'Document not found' });
       return;
@@ -126,13 +131,15 @@ export async function updateDocument(req: Request, res: Response) {
       return;
     }
 
+    const isAdmin = perm.role === 'admin' && perm.recordAccess === 'all';
     const userId = req.auth!.userId;
+    const tenantId = req.auth!.tenantId!;
     const documentId = req.params.id as string;
     const { title, status, expiresAt, tags, pageCount, redirectUrl, documentType, counterpartyName } = req.body;
 
-    const doc = await signService.updateDocument(userId, documentId, {
+    const doc = await signService.updateDocument(tenantId, documentId, {
       title, status, expiresAt, tags, pageCount, redirectUrl, documentType, counterpartyName,
-    });
+    }, isAdmin ? undefined : userId);
 
     if (!doc) {
       res.status(404).json({ success: false, error: 'Document not found' });
@@ -154,17 +161,22 @@ export async function deleteDocument(req: Request, res: Response) {
       return;
     }
 
+    const isAdmin = perm.role === 'admin' && perm.recordAccess === 'all';
     const userId = req.auth!.userId;
+    const tenantId = req.auth!.tenantId!;
     const documentId = req.params.id as string;
 
-    const existing = await signService.getDocument(userId, documentId);
+    // Admins with recordAccess 'all' can see any doc in the tenant; owners see
+    // only their own. assertCanDelete then enforces the role-level delete rule
+    // (delete vs delete_own) against the real owner fetched from the DB.
+    const existing = await signService.getDocument(tenantId, documentId, isAdmin ? undefined : userId);
     if (!existing) {
       res.status(404).json({ success: false, error: 'Document not found' });
       return;
     }
     if (!assertCanDelete(res, perm.role, existing.userId, userId)) return;
 
-    await signService.deleteDocument(existing.userId, documentId);
+    await signService.deleteDocument(tenantId, documentId);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to delete signature document');
@@ -174,10 +186,13 @@ export async function deleteDocument(req: Request, res: Response) {
 
 export async function viewPDF(req: Request, res: Response) {
   try {
+    const perm = req.signPerm!;
+    const isAdmin = perm.role === 'admin' && perm.recordAccess === 'all';
     const userId = req.auth!.userId;
+    const tenantId = req.auth!.tenantId!;
     const documentId = req.params.id as string;
 
-    const doc = await signService.getDocument(userId, documentId);
+    const doc = await signService.getDocument(tenantId, documentId, isAdmin ? undefined : userId);
     if (!doc || !doc.storagePath) {
       res.status(404).json({ success: false, error: 'Document not found' });
       return;
@@ -204,10 +219,13 @@ export async function viewPDF(req: Request, res: Response) {
 
 export async function downloadPDF(req: Request, res: Response) {
   try {
+    const perm = req.signPerm!;
+    const isAdmin = perm.role === 'admin' && perm.recordAccess === 'all';
     const userId = req.auth!.userId;
+    const tenantId = req.auth!.tenantId!;
     const documentId = req.params.id as string;
 
-    const doc = await signService.getDocument(userId, documentId);
+    const doc = await signService.getDocument(tenantId, documentId, isAdmin ? undefined : userId);
     if (!doc || !doc.storagePath) {
       res.status(404).json({ success: false, error: 'Document not found' });
       return;
@@ -241,10 +259,12 @@ export async function voidDocument(req: Request, res: Response) {
       return;
     }
 
+    const isAdmin = perm.role === 'admin' && perm.recordAccess === 'all';
     const userId = req.auth!.userId;
+    const tenantId = req.auth!.tenantId!;
     const documentId = req.params.id as string;
 
-    const doc = await signService.getDocument(userId, documentId);
+    const doc = await signService.getDocument(tenantId, documentId, isAdmin ? undefined : userId);
     if (!doc) {
       res.status(404).json({ success: false, error: 'Document not found' });
       return;
@@ -255,7 +275,7 @@ export async function voidDocument(req: Request, res: Response) {
       return;
     }
 
-    const updated = await signService.voidDocument(userId, documentId);
+    const updated = await signService.voidDocument(tenantId, documentId, userId, isAdmin ? undefined : userId);
 
     if (req.auth!.tenantId) {
       emitAppEvent({
@@ -295,10 +315,13 @@ export async function seedSampleData(req: Request, res: Response) {
 
 export async function getAuditLog(req: Request, res: Response) {
   try {
+    const perm = req.signPerm!;
+    const isAdmin = perm.role === 'admin' && perm.recordAccess === 'all';
     const userId = req.auth!.userId;
+    const tenantId = req.auth!.tenantId!;
     const documentId = req.params.id as string;
 
-    const doc = await signService.getDocument(userId, documentId);
+    const doc = await signService.getDocument(tenantId, documentId, isAdmin ? undefined : userId);
     if (!doc) {
       res.status(404).json({ success: false, error: 'Document not found' });
       return;

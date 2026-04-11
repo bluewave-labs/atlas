@@ -72,15 +72,17 @@ export async function saveAsTemplate(
   tenantId: string,
   documentId: string,
   title?: string,
+  userIdFilter?: string,
 ) {
-  // Get the document
+  // Get the document — tenant-scoped, optionally owner-scoped.
   const [doc] = await db
     .select()
     .from(signatureDocuments)
     .where(
       and(
         eq(signatureDocuments.id, documentId),
-        eq(signatureDocuments.userId, userId),
+        eq(signatureDocuments.tenantId, tenantId),
+        ...(userIdFilter ? [eq(signatureDocuments.userId, userIdFilter)] : []),
       ),
     )
     .limit(1);

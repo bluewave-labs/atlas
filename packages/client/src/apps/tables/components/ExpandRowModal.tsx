@@ -13,6 +13,7 @@ import { Textarea } from '../../../components/ui/textarea';
 import { Select } from '../../../components/ui/select';
 import { useRowComments, useCreateRowComment, useDeleteRowComment } from '../hooks';
 import { useAuthStore } from '../../../stores/auth-store';
+import { useAppActions } from '../../../hooks/use-app-permissions';
 
 const FIELD_TYPES: { value: TableFieldType; label: string }[] = [
   { value: 'text', label: 'Text' },
@@ -57,6 +58,7 @@ export function ExpandRowModal({
   hasNext = false,
 }: ExpandRowModalProps) {
   const { t } = useTranslation();
+  const { canEdit } = useAppActions('tables');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingColRef = useRef<string | null>(null);
   const [showAddField, setShowAddField] = useState(false);
@@ -112,6 +114,7 @@ export function ExpandRowModal({
 
   const renderField = (col: TableColumn) => {
     const value = row[col.id];
+    const ro = !canEdit;
 
     switch (col.type) {
       case 'text':
@@ -121,6 +124,8 @@ export function ExpandRowModal({
             className="tables-expand-input"
             value={value != null ? String(value) : ''}
             onChange={(e) => onUpdateField(row._id, col.id, e.target.value)}
+            readOnly={ro}
+            disabled={ro}
           />
         );
       case 'email':
@@ -130,6 +135,8 @@ export function ExpandRowModal({
             className="tables-expand-input"
             value={value != null ? String(value) : ''}
             onChange={(e) => onUpdateField(row._id, col.id, e.target.value)}
+            readOnly={ro}
+            disabled={ro}
           />
         );
       case 'url':
@@ -139,6 +146,8 @@ export function ExpandRowModal({
             className="tables-expand-input"
             value={value != null ? String(value) : ''}
             onChange={(e) => onUpdateField(row._id, col.id, e.target.value)}
+            readOnly={ro}
+            disabled={ro}
           />
         );
       case 'phone':
@@ -148,6 +157,8 @@ export function ExpandRowModal({
             className="tables-expand-input"
             value={value != null ? String(value) : ''}
             onChange={(e) => onUpdateField(row._id, col.id, e.target.value)}
+            readOnly={ro}
+            disabled={ro}
           />
         );
       case 'number':
@@ -160,6 +171,8 @@ export function ExpandRowModal({
             className="tables-expand-input"
             value={value != null ? String(value) : ''}
             onChange={(e) => onUpdateField(row._id, col.id, e.target.value ? Number(e.target.value) : null)}
+            readOnly={ro}
+            disabled={ro}
           />
         );
       case 'checkbox':
@@ -169,6 +182,7 @@ export function ExpandRowModal({
             checked={value === true}
             onChange={(e) => onUpdateField(row._id, col.id, e.target.checked)}
             style={{ width: 18, height: 18 }}
+            disabled={ro}
           />
         );
       case 'singleSelect':
@@ -180,6 +194,7 @@ export function ExpandRowModal({
               { value: '', label: '—' },
               ...(col.options || []).map((opt) => ({ value: opt, label: opt })),
             ]}
+            disabled={ro}
           />
         );
       case 'multiSelect': {
@@ -197,6 +212,7 @@ export function ExpandRowModal({
                       : selected.filter((s) => s !== opt);
                     onUpdateField(row._id, col.id, next);
                   }}
+                  disabled={ro}
                 />
                 <span>{opt}</span>
               </label>
@@ -211,6 +227,8 @@ export function ExpandRowModal({
             className="tables-expand-input"
             value={value != null ? String(value).slice(0, 10) : ''}
             onChange={(e) => onUpdateField(row._id, col.id, e.target.value)}
+            readOnly={ro}
+            disabled={ro}
           />
         );
       case 'longText':
@@ -220,6 +238,8 @@ export function ExpandRowModal({
             rows={4}
             value={value != null ? String(value) : ''}
             onChange={(e) => onUpdateField(row._id, col.id, e.target.value)}
+            readOnly={ro}
+            disabled={ro}
           />
         );
       case 'attachment': {
@@ -245,27 +265,31 @@ export function ExpandRowModal({
                     >
                       {att.name}
                     </a>
-                    <button
-                      className="tables-expand-attachment-remove"
-                      onClick={() => handleRemoveAttachment(col.id, i)}
-                      title="Remove"
-                    >
-                      <X size={12} />
-                    </button>
+                    {!ro && (
+                      <button
+                        className="tables-expand-attachment-remove"
+                        onClick={() => handleRemoveAttachment(col.id, i)}
+                        title="Remove"
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
             )}
-            <button
-              className="tables-expand-attachment-add"
-              onClick={() => {
-                pendingColRef.current = col.id;
-                fileInputRef.current?.click();
-              }}
-            >
-              <Paperclip size={14} />
-              <span>Add file</span>
-            </button>
+            {!ro && (
+              <button
+                className="tables-expand-attachment-add"
+                onClick={() => {
+                  pendingColRef.current = col.id;
+                  fileInputRef.current?.click();
+                }}
+              >
+                <Paperclip size={14} />
+                <span>Add file</span>
+              </button>
+            )}
           </div>
         );
       }
@@ -276,6 +300,8 @@ export function ExpandRowModal({
             className="tables-expand-input"
             value={value != null ? String(value) : ''}
             onChange={(e) => onUpdateField(row._id, col.id, e.target.value)}
+            readOnly={ro}
+            disabled={ro}
           />
         );
     }
@@ -334,6 +360,8 @@ export function ExpandRowModal({
                 value={primaryValue}
                 onChange={(e) => onUpdateField(row._id, primaryCol.id, e.target.value)}
                 placeholder="Untitled"
+                readOnly={!canEdit}
+                disabled={!canEdit}
               />
             </div>
           )}
@@ -358,7 +386,7 @@ export function ExpandRowModal({
             })}
 
             {/* Add a field button */}
-            {onAddColumn && (
+            {onAddColumn && canEdit && (
               <div className="tables-expand-add-field-wrapper">
                 {!showAddField ? (
                   <Button
@@ -410,6 +438,7 @@ function RowCommentsSection({
 }) {
   const { t } = useTranslation();
   const { account } = useAuthStore();
+  const { canCreate } = useAppActions('tables');
   const { data: comments, isLoading } = useRowComments(spreadsheetId, rowId);
   const createComment = useCreateRowComment();
   const deleteComment = useDeleteRowComment();
@@ -489,6 +518,8 @@ function RowCommentsSection({
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           placeholder={t('tables.comments.placeholder')}
+          readOnly={!canCreate}
+          disabled={!canCreate}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
@@ -514,7 +545,7 @@ function RowCommentsSection({
           variant="primary"
           size="sm"
           onClick={handleSubmit}
-          disabled={!newComment.trim() || createComment.isPending}
+          disabled={!canCreate || !newComment.trim() || createComment.isPending}
         >
           {t('tables.comments.add')}
         </Button>

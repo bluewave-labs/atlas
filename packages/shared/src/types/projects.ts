@@ -46,14 +46,11 @@ export interface UpdateProjInput extends Partial<CreateProjInput> {
 
 // ─── Project Member ─────────────────────────────────────────────────
 
-export type ProjectMemberRole = 'manager' | 'member';
-
 export interface ProjectMember {
   id: string;
   userId: string;
   projectId: string;
   hourlyRate: number | null;
-  role: ProjectMemberRole;
   createdAt: string;
   updatedAt: string;
   // Joined

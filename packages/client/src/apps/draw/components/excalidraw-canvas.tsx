@@ -55,6 +55,7 @@ function EditableTitle({
   presenceSlot,
   visibilitySlot,
   presentSlot,
+  canEdit = true,
 }: {
   title: string;
   onChange: (title: string) => void;
@@ -64,6 +65,7 @@ function EditableTitle({
   presenceSlot?: React.ReactNode;
   visibilitySlot?: React.ReactNode;
   presentSlot?: React.ReactNode;
+  canEdit?: boolean;
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
@@ -128,13 +130,13 @@ function EditableTitle({
         />
       ) : (
         <span
-          onClick={() => setEditing(true)}
+          onClick={() => { if (canEdit) setEditing(true); }}
           style={{
             flex: 1,
             fontSize: 'var(--font-size-md)',
             fontWeight: 600,
             color: 'var(--color-text-primary)',
-            cursor: 'text',
+            cursor: canEdit ? 'text' : 'default',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -192,6 +194,7 @@ export function ExcalidrawCanvas({
   showSaved,
   onTitleChange,
   visibilitySlot,
+  canEdit = true,
 }: {
   drawing: Drawing;
   onAutoSave: (content: Record<string, unknown>) => void;
@@ -200,6 +203,7 @@ export function ExcalidrawCanvas({
   showSaved?: boolean;
   onTitleChange: (title: string) => void;
   visibilitySlot?: React.ReactNode;
+  canEdit?: boolean;
 }) {
   const { t } = useTranslation();
   const [excalidrawApi, setExcalidrawApi] = useState<ExcalidrawImperativeAPI | null>(null);
@@ -331,6 +335,7 @@ export function ExcalidrawCanvas({
             isSaving={isSaving}
             showSaved={showSaved}
             excalidrawApi={excalidrawApi}
+            canEdit={canEdit}
             presenceSlot={<PresenceAvatars appId="draw" recordId={drawing.id} />}
             visibilitySlot={visibilitySlot}
             presentSlot={
@@ -354,6 +359,7 @@ export function ExcalidrawCanvas({
           }}
           initialData={initialData as any}
           theme={effectiveTheme}
+          viewModeEnabled={!canEdit}
           onChange={handleChange as any}
           UIOptions={{
             canvasActions: {

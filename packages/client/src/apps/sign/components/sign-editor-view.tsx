@@ -16,6 +16,8 @@ import { FieldPropertiesPanel } from './field-properties-panel';
 import { SignFieldToolbar } from './sign-field-toolbar';
 import { SmartButtonBar } from '../../../components/shared/SmartButtonBar';
 import { STATUS_BADGE_MAP } from '../lib/helpers';
+import { useAppActions } from '../../../hooks/use-app-permissions';
+import { useAuthStore } from '../../../stores/auth-store';
 import type { SignatureDocument, SignatureFieldType, SignatureField } from '@atlas-platform/shared';
 import type { Signer } from './signer-panel';
 
@@ -93,6 +95,10 @@ export function SignEditorView({
   onUpdateDoc: (data: Partial<SignatureDocument>) => void;
 }) {
   const { t } = useTranslation();
+  const { canEdit, canDelete, canDeleteOwn } = useAppActions('sign');
+  const { account } = useAuthStore();
+  const isOwner = !!account && selectedDoc.userId === account.userId;
+  const canDeleteDoc = canDelete || (canDeleteOwn && isOwner);
   const pdfContentRef = useRef<HTMLDivElement>(null);
 
   // Inline title editing
@@ -108,6 +114,7 @@ export function SignEditorView({
   const handlePageDrop = useCallback(
     (e: DragEvent<HTMLDivElement>) => {
       e.preventDefault();
+      if (!canEdit) return;
       const fieldType = e.dataTransfer.getData('application/sign-field-type') as SignatureFieldType;
       if (!fieldType) return;
 
@@ -140,7 +147,7 @@ export function SignEditorView({
 
       onAddField(fieldType, targetPage, relX, relY);
     },
-    [onAddField],
+    [onAddField, canEdit],
   );
 
   const handlePageDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
@@ -203,12 +210,12 @@ export function SignEditorView({
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
-                cursor: 'pointer',
+                cursor: canEdit ? 'pointer' : 'default',
               }}
-              onClick={() => { setTitleDraft(selectedDoc.title); setEditingTitle(true); }}
+              onClick={() => { if (!canEdit) return; setTitleDraft(selectedDoc.title); setEditingTitle(true); }}
             >
               {selectedDoc.title}
-              <Pencil size={12} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />
+              {canEdit && <Pencil size={12} style={{ color: 'var(--color-text-tertiary)', flexShrink: 0 }} />}
             </span>
           )}
           <Badge variant={STATUS_BADGE_MAP[selectedDoc.status] ?? 'default'}>
@@ -320,12 +327,14 @@ export function SignEditorView({
             size={28}
             onClick={onAuditView}
           />
-          <IconButton
-            icon={<BookmarkPlus size={14} />}
-            label={t('sign.templates.saveAsTemplate')}
-            size={28}
-            onClick={onSaveAsTemplate}
-          />
+          {canEdit && (
+            <IconButton
+              icon={<BookmarkPlus size={14} />}
+              label={t('sign.templates.saveAsTemplate')}
+              size={28}
+              onClick={onSaveAsTemplate}
+            />
+          )}
           <IconButton
             icon={<Users size={14} />}
             label={t('sign.editor.manageSigners')}
@@ -338,14 +347,16 @@ export function SignEditorView({
             size={28}
             onClick={() => onDownload(selectedDoc.id)}
           />
-          <IconButton
-            icon={<Trash2 size={14} />}
-            label={t('sign.editor.deleteDocument')}
-            size={28}
-            destructive
-            onClick={() => onRequestDelete(selectedDoc.id)}
-          />
-          {selectedDoc.status === 'pending' && (
+          {canDeleteDoc && (
+            <IconButton
+              icon={<Trash2 size={14} />}
+              label={t('sign.editor.deleteDocument')}
+              size={28}
+              destructive
+              onClick={() => onRequestDelete(selectedDoc.id)}
+            />
+          )}
+          {canEdit && selectedDoc.status === 'pending' && (
             <IconButton
               icon={<Ban size={14} />}
               label={t('sign.editor.voidDocument')}
@@ -355,22 +366,24 @@ export function SignEditorView({
             />
           )}
           <div style={{ width: 1, height: 20, background: 'var(--color-border-primary)' }} />
-          <Tooltip content={!allFieldsAssigned && fields && fields.length > 0 ? t('sign.editor.assignAllFields') : undefined}>
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={<Send size={14} />}
-              onClick={onSendModalOpen}
-              disabled={!allFieldsAssigned && fields != null && fields.length > 0}
-            >
-              {t('sign.editor.sendForSigning')}
-              {signers.filter((s) => s.email.trim()).length > 0 && (
-                <span style={{ marginLeft: 4, fontSize: 'var(--font-size-xs)', opacity: 0.7 }}>
-                  ({signers.filter((s) => s.email.trim()).length})
-                </span>
-              )}
-            </Button>
-          </Tooltip>
+          {canEdit && (
+            <Tooltip content={!allFieldsAssigned && fields && fields.length > 0 ? t('sign.editor.assignAllFields') : undefined}>
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<Send size={14} />}
+                onClick={onSendModalOpen}
+                disabled={!allFieldsAssigned && fields != null && fields.length > 0}
+              >
+                {t('sign.editor.sendForSigning')}
+                {signers.filter((s) => s.email.trim()).length > 0 && (
+                  <span style={{ marginLeft: 4, fontSize: 'var(--font-size-xs)', opacity: 0.7 }}>
+                    ({signers.filter((s) => s.email.trim()).length})
+                  </span>
+                )}
+              </Button>
+            </Tooltip>
+          )}
           <Button
             variant="primary"
             size="sm"
@@ -393,7 +406,7 @@ export function SignEditorView({
 
       {/* Field toolbar (vertical) + Page thumbnails + PDF viewer + Right sidebar */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        <SignFieldToolbar onAddField={(type) => onAddField(type)} />
+        {canEdit && <SignFieldToolbar onAddField={(type) => onAddField(type)} />}
 
         {/* Page thumbnails sidebar */}
         {pageThumbnails.length > 1 && (
@@ -458,7 +471,7 @@ export function SignEditorView({
                       onFieldClick={onFieldClick}
                       onFieldDelete={onFieldDelete}
                       selectedFieldId={selectedFieldId}
-                      editable
+                      editable={canEdit}
                     />
                     {(!fields || fields.filter((f) => f.pageNumber === pageNumber).length === 0) && pageNumber === 1 && (
                       <div className="sign-empty-overlay">
@@ -483,7 +496,7 @@ export function SignEditorView({
             activeSignerIndex={activeSignerIndex}
             onActiveSignerChange={onSetActiveSignerIndex}
           />
-          {selectedField && (
+          {canEdit && selectedField && (
             <>
               <div className="sign-right-sidebar-divider" />
               <FieldPropertiesPanel
