@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Command } from 'cmdk';
 import {
   Search, LayoutDashboard, GitBranch, Briefcase, Users, Building2,
-  Activity, Zap, Shield, FileText, BarChart3,
+  Activity, Zap, FileText, BarChart3,
   Plus, Clock, X, Loader2,
 } from 'lucide-react';
 import { useGlobalSearch } from '../../hooks/use-global-search';
@@ -29,7 +29,6 @@ const CRM_NAV = [
   { id: 'activities', key: 'crm.sidebar.activities', icon: Activity, view: 'activities' },
   { id: 'forecast', key: 'crm.forecast.title', icon: BarChart3, view: 'forecast' },
   { id: 'automations', key: 'crm.sidebar.automations', icon: Zap, view: 'automations' },
-  { id: 'permissions', key: 'crm.sidebar.permissions', icon: Shield, view: 'permissions' },
   { id: 'leadForms', key: 'crm.sidebar.leadForms', icon: FileText, view: 'leadForms' },
 ];
 

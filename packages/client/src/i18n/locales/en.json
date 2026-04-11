@@ -2997,6 +2997,19 @@
       "storage": "Storage",
       "email": "Email"
     },
+    "permissions": {
+      "title": "Permissions",
+      "columnUser": "User",
+      "ownerBadge": "Owner",
+      "inheritedTooltip": "Inherited from tenant role. Click to override.",
+      "resetButton": "Reset to default",
+      "roleAdmin": "Admin",
+      "roleEditor": "Editor",
+      "roleViewer": "Viewer",
+      "recordAccessAll": "All records",
+      "recordAccessOwn": "Own records only",
+      "saveError": "Failed to update permission"
+    },
     "cpuUsage": "CPU usage",
     "memoryUsage": "Memory usage",
     "memoryUsed": "Memory used",

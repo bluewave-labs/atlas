@@ -11,5 +11,4 @@ export * from './controllers/team.controller';
 export * from './controllers/note.controller';
 export * from './controllers/view.controller';
 export * from './controllers/dashboard.controller';
-export * from './controllers/permission.controller';
 export * from './controllers/proposal.controller';

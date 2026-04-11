@@ -248,6 +248,7 @@ export const queryKeys = {
     all: ['system'] as const,
     metrics: ['system', 'metrics'] as const,
     emailSettings: ['system', 'email-settings'] as const,
+    permissions: ['system', 'permissions'] as const,
   },
   marketplace: {
     catalog: ['marketplace', 'catalog'] as const,

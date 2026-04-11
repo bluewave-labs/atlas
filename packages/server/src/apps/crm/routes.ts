@@ -2,6 +2,9 @@ import { Router } from 'express';
 import * as crmController from './controller';
 import { authMiddleware } from '../../middleware/auth';
 import { requireAppPermission } from '../../middleware/require-app-permission';
+import { db } from '../../config/database';
+import { accounts, tenantMembers } from '../../db/schema';
+import { eq, inArray } from 'drizzle-orm';
 
 const router = Router();
 
@@ -91,11 +94,6 @@ router.put('/workflows/:id', crmController.updateWorkflow);
 router.delete('/workflows/:id', crmController.deleteWorkflow);
 router.post('/workflows/:id/toggle', crmController.toggleWorkflow);
 
-// Permissions
-router.get('/permissions', crmController.listPermissions);
-router.get('/permissions/me', crmController.getMyPermission);
-router.put('/permissions/:userId', crmController.updatePermission);
-
 // Leads
 router.get('/leads/list', crmController.listLeads);
 router.post('/leads', crmController.createLead);
@@ -145,6 +143,65 @@ router.patch('/proposals/:id', crmController.updateProposal);
 router.delete('/proposals/:id', crmController.deleteProposal);
 router.post('/proposals/:id/send', crmController.sendProposal);
 router.post('/proposals/:id/duplicate', crmController.duplicateProposal);
+
+// Read-only helpers for the CRM client. Write/admin endpoints for per-app
+// permissions now live under /system/permissions (owner-only unified grid).
+router.get('/permissions/me', (req, res) => {
+  const perm = req.crmPerm!;
+  res.json({
+    success: true,
+    data: {
+      id: null,
+      tenantId: req.auth?.tenantId ?? null,
+      userId: req.auth!.userId,
+      role: perm.role,
+      recordAccess: perm.recordAccess,
+    },
+  });
+});
+
+// Legacy team-member list — the log-activity modal's assignee picker still
+// reads this. Returns member info only; no RBAC data.
+router.get('/permissions', async (req, res) => {
+  try {
+    const tenantId = req.auth?.tenantId;
+    if (!tenantId) {
+      res.json({ success: true, data: { permissions: [] } });
+      return;
+    }
+    const members = await db
+      .select()
+      .from(tenantMembers)
+      .where(eq(tenantMembers.tenantId, tenantId));
+    if (members.length === 0) {
+      res.json({ success: true, data: { permissions: [] } });
+      return;
+    }
+    const userIds = members.map((m) => m.userId);
+    const acctRows = await db
+      .select({ userId: accounts.userId, email: accounts.email, name: accounts.name })
+      .from(accounts)
+      .where(inArray(accounts.userId, userIds));
+    const acctMap = new Map(acctRows.map((a) => [a.userId, a]));
+    const permissions = members.map((m) => {
+      const acct = acctMap.get(m.userId);
+      return {
+        id: null,
+        tenantId,
+        userId: m.userId,
+        role: 'editor',
+        recordAccess: 'all',
+        userName: acct?.name ?? null,
+        userEmail: acct?.email ?? 'unknown',
+        createdAt: null,
+        updatedAt: null,
+      };
+    });
+    res.json({ success: true, data: { permissions } });
+  } catch {
+    res.status(500).json({ success: false, error: 'Failed to list team members' });
+  }
+});
 
 // Google sync
 router.get('/google/status', crmController.getGoogleSyncStatus);

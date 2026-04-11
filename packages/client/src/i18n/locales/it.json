@@ -2965,6 +2965,19 @@
       "storage": "Archiviazione",
       "email": "Email"
     },
+    "permissions": {
+      "title": "Autorizzazioni",
+      "columnUser": "Utente",
+      "ownerBadge": "Proprietario",
+      "inheritedTooltip": "Ereditato dal ruolo del tenant. Clicca per sovrascrivere.",
+      "resetButton": "Ripristina predefinito",
+      "roleAdmin": "Amministratore",
+      "roleEditor": "Editor",
+      "roleViewer": "Visualizzatore",
+      "recordAccessAll": "Tutti i record",
+      "recordAccessOwn": "Solo i propri record",
+      "saveError": "Aggiornamento autorizzazione non riuscito"
+    },
     "cpuUsage": "Utilizzo CPU",
     "memoryUsage": "Utilizzo memoria",
     "memoryUsed": "Memoria utilizzata",

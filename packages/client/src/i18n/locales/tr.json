@@ -2965,6 +2965,19 @@
       "storage": "Depolama",
       "email": "E-posta"
     },
+    "permissions": {
+      "title": "İzinler",
+      "columnUser": "Kullanıcı",
+      "ownerBadge": "Sahip",
+      "inheritedTooltip": "Kiracı rolünden devralındı. Geçersiz kılmak için tıklayın.",
+      "resetButton": "Varsayılana sıfırla",
+      "roleAdmin": "Yönetici",
+      "roleEditor": "Editör",
+      "roleViewer": "Görüntüleyici",
+      "recordAccessAll": "Tüm kayıtlar",
+      "recordAccessOwn": "Yalnızca kendi kayıtları",
+      "saveError": "İzin güncellenemedi"
+    },
     "cpuUsage": "CPU kullanımı",
     "memoryUsage": "Bellek kullanımı",
     "memoryUsed": "Kullanılan bellek",

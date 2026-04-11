@@ -2965,6 +2965,19 @@
       "storage": "Stockage",
       "email": "E-mail"
     },
+    "permissions": {
+      "title": "Autorisations",
+      "columnUser": "Utilisateur",
+      "ownerBadge": "Propriétaire",
+      "inheritedTooltip": "Hérité du rôle du locataire. Cliquez pour remplacer.",
+      "resetButton": "Réinitialiser",
+      "roleAdmin": "Administrateur",
+      "roleEditor": "Éditeur",
+      "roleViewer": "Lecteur",
+      "recordAccessAll": "Tous les enregistrements",
+      "recordAccessOwn": "Ses propres enregistrements",
+      "saveError": "Échec de la mise à jour de l'autorisation"
+    },
     "cpuUsage": "Utilisation CPU",
     "memoryUsage": "Utilisation mémoire",
     "memoryUsed": "Mémoire utilisée",

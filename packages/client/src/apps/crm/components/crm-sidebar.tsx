@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Users, Building2, Clock, Settings2,
   LayoutGrid, List,
-  BarChart3, Zap, Shield,
+  BarChart3, Zap,
   UserPlus, TrendingUp,
   Eye, FileText, FileSignature,
 } from 'lucide-react';
@@ -182,15 +182,6 @@ export function CrmSidebar({
             iconColor="#ef4444"
             isActive={activeView === 'automations'}
             onClick={() => setActiveView('automations')}
-          />
-        )}
-        {myRole === 'admin' && (
-          <SidebarItem
-            label={t('crm.sidebar.permissions')}
-            icon={<Shield size={14} />}
-            iconColor="#6b7280"
-            isActive={activeView === 'permissions'}
-            onClick={() => setActiveView('permissions')}
           />
         )}
         <SidebarItem

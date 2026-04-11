@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Cpu, MemoryStick, HardDrive, Clock, Server, Globe, Activity, LayoutDashboard, Mail, Send, CheckCircle2 } from 'lucide-react';
+import { Cpu, MemoryStick, HardDrive, Clock, Server, Globe, Activity, LayoutDashboard, Mail, Send, CheckCircle2, Shield } from 'lucide-react';
 import { AlertBanner } from '../../components/ui/alert-banner';
 import { StatCard, InfoCard } from '../../components/ui/stat-card';
 import { AppSidebar, SidebarSection, SidebarItem } from '../../components/layout/app-sidebar';
@@ -12,6 +12,8 @@ import { Select } from '../../components/ui/select';
 import { Badge } from '../../components/ui/badge';
 import { SettingsSection, SettingsRow, SettingsToggle } from '../../components/settings/settings-primitives';
 import { useSystemMetrics } from './hooks';
+import { useAuthStore } from '../../stores/auth-store';
+import { PermissionsView } from './components/permissions-view';
 import { formatBytes } from '../../lib/format';
 import { api } from '../../lib/api-client';
 import { queryKeys } from '../../config/query-keys';
@@ -163,12 +165,14 @@ function RefreshDot() {
 
 // ─── Main Page ─────────────────────────────────────────────────────
 
-type SystemView = 'overview' | 'email';
+type SystemView = 'overview' | 'email' | 'permissions';
 
 export function SystemPage() {
   const { t } = useTranslation();
   const { data: metrics, isLoading } = useSystemMetrics();
   const [activeView, setActiveView] = useState<SystemView>('overview');
+  const tenantRole = useAuthStore((s) => s.tenantRole);
+  const isOwner = tenantRole === 'owner';
 
   return (
     <div style={{ display: 'flex', height: '100vh' }}>
@@ -194,6 +198,15 @@ export function SystemPage() {
             isActive={activeView === 'email'}
             onClick={() => setActiveView('email')}
           />
+          {isOwner && (
+            <SidebarItem
+              label={t('system.permissions.title')}
+              icon={<Shield size={15} />}
+              iconColor="#6b7280"
+              isActive={activeView === 'permissions'}
+              onClick={() => setActiveView('permissions')}
+            />
+          )}
         </SidebarSection>
       </AppSidebar>
 
@@ -220,6 +233,7 @@ export function SystemPage() {
           </>
         )}
         {activeView === 'email' && <EmailSettingsView />}
+        {activeView === 'permissions' && isOwner && <PermissionsView />}
       </div>
     </div>
   );

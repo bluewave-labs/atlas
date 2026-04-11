@@ -210,7 +210,6 @@ export function CrmPage() {
       case 'companies': return t('crm.sidebar.companies');
       case 'activities': return t('crm.sidebar.activities');
       case 'automations': return t('crm.sidebar.automations');
-      case 'permissions': return t('crm.sidebar.permissions');
       case 'forecast': return t('crm.forecast.title');
       case 'leadForms': return t('crm.leadForms.title');
     }
@@ -279,7 +278,7 @@ export function CrmPage() {
       <ContentArea
         title={sectionTitle ?? ''}
         actions={
-          activeView !== 'dashboard' && activeView !== 'automations' && activeView !== 'permissions' ? (
+          activeView !== 'dashboard' && activeView !== 'automations' ? (
             <>
               <IconButton icon={<Search size={14} />} label={t('crm.actions.search')} size={28} active={showSearch}
                 onClick={() => { setShowSearch(!showSearch); if (!showSearch) setTimeout(() => searchInputRef.current?.focus(), 50); }} />

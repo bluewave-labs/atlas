@@ -863,20 +863,6 @@ export function useMyCrmPermission() {
   });
 }
 
-export function useUpdateCrmPermission() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ userId, role, recordAccess }: { userId: string; role: CrmRole; recordAccess: CrmRecordAccess }) => {
-      const { data } = await api.put(`/crm/permissions/${userId}`, { role, recordAccess });
-      return data.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.crm.permissions.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.crm.permissions.me });
-    },
-  });
-}
-
 // ─── Seed ──────────────────────────────────────────────────────────
 
 export function useSeedCrmData() {

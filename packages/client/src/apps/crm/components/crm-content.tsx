@@ -8,7 +8,6 @@ import { DealKanban } from './deal-kanban';
 import { CrmDashboard } from './dashboard';
 import { DashboardCharts } from './dashboard-charts';
 import { AutomationsView } from './automations-view';
-import { PermissionsView } from './permissions-view';
 import { LeadsView } from './leads-view';
 import { LeadDetailPage } from './lead-detail-page';
 import { DealDetailPage } from './deal-detail-page';
@@ -211,10 +210,6 @@ export function CrmContent({
 
         {activeView === 'automations' && (
           <AutomationsView stages={stages} />
-        )}
-
-        {activeView === 'permissions' && (
-          <PermissionsView />
         )}
 
         {activeView === 'proposals' && (

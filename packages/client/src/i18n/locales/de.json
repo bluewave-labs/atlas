@@ -2965,6 +2965,19 @@
       "storage": "Speicher",
       "email": "E-Mail"
     },
+    "permissions": {
+      "title": "Berechtigungen",
+      "columnUser": "Benutzer",
+      "ownerBadge": "Inhaber",
+      "inheritedTooltip": "Von der Mandantenrolle geerbt. Klicken zum Überschreiben.",
+      "resetButton": "Auf Standard zurücksetzen",
+      "roleAdmin": "Admin",
+      "roleEditor": "Bearbeiter",
+      "roleViewer": "Betrachter",
+      "recordAccessAll": "Alle Datensätze",
+      "recordAccessOwn": "Nur eigene Datensätze",
+      "saveError": "Berechtigung konnte nicht aktualisiert werden"
+    },
     "cpuUsage": "CPU-Auslastung",
     "memoryUsage": "Speicherauslastung",
     "memoryUsed": "Verwendeter Speicher",

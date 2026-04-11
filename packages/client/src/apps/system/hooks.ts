@@ -1,7 +1,41 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api-client';
 import { queryKeys } from '../../config/query-keys';
 import { useAuthStore } from '../../stores/auth-store';
+
+// ─── App Permissions Types ─────────────────────────────────────────
+
+export type AppPermissionRole = 'admin' | 'editor' | 'viewer';
+export type AppPermissionRecordAccess = 'all' | 'own';
+
+export interface AppPermissionUser {
+  userId: string;
+  userName: string | null;
+  userEmail: string;
+  tenantRole: string;
+}
+
+export interface AppPermissionApp {
+  id: string;
+  name: string;
+}
+
+export interface AppPermissionCell {
+  userId: string;
+  userName: string | null;
+  userEmail: string;
+  tenantRole: string;
+  appId: string;
+  role: AppPermissionRole;
+  recordAccess: AppPermissionRecordAccess;
+  inherited: boolean;
+}
+
+export interface AppPermissionsResponse {
+  users: AppPermissionUser[];
+  apps: AppPermissionApp[];
+  cells: AppPermissionCell[];
+}
 
 // ─── Types ─────────────────────────────────────────────────────────
 
@@ -29,5 +63,59 @@ export function useSystemMetrics() {
     enabled: isSuperAdmin,
     refetchInterval: 10_000,
     staleTime: 5_000,
+  });
+}
+
+// ─── App Permissions Hooks ─────────────────────────────────────────
+
+export function useAppPermissions() {
+  const tenantRole = useAuthStore((s) => s.tenantRole);
+  return useQuery({
+    queryKey: queryKeys.system.permissions,
+    queryFn: async () => {
+      const { data } = await api.get('/system/permissions');
+      return data.data as AppPermissionsResponse;
+    },
+    enabled: tenantRole === 'owner',
+    staleTime: 10_000,
+  });
+}
+
+export function useSetAppPermission() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      appId,
+      role,
+      recordAccess,
+    }: {
+      userId: string;
+      appId: string;
+      role: AppPermissionRole;
+      recordAccess: AppPermissionRecordAccess;
+    }) => {
+      const { data } = await api.put(`/system/permissions/${userId}/${appId}`, {
+        role,
+        recordAccess,
+      });
+      return data.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.system.permissions });
+    },
+  });
+}
+
+export function useRevertAppPermission() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, appId }: { userId: string; appId: string }) => {
+      const { data } = await api.delete(`/system/permissions/${userId}/${appId}`);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.system.permissions });
+    },
   });
 }
