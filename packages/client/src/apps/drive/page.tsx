@@ -31,6 +31,11 @@ import { useDrivePage } from './use-drive-page';
 export function DrivePage() {
   const { t } = useTranslation();
   const d = useDrivePage();
+  const canCreate = d.perm.canCreate;
+  const canEdit = d.perm.canEdit;
+  const canDeleteAny = d.perm.canDelete;
+  const canDeleteOwn = d.perm.canDeleteOwn;
+  const currentUserId = d.account?.userId;
 
   const renderTags = (item: DriveItem) => {
     if (!item.tags || item.tags.length === 0) return null;
@@ -53,6 +58,7 @@ export function DrivePage() {
         storageKey="atlas_drive_sidebar"
         title="Drive"
         search={
+          canCreate ? (
           <div className="drive-sidebar-actions">
             <div ref={d.newDropdownRef} style={{ flex: 1, position: 'relative' }}>
               <Button variant="secondary" size="sm" icon={<Plus size={14} />} onClick={() => d.setNewDropdownOpen((v) => !v)} style={{ width: '100%', gap: 6 }}>
@@ -72,6 +78,7 @@ export function DrivePage() {
             </div>
             <Button variant="primary" size="sm" icon={<Upload size={14} />} onClick={() => d.fileInputRef.current?.click()} style={{ flex: 1 }}>{t('drive.actions.upload')}</Button>
           </div>
+          ) : undefined
         }
         footer={d.storageData ? (() => {
           const totalQuota = 10 * 1024 * 1024 * 1024;
@@ -168,7 +175,7 @@ export function DrivePage() {
               : d.sidebarView === 'shared' ? (<><Users size={40} strokeWidth={1.2} /><span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500, color: 'var(--color-text-secondary)' }}>{t('drive.sharing.sharedEmpty')}</span><span style={{ fontSize: 'var(--font-size-sm)' }}>{t('drive.sharing.sharedEmptyDesc')}</span></>)
               : d.sidebarView === 'favourites' ? (<><Heart size={40} strokeWidth={1.2} /><span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500, color: 'var(--color-text-secondary)' }}>{t('drive.emptyState.noFavourites')}</span><span style={{ fontSize: 'var(--font-size-sm)' }}>{t('drive.emptyState.noFavouritesDesc')}</span></>)
               : d.searchQuery.trim() ? (<><Search size={40} strokeWidth={1.2} /><span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500, color: 'var(--color-text-secondary)' }}>{t('drive.emptyState.noResults')}</span><span style={{ fontSize: 'var(--font-size-sm)' }}>{t('drive.emptyState.noResultsDesc')}</span></>)
-              : (<FeatureEmptyState illustration="files" title={d.t('drive.empty.title')} description={d.t('drive.empty.desc')} highlights={[{ icon: <Upload size={14} />, title: d.t('drive.empty.h1Title'), description: d.t('drive.empty.h1Desc') }, { icon: <FolderPlus size={14} />, title: d.t('drive.empty.h2Title'), description: d.t('drive.empty.h2Desc') }, { icon: <Share2 size={14} />, title: d.t('drive.empty.h3Title'), description: d.t('drive.empty.h3Desc') }]} actionLabel={d.t('drive.empty.uploadFiles')} actionIcon={<Upload size={14} />} onAction={() => d.fileInputRef.current?.click()} />)}
+              : (<FeatureEmptyState illustration="files" title={d.t('drive.empty.title')} description={d.t('drive.empty.desc')} highlights={[{ icon: <Upload size={14} />, title: d.t('drive.empty.h1Title'), description: d.t('drive.empty.h1Desc') }, { icon: <FolderPlus size={14} />, title: d.t('drive.empty.h2Title'), description: d.t('drive.empty.h2Desc') }, { icon: <Share2 size={14} />, title: d.t('drive.empty.h3Title'), description: d.t('drive.empty.h3Desc') }]} actionLabel={canCreate ? d.t('drive.empty.uploadFiles') : undefined} actionIcon={canCreate ? <Upload size={14} /> : undefined} onAction={canCreate ? () => d.fileInputRef.current?.click() : undefined} />)}
             </div>
           ) : d.viewMode === 'list' ? (
             <DriveDataTableList displayItems={d.displayItems} sortBy={d.sortBy} setSortBy={d.setSortBy} selectedIds={d.selectedIds} setSelectedIds={d.setSelectedIds} renameId={d.renameId} setRenameId={d.setRenameId} renameValue={d.renameValue} setRenameValue={d.setRenameValue} handleRenameSubmit={d.handleRenameSubmit} setPreviewItem={d.setPreviewItem} handleItemDoubleClick={d.handleItemDoubleClick} handleContextMenu={d.handleContextMenu} handleItemDragStart={d.handleItemDragStart} handleItemDragEnd={d.handleItemDragEnd} handleFolderDragOver={d.handleFolderDragOver} handleFolderDragLeave={d.handleFolderDragLeave} handleFolderDrop={d.handleFolderDrop} dragOverFolderId={d.dragOverFolderId} sidebarView={d.sidebarView} tenantUsersData={d.tenantUsersData ?? []} driveSettings={d.driveSettings} renderTags={renderTags} />
@@ -184,9 +191,15 @@ export function DrivePage() {
       )}
 
       {/* Context menu */}
-      {d.contextMenu && (
-        <DriveContextMenuView contextMenu={d.contextMenu} setContextMenu={() => d.setContextMenu(null)} sidebarView={d.sidebarView} handleRestore={d.handleRestore} handlePermanentDelete={d.handlePermanentDelete} handleDownload={d.handleDownload} handleDownloadZip={d.handleDownloadZip} handleRename={d.handleRename} handleSetIcon={d.handleSetIcon} handleDuplicate={d.handleDuplicate} handleMove={d.handleMove} handleCopy={d.handleCopy} handleToggleFavourite={d.handleToggleFavourite} handleAddTag={d.handleAddTag} setShareModalItem={d.setShareModalItem} setReplaceTargetId={d.setReplaceTargetId} replaceFileInputRef={d.replaceFileInputRef} handleMoveToTrash={d.handleMoveToTrash} />
-      )}
+      {d.contextMenu && (() => {
+        const item = d.contextMenu.item;
+        const isOwner = item.userId === currentUserId;
+        const ctxCanEdit = canEdit;
+        const ctxCanDelete = canDeleteAny || (canDeleteOwn && isOwner);
+        return (
+        <DriveContextMenuView contextMenu={d.contextMenu} setContextMenu={() => d.setContextMenu(null)} sidebarView={d.sidebarView} handleRestore={d.handleRestore} handlePermanentDelete={d.handlePermanentDelete} handleDownload={d.handleDownload} handleDownloadZip={d.handleDownloadZip} handleRename={d.handleRename} handleSetIcon={d.handleSetIcon} handleDuplicate={d.handleDuplicate} handleMove={d.handleMove} handleCopy={d.handleCopy} handleToggleFavourite={d.handleToggleFavourite} handleAddTag={d.handleAddTag} setShareModalItem={d.setShareModalItem} setReplaceTargetId={d.setReplaceTargetId} replaceFileInputRef={d.replaceFileInputRef} handleMoveToTrash={d.handleMoveToTrash} canEdit={ctxCanEdit} canDelete={ctxCanDelete} />
+        );
+      })()}
 
       {/* Modals */}
       <NewFolderModal open={d.newFolderOpen} onOpenChange={d.setNewFolderOpen} folderName={d.newFolderName} setFolderName={d.setNewFolderName} onSubmit={d.handleCreateFolder} />
@@ -207,9 +220,9 @@ export function DrivePage() {
           <Button variant="ghost" size="sm" icon={<Check size={14} />} onClick={d.handleSelectAll}>{t('drive.actions.selectAll')}</Button>
           <Button variant="ghost" size="sm" icon={<X size={14} />} onClick={d.handleClearSelection}>{t('drive.actions.clear')}</Button>
           <div style={{ width: 1, height: 20, background: 'var(--color-border-primary)' }} />
-          <Button variant="ghost" size="sm" icon={<FolderInput size={14} />} onClick={() => { d.setBatchMoveTargetId(null); d.setBatchMoveOpen(true); }}>{t('drive.actions.move')}</Button>
+          {canEdit && <Button variant="ghost" size="sm" icon={<FolderInput size={14} />} onClick={() => { d.setBatchMoveTargetId(null); d.setBatchMoveOpen(true); }}>{t('drive.actions.move')}</Button>}
           <Button variant="ghost" size="sm" icon={<Star size={14} />} onClick={d.handleBulkFavourite}>{t('drive.actions.favourite')}</Button>
-          <Button variant="danger" size="sm" icon={<Trash2 size={14} />} onClick={d.handleBulkDelete}>{t('drive.actions.delete')}</Button>
+          {(canDeleteAny || canDeleteOwn) && <Button variant="danger" size="sm" icon={<Trash2 size={14} />} onClick={d.handleBulkDelete}>{t('drive.actions.delete')}</Button>}
         </div>
       )}
 

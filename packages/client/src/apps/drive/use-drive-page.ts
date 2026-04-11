@@ -21,6 +21,7 @@ import { ROUTES } from '../../config/routes';
 import { useDriveSettingsStore, useDriveSettingsSync } from './settings-store';
 import { useUIStore } from '../../stores/ui-store';
 import { useAuthStore } from '../../stores/auth-store';
+import { useAppActions } from '../../hooks/use-app-permissions';
 import { useTenantUsers } from '../../hooks/use-platform';
 import { useQuery } from '@tanstack/react-query';
 import type { DriveItem } from '@atlas-platform/shared';
@@ -171,6 +172,7 @@ export function useDrivePage() {
   const deleteFileComment = useDeleteFileComment();
   const updateDriveVisibility = useUpdateDriveItemVisibility();
   const { account } = useAuthStore();
+  const perm = useAppActions('drive');
 
   // Activity & comments queries
   const activityItemId = activityOpen && previewItem ? previewItem.id : undefined;
@@ -550,7 +552,7 @@ export function useDrivePage() {
     storageData, filePreviewData, previewLoading,
     linkedDocData, linkedDrawingData, linkedTableData,
     versionsData, shareLinksData, itemSharesData, tenantUsersData,
-    activityData, commentsData, account,
+    activityData, commentsData, account, perm,
     // Mutations
     createLinkedDocument, createLinkedDrawing, createLinkedSpreadsheet,
     replaceFile, restoreVersion, createShareLink, deleteShareLink,

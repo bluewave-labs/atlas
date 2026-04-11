@@ -81,6 +81,7 @@ export function TablesPage() {
     t, selectedId, searchQuery, setSearchQuery, showAddColumn, setShowAddColumn,
     showTrash, setShowTrash, showTemplates, setShowTemplates, deleteConfirmId, setDeleteConfirmId,
     showSaved, isSaving,
+    canEdit, canDeleteTable,
     localColumns, localRows, localViewConfig, setLocalViewConfig, localTitle,
     showSearch, setShowSearch, searchText, setSearchText,
     columnMenu, setColumnMenu, rowMenu, setRowMenu, expandedRowId, setExpandedRowId,
@@ -228,14 +229,14 @@ export function TablesPage() {
                   {selectedRowIds.length > 0 && (
                     <div className="tables-selection-float">
                       <span className="tables-selection-float-count">{selectedRowIds.length}</span>
-                      <IconButton icon={<Copy size={13} />} label={t('tables.duplicateSelected')} onClick={handleBulkDuplicate} size={28} style={{ color: 'inherit' }} />
-                      <IconButton icon={<Trash2 size={13} />} label={t('tables.deleteSelected')} onClick={handleBulkDelete} destructive size={28} />
+                      {canEdit && <IconButton icon={<Copy size={13} />} label={t('tables.duplicateSelected')} onClick={handleBulkDuplicate} size={28} style={{ color: 'inherit' }} />}
+                      {canDeleteTable && <IconButton icon={<Trash2 size={13} />} label={t('tables.deleteSelected')} onClick={handleBulkDelete} destructive size={28} />}
                       <IconButton icon={<X size={13} />} label={t('tables.clearSelection')} onClick={handleClearSelection} size={28} style={{ color: 'inherit' }} />
                     </div>
                   )}
                 </div>
                 <div className="tables-footer">
-                  <Button variant="ghost" size="sm" icon={<Plus size={14} />} onClick={handleAddRow} className="tables-footer-btn">{t('tables.addRow')}</Button>
+                  {canEdit && <Button variant="ghost" size="sm" icon={<Plus size={14} />} onClick={handleAddRow} className="tables-footer-btn">{t('tables.addRow')}</Button>}
                   <span>{filteredRows.length !== localRows.length ? t('tables.filteredRowCount', { filtered: filteredRows.length, total: localRows.length }) : t('tables.rowCount', { count: localRows.length })}</span>
                   {rangeVersion > 0 && getSelectedCellCount() > 0 && <span className="tables-footer-agg">{t('tables.cellsSelected', { count: getSelectedCellCount() })}</span>}
                   {footerAgg && <span className="tables-footer-agg">{footerAgg.label}: {footerAgg.sum} {t('tables.sum')} · {footerAgg.avg} {t('tables.avg')}</span>}
@@ -254,9 +255,9 @@ export function TablesPage() {
       {columnMenu && (() => {
         const col = localColumns.find((c) => c.id === columnMenu.columnId);
         if (!col) return null;
-        return <ColumnHeaderMenu columnId={columnMenu.columnId} columnName={col.name} columnType={col.type} columnDescription={col.description} columnIndex={localColumns.findIndex((c) => c.id === columnMenu.columnId)} frozenCount={localViewConfig.frozenColumnCount || 0} x={columnMenu.x} y={columnMenu.y} onClose={() => setColumnMenu(null)} onRename={handleRenameColumn} onDelete={handleDeleteColumn} onDuplicate={handleDuplicateColumn} onChangeType={handleChangeColumnType} onSortAsc={(colId) => handleSortByColumn(colId, 'asc')} onSortDesc={(colId) => handleSortByColumn(colId, 'desc')} onHide={handleHideColumn} onFreeze={handleFreezeUpTo} onUnfreeze={handleUnfreezeColumns} onInsertLeft={handleInsertColumnLeft} onInsertRight={handleInsertColumnRight} onEditDescription={handleEditColumnDescription} onGroupBy={handleGroupByColumn} onUngroup={handleUngroupRows} isGroupedBy={localViewConfig.groupByColumnId === columnMenu.columnId} />;
+        return <ColumnHeaderMenu columnId={columnMenu.columnId} columnName={col.name} columnType={col.type} columnDescription={col.description} columnIndex={localColumns.findIndex((c) => c.id === columnMenu.columnId)} frozenCount={localViewConfig.frozenColumnCount || 0} x={columnMenu.x} y={columnMenu.y} onClose={() => setColumnMenu(null)} onRename={handleRenameColumn} onDelete={handleDeleteColumn} onDuplicate={handleDuplicateColumn} onChangeType={handleChangeColumnType} onSortAsc={(colId) => handleSortByColumn(colId, 'asc')} onSortDesc={(colId) => handleSortByColumn(colId, 'desc')} onHide={handleHideColumn} onFreeze={handleFreezeUpTo} onUnfreeze={handleUnfreezeColumns} onInsertLeft={handleInsertColumnLeft} onInsertRight={handleInsertColumnRight} onEditDescription={handleEditColumnDescription} onGroupBy={handleGroupByColumn} onUngroup={handleUngroupRows} isGroupedBy={localViewConfig.groupByColumnId === columnMenu.columnId} canEdit={canEdit} canDelete={canDeleteTable} />;
       })()}
-      {rowMenu && <RowContextMenu rowId={rowMenu.rowId} x={rowMenu.x} y={rowMenu.y} onClose={() => setRowMenu(null)} onInsertAbove={handleInsertRowAbove} onInsertBelow={handleInsertRowBelow} onDuplicate={handleDuplicateRow} onExpand={(rowId) => setExpandedRowId(rowId)} onDelete={handleDeleteRow} />}
+      {rowMenu && <RowContextMenu rowId={rowMenu.rowId} x={rowMenu.x} y={rowMenu.y} onClose={() => setRowMenu(null)} onInsertAbove={handleInsertRowAbove} onInsertBelow={handleInsertRowBelow} onDuplicate={handleDuplicateRow} onExpand={(rowId) => setExpandedRowId(rowId)} onDelete={handleDeleteRow} canEdit={canEdit} canDelete={canDeleteTable} />}
       {expandedRowId && (() => {
         const rowIdx = localRows.findIndex((r) => r._id === expandedRowId);
         const row = rowIdx >= 0 ? localRows[rowIdx] : undefined;
@@ -278,15 +279,16 @@ export function TablesPage() {
 import { AppSidebar as AppSidebarLayout } from '../../components/layout/app-sidebar';
 
 function AppSidebar({ state }: { state: ReturnType<typeof useTablesPageState> }) {
-  const { t, searchQuery, setSearchQuery, showTrash, setShowTrash, showTemplates, setShowTemplates, selectedId, localViewConfig, filteredTables, archivedTables, listLoading, handleSelectTable, handleCreateTable, handleDeleteTable, handleRestoreTable, handleViewToggle, openSettings } = state;
+  const { t, searchQuery, setSearchQuery, showTrash, setShowTrash, showTemplates, setShowTemplates, selectedId, localViewConfig, filteredTables, archivedTables, listLoading, handleSelectTable, handleCreateTable, handleDeleteTable, handleRestoreTable, handleViewToggle, openSettings, perm, currentUserId } = state;
+  const canCreate = perm.canCreate;
   return (
     <AppSidebarLayout storageKey="atlas_tables_sidebar" title={t('tables.title')}
-      headerAction={<div style={{ display: 'flex', gap: 2 }}><IconButton icon={<LayoutTemplate size={14} />} label={t('tables.browseTemplates')} onClick={() => setShowTemplates(true)} size={28} /><IconButton icon={<Plus size={14} />} label={t('tables.newTable')} onClick={handleCreateTable} size={28} /></div>}
+      headerAction={<div style={{ display: 'flex', gap: 2 }}>{canCreate && <IconButton icon={<LayoutTemplate size={14} />} label={t('tables.browseTemplates')} onClick={() => setShowTemplates(true)} size={28} />}{canCreate && <IconButton icon={<Plus size={14} />} label={t('tables.newTable')} onClick={handleCreateTable} size={28} />}</div>}
       search={<div className="tables-sidebar-search"><input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t('tables.searchTables')} /></div>}
       footer={<><div className="tables-sidebar-views">{[{ key: 'grid' as const, icon: LayoutGrid, label: t('tables.gridView', 'Grid view') }, { key: 'kanban' as const, icon: Kanban, label: t('tables.kanbanView', 'Kanban') }, { key: 'calendar' as const, icon: Calendar, label: t('tables.calendarView', 'Calendar') }, { key: 'gallery' as const, icon: GalleryHorizontalEnd, label: t('tables.galleryView', 'Gallery') }].map((v) => (<button key={v.key} className={`tables-sidebar-view-item${localViewConfig.activeView === v.key ? ' active' : ''}`} onClick={() => handleViewToggle(v.key)}><v.icon size={14} /><span>{v.label}</span></button>))}</div><button className="tables-sidebar-view-item" onClick={() => openSettings('tables')} title={t('tables.tableSettings')}><Settings2 size={14} /><span>{t('tables.settings')}</span></button></>}>
       <div className="tables-sidebar-list">
         {filteredTables.length === 0 && !listLoading && <div className="tables-sidebar-empty">{t('tables.noTables')}</div>}
-        {filteredTables.map((table) => { const SidebarIcon = getTableIcon(table.icon); return (<div key={table.id} role="button" tabIndex={0} className={`tables-sidebar-item${selectedId === table.id ? ' active' : ''}`} onClick={() => handleSelectTable(table.id)} onKeyDown={(e) => { if (e.key === 'Enter') handleSelectTable(table.id); }}><SidebarIcon size={14} style={table.color ? { color: table.color } : undefined} /><span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{table.title}</span><IconButton icon={<Trash2 size={12} />} label={t('tables.delete')} onClick={(e) => { e.stopPropagation(); handleDeleteTable(table.id); }} size={22} destructive tooltip={false} className="tables-sidebar-delete-btn" style={{ opacity: 0, transition: 'opacity 100ms' }} /></div>); })}
+        {filteredTables.map((table) => { const SidebarIcon = getTableIcon(table.icon); const canDeleteThis = perm.canDelete || (perm.canDeleteOwn && table.userId === currentUserId); return (<div key={table.id} role="button" tabIndex={0} className={`tables-sidebar-item${selectedId === table.id ? ' active' : ''}`} onClick={() => handleSelectTable(table.id)} onKeyDown={(e) => { if (e.key === 'Enter') handleSelectTable(table.id); }}><SidebarIcon size={14} style={table.color ? { color: table.color } : undefined} /><span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{table.title}</span>{canDeleteThis && <IconButton icon={<Trash2 size={12} />} label={t('tables.delete')} onClick={(e) => { e.stopPropagation(); handleDeleteTable(table.id); }} size={22} destructive tooltip={false} className="tables-sidebar-delete-btn" style={{ opacity: 0, transition: 'opacity 100ms' }} />}</div>); })}
         {archivedTables.length > 0 && (<><button className="tables-sidebar-item" onClick={() => setShowTrash(!showTrash)} style={{ marginTop: 8 }}><Trash2 size={14} /><span>{t('tables.trash')}</span><span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--color-text-tertiary)' }}>{archivedTables.length}</span></button>{showTrash && archivedTables.map((table) => (<div key={table.id} className="tables-sidebar-item archived"><Table2 size={14} /><span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{table.title}</span><IconButton icon={<RotateCcw size={12} />} label={t('tables.restore')} onClick={(e) => { e.stopPropagation(); handleRestoreTable(table.id); }} size={22} /></div>))}</>)}
       </div>
     </AppSidebarLayout>
@@ -294,16 +296,16 @@ function AppSidebar({ state }: { state: ReturnType<typeof useTablesPageState> })
 }
 
 function EmptyState({ state }: { state: ReturnType<typeof useTablesPageState> }) {
-  const { t, handleCreateTable, handleCreateFromTemplate } = state;
+  const { t, handleCreateTable, handleCreateFromTemplate, canCreate } = state;
   return (
     <div className="tables-empty-state">
       <FeatureEmptyState illustration="table" title={t('tables.empty.title')} description={t('tables.empty.desc')}
         highlights={[{ icon: <Table2 size={14} />, title: t('tables.empty.h1Title'), description: t('tables.empty.h1Desc') }, { icon: <Layers size={14} />, title: t('tables.empty.h2Title'), description: t('tables.empty.h2Desc') }, { icon: <LayoutGrid size={14} />, title: t('tables.empty.h3Title'), description: t('tables.empty.h3Desc') }]}
-        actionLabel={t('tables.newTable')} actionIcon={<Plus size={14} />} onAction={handleCreateTable} />
-      <div className="tables-templates-section">
+        actionLabel={canCreate ? t('tables.newTable') : undefined} actionIcon={canCreate ? <Plus size={14} /> : undefined} onAction={canCreate ? handleCreateTable : undefined} />
+      {canCreate && <div className="tables-templates-section">
         <div className="tables-templates-label">{t('tables.startFromTemplate')}</div>
         <div className="tables-templates-grid">{TABLE_TEMPLATES.slice(0, 6).map((tpl) => { const Icon = getTemplateIcon(tpl.icon); return (<button key={tpl.key} className="tables-template-card" onClick={() => handleCreateFromTemplate(tpl)}><Icon size={24} style={{ color: 'var(--color-text-secondary)' }} /><span className="tables-template-name">{tpl.name}</span></button>); })}</div>
-      </div>
+      </div>}
     </div>
   );
 }
@@ -342,13 +344,13 @@ function TopBar({ state }: { state: ReturnType<typeof useTablesPageState> }) {
 }
 
 function Toolbar({ state }: { state: ReturnType<typeof useTablesPageState> }) {
-  const { t, showAddColumn, setShowAddColumn, localColumns, localViewConfig, setLocalViewConfig, allTables, triggerAutoSave, handleAddColumn, handleGroupByColumn, handleUngroupRows, effectiveKanbanCol, selectColumns } = state;
+  const { t, showAddColumn, setShowAddColumn, localColumns, localViewConfig, setLocalViewConfig, allTables, triggerAutoSave, handleAddColumn, handleGroupByColumn, handleUngroupRows, effectiveKanbanCol, selectColumns, canEdit } = state;
   return (
     <div className="tables-toolbar">
-      <div style={{ position: 'relative' }}>
+      {canEdit && <div style={{ position: 'relative' }}>
         <Button variant="ghost" size="sm" icon={<Plus size={14} />} onClick={() => setShowAddColumn(!showAddColumn)}>{t('tables.column')}</Button>
         {showAddColumn && <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 4, zIndex: 100 }}><AddColumnPopover onAdd={handleAddColumn} onClose={() => setShowAddColumn(false)} tables={allTables.map((t) => ({ id: t.id, title: t.title }))} /></div>}
-      </div>
+      </div>}
       <HideFieldsPopover columns={localColumns} viewConfig={localViewConfig} onUpdate={(hiddenColumns) => { const updated = { ...localViewConfig, hiddenColumns }; setLocalViewConfig(updated); triggerAutoSave({ viewConfig: updated }); }} />
       <SortPopover columns={localColumns} viewConfig={localViewConfig} onUpdate={(sorts) => { const updated = { ...localViewConfig, sorts }; setLocalViewConfig(updated); triggerAutoSave({ viewConfig: updated }); }} />
       <FilterPopover columns={localColumns} viewConfig={localViewConfig} onUpdate={(filters) => { const updated = { ...localViewConfig, filters }; setLocalViewConfig(updated); triggerAutoSave({ viewConfig: updated }); }} />

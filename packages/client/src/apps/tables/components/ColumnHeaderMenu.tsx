@@ -53,6 +53,8 @@ interface ColumnHeaderMenuProps {
   onGroupBy?: (colId: string) => void;
   onUngroup?: () => void;
   isGroupedBy?: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 export function ColumnHeaderMenu({
@@ -61,6 +63,7 @@ export function ColumnHeaderMenu({
   onRename, onDelete, onDuplicate, onChangeType, onSortAsc, onSortDesc,
   onHide, onFreeze, onUnfreeze, onInsertLeft, onInsertRight, onEditDescription,
   onGroupBy, onUngroup, isGroupedBy,
+  canEdit = true, canDelete = true,
 }: ColumnHeaderMenuProps) {
   const { t } = useTranslation();
   const [showTypeSubmenu, setShowTypeSubmenu] = useState(false);
@@ -130,10 +133,10 @@ export function ColumnHeaderMenu({
         </div>
       ) : (
         <>
-          <ContextMenuItem icon={<Pencil size={14} />} label={t('tables.rename')} onClick={() => setIsRenaming(true)} />
-          <ContextMenuItem icon={<FileText size={14} />} label={t('tables.editDescription')} onClick={() => setIsEditingDesc(true)} />
+          {canEdit && <ContextMenuItem icon={<Pencil size={14} />} label={t('tables.rename')} onClick={() => setIsRenaming(true)} />}
+          {canEdit && <ContextMenuItem icon={<FileText size={14} />} label={t('tables.editDescription')} onClick={() => setIsEditingDesc(true)} />}
 
-          <div
+          {canEdit && <div
             className="context-menu-item has-submenu"
             onMouseEnter={() => setShowTypeSubmenu(true)}
             onMouseLeave={() => setShowTypeSubmenu(false)}
@@ -158,11 +161,11 @@ export function ColumnHeaderMenu({
                 })}
               </div>
             )}
-          </div>
+          </div>}
 
-          <ContextMenuItem icon={<ArrowLeftToLine size={14} />} label={t('tables.insertLeft')} onClick={() => { onInsertLeft(columnId); onClose(); }} />
-          <ContextMenuItem icon={<ArrowRightToLine size={14} />} label={t('tables.insertRight')} onClick={() => { onInsertRight(columnId); onClose(); }} />
-          <ContextMenuItem icon={<Copy size={14} />} label={t('tables.duplicateColumn')} onClick={() => { onDuplicate(columnId); onClose(); }} />
+          {canEdit && <ContextMenuItem icon={<ArrowLeftToLine size={14} />} label={t('tables.insertLeft')} onClick={() => { onInsertLeft(columnId); onClose(); }} />}
+          {canEdit && <ContextMenuItem icon={<ArrowRightToLine size={14} />} label={t('tables.insertRight')} onClick={() => { onInsertRight(columnId); onClose(); }} />}
+          {canEdit && <ContextMenuItem icon={<Copy size={14} />} label={t('tables.duplicateColumn')} onClick={() => { onDuplicate(columnId); onClose(); }} />}
           <ContextMenuItem icon={<ArrowUpAZ size={14} />} label={t('tables.sortAsc')} onClick={() => { onSortAsc(columnId); onClose(); }} />
           <ContextMenuItem icon={<ArrowDownAZ size={14} />} label={t('tables.sortDesc')} onClick={() => { onSortDesc(columnId); onClose(); }} />
 
@@ -193,9 +196,9 @@ export function ColumnHeaderMenu({
             </>
           )}
 
-          <ContextMenuSeparator />
+          {canDelete && <ContextMenuSeparator />}
 
-          <ContextMenuItem icon={<Trash2 size={14} />} label={t('tables.deleteColumn')} onClick={() => { onDelete(columnId); onClose(); }} destructive />
+          {canDelete && <ContextMenuItem icon={<Trash2 size={14} />} label={t('tables.deleteColumn')} onClick={() => { onDelete(columnId); onClose(); }} destructive />}
         </>
       )}
     </ContextMenu>

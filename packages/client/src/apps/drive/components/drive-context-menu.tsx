@@ -30,6 +30,8 @@ interface DriveContextMenuProps {
   setReplaceTargetId: (id: string) => void;
   replaceFileInputRef: React.RefObject<HTMLInputElement | null>;
   handleMoveToTrash: (item: DriveItem) => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 export function DriveContextMenuView({
@@ -51,6 +53,8 @@ export function DriveContextMenuView({
   setReplaceTargetId,
   replaceFileInputRef,
   handleMoveToTrash,
+  canEdit = true,
+  canDelete = true,
 }: DriveContextMenuProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -62,18 +66,18 @@ export function DriveContextMenuView({
     <ContextMenu x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)} minWidth={180}>
       {sidebarView === 'trash' ? (
         <>
-          <ContextMenuItem
+          {canEdit && <ContextMenuItem
             icon={<RotateCcw size={14} />}
             label={t('drive.context.restore')}
             onClick={() => handleRestore(contextMenu.item)}
-          />
-          <ContextMenuSeparator />
-          <ContextMenuItem
+          />}
+          {canDelete && <ContextMenuSeparator />}
+          {canDelete && <ContextMenuItem
             icon={<Trash2 size={14} />}
             label={t('drive.context.deletePermanently')}
             onClick={() => handlePermanentDelete(contextMenu.item)}
             destructive
-          />
+          />}
         </>
       ) : (
         <>
@@ -115,43 +119,43 @@ export function DriveContextMenuView({
               onClick={() => handleDownloadZip(contextMenu.item)}
             />
           )}
-          <ContextMenuItem
+          {canEdit && <ContextMenuItem
             icon={<Pencil size={14} />}
             label={t('drive.context.rename')}
             onClick={() => handleRename(contextMenu.item)}
-          />
-          {contextMenu.item.type === 'folder' && (
+          />}
+          {canEdit && contextMenu.item.type === 'folder' && (
             <ContextMenuItem
               icon={<span style={{ fontSize: 14, lineHeight: 1 }}>{contextMenu.item.icon || '😀'}</span>}
               label={contextMenu.item.icon ? t('drive.context.changeIcon') : t('drive.context.addIcon')}
               onClick={() => handleSetIcon(contextMenu.item)}
             />
           )}
-          <ContextMenuItem
+          {canEdit && <ContextMenuItem
             icon={<Copy size={14} />}
             label={t('drive.context.duplicate')}
             onClick={() => handleDuplicate(contextMenu.item)}
-          />
-          <ContextMenuItem
+          />}
+          {canEdit && <ContextMenuItem
             icon={<FolderInput size={14} />}
             label={t('drive.context.moveTo')}
             onClick={() => handleMove(contextMenu.item)}
-          />
-          <ContextMenuItem
+          />}
+          {canEdit && <ContextMenuItem
             icon={<FolderOutput size={14} />}
             label={t('drive.context.copyTo')}
             onClick={() => handleCopy(contextMenu.item)}
-          />
+          />}
           <ContextMenuItem
             icon={<Star size={14} />}
             label={contextMenu.item.isFavourite ? t('drive.context.removeFromFavourites') : t('drive.context.addToFavourites')}
             onClick={() => handleToggleFavourite(contextMenu.item)}
           />
-          <ContextMenuItem
+          {canEdit && <ContextMenuItem
             icon={<Tag size={14} />}
             label={t('drive.context.addTag')}
             onClick={() => handleAddTag(contextMenu.item)}
-          />
+          />}
           <ContextMenuItem
             icon={<Share2 size={14} />}
             label={t('drive.context.share')}
@@ -168,7 +172,7 @@ export function DriveContextMenuView({
               setContextMenu(null);
             }}
           />
-          {contextMenu.item.type === 'file' && (
+          {canEdit && contextMenu.item.type === 'file' && (
             <ContextMenuItem
               icon={<Upload size={14} />}
               label={t('drive.context.uploadNewVersion')}
@@ -195,13 +199,13 @@ export function DriveContextMenuView({
               }}
             />
           )}
-          <ContextMenuSeparator />
-          <ContextMenuItem
+          {canDelete && <ContextMenuSeparator />}
+          {canDelete && <ContextMenuItem
             icon={<Trash2 size={14} />}
             label={t('drive.context.moveToTrash')}
             onClick={() => handleMoveToTrash(contextMenu.item)}
             destructive
-          />
+          />}
         </>
       )}
     </ContextMenu>

@@ -12,22 +12,25 @@ interface RowContextMenuProps {
   onDuplicate: (rowId: string) => void;
   onExpand: (rowId: string) => void;
   onDelete: (rowId: string) => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 export function RowContextMenu({
   rowId, x, y, onClose,
   onInsertAbove, onInsertBelow, onDuplicate, onExpand, onDelete,
+  canEdit = true, canDelete = true,
 }: RowContextMenuProps) {
   const { t } = useTranslation();
 
   return (
     <ContextMenu x={x} y={y} onClose={onClose}>
-      <ContextMenuItem icon={<ArrowUp size={14} />} label={t('tables.insertAbove')} onClick={() => { onInsertAbove(rowId); onClose(); }} />
-      <ContextMenuItem icon={<ArrowDown size={14} />} label={t('tables.insertBelow')} onClick={() => { onInsertBelow(rowId); onClose(); }} />
-      <ContextMenuItem icon={<Copy size={14} />} label={t('tables.duplicateRow')} onClick={() => { onDuplicate(rowId); onClose(); }} />
+      {canEdit && <ContextMenuItem icon={<ArrowUp size={14} />} label={t('tables.insertAbove')} onClick={() => { onInsertAbove(rowId); onClose(); }} />}
+      {canEdit && <ContextMenuItem icon={<ArrowDown size={14} />} label={t('tables.insertBelow')} onClick={() => { onInsertBelow(rowId); onClose(); }} />}
+      {canEdit && <ContextMenuItem icon={<Copy size={14} />} label={t('tables.duplicateRow')} onClick={() => { onDuplicate(rowId); onClose(); }} />}
       <ContextMenuItem icon={<Maximize2 size={14} />} label={t('tables.expandRow')} onClick={() => { onExpand(rowId); onClose(); }} />
-      <ContextMenuSeparator />
-      <ContextMenuItem icon={<Trash2 size={14} />} label={t('tables.deleteRow')} onClick={() => { onDelete(rowId); onClose(); }} destructive />
+      {canDelete && <ContextMenuSeparator />}
+      {canDelete && <ContextMenuItem icon={<Trash2 size={14} />} label={t('tables.deleteRow')} onClick={() => { onDelete(rowId); onClose(); }} destructive />}
     </ContextMenu>
   );
 }

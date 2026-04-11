@@ -37,7 +37,8 @@ export function TaskDetailPanel({
 }) {
   const { t } = useTranslation();
   const { data: tasksPerm } = useMyAppPermission('tasks');
-  const canDelete = !tasksPerm || tasksPerm.role === 'admin';
+  const canDeleteAll = !tasksPerm || tasksPerm.role === 'admin';
+  const canDeleteOwn = !tasksPerm || tasksPerm.role === 'admin' || tasksPerm.role === 'editor';
   const [title, setTitle] = useState(task.title);
   const [when, setWhen] = useState(task.when);
   const [priority, setPriority] = useState(task.priority);
@@ -48,6 +49,7 @@ export function TaskDetailPanel({
   const updateVisibility = useUpdateTaskVisibility();
   const { account } = useAuthStore();
   const isOwner = task.userId === account?.userId;
+  const canDelete = canDeleteAll || (canDeleteOwn && isOwner);
   const titleRef = useRef<HTMLInputElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 

@@ -27,6 +27,8 @@ import { useCellRangeSelection } from '../hooks/use-cell-range-selection';
 import { useTablesSettingsStore } from '../settings-store';
 import { useUIStore } from '../../../stores/ui-store';
 import { useToastStore } from '../../../stores/toast-store';
+import { useAppActions } from '../../../hooks/use-app-permissions';
+import { useAuthStore } from '../../../stores/auth-store';
 import { useFindReplace } from '../hooks/use-find-replace';
 import { useFillHandle } from '../hooks/use-fill-handle';
 import { useRowGrouping } from '../hooks/use-row-grouping';
@@ -51,6 +53,8 @@ export function useTablesPageState() {
   const { save: autoSave, isSaving, isSuccess: isSaveSuccess } = useAutoSaveTable();
   const tablesSettings = useTablesSettingsStore();
   const { openSettings } = useUIStore();
+  const perm = useAppActions('tables');
+  const currentUserId = useAuthStore((s) => s.account?.userId);
 
   const [selectedId, setSelectedId] = useState<string | null>(
     paramId ?? localStorage.getItem(LAST_TABLE_KEY) ?? null,
@@ -1127,6 +1131,10 @@ export function useTablesPageState() {
     isDark,
     allTables, archivedTables, filteredTables, listLoading,
     spreadsheet, tablesSettings, openSettings,
+    perm, currentUserId,
+    canCreate: perm.canCreate,
+    canEdit: perm.canEdit,
+    canDeleteTable: perm.canDelete || (perm.canDeleteOwn && !!spreadsheet && spreadsheet.userId === currentUserId),
     getComputedValue, getCellReference,
     toggleGroup,
     pinnedBottomRowData, getRowStyle,
