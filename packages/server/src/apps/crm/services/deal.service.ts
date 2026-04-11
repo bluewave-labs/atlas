@@ -1,6 +1,6 @@
 import { db } from '../../../config/database';
 import { crmCompanies, crmContacts, crmDealStages, crmDeals } from '../../../db/schema';
-import { eq, and, asc, desc, sql, gte, lte, isNull } from 'drizzle-orm';
+import { eq, and, or, asc, desc, sql, gte, lte, isNull } from 'drizzle-orm';
 import { logger } from '../../../utils/logger';
 import type { CrmRecordAccess } from '@atlas-platform/shared';
 import { executeWorkflows } from './workflow.service';
@@ -164,7 +164,10 @@ export async function listDeals(userId: string, tenantId: string, filters?: {
 }) {
   const conditions = [eq(crmDeals.tenantId, tenantId)];
   if (!filters?.recordAccess || filters.recordAccess === 'own') {
-    conditions.push(eq(crmDeals.userId, userId));
+    conditions.push(or(
+      eq(crmDeals.userId, userId),
+      eq(crmDeals.assignedUserId, userId),
+    )!);
   }
 
   if (!filters?.includeArchived) {
@@ -219,7 +222,10 @@ export async function listDeals(userId: string, tenantId: string, filters?: {
 export async function getDeal(userId: string, tenantId: string, id: string, recordAccess?: CrmRecordAccess) {
   const conditions = [eq(crmDeals.id, id), eq(crmDeals.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
-    conditions.push(eq(crmDeals.userId, userId));
+    conditions.push(or(
+      eq(crmDeals.userId, userId),
+      eq(crmDeals.assignedUserId, userId),
+    )!);
   }
 
   const [deal] = await db
@@ -303,7 +309,10 @@ export async function updateDeal(userId: string, tenantId: string, id: string, i
 
   const updateConditions = [eq(crmDeals.id, id), eq(crmDeals.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
-    updateConditions.push(eq(crmDeals.userId, userId));
+    updateConditions.push(or(
+      eq(crmDeals.userId, userId),
+      eq(crmDeals.assignedUserId, userId),
+    )!);
   }
 
   // Capture old stage for workflow trigger
@@ -368,7 +377,10 @@ export async function markDealWon(userId: string, tenantId: string, id: string, 
   const now = new Date();
   const conditions = [eq(crmDeals.id, id), eq(crmDeals.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
-    conditions.push(eq(crmDeals.userId, userId));
+    conditions.push(or(
+      eq(crmDeals.userId, userId),
+      eq(crmDeals.assignedUserId, userId),
+    )!);
   }
   await db
     .update(crmDeals)
@@ -386,7 +398,10 @@ export async function markDealLost(userId: string, tenantId: string, id: string,
   const now = new Date();
   const conditions = [eq(crmDeals.id, id), eq(crmDeals.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
-    conditions.push(eq(crmDeals.userId, userId));
+    conditions.push(or(
+      eq(crmDeals.userId, userId),
+      eq(crmDeals.assignedUserId, userId),
+    )!);
   }
   await db
     .update(crmDeals)
@@ -403,7 +418,10 @@ export async function markDealLost(userId: string, tenantId: string, id: string,
 export async function countsByStage(userId: string, tenantId: string, recordAccess?: CrmRecordAccess) {
   const conditions = [eq(crmDeals.tenantId, tenantId), eq(crmDeals.isArchived, false)];
   if (!recordAccess || recordAccess === 'own') {
-    conditions.push(eq(crmDeals.userId, userId));
+    conditions.push(or(
+      eq(crmDeals.userId, userId),
+      eq(crmDeals.assignedUserId, userId),
+    )!);
   }
   return db
     .select({
@@ -426,7 +444,10 @@ export async function pipelineValue(userId: string, tenantId: string, recordAcce
     sql`${crmDeals.wonAt} IS NULL AND ${crmDeals.lostAt} IS NULL`,
   ];
   if (!recordAccess || recordAccess === 'own') {
-    conditions.push(eq(crmDeals.userId, userId));
+    conditions.push(or(
+      eq(crmDeals.userId, userId),
+      eq(crmDeals.assignedUserId, userId),
+    )!);
   }
   const [result] = await db
     .select({

@@ -1,6 +1,6 @@
 import { db } from '../../../config/database';
 import { crmLeads, crmLeadForms } from '../../../db/schema';
-import { eq, and, asc, desc, sql } from 'drizzle-orm';
+import { eq, and, or, asc, desc, sql } from 'drizzle-orm';
 import { logger } from '../../../utils/logger';
 import crypto from 'crypto';
 import type { CrmRecordAccess } from '@atlas-platform/shared';
@@ -41,7 +41,10 @@ export async function listLeads(userId: string, tenantId: string, filters?: {
 }) {
   const conditions = [eq(crmLeads.tenantId, tenantId)];
   if (!filters?.recordAccess || filters.recordAccess === 'own') {
-    conditions.push(eq(crmLeads.userId, userId));
+    conditions.push(or(
+      eq(crmLeads.userId, userId),
+      eq(crmLeads.assignedUserId, userId),
+    )!);
   }
   conditions.push(eq(crmLeads.isArchived, false));
 
@@ -64,7 +67,10 @@ export async function listLeads(userId: string, tenantId: string, filters?: {
 export async function getLead(userId: string, tenantId: string, id: string, recordAccess?: CrmRecordAccess) {
   const conditions = [eq(crmLeads.id, id), eq(crmLeads.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
-    conditions.push(eq(crmLeads.userId, userId));
+    conditions.push(or(
+      eq(crmLeads.userId, userId),
+      eq(crmLeads.assignedUserId, userId),
+    )!);
   }
   const [lead] = await db.select().from(crmLeads).where(and(...conditions)).limit(1);
   return lead || null;
@@ -120,7 +126,10 @@ export async function updateLead(userId: string, tenantId: string, id: string, i
 
   const conditions = [eq(crmLeads.id, id), eq(crmLeads.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
-    conditions.push(eq(crmLeads.userId, userId));
+    conditions.push(or(
+      eq(crmLeads.userId, userId),
+      eq(crmLeads.assignedUserId, userId),
+    )!);
   }
 
   await db.update(crmLeads).set(updates).where(and(...conditions));

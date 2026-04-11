@@ -1,6 +1,6 @@
 import { db } from '../../../config/database';
 import { crmCompanies, crmContacts, crmDealStages, crmDeals, crmActivities } from '../../../db/schema';
-import { eq, and, asc, desc, sql, gte, lte } from 'drizzle-orm';
+import { eq, and, or, asc, desc, sql, gte, lte } from 'drizzle-orm';
 import { logger } from '../../../utils/logger';
 import type { CrmRecordAccess } from '@atlas-platform/shared';
 import { createCompany } from './company.service';
@@ -14,7 +14,7 @@ import { createLead, updateLead, listLeads } from './lead.service';
 export async function getDashboard(userId: string, tenantId: string, recordAccess?: CrmRecordAccess) {
   // Build base ownership condition
   const ownerFilter = (!recordAccess || recordAccess === 'own')
-    ? eq(crmDeals.userId, userId)
+    ? or(eq(crmDeals.userId, userId), eq(crmDeals.assignedUserId, userId))!
     : sql`TRUE`;
 
   // 1. Total pipeline value (active deals: not won, not lost, not archived)
@@ -97,7 +97,7 @@ export async function getDashboard(userId: string, tenantId: string, recordAcces
 
   // 5. Recent activities (last 10)
   const activityOwnerFilter = (!recordAccess || recordAccess === 'own')
-    ? eq(crmActivities.userId, userId)
+    ? or(eq(crmActivities.userId, userId), eq(crmActivities.assignedUserId, userId))!
     : sql`TRUE`;
   const recentActivities = await db
     .select()
@@ -218,7 +218,7 @@ export async function getDashboard(userId: string, tenantId: string, recordAcces
 
 export async function getDashboardCharts(userId: string, tenantId: string, recordAccess?: CrmRecordAccess) {
   const ownerFilter = (!recordAccess || recordAccess === 'own')
-    ? eq(crmDeals.userId, userId)
+    ? or(eq(crmDeals.userId, userId), eq(crmDeals.assignedUserId, userId))!
     : sql`TRUE`;
   const now = new Date();
 

@@ -1,6 +1,6 @@
 import { db } from '../../../config/database';
 import { crmActivities, crmActivityTypes, users } from '../../../db/schema';
-import { eq, and, asc, desc, sql, gte, lte } from 'drizzle-orm';
+import { eq, and, or, asc, desc, sql, gte, lte } from 'drizzle-orm';
 import { logger } from '../../../utils/logger';
 import type { CrmRecordAccess } from '@atlas-platform/shared';
 import { executeWorkflows } from './workflow.service';
@@ -36,7 +36,10 @@ export async function listActivities(userId: string, tenantId: string, filters?:
 }) {
   const conditions = [eq(crmActivities.tenantId, tenantId)];
   if (!filters?.recordAccess || filters.recordAccess === 'own') {
-    conditions.push(eq(crmActivities.userId, userId));
+    conditions.push(or(
+      eq(crmActivities.userId, userId),
+      eq(crmActivities.assignedUserId, userId),
+    )!);
   }
 
   if (!filters?.includeArchived) {
@@ -133,7 +136,10 @@ export async function updateActivity(userId: string, tenantId: string, id: strin
 
   const updateConditions = [eq(crmActivities.id, id), eq(crmActivities.tenantId, tenantId)];
   if (!recordAccess || recordAccess === 'own') {
-    updateConditions.push(eq(crmActivities.userId, userId));
+    updateConditions.push(or(
+      eq(crmActivities.userId, userId),
+      eq(crmActivities.assignedUserId, userId),
+    )!);
   }
 
   await db
