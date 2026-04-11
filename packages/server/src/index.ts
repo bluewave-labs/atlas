@@ -3,8 +3,8 @@ import { env } from './config/env';
 import { logger } from './utils/logger';
 import { purgeOldArchivedDrawings } from './apps/draw/service';
 import { runScheduledBackup } from './services/backup.service';
-import { runMigrations } from './db/migrate';
 import { closeDb } from './config/database';
+import { bootstrapDatabase } from './db/bootstrap';
 import { startSyncWorker, stopSyncWorker } from './workers';
 import { closeRedis } from './config/redis';
 import { startReminderScheduler, stopReminderScheduler } from './apps/sign/reminder';
@@ -24,11 +24,10 @@ const app = createApp();
 app.listen(env.PORT, async () => {
   logger.info(`Atlas server running on port ${env.PORT} in ${env.NODE_ENV} mode`);
 
-  // Run database migrations
   try {
-    await runMigrations();
+    await bootstrapDatabase();
   } catch (err) {
-    logger.error({ err }, 'Database migration failed');
+    logger.error({ err }, 'Database bootstrap failed');
     process.exit(1);
   }
 

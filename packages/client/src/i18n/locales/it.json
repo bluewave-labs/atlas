@@ -2976,7 +2976,17 @@
       "roleViewer": "Visualizzatore",
       "recordAccessAll": "Tutti i record",
       "recordAccessOwn": "Solo i propri record",
-      "saveError": "Aggiornamento autorizzazione non riuscito"
+      "saveError": "Aggiornamento autorizzazione non riuscito",
+      "tabMatrix": "Matrice",
+      "tabHistory": "Cronologia",
+      "historyEmpty": "Nessuna modifica alle autorizzazioni",
+      "historyActionGrant": "{{actor}} ha concesso a {{target}} {{role}}/{{recordAccess}} su {{app}}",
+      "historyActionUpdate": "{{actor}} ha modificato l'accesso di {{target}} a {{app}} in {{role}}/{{recordAccess}}",
+      "historyActionRevoke": "{{actor}} ha revocato le autorizzazioni {{app}} di {{target}}",
+      "historySystemActor": "Sistema",
+      "filterAllUsers": "Tutti gli utenti",
+      "filterAllApps": "Tutte le app",
+      "savedIndicator": "Salvato"
     },
     "cpuUsage": "Utilizzo CPU",
     "memoryUsage": "Utilizzo memoria",

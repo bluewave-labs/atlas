@@ -2976,7 +2976,17 @@
       "roleViewer": "Lecteur",
       "recordAccessAll": "Tous les enregistrements",
       "recordAccessOwn": "Ses propres enregistrements",
-      "saveError": "Échec de la mise à jour de l'autorisation"
+      "saveError": "Échec de la mise à jour de l'autorisation",
+      "tabMatrix": "Matrice",
+      "tabHistory": "Historique",
+      "historyEmpty": "Aucune modification d'autorisation pour l'instant",
+      "historyActionGrant": "{{actor}} a accordé {{role}}/{{recordAccess}} à {{target}} sur {{app}}",
+      "historyActionUpdate": "{{actor}} a modifié l'accès {{app}} de {{target}} en {{role}}/{{recordAccess}}",
+      "historyActionRevoke": "{{actor}} a révoqué les autorisations {{app}} de {{target}}",
+      "historySystemActor": "Système",
+      "filterAllUsers": "Tous les utilisateurs",
+      "filterAllApps": "Toutes les apps",
+      "savedIndicator": "Enregistré"
     },
     "cpuUsage": "Utilisation CPU",
     "memoryUsage": "Utilisation mémoire",

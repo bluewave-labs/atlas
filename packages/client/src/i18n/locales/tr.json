@@ -2976,7 +2976,17 @@
       "roleViewer": "Görüntüleyici",
       "recordAccessAll": "Tüm kayıtlar",
       "recordAccessOwn": "Yalnızca kendi kayıtları",
-      "saveError": "İzin güncellenemedi"
+      "saveError": "İzin güncellenemedi",
+      "tabMatrix": "Matris",
+      "tabHistory": "Geçmiş",
+      "historyEmpty": "Henüz izin değişikliği yok",
+      "historyActionGrant": "{{actor}}, {{target}} kullanıcısına {{app}} için {{role}}/{{recordAccess}} izni verdi",
+      "historyActionUpdate": "{{actor}}, {{target}} kullanıcısının {{app}} erişimini {{role}}/{{recordAccess}} olarak değiştirdi",
+      "historyActionRevoke": "{{actor}}, {{target}} kullanıcısının {{app}} izinlerini kaldırdı",
+      "historySystemActor": "Sistem",
+      "filterAllUsers": "Tüm kullanıcılar",
+      "filterAllApps": "Tüm uygulamalar",
+      "savedIndicator": "Kaydedildi"
     },
     "cpuUsage": "CPU kullanımı",
     "memoryUsage": "Bellek kullanımı",

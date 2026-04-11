@@ -86,7 +86,7 @@ Add `export * from './{name}'` to `packages/shared/src/types/index.ts`.
 
 ### 2. Database
 Add tables to `packages/server/src/db/schema.ts`.
-Add `CREATE TABLE IF NOT EXISTS` to `packages/server/src/db/migrate.ts`.
+Run `cd packages/server && npm run db:push` to sync the schema to Postgres.
 
 ### 3. Server app
 Create directory `packages/server/src/apps/{name}/` with:
@@ -152,7 +152,7 @@ All tables in `packages/server/src/db/schema.ts`. Sections:
 - App tables (documents, drawings, tasks, spreadsheets, driveItems, etc.)
 
 ### Migrations
-In `packages/server/src/db/migrate.ts`. Uses `CREATE TABLE IF NOT EXISTS` + `ALTER TABLE ADD COLUMN IF NOT EXISTS` for idempotency.
+There are no hand-written migrations. `schema.ts` is the single source of truth; `npm run db:push` (wraps `drizzle-kit push --force`) diffs the schema against the live DB and applies the change. Pre-launch stance — no users, so drop-and-recreate is fine. Re-introduce versioned migrations once we have deployments we can't rewind.
 
 ---
 
@@ -353,7 +353,7 @@ When the user asks to "create a release", "make a new version", "tag and release
 - Use `uuid` primary keys with `defaultRandom()`
 - Use CSS variables for all colors, spacing, radius, font sizes
 - Use `Button`/`Input` size prop to match heights when side-by-side
-- Add new tables to both schema.ts AND migrate.ts
+- Edit `schema.ts` and run `npm run db:push` from `packages/server`
 - Register new apps in both client and server `apps/index.ts`
 
 ### Server pattern
@@ -421,7 +421,7 @@ export function MyAppPage() {
 | Query keys | `packages/client/src/config/query-keys.ts` |
 | Settings registry | `packages/client/src/config/settings-registry.ts` |
 | DB schema | `packages/server/src/db/schema.ts` |
-| DB migrations | `packages/server/src/db/migrate.ts` |
+| DB schema sync | `cd packages/server && npm run db:push` |
 | Auth middleware | `packages/server/src/middleware/auth.ts` |
 | Theme/tokens | `packages/client/src/styles/theme.css` |
 | Shared types | `packages/shared/src/types/index.ts` |

@@ -1,6 +1,6 @@
 import { db } from '../config/database';
-import { appPermissions, tenantMembers } from '../db/schema';
-import { eq, and } from 'drizzle-orm';
+import { appPermissions, appPermissionAudit, tenantMembers, accounts } from '../db/schema';
+import { eq, and, desc } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 import { canAccess, type AppRole, type AppOperation, type AppRecordAccess } from '@atlas-platform/shared';
 
@@ -88,7 +88,12 @@ export async function listAppPermissions(tenantId: string, appId: string) {
 }
 
 export async function setAppPermission(
-  tenantId: string, userId: string, appId: string, role: AppRole, recordAccess: AppRecordAccess = 'all'
+  tenantId: string,
+  userId: string,
+  appId: string,
+  role: AppRole,
+  recordAccess: AppRecordAccess = 'all',
+  actorUserId: string | null = null,
 ) {
   const [existing] = await db.select().from(appPermissions)
     .where(and(
@@ -97,18 +102,36 @@ export async function setAppPermission(
       eq(appPermissions.appId, appId),
     )).limit(1);
 
+  let result;
   if (existing) {
     const [updated] = await db.update(appPermissions)
       .set({ role, recordAccess, updatedAt: new Date() })
       .where(eq(appPermissions.id, existing.id))
       .returning();
-    return updated;
+    result = updated;
+  } else {
+    const [created] = await db.insert(appPermissions)
+      .values({ tenantId, userId, appId, role, recordAccess })
+      .returning();
+    result = created;
   }
 
-  const [created] = await db.insert(appPermissions)
-    .values({ tenantId, userId, appId, role, recordAccess })
-    .returning();
-  return created;
+  // Write audit row. A missing prior row means this was a fresh grant;
+  // an existing row means an in-place update.
+  await db.insert(appPermissionAudit).values({
+    tenantId,
+    targetUserId: userId,
+    actorUserId: actorUserId ?? null,
+    actorType: actorUserId ? 'user' : 'system',
+    appId,
+    action: existing ? 'update' : 'grant',
+    beforeRole: (existing?.role as AppRole | undefined) ?? null,
+    beforeRecordAccess: (existing?.recordAccess as AppRecordAccess | undefined) ?? null,
+    afterRole: role,
+    afterRecordAccess: recordAccess,
+  });
+
+  return result;
 }
 
 export async function listUserPermissions(tenantId: string, userId: string) {
@@ -121,11 +144,119 @@ export async function listAllTenantPermissions(tenantId: string) {
     .where(eq(appPermissions.tenantId, tenantId));
 }
 
-export async function deleteAppPermission(tenantId: string, userId: string, appId: string) {
+export async function deleteAppPermission(
+  tenantId: string,
+  userId: string,
+  appId: string,
+  actorUserId: string | null = null,
+) {
+  const [existing] = await db.select().from(appPermissions)
+    .where(and(
+      eq(appPermissions.tenantId, tenantId),
+      eq(appPermissions.userId, userId),
+      eq(appPermissions.appId, appId),
+    )).limit(1);
+
   await db.delete(appPermissions)
     .where(and(
       eq(appPermissions.tenantId, tenantId),
       eq(appPermissions.userId, userId),
       eq(appPermissions.appId, appId),
     ));
+
+  await db.insert(appPermissionAudit).values({
+    tenantId,
+    targetUserId: userId,
+    actorUserId: actorUserId ?? null,
+    actorType: actorUserId ? 'user' : 'system',
+    appId,
+    action: 'revoke',
+    beforeRole: (existing?.role as AppRole | undefined) ?? null,
+    beforeRecordAccess: (existing?.recordAccess as AppRecordAccess | undefined) ?? null,
+    afterRole: null,
+    afterRecordAccess: null,
+  });
+}
+
+// ─── Audit log ─────────────────────────────────────────────────────
+
+export interface PermissionAuditRow {
+  id: string;
+  tenantId: string;
+  targetUserId: string;
+  targetName: string | null;
+  targetEmail: string | null;
+  actorUserId: string | null;
+  actorName: string | null;
+  actorEmail: string | null;
+  actorType: 'user' | 'system';
+  appId: string;
+  action: 'grant' | 'revoke' | 'update';
+  beforeRole: AppRole | null;
+  beforeRecordAccess: AppRecordAccess | null;
+  afterRole: AppRole | null;
+  afterRecordAccess: AppRecordAccess | null;
+  createdAt: string;
+}
+
+export async function listPermissionAudit(
+  tenantId: string,
+  filters?: {
+    targetUserId?: string;
+    appId?: string;
+    limit?: number;
+    offset?: number;
+  },
+): Promise<PermissionAuditRow[]> {
+  const limit = Math.min(filters?.limit ?? 100, 500);
+  const offset = filters?.offset ?? 0;
+
+  const where = [eq(appPermissionAudit.tenantId, tenantId)];
+  if (filters?.targetUserId) where.push(eq(appPermissionAudit.targetUserId, filters.targetUserId));
+  if (filters?.appId) where.push(eq(appPermissionAudit.appId, filters.appId));
+
+  const rows = await db
+    .select()
+    .from(appPermissionAudit)
+    .where(and(...where))
+    .orderBy(desc(appPermissionAudit.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  // Batch-look up account info for display.
+  const userIds = new Set<string>();
+  for (const r of rows) {
+    if (r.targetUserId) userIds.add(r.targetUserId);
+    if (r.actorUserId) userIds.add(r.actorUserId);
+  }
+  const acctList = userIds.size
+    ? await db
+        .select({ userId: accounts.userId, name: accounts.name, email: accounts.email })
+        .from(accounts)
+    : [];
+  const acctMap = new Map<string, { name: string | null; email: string }>();
+  for (const a of acctList) acctMap.set(a.userId, { name: a.name, email: a.email });
+
+  return rows.map((r) => {
+    const tgt = acctMap.get(r.targetUserId);
+    const act = r.actorUserId ? acctMap.get(r.actorUserId) : null;
+    return {
+      id: r.id,
+      tenantId: r.tenantId,
+      targetUserId: r.targetUserId,
+      targetName: tgt?.name ?? null,
+      targetEmail: tgt?.email ?? null,
+      actorUserId: r.actorUserId,
+      actorName: act?.name ?? null,
+      actorEmail: act?.email ?? null,
+      actorType: (r.actorType as 'user' | 'system') ?? 'user',
+      appId: r.appId,
+      action: r.action as 'grant' | 'revoke' | 'update',
+      beforeRole: (r.beforeRole as AppRole | null) ?? null,
+      beforeRecordAccess: (r.beforeRecordAccess as AppRecordAccess | null) ?? null,
+      afterRole: (r.afterRole as AppRole | null) ?? null,
+      afterRecordAccess: (r.afterRecordAccess as AppRecordAccess | null) ?? null,
+      createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+    };
+  });
 }

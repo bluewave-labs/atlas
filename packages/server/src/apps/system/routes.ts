@@ -52,6 +52,7 @@ router.post('/email-test', requireAdmin, systemController.testEmail);
 
 // Unified app permissions grid (owner-only)
 router.get('/permissions', requireTenantOwner, permissionsController.listPermissions);
+router.get('/permissions/audit', requireTenantOwner, permissionsController.listAudit);
 router.put('/permissions/:userId/:appId', requireTenantOwner, permissionsController.setPermission);
 router.delete('/permissions/:userId/:appId', requireTenantOwner, permissionsController.revertPermission);
 

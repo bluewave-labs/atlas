@@ -2046,6 +2046,26 @@ export const appPermissions = pgTable('app_permissions', {
   uniqueIdx: uniqueIndex('idx_app_permissions_unique').on(table.tenantId, table.userId, table.appId),
 }));
 
+// ─── App Permission Audit ───────────────────────────────────────────
+
+export const appPermissionAudit = pgTable('app_permission_audit', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull(),
+  targetUserId: uuid('target_user_id').notNull(),
+  actorUserId: uuid('actor_user_id'), // nullable — system actors
+  actorType: varchar('actor_type', { length: 20 }).notNull().default('user'), // 'user' | 'system'
+  appId: varchar('app_id', { length: 50 }).notNull(),
+  action: varchar('action', { length: 20 }).notNull(), // 'grant' | 'revoke' | 'update'
+  beforeRole: varchar('before_role', { length: 20 }),
+  beforeRecordAccess: varchar('before_record_access', { length: 10 }),
+  afterRole: varchar('after_role', { length: 20 }),
+  afterRecordAccess: varchar('after_record_access', { length: 10 }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  idxTenantCreated: index('idx_app_permission_audit_tenant_created').on(table.tenantId, table.createdAt),
+  idxTargetUser: index('idx_app_permission_audit_target').on(table.tenantId, table.targetUserId),
+}));
+
 // ─── Presence Heartbeats ────────────────────────────────────────────
 
 export const presenceHeartbeats = pgTable('presence_heartbeats', {

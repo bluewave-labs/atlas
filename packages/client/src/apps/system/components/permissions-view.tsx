@@ -1,13 +1,15 @@
-import { type CSSProperties, useMemo } from 'react';
+import { type CSSProperties, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Shield } from 'lucide-react';
 import {
   useAppPermissions,
   useSetAppPermission,
   useRevertAppPermission,
+  useAppPermissionsAudit,
   type AppPermissionRole,
   type AppPermissionRecordAccess,
   type AppPermissionCell,
+  type PermissionAuditRow,
 } from '../hooks';
 import { Select } from '../../../components/ui/select';
 import { Badge } from '../../../components/ui/badge';
@@ -17,6 +19,7 @@ import { Skeleton } from '../../../components/ui/skeleton';
 
 export function PermissionsView() {
   const { t } = useTranslation();
+  const [tab, setTab] = useState<'matrix' | 'history'>('matrix');
   const { data, isLoading, error } = useAppPermissions();
   const setPerm = useSetAppPermission();
   const revertPerm = useRevertAppPermission();
@@ -120,6 +123,18 @@ export function PermissionsView() {
         </h2>
       </div>
 
+      <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--color-border-primary)' }}>
+        <TabButton active={tab === 'matrix'} onClick={() => setTab('matrix')}>
+          {t('system.permissions.tabMatrix')}
+        </TabButton>
+        <TabButton active={tab === 'history'} onClick={() => setTab('history')}>
+          {t('system.permissions.tabHistory')}
+        </TabButton>
+      </div>
+
+      {tab === 'history' ? (
+        <HistoryTab />
+      ) : (
       <div
         style={{
           border: '1px solid var(--color-border-primary)',
@@ -260,6 +275,144 @@ export function PermissionsView() {
           </tbody>
         </table>
       </div>
+      )}
+    </div>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        background: 'none',
+        border: 'none',
+        padding: '8px 14px',
+        fontSize: 'var(--font-size-sm)',
+        fontWeight: active ? 600 : 500,
+        color: active ? 'var(--color-accent-primary)' : 'var(--color-text-secondary)',
+        borderBottom: active
+          ? '2px solid var(--color-accent-primary)'
+          : '2px solid transparent',
+        marginBottom: -1,
+        cursor: 'pointer',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function HistoryTab() {
+  const { t } = useTranslation();
+  const { data, isLoading } = useAppPermissionsAudit({ limit: 100 });
+
+  if (isLoading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <Skeleton style={{ height: 40 }} />
+        <Skeleton style={{ height: 40 }} />
+        <Skeleton style={{ height: 40 }} />
+      </div>
+    );
+  }
+
+  if (!data || data.length === 0) {
+    return (
+      <div
+        style={{
+          padding: 24,
+          border: '1px solid var(--color-border-primary)',
+          borderRadius: 'var(--radius-lg)',
+          color: 'var(--color-text-tertiary)',
+          fontSize: 'var(--font-size-sm)',
+          textAlign: 'center',
+        }}
+      >
+        {t('system.permissions.historyEmpty')}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        border: '1px solid var(--color-border-primary)',
+        borderRadius: 'var(--radius-lg)',
+        background: 'var(--color-bg-primary)',
+        overflow: 'hidden',
+      }}
+    >
+      {data.map((row) => (
+        <HistoryRow key={row.id} row={row} />
+      ))}
+    </div>
+  );
+}
+
+function HistoryRow({ row }: { row: PermissionAuditRow }) {
+  const { t } = useTranslation();
+  const actor = row.actorType === 'system'
+    ? t('system.permissions.historySystemActor')
+    : row.actorName || row.actorEmail || '—';
+  const target = row.targetName || row.targetEmail || '—';
+  const app = row.appId;
+
+  let text: string;
+  if (row.action === 'grant') {
+    text = t('system.permissions.historyActionGrant', {
+      actor,
+      target,
+      role: row.afterRole ?? '',
+      recordAccess: row.afterRecordAccess ?? '',
+      app,
+    });
+  } else if (row.action === 'revoke') {
+    text = t('system.permissions.historyActionRevoke', { actor, target, app });
+  } else {
+    text = t('system.permissions.historyActionUpdate', {
+      actor,
+      target,
+      app,
+      role: row.afterRole ?? '',
+      recordAccess: row.afterRecordAccess ?? '',
+    });
+  }
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 12,
+        padding: '10px 14px',
+        borderBottom: '1px solid var(--color-border-secondary)',
+        fontSize: 'var(--font-size-sm)',
+        color: 'var(--color-text-primary)',
+      }}
+    >
+      <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {text}
+      </span>
+      <span
+        style={{
+          color: 'var(--color-text-tertiary)',
+          fontSize: 'var(--font-size-xs)',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {new Date(row.createdAt).toLocaleString()}
+      </span>
     </div>
   );
 }

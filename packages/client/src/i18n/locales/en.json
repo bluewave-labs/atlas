@@ -3008,7 +3008,17 @@
       "roleViewer": "Viewer",
       "recordAccessAll": "All records",
       "recordAccessOwn": "Own records only",
-      "saveError": "Failed to update permission"
+      "saveError": "Failed to update permission",
+      "tabMatrix": "Matrix",
+      "tabHistory": "History",
+      "historyEmpty": "No permission changes yet",
+      "historyActionGrant": "{{actor}} granted {{target}} {{role}}/{{recordAccess}} on {{app}}",
+      "historyActionUpdate": "{{actor}} changed {{target}}'s {{app}} access to {{role}}/{{recordAccess}}",
+      "historyActionRevoke": "{{actor}} revoked {{target}}'s {{app}} permissions",
+      "historySystemActor": "System",
+      "filterAllUsers": "All users",
+      "filterAllApps": "All apps",
+      "savedIndicator": "Saved"
     },
     "cpuUsage": "CPU usage",
     "memoryUsage": "Memory usage",

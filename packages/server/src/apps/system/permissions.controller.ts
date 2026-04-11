@@ -5,6 +5,7 @@ import { accounts, appPermissions, tenantMembers } from '../../db/schema';
 import {
   setAppPermission,
   deleteAppPermission,
+  listPermissionAudit,
   type AppRole,
   type AppRecordAccess,
 } from '../../services/app-permissions.service';
@@ -176,6 +177,7 @@ export async function setPermission(req: Request, res: Response) {
       appId,
       role as AppRole,
       recordAccess as AppRecordAccess,
+      req.auth!.userId,
     );
     res.json({ success: true, data: updated });
   } catch (error) {
@@ -209,10 +211,37 @@ export async function revertPermission(req: Request, res: Response) {
       return;
     }
 
-    await deleteAppPermission(tenantId, userId, appId);
+    await deleteAppPermission(tenantId, userId, appId, req.auth!.userId);
     res.json({ success: true });
   } catch (error) {
     logger.error({ error }, 'Failed to revert app permission');
     res.status(500).json({ success: false, error: 'Failed to revert permission' });
+  }
+}
+
+export async function listAudit(req: Request, res: Response) {
+  try {
+    const tenantId = req.auth!.tenantId;
+    if (!tenantId) {
+      res.status(400).json({ success: false, error: 'Tenant context required' });
+      return;
+    }
+
+    const { targetUserId, appId, limit, offset } = req.query as Record<string, string | undefined>;
+
+    const parsedLimit = limit ? Math.max(1, Math.min(500, parseInt(limit, 10) || 100)) : 100;
+    const parsedOffset = offset ? Math.max(0, parseInt(offset, 10) || 0) : 0;
+
+    const rows = await listPermissionAudit(tenantId, {
+      targetUserId: targetUserId || undefined,
+      appId: appId || undefined,
+      limit: parsedLimit,
+      offset: parsedOffset,
+    });
+
+    res.json({ success: true, data: rows });
+  } catch (error) {
+    logger.error({ error }, 'Failed to list permission audit log');
+    res.status(500).json({ success: false, error: 'Failed to list permission audit log' });
   }
 }

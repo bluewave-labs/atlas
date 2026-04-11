@@ -2976,7 +2976,17 @@
       "roleViewer": "Betrachter",
       "recordAccessAll": "Alle Datensätze",
       "recordAccessOwn": "Nur eigene Datensätze",
-      "saveError": "Berechtigung konnte nicht aktualisiert werden"
+      "saveError": "Berechtigung konnte nicht aktualisiert werden",
+      "tabMatrix": "Matrix",
+      "tabHistory": "Verlauf",
+      "historyEmpty": "Noch keine Berechtigungsänderungen",
+      "historyActionGrant": "{{actor}} hat {{target}} auf {{app}} {{role}}/{{recordAccess}} gewährt",
+      "historyActionUpdate": "{{actor}} hat den {{app}}-Zugriff von {{target}} auf {{role}}/{{recordAccess}} geändert",
+      "historyActionRevoke": "{{actor}} hat die {{app}}-Berechtigungen von {{target}} entzogen",
+      "historySystemActor": "System",
+      "filterAllUsers": "Alle Benutzer",
+      "filterAllApps": "Alle Apps",
+      "savedIndicator": "Gespeichert"
     },
     "cpuUsage": "CPU-Auslastung",
     "memoryUsage": "Speicherauslastung",

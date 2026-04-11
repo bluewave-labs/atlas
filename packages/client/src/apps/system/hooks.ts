@@ -108,6 +108,49 @@ export function useSetAppPermission() {
   });
 }
 
+// ─── Permission Audit ─────────────────────────────────────────────
+
+export interface PermissionAuditRow {
+  id: string;
+  tenantId: string;
+  targetUserId: string;
+  targetName: string | null;
+  targetEmail: string | null;
+  actorUserId: string | null;
+  actorName: string | null;
+  actorEmail: string | null;
+  actorType: 'user' | 'system';
+  appId: string;
+  action: 'grant' | 'revoke' | 'update';
+  beforeRole: AppPermissionRole | null;
+  beforeRecordAccess: AppPermissionRecordAccess | null;
+  afterRole: AppPermissionRole | null;
+  afterRecordAccess: AppPermissionRecordAccess | null;
+  createdAt: string;
+}
+
+export function useAppPermissionsAudit(filters?: {
+  targetUserId?: string;
+  appId?: string;
+  limit?: number;
+}) {
+  const tenantRole = useAuthStore((s) => s.tenantRole);
+  return useQuery({
+    queryKey: [...queryKeys.system.permissions, 'audit', filters ?? {}],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.targetUserId) params.set('targetUserId', filters.targetUserId);
+      if (filters?.appId) params.set('appId', filters.appId);
+      if (filters?.limit) params.set('limit', String(filters.limit));
+      const qs = params.toString();
+      const { data } = await api.get(`/system/permissions/audit${qs ? `?${qs}` : ''}`);
+      return data.data as PermissionAuditRow[];
+    },
+    enabled: tenantRole === 'owner',
+    staleTime: 5_000,
+  });
+}
+
 export function useRevertAppPermission() {
   const qc = useQueryClient();
   return useMutation({
