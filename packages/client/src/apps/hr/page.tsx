@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Users, Building2, CalendarDays, Plus, Search, Settings2, X,
@@ -27,7 +27,6 @@ import { useAuthStore } from '../../stores/auth-store';
 import { useMyAppPermission } from '../../hooks/use-app-permissions';
 import { useHrSettingsStore } from './settings-store';
 import { OrgChartView } from './components/org-chart';
-import { EmployeeDetailPanel } from './components/employee-detail-panel';
 import { EmployeeDetailPage } from './components/employee-detail-page';
 import { CreateEmployeeModal } from './components/modals/create-employee-modal';
 import { CreateDepartmentModal } from './components/modals/create-department-modal';
@@ -57,7 +56,6 @@ const PORTAL_VIEWS = new Set<string>(['my-profile', 'leave', 'expenses']);
 
 export function HrPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { openSettings } = useUIStore();
 
   // Auth
@@ -70,7 +68,10 @@ export function HrPage() {
 
   // Navigation state (URL-driven, falls back to user's preferred default view)
   const hrDefaultView = useHrSettingsStore((s) => s.defaultView);
-  const portalDefault = 'my-profile';
+  // Portal users (viewer role) land on Leave by default — it's a more
+  // actionable hub than 'view your own record'. my-profile is still
+  // reachable via the portal sidebar item when they want it.
+  const portalDefault = 'leave';
   const [searchParams, setSearchParams] = useSearchParams();
   const activeNav = (searchParams.get('view') || (isPortalUser ? portalDefault : hrDefaultView)) as NavSection;
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
@@ -195,12 +196,12 @@ export function HrPage() {
 
   const showAddButton = canCreate && (activeNav === 'employees' || activeNav === 'departments' || activeNav === 'time-off');
 
-  // Full-page render path for non-portal users viewing their own profile.
-  // Bypasses the AppSidebar layout entirely so the view fills the viewport
-  // with just a back button at the top (via EmployeeDetailPage). Portal
-  // users keep the in-sidebar panel rendering below so they don't lose
-  // access to their Leave / Expenses tabs.
-  if (activeNav === 'my-profile' && !isPortalUser) {
+  // Full-page render path for my-profile. Bypasses the AppSidebar layout
+  // entirely so the view fills the viewport with just a back button at
+  // the top (via EmployeeDetailPage). Applies to ALL users — portal
+  // viewers and admins alike — because my-profile is a "view my own
+  // record" page, not a hub for navigation.
+  if (activeNav === 'my-profile') {
     const myEmployee = allEmployees.find(
       (e) => e.email?.toLowerCase() === authAccount?.email?.toLowerCase(),
     );
@@ -220,6 +221,9 @@ export function HrPage() {
         </div>
       );
     }
+    // Back target: portal users (viewers) return to their default Leave
+    // landing; non-portal users return to their HR dashboard / default.
+    const backTarget: NavSection = isPortalUser ? 'leave' : (hrDefaultView as NavSection);
     return (
       <EmployeeDetailPage
         employeeId={myEmployee.id}
@@ -228,7 +232,7 @@ export function HrPage() {
         // of 1). The user is viewing their own profile, not navigating a list.
         employees={[myEmployee]}
         departments={departments}
-        onBack={() => navigate(-1)}
+        onBack={() => setActiveNav(backTarget)}
         onNavigate={() => {}}
       />
     );
@@ -256,7 +260,11 @@ export function HrPage() {
               label={t('hr.sidebar.myProfile')}
               icon={<User size={14} />}
               iconColor="#14b8a6"
-              isActive={activeNav === 'my-profile'}
+              // Always false here — the early return at the top of the
+              // component renders a full-page view when activeNav is
+              // 'my-profile', so control flow never reaches this
+              // sidebar item in the my-profile state.
+              isActive={false}
               onClick={() => setActiveNav('my-profile')}
             />
             <SidebarItem
@@ -411,29 +419,6 @@ export function HrPage() {
           />
         )}
 
-        {/* Portal-user my-profile rendering — non-portal users hit the
-            full-page EmployeeDetailPage early-return at the top of this
-            function instead. */}
-        {activeNav === 'my-profile' && isPortalUser && (() => {
-          const myEmployee = allEmployees.find(
-            (e) => e.email?.toLowerCase() === authAccount?.email?.toLowerCase(),
-          );
-          return myEmployee ? (
-            <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-              <EmployeeDetailPanel
-                employee={myEmployee}
-                departments={departments}
-                employees={allEmployees}
-                timeOffRequests={timeOffRequests}
-                onClose={() => {}}
-              />
-            </div>
-          ) : (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
-              {t('hr.sidebar.noProfile')}
-            </div>
-          );
-        })()}
         {activeNav === 'attendance' && <AttendanceView employees={allEmployees} />}
         {activeNav === 'leave' && <LeaveTabs employees={allEmployees} />}
         {activeNav === 'expenses' && <ExpensesTabs searchQuery={searchQuery} />}
