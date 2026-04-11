@@ -627,3 +627,210 @@ export function InvoicesIcon({ size = 24, className, style }: IconProps) {
     </svg>
   );
 }
+
+// ─── Draw alternatives (preview at /dev/draw-icons) ───────────────────
+//
+// Five hand-authored Draw icons in the SignIcon visual language —
+// 2-3 paths, 2-stop gradients, 128×128 viewBox. The user picks one in
+// the preview page; the winner becomes DrawIcon and the rest get
+// deleted along with the preview route.
+
+// (A) Pencil — diagonal pencil with a wood tip, pink-to-magenta gradient body.
+export function DrawIconA({ size = 24, className, style }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 128 128"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      style={style}
+    >
+      <g transform="rotate(-45 64 64)">
+        {/* Pencil body */}
+        <rect x="42" y="20" width="44" height="76" rx="6" fill="url(#drawA_paint0)" />
+        {/* Wood tip */}
+        <path d="M42 96 L 64 122 L 86 96 Z" fill="url(#drawA_paint1)" />
+        {/* Graphite point */}
+        <path d="M56 110 L 64 122 L 72 110 Z" fill="#1f2937" />
+        {/* Eraser */}
+        <rect x="42" y="14" width="44" height="10" rx="3" fill="#e879a8" />
+      </g>
+      <defs>
+        <linearGradient id="drawA_paint0" x1="64" y1="20" x2="64" y2="96" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#f472b6" />
+          <stop offset="1" stopColor="#be185d" />
+        </linearGradient>
+        <linearGradient id="drawA_paint1" x1="64" y1="96" x2="64" y2="122" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#fde68a" />
+          <stop offset="1" stopColor="#a16207" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+// (B) Brush stroke — bold S-curve in pink-to-purple, like a paint swoosh.
+export function DrawIconB({ size = 24, className, style }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 128 128"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      style={style}
+    >
+      {/* Background fill */}
+      <rect width="128" height="128" fill="url(#drawB_bg)" />
+      {/* Brush stroke — fat curve with tapered ends */}
+      <path
+        d="M18 96 C 32 64, 56 48, 70 60 C 84 72, 60 90, 70 100 C 80 110, 104 96, 110 76"
+        stroke="url(#drawB_stroke)"
+        strokeWidth="14"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <defs>
+        <linearGradient id="drawB_bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#fce7f3" />
+          <stop offset="1" stopColor="#f9a8d4" />
+        </linearGradient>
+        <linearGradient id="drawB_stroke" x1="18" y1="64" x2="110" y2="96" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#ec4899" />
+          <stop offset="1" stopColor="#7e22ce" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+// (C) Color palette — half-circle palette with a thumb hole and three color dots.
+export function DrawIconC({ size = 24, className, style }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 128 128"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      style={style}
+    >
+      {/* Palette body — rounded teardrop */}
+      <path
+        d="M64 18
+           C 92 18, 114 38, 114 64
+           C 114 86, 96 100, 80 96
+           C 70 94, 68 86, 70 80
+           C 72 74, 70 68, 62 68
+           C 36 68, 14 56, 14 40
+           C 14 26, 30 18, 64 18 Z"
+        fill="url(#drawC_paint0)"
+      />
+      {/* Color dots */}
+      <circle cx="44" cy="44" r="7" fill="#ef4444" />
+      <circle cx="68" cy="36" r="7" fill="#f59e0b" />
+      <circle cx="90" cy="48" r="7" fill="#3b82f6" />
+      <circle cx="92" cy="74" r="7" fill="#10b981" />
+      <defs>
+        <linearGradient id="drawC_paint0" x1="64" y1="18" x2="64" y2="100" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#fef3c7" />
+          <stop offset="1" stopColor="#d97706" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+// (D) Crayon — chunky crayon stub at an angle, blue-to-cyan gradient.
+export function DrawIconD({ size = 24, className, style }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 128 128"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      style={style}
+    >
+      <g transform="rotate(15 64 64)">
+        {/* Crayon body with chevron tip */}
+        <path
+          d="M28 36
+             L 92 36
+             L 100 60
+             L 92 84
+             L 28 84
+             L 22 80
+             L 18 72
+             L 16 60
+             L 18 48
+             L 22 40 Z"
+          fill="url(#drawD_paint0)"
+        />
+        {/* Wrapper bands */}
+        <rect x="36" y="36" width="48" height="48" fill="url(#drawD_paint1)" />
+        {/* Brand label rectangle */}
+        <rect x="46" y="56" width="28" height="8" rx="1" fill="#ffffff" opacity="0.7" />
+      </g>
+      <defs>
+        <linearGradient id="drawD_paint0" x1="64" y1="36" x2="64" y2="84" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#67e8f9" />
+          <stop offset="1" stopColor="#0e7490" />
+        </linearGradient>
+        <linearGradient id="drawD_paint1" x1="60" y1="36" x2="60" y2="84" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#22d3ee" />
+          <stop offset="1" stopColor="#155e75" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+// (E) Marker tip — chunky marker viewed from above with a fat felt tip and
+// a colour swatch trail behind it. Vivid green.
+export function DrawIconE({ size = 24, className, style }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 128 128"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      style={style}
+    >
+      {/* Soft trail behind the marker */}
+      <path
+        d="M14 88 Q 40 72, 64 84 T 114 80"
+        stroke="url(#drawE_trail)"
+        strokeWidth="18"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.6"
+      />
+      {/* Marker body — wide teardrop pointing down-right */}
+      <g transform="rotate(35 64 60)">
+        <rect x="36" y="20" width="56" height="40" rx="6" fill="url(#drawE_body)" />
+        {/* Felt tip */}
+        <path d="M92 28 L 110 40 L 92 52 Z" fill="#1f2937" />
+        {/* Cap separator */}
+        <rect x="80" y="20" width="3" height="40" fill="#ffffff" opacity="0.4" />
+      </g>
+      <defs>
+        <linearGradient id="drawE_body" x1="64" y1="20" x2="64" y2="60" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#86efac" />
+          <stop offset="1" stopColor="#15803d" />
+        </linearGradient>
+        <linearGradient id="drawE_trail" x1="14" y1="84" x2="114" y2="84" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#86efac" />
+          <stop offset="1" stopColor="#22c55e" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
