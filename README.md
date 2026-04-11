@@ -104,9 +104,9 @@ npm run dev
 | Tasks | Task management with calendar, dependencies, attachments, assignees, comments |
 | Write | Rich text editor with cover images, comments, templates |
 | Draw | Excalidraw-based canvas with PDF export, image insertion, presentation mode |
-| Marketplace | One-click deploy of 10 Docker apps (Metabase, Mattermost, Vaultwarden, etc.) |
 
-## Marketplace
+<!--
+## Marketplace (hidden — not available in current release)
 
 Atlas can also host 3rd party apps. Here is a screenshot of the Atlas Marketplace. We're adding more by time but feel free to create an issue if you would like to see your favorite app here.
 
@@ -124,6 +124,7 @@ Atlas can also host 3rd party apps. Here is a screenshot of the Atlas Marketplac
 | Metabase | Analytics | Business intelligence and analytics dashboards — ask questions, get charts | AGPLv3 |
 | Umami | Analytics | Privacy-focused web analytics — lightweight alternative to Google Analytics | MIT |
 | Vaultwarden | Security | Bitwarden-compatible password manager — self-hosted vault for keys and secrets | AGPLv3 |
+-->
 
 
 ## Tech stack
