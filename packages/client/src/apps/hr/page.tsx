@@ -196,47 +196,15 @@ export function HrPage() {
 
   const showAddButton = canCreate && (activeNav === 'employees' || activeNav === 'departments' || activeNav === 'time-off');
 
-  // Full-page render path for my-profile. Bypasses the AppSidebar layout
-  // entirely so the view fills the viewport with just a back button at
-  // the top (via EmployeeDetailPage). Applies to ALL users — portal
-  // viewers and admins alike — because my-profile is a "view my own
-  // record" page, not a hub for navigation.
-  if (activeNav === 'my-profile') {
-    const myEmployee = allEmployees.find(
-      (e) => e.email?.toLowerCase() === authAccount?.email?.toLowerCase(),
-    );
-    if (!myEmployee) {
-      return (
-        <div
-          style={{
-            display: 'flex',
-            height: '100vh',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--color-text-tertiary)',
-            fontFamily: 'var(--font-family)',
-          }}
-        >
-          {t('hr.sidebar.noProfile')}
-        </div>
-      );
-    }
-    // Back target: portal users (viewers) return to their default Leave
-    // landing; non-portal users return to their HR dashboard / default.
-    const backTarget: NavSection = isPortalUser ? 'leave' : (hrDefaultView as NavSection);
-    return (
-      <EmployeeDetailPage
-        employeeId={myEmployee.id}
-        // Pass a single-element employees array so the prev/next buttons
-        // in EmployeeDetailPage are effectively disabled (currentIndex 0
-        // of 1). The user is viewing their own profile, not navigating a list.
-        employees={[myEmployee]}
-        departments={departments}
-        onBack={() => setActiveNav(backTarget)}
-        onNavigate={() => {}}
-      />
-    );
-  }
+  // Resolve the current user's employee record for the my-profile view.
+  // This runs on every render when activeNav === 'my-profile' and feeds
+  // the EmployeeDetailPage render block below.
+  const myEmployee =
+    activeNav === 'my-profile'
+      ? allEmployees.find(
+          (e) => e.email?.toLowerCase() === authAccount?.email?.toLowerCase(),
+        )
+      : undefined;
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
@@ -260,11 +228,7 @@ export function HrPage() {
               label={t('hr.sidebar.myProfile')}
               icon={<User size={14} />}
               iconColor="#14b8a6"
-              // Always false here — the early return at the top of the
-              // component renders a full-page view when activeNav is
-              // 'my-profile', so control flow never reaches this
-              // sidebar item in the my-profile state.
-              isActive={false}
+              isActive={activeNav === 'my-profile'}
               onClick={() => setActiveNav('my-profile')}
             />
             <SidebarItem
@@ -351,7 +315,7 @@ export function HrPage() {
       </AppSidebar>
 
       {/* Main content */}
-      {activeNav !== 'employee-detail' && <ContentArea
+      {activeNav !== 'employee-detail' && activeNav !== 'my-profile' && <ContentArea
         title={sectionTitle}
         actions={
           <>
@@ -433,6 +397,36 @@ export function HrPage() {
           onBack={() => setActiveNav('employees')}
           onNavigate={(id) => setSearchParams({ view: 'employee-detail', employee: id }, { replace: true })}
         />
+      )}
+
+      {/* Full-page my-profile — rendered next to the sidebar (not inside
+          ContentArea) so there's no double header and the user still has
+          the HR sidebar for navigation. EmployeeDetailPage supplies its
+          own back button. */}
+      {activeNav === 'my-profile' && myEmployee && (
+        <EmployeeDetailPage
+          employeeId={myEmployee.id}
+          // Single-element array disables prev/next buttons for the
+          // self-view ("view my own profile" isn't a list context).
+          employees={[myEmployee]}
+          departments={departments}
+          onBack={() => setActiveNav(isPortalUser ? 'leave' : (hrDefaultView as NavSection))}
+          onNavigate={() => {}}
+        />
+      )}
+      {activeNav === 'my-profile' && !myEmployee && (
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--color-text-tertiary)',
+            fontFamily: 'var(--font-family)',
+          }}
+        >
+          {t('hr.sidebar.noProfile')}
+        </div>
       )}
 
       {/* Modals */}
