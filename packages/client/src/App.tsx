@@ -29,6 +29,7 @@ import { ForgotPasswordPage } from './pages/forgot-password';
 import { ResetPasswordPage } from './pages/reset-password';
 import { SignPublicPage } from './pages/sign-public';
 import { ProposalPublicPage } from './pages/proposal-public';
+import { SystemIconsPreviewPage } from './pages/dev/system-icons-preview';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
@@ -89,6 +90,8 @@ export function App() {
                 <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
                 <Route path="/sign/:token" element={<SignPublicPage />} />
                 <Route path="/proposal/:token" element={<ProposalPublicPage />} />
+                {/* TEMP: System icon picker preview — delete after the user picks */}
+                <Route path="/dev/system-icons" element={<ProtectedRoute><SystemIconsPreviewPage /></ProtectedRoute>} />
                 <Route
                   path={ROUTES.HOME}
                   element={
