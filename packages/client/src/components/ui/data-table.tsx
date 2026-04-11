@@ -1,8 +1,26 @@
-import { useState, useCallback, useRef, useMemo, useEffect, type ReactNode, type CSSProperties } from 'react';
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+  useEffect,
+  type ReactNode,
+  type CSSProperties,
+} from 'react';
+import {
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Download,
+  Columns3,
+  Check,
+} from 'lucide-react';
 import { ColumnHeader } from './column-header';
 import { Button } from './button';
 import { Select } from './select';
+import { Input } from './input';
+import { Popover, PopoverTrigger, PopoverContent } from './popover';
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -23,6 +41,19 @@ export interface DataTableColumn<T> {
   align?: 'left' | 'right';
   render: (item: T, index: number) => ReactNode;
   compare?: (a: T, b: T) => number;
+  /** Plain-string value used by the search filter and CSV export. If
+   * omitted, the table will try to coerce the result of `render()` to a
+   * string — works for primitive renders, returns empty string for JSX. */
+  searchValue?: (item: T) => string;
+  /** Plain-string value used by the CSV export. Defaults to `searchValue` if
+   * defined, otherwise the coerced render result. */
+  csvValue?: (item: T) => string | number;
+  /** Whether this column may be hidden via the column selector. Default true.
+   * Set to false for "always-on" identity columns. */
+  hideable?: boolean;
+  /** Whether this column may be resized when `resizableColumns` is on.
+   * Default true. */
+  resizable?: boolean;
 }
 
 export interface DataTableBulkAction<T> {
@@ -88,9 +119,89 @@ export interface DataTableProps<T extends { id: string }> {
   // Keyboard
   keyboardNavigation?: boolean;
 
+  // ─── Built-in toolbar features (opt-in) ───────────────────────────
+
+  /** Show a search input in the toolbar. Filters rows client-side using
+   * each column's `searchValue` (or coerced render output). */
+  searchable?: boolean;
+  /** Placeholder text for the search input. */
+  searchPlaceholder?: string;
+  /** Lift search state out of the table. When provided, the table calls
+   * this on each change but still filters internally unless you also
+   * filter `data` upstream. */
+  onSearchChange?: (query: string) => void;
+
+  /** Show an "Export CSV" button in the toolbar. Exports filtered + sorted
+   * rows (NOT just the current page) using each visible column's `csvValue`
+   * (or coerced render output). Pass `{ filename }` to control the
+   * download name; default is `table.csv`. */
+  exportable?: boolean | { filename?: string };
+
+  /** Show a "Columns" popover in the toolbar that toggles column
+   * visibility. Columns with `hideable: false` are excluded from the list.
+   * State persists in localStorage when `storageKey` is set. */
+  columnSelector?: boolean;
+
+  /** Allow the user to drag column edges to resize widths. State persists
+   * in localStorage when `storageKey` is set. */
+  resizableColumns?: boolean;
+
+  /** Stable identifier used to namespace localStorage keys for the
+   * built-in toolbar features (column visibility + widths). Without this
+   * the user's preferences won't persist across reloads. */
+  storageKey?: string;
+
   // Misc
   className?: string;
   rowClassName?: (item: T, index: number) => string;
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────
+
+/** Best-effort stringification of a ReactNode for search/CSV. Walks the
+ * tree and concatenates string/number children; returns '' for elements
+ * we can't safely peek into. The escape hatch is the explicit
+ * `searchValue`/`csvValue` column field. */
+function coerceNodeToString(node: ReactNode): string {
+  if (node == null || node === false || node === true) return '';
+  if (typeof node === 'string') return node;
+  if (typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(coerceNodeToString).join(' ');
+  return '';
+}
+
+function getSearchableString<T>(col: DataTableColumn<T>, item: T, index: number): string {
+  if (col.searchValue) return col.searchValue(item);
+  return coerceNodeToString(col.render(item, index));
+}
+
+function getCsvValue<T>(col: DataTableColumn<T>, item: T, index: number): string {
+  if (col.csvValue) return String(col.csvValue(item));
+  if (col.searchValue) return col.searchValue(item);
+  return coerceNodeToString(col.render(item, index));
+}
+
+/** RFC 4180 CSV cell escape: wrap in double quotes and double any internal
+ * quotes if the value contains commas, quotes, or newlines. */
+function csvCell(value: string): string {
+  if (/[",\n\r]/.test(value)) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
+function downloadCsv(filename: string, rows: string[][]) {
+  const csv = rows.map(row => row.map(csvCell).join(',')).join('\n');
+  // Prepend BOM so Excel opens UTF-8 correctly.
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ─── Component ──────────────────────────────────────────────────────
@@ -119,6 +230,13 @@ export function DataTable<T extends { id: string }>({
   emptyDescription,
   groupBy,
   keyboardNavigation = true,
+  searchable = false,
+  searchPlaceholder = 'Search…',
+  onSearchChange,
+  exportable = false,
+  columnSelector = false,
+  resizableColumns = false,
+  storageKey,
   className,
   rowClassName,
 }: DataTableProps<T>) {
@@ -137,6 +255,73 @@ export function DataTable<T extends { id: string }>({
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(defaultPageSize);
 
+  // ─── Search state ───────────────────────────────────────────────
+  const [query, setQuery] = useState('');
+
+  // ─── Column visibility state ────────────────────────────────────
+  // Stores the set of HIDDEN column keys (not visible). Inverse of "visible"
+  // so newly added columns default to visible without a migration step.
+  const visibilityStorageKey = storageKey ? `atlasmail_dt_hidden_${storageKey}` : null;
+  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(() => {
+    if (!visibilityStorageKey || typeof window === 'undefined') return new Set();
+    try {
+      const raw = window.localStorage.getItem(visibilityStorageKey);
+      if (!raw) return new Set();
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return new Set(parsed.map(String));
+    } catch { /* ignore */ }
+    return new Set();
+  });
+  useEffect(() => {
+    if (!visibilityStorageKey || typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(visibilityStorageKey, JSON.stringify([...hiddenKeys]));
+    } catch { /* ignore */ }
+  }, [hiddenKeys, visibilityStorageKey]);
+
+  // ─── Column width overrides (for resizable columns) ─────────────
+  const widthsStorageKey = storageKey ? `atlasmail_dt_widths_${storageKey}` : null;
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
+    if (!widthsStorageKey || typeof window === 'undefined') return {};
+    try {
+      const raw = window.localStorage.getItem(widthsStorageKey);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') return parsed as Record<string, number>;
+    } catch { /* ignore */ }
+    return {};
+  });
+  useEffect(() => {
+    if (!widthsStorageKey || typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(widthsStorageKey, JSON.stringify(columnWidths));
+    } catch { /* ignore */ }
+  }, [columnWidths, widthsStorageKey]);
+
+  // Active resize drag — column key + starting x + starting width.
+  const resizeDragRef = useRef<{ key: string; startX: number; startWidth: number } | null>(null);
+  useEffect(() => {
+    if (!resizableColumns) return;
+    const onMouseMove = (e: MouseEvent) => {
+      const drag = resizeDragRef.current;
+      if (!drag) return;
+      const next = Math.max(60, Math.round(drag.startWidth + (e.clientX - drag.startX)));
+      setColumnWidths(prev => ({ ...prev, [drag.key]: next }));
+    };
+    const onMouseUp = () => {
+      if (!resizeDragRef.current) return;
+      resizeDragRef.current = null;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [resizableColumns]);
+
   // ─── Keyboard focus ─────────────────────────────────────────────
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -144,6 +329,23 @@ export function DataTable<T extends { id: string }>({
   // Reset page when data changes
   const dataLen = data.length;
   useEffect(() => { setPage(0); }, [dataLen]);
+
+  // ─── Visible columns (after column-selector hides) ──────────────
+  const visibleColumns = useMemo(
+    () => columns.filter(c => !hiddenKeys.has(c.key)),
+    [columns, hiddenKeys],
+  );
+
+  // ─── Search filter ──────────────────────────────────────────────
+  const filteredData = useMemo(() => {
+    if (!searchable || !query.trim()) return data;
+    const needle = query.trim().toLowerCase();
+    return data.filter((item, index) =>
+      visibleColumns.some(col =>
+        getSearchableString(col, item, index).toLowerCase().includes(needle),
+      ),
+    );
+  }, [data, searchable, query, visibleColumns]);
 
   // ─── Sort handler ───────────────────────────────────────────────
   const handleSort = useCallback((columnKey: string) => {
@@ -163,11 +365,11 @@ export function DataTable<T extends { id: string }>({
 
   // ─── Sorted data ───────────────────────────────────────────────
   const sortedData = useMemo(() => {
-    if (!sort) return data;
+    if (!sort) return filteredData;
     const col = columns.find(c => c.key === sort.column);
-    if (!col) return data;
+    if (!col) return filteredData;
 
-    const sorted = [...data].sort((a, b) => {
+    const sorted = [...filteredData].sort((a, b) => {
       if (col.compare) return col.compare(a, b);
       const aVal = (a as Record<string, unknown>)[col.key];
       const bVal = (b as Record<string, unknown>)[col.key];
@@ -178,7 +380,7 @@ export function DataTable<T extends { id: string }>({
       return String(aVal).localeCompare(String(bVal));
     });
     return sort.direction === 'desc' ? sorted.reverse() : sorted;
-  }, [data, sort, columns]);
+  }, [filteredData, sort, columns]);
 
   // ─── Grouped data ──────────────────────────────────────────────
   const groups = useMemo(() => {
@@ -298,6 +500,62 @@ export function DataTable<T extends { id: string }>({
     return pages;
   }, [totalPages, page]);
 
+  // ─── Resolve effective column width ────────────────────────────
+  const getEffectiveWidth = useCallback(
+    (col: DataTableColumn<T>): number | string | undefined => {
+      if (resizableColumns && columnWidths[col.key] != null) return columnWidths[col.key];
+      return col.width;
+    },
+    [resizableColumns, columnWidths],
+  );
+
+  const startResize = useCallback(
+    (col: DataTableColumn<T>, e: React.MouseEvent) => {
+      if (!resizableColumns) return;
+      e.preventDefault();
+      e.stopPropagation();
+      // Measure the actual current width from the DOM rather than trusting
+      // the prop, so the drag starts from where the user sees the edge.
+      const headerCell = (e.currentTarget as HTMLElement).parentElement;
+      const startWidth = headerCell?.getBoundingClientRect().width ?? 120;
+      resizeDragRef.current = { key: col.key, startX: e.clientX, startWidth };
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    },
+    [resizableColumns],
+  );
+
+  // ─── CSV export ────────────────────────────────────────────────
+  const exportCsv = useCallback(() => {
+    const cols = visibleColumns;
+    const headers = cols.map(c => c.label);
+    const body = sortedData.map((item, idx) =>
+      cols.map(col => getCsvValue(col, item, idx)),
+    );
+    const filename =
+      typeof exportable === 'object' && exportable.filename
+        ? exportable.filename
+        : storageKey
+          ? `${storageKey}.csv`
+          : 'table.csv';
+    downloadCsv(filename, [headers, ...body]);
+  }, [visibleColumns, sortedData, exportable, storageKey]);
+
+  // ─── Search input handler ──────────────────────────────────────
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setQuery(value);
+      setPage(0);
+      onSearchChange?.(value);
+    },
+    [onSearchChange],
+  );
+
+  // ─── Built-in toolbar parts ────────────────────────────────────
+  const showBuiltInToolbar = searchable || exportable || columnSelector;
+  const hideableColumns = columns.filter(c => c.hideable !== false);
+
   // ─── Render helpers ────────────────────────────────────────────
   const renderRow = (item: T, index: number, globalIndex: number) => {
     const isActive = activeRowId === item.id;
@@ -323,23 +581,26 @@ export function DataTable<T extends { id: string }>({
             readOnly
           />
         )}
-        {columns.map(col => (
-          <span
-            key={col.key}
-            style={{
-              width: col.width ?? undefined,
-              minWidth: col.minWidth ?? undefined,
-              flex: col.width ? undefined : 1,
-              flexShrink: col.width ? 0 : undefined,
-              textAlign: col.align,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {col.render(item, index)}
-          </span>
-        ))}
+        {visibleColumns.map(col => {
+          const w = getEffectiveWidth(col);
+          return (
+            <span
+              key={col.key}
+              style={{
+                width: w ?? undefined,
+                minWidth: col.minWidth ?? undefined,
+                flex: w ? undefined : 1,
+                flexShrink: w ? 0 : undefined,
+                textAlign: col.align,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {col.render(item, index)}
+            </span>
+          );
+        })}
       </div>
     );
   };
@@ -367,10 +628,117 @@ export function DataTable<T extends { id: string }>({
   return (
     <div className={`dt-container ${className ?? ''}`} ref={containerRef} tabIndex={0} onKeyDown={handleKeyDown}>
       {/* Toolbar */}
-      {toolbar && (
+      {(toolbar || showBuiltInToolbar) && (
         <div className="dt-toolbar">
-          <div className="dt-toolbar-left">{toolbar.left}</div>
-          <div className="dt-toolbar-right">{toolbar.right}</div>
+          <div className="dt-toolbar-left">
+            {searchable && (
+              <Input
+                size="sm"
+                iconLeft={<Search size={14} />}
+                placeholder={searchPlaceholder}
+                value={query}
+                onChange={handleSearchChange}
+                style={{ width: 240 }}
+              />
+            )}
+            {toolbar?.left}
+          </div>
+          <div className="dt-toolbar-right">
+            {toolbar?.right}
+            {columnSelector && hideableColumns.length > 0 && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    icon={<Columns3 size={14} />}
+                    aria-label="Show fields"
+                  >
+                    Fields
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" sideOffset={4} style={{ padding: 0, minWidth: 200 }}>
+                  <div
+                    style={{
+                      padding: '8px 12px',
+                      fontSize: 'var(--font-size-xs)',
+                      fontWeight: 'var(--font-weight-semibold)',
+                      color: 'var(--color-text-tertiary)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      borderBottom: '1px solid var(--color-border-secondary)',
+                    }}
+                  >
+                    Show fields
+                  </div>
+                  <div style={{ maxHeight: 320, overflow: 'auto', padding: 4 }}>
+                    {hideableColumns.map(col => {
+                      const isVisible = !hiddenKeys.has(col.key);
+                      return (
+                        <button
+                          key={col.key}
+                          type="button"
+                          onClick={() => {
+                            setHiddenKeys(prev => {
+                              const next = new Set(prev);
+                              if (next.has(col.key)) next.delete(col.key);
+                              else next.add(col.key);
+                              return next;
+                            });
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            width: '100%',
+                            padding: '6px 8px',
+                            background: 'transparent',
+                            border: 'none',
+                            borderRadius: 'var(--radius-sm)',
+                            color: 'var(--color-text-primary)',
+                            fontSize: 'var(--font-size-sm)',
+                            fontFamily: 'var(--font-family)',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-surface-hover)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: 16,
+                              height: 16,
+                              flexShrink: 0,
+                              borderRadius: 3,
+                              border: `1.5px solid ${isVisible ? 'var(--color-accent-primary)' : 'var(--color-border-primary)'}`,
+                              background: isVisible ? 'var(--color-accent-primary)' : 'transparent',
+                            }}
+                          >
+                            {isVisible && <Check size={11} color="#fff" strokeWidth={3} />}
+                          </span>
+                          {col.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+            {exportable && (
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={<Download size={14} />}
+                onClick={exportCsv}
+                aria-label="Export as CSV"
+              >
+                Export CSV
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
@@ -386,25 +754,45 @@ export function DataTable<T extends { id: string }>({
               onChange={handleHeaderCheckbox}
             />
           )}
-          {columns.map(col => (
-            <ColumnHeader
-              key={col.key}
-              label={col.label}
-              icon={col.icon}
-              sortable={col.sortable}
-              columnKey={col.key}
-              sortColumn={sort?.column ?? null}
-              sortDirection={sort?.direction}
-              onSort={handleSort}
-              style={{
-                width: col.width ?? undefined,
-                minWidth: col.minWidth ?? undefined,
-                flex: col.width ? undefined : 1,
-                flexShrink: col.width ? 0 : undefined,
-                textAlign: col.align,
-              }}
-            />
-          ))}
+          {visibleColumns.map(col => {
+            const w = getEffectiveWidth(col);
+            const allowResize = resizableColumns && col.resizable !== false;
+            return (
+              <div
+                key={col.key}
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  width: w ?? undefined,
+                  minWidth: col.minWidth ?? undefined,
+                  flex: w ? undefined : 1,
+                  flexShrink: w ? 0 : undefined,
+                }}
+              >
+                <ColumnHeader
+                  label={col.label}
+                  icon={col.icon}
+                  sortable={col.sortable}
+                  columnKey={col.key}
+                  sortColumn={sort?.column ?? null}
+                  sortDirection={sort?.direction}
+                  onSort={handleSort}
+                  style={{
+                    flex: 1,
+                    textAlign: col.align,
+                  }}
+                />
+                {allowResize && (
+                  <span
+                    onMouseDown={(e) => startResize(col, e)}
+                    className="dt-resize-handle"
+                    aria-hidden="true"
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Body */}

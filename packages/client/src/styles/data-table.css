@@ -298,6 +298,38 @@
   color: var(--color-text-tertiary);
 }
 
+/* ─── Resize handle (column drag) ─────────────────────────────────── */
+
+.dt-resize-handle {
+  position: absolute;
+  top: 50%;
+  right: -6px;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 60%;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dt-resize-handle::before {
+  content: '';
+  display: block;
+  width: 1px;
+  height: 100%;
+  background: transparent;
+  transition: background 0.1s;
+}
+
+.dt-resize-handle:hover::before,
+.dt-resize-handle:active::before {
+  background: var(--color-accent-primary);
+  width: 2px;
+}
+
 /* ─── Cell helpers ───────────────────────────────────────────────── */
 
 .dt-cell {
