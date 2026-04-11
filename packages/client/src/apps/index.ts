@@ -11,6 +11,7 @@ import { docsManifest } from './docs/manifest';
 import { drawManifest } from './draw/manifest';
 import { invoicesManifest } from './invoices/manifest';
 import { systemManifest } from './system/manifest';
+
 appRegistry.register(crmManifest);
 appRegistry.register(hrManifest);
 appRegistry.register(calendarManifest);

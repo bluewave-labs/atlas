@@ -41,7 +41,7 @@ import * as tenantAppService from '../src/services/platform/tenant-app.service';
 
 function makeReq(overrides: Record<string, any> = {}): Request {
   return {
-    auth: { userId: 'u1', accountId: 'a1', email: 'test@test.com', isSuperAdmin: false, tenantId: 't1' },
+    auth: { userId: 'u1', accountId: 'a1', email: 'test@test.com', tenantId: 't1' },
     body: {},
     params: {},
     query: {},

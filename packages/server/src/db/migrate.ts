@@ -899,10 +899,16 @@ export async function runMigrations() {
       ALTER TABLE app_installations ADD COLUMN IF NOT EXISTS provisioning_enabled BOOLEAN NOT NULL DEFAULT FALSE;
     `);
 
-    // Add super admin column to users (idempotent)
-    await client.query(`
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS is_super_admin BOOLEAN NOT NULL DEFAULT FALSE;
-    `);
+    // `users.is_super_admin` used to distinguish a super admin from a tenant
+    // owner. In single-tenant self-hosted Atlas the two are always the same
+    // person, so we standardised on `tenant_members.role = 'owner'` and
+    // dropped the column to avoid silent divergence between the two checks.
+    // Idempotent — a no-op on databases that already dropped the column.
+    try {
+      await client.query(`ALTER TABLE users DROP COLUMN IF EXISTS is_super_admin`);
+    } catch (err: any) {
+      logger.warn({ err: err?.message }, 'Failed to drop users.is_super_admin');
+    }
 
     // ─── Signature tables ────────────────────────────────────────────
 
@@ -2113,25 +2119,13 @@ export async function runMigrations() {
       CREATE INDEX IF NOT EXISTS idx_task_comments_task ON task_comments(task_id);
     `);
 
-    // ─── Marketplace: Installed Apps ──────────────────────────────────
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS marketplace_apps (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        tenant_id UUID NOT NULL REFERENCES tenants(id),
-        app_id VARCHAR(50) NOT NULL,
-        status VARCHAR(20) NOT NULL DEFAULT 'stopped',
-        assigned_port INTEGER NOT NULL,
-        container_ids JSONB,
-        image_digest VARCHAR(255),
-        latest_digest VARCHAR(255),
-        generated_secrets TEXT,
-        env_overrides JSONB,
-        installed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        UNIQUE(tenant_id, app_id)
-      );
-      CREATE UNIQUE INDEX IF NOT EXISTS idx_marketplace_apps_unique ON marketplace_apps(tenant_id, app_id);
-    `);
+    // ─── Marketplace: removed ─────────────────────────────────────────
+    // The marketplace feature was removed; drop the legacy table if it still exists.
+    try {
+      await client.query(`DROP TABLE IF EXISTS marketplace_apps CASCADE`);
+    } catch (err) {
+      logger.warn({ err }, 'Failed to drop legacy marketplace_apps table');
+    }
 
     // ─── Presence Heartbeats ────────────────────────────────────────────
     await client.query(`

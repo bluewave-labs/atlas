@@ -39,6 +39,13 @@ export async function createFieldDefinition(data: {
   return field;
 }
 
+export async function getFieldDefinitionById(id: string) {
+  const [field] = await db.select().from(customFieldDefinitions)
+    .where(eq(customFieldDefinitions.id, id))
+    .limit(1);
+  return field ?? null;
+}
+
 export async function updateFieldDefinition(id: string, data: Partial<{
   name: string;
   options: Record<string, unknown>;

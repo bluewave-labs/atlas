@@ -272,3 +272,66 @@ Total: ~6 days of focused work, or ~2 weeks calendar time with review + integrat
 3. **Default permission display** — show derived defaults (editor/all) as inherited/grey, or force the user to set every cell explicitly?
 4. **Search UX** — if viewer Carol has different access across apps, do we still show the "Projects" tab in search even if she'd get zero results? Or hide the tab?
 5. **Migration path for existing CRM permissions UI users** — is there any live deployment using the CRM-specific permissions page that would break? (Likely not, but worth confirming before deleting.)
+
+---
+
+## System actor
+
+Background jobs run outside the request/response lifecycle and therefore
+outside RBAC. The reminder scheduler, recurring invoice generator, email
+worker, and any cron tasks invoke service functions directly — there is no
+`req.auth`, no tenant role, no permission lookup. These paths intentionally
+bypass the middleware factory and are trusted to scope by `tenantId` /
+`accountId` explicitly.
+
+Once the permission-change audit log (Item 3) lands, we will need to
+represent system-initiated writes in audit rows. The proposed convention:
+
+- Introduce an `actor_type` column (`'user' | 'system'`) on the audit table,
+  or reserve a sentinel `actor_user_id = 'system'` / null row.
+- Background jobs pass `actorUserId: null, actorType: 'system'` into the
+  permission/audit service.
+- The history UI renders system rows with a distinct label ("System" with
+  an icon) so operators can tell cron-triggered changes from human ones.
+
+No code change today — captured here so whoever builds the audit log does
+not have to rediscover the requirement.
+
+---
+
+## Public tokens
+
+Atlas currently has three independent public-token mechanisms that let an
+unauthenticated caller access a specific resource:
+
+- **Drive share links** — `drive_share_links` table. Issued and validated by
+  `packages/server/src/apps/drive/controllers/sharing.controller.ts`. Each
+  row carries its own `share_token`, optional expiry, and per-link ACL.
+- **Sign signing tokens** — `signing_tokens` table (see
+  `packages/server/src/db/schema.ts` at line 968). Scoped to a specific
+  `signature_documents` row and signer email; single-use, time-boxed.
+- **CRM proposal public tokens** — `crm_proposals.public_token`. Used for
+  the public proposal-view URL; one token per proposal, no revocation UI.
+
+Each mechanism rolls its own tokenization, expiry, and lookup. There is no
+unified registry, no "revoke all tokens for user X" view, and no audit of
+who fetched which token. That is acceptable for now because the three
+surfaces have meaningfully different threat models and the per-table indexes
+are fine at single-tenant scale. When we need compliance-grade revocation,
+collapse them into a single `public_tokens(kind, resource_id, token, ...)`
+table with a shared service.
+
+---
+
+## Calendar RBAC note
+
+The Calendar app is currently client-only — there is no
+`packages/server/src/apps/calendar/` directory. Events live in the browser
+and per-user settings only. As a result, it has no server-side permission
+matrix, no middleware registration, and no tenant-scoped reads.
+
+If Calendar ever gains server-backed shared calendars (team calendars,
+booking pages, resource calendars), it needs the full RBAC treatment:
+matrix entry in `ROLE_MATRIX`, `requireAppPermission('calendar', op)`
+middleware on every route, and `recordAccess` scoping inside the service
+layer. Don't ship a server Calendar app without landing this first.

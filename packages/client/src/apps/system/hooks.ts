@@ -53,14 +53,15 @@ export interface SystemMetrics {
 // ─── Hooks ─────────────────────────────────────────────────────────
 
 export function useSystemMetrics() {
-  const isSuperAdmin = useAuthStore((s) => s.isSuperAdmin);
+  const tenantRole = useAuthStore((s) => s.tenantRole);
+  const isAdmin = tenantRole === 'owner' || tenantRole === 'admin';
   return useQuery({
     queryKey: queryKeys.system.metrics,
     queryFn: async () => {
       const { data } = await api.get('/system/metrics');
       return data.data as SystemMetrics;
     },
-    enabled: isSuperAdmin,
+    enabled: isAdmin,
     refetchInterval: 10_000,
     staleTime: 5_000,
   });

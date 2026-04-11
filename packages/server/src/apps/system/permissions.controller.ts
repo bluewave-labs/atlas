@@ -14,9 +14,9 @@ import { logger } from '../../utils/logger';
 const VALID_ROLES: AppRole[] = ['admin', 'editor', 'viewer'];
 const VALID_ACCESS: AppRecordAccess[] = ['all', 'own'];
 
-// Apps the permissions matrix should show. System/marketplace are platform
-// management views (owner-only by design) so we hide them from the grid.
-const HIDDEN_APPS = new Set(['system', 'marketplace', 'calendar']);
+// Apps the permissions matrix should show. System is a platform
+// management view (owner-only by design) so we hide it from the grid.
+const HIDDEN_APPS = new Set(['system', 'calendar']);
 
 interface PermissionCell {
   userId: string;

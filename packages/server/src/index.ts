@@ -7,7 +7,6 @@ import { runMigrations } from './db/migrate';
 import { closeDb } from './config/database';
 import { startSyncWorker, stopSyncWorker } from './workers';
 import { closeRedis } from './config/redis';
-import { startUpdateChecker, stopUpdateChecker } from './apps/marketplace/update-checker';
 import { startReminderScheduler, stopReminderScheduler } from './apps/sign/reminder';
 import { startTaskReminderScheduler, stopTaskReminderScheduler } from './apps/tasks/reminder';
 import { startCrmReminderScheduler, stopCrmReminderScheduler } from './apps/crm/activity-reminder';
@@ -53,9 +52,6 @@ app.listen(env.PORT, async () => {
   // Start Google sync worker (requires Redis)
   startSyncWorker().catch((err) => logger.warn({ err }, 'Failed to start sync worker'));
 
-  // Marketplace update checker — runs after 30s delay, then daily
-  startUpdateChecker();
-
   // Sign: automated reminders for pending signing tokens — runs hourly
   startReminderScheduler();
 
@@ -88,7 +84,6 @@ function handleShutdown(signal: string) {
   stopLeaveBalanceScheduler();
   stopRecurringInvoiceScheduler();
   stopInvoiceReminderScheduler();
-  stopUpdateChecker();
   stopReminderScheduler();
   stopTaskReminderScheduler();
   stopCrmReminderScheduler();

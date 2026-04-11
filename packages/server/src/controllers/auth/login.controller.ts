@@ -43,8 +43,7 @@ export async function loginWithPassword(req: Request, res: Response) {
       .limit(1);
     const tenantRole = member?.role;
 
-    const isSuperAdmin = await authService.isUserSuperAdmin(account.userId);
-    const jwtTokens = authService.generateTokens(account, tenantId, isSuperAdmin, tenantRole);
+    const jwtTokens = authService.generateTokens(account, tenantId, tenantRole);
 
     res.json({
       success: true,
@@ -95,13 +94,11 @@ export async function refreshToken(req: Request, res: Response) {
       .limit(1);
     const tenantRole = member?.role;
 
-    const isSuperAdmin = await authService.isUserSuperAdmin(userId);
-
     const newTokens = authService.generateTokens({
       id: tenantId,
       email: payload.email,
       userId,
-    }, tenantId, isSuperAdmin, tenantRole);
+    }, tenantId, tenantRole);
 
     res.json({
       success: true,
@@ -218,7 +215,7 @@ export async function acceptInvitation(req: Request, res: Response) {
       .limit(1);
     const tenantRole = member?.role;
 
-    const jwtTokens = authService.generateTokens(result.account, result.tenantId, undefined, tenantRole);
+    const jwtTokens = authService.generateTokens(result.account, result.tenantId, tenantRole);
 
     res.json({
       success: true,

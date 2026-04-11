@@ -17,7 +17,6 @@ export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name'),
   email: text('email'),
-  isSuperAdmin: boolean('is_super_admin').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
@@ -2045,25 +2044,6 @@ export const appPermissions = pgTable('app_permissions', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   uniqueIdx: uniqueIndex('idx_app_permissions_unique').on(table.tenantId, table.userId, table.appId),
-}));
-
-// ─── Marketplace: Installed Apps ──────────────────────────────────────
-
-export const marketplaceApps = pgTable('marketplace_apps', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
-  appId: varchar('app_id', { length: 50 }).notNull(),
-  status: varchar('status', { length: 20 }).notNull().default('stopped'),
-  assignedPort: integer('assigned_port').notNull(),
-  containerIds: jsonb('container_ids').$type<string[] | null>(),
-  imageDigest: varchar('image_digest', { length: 255 }),
-  latestDigest: varchar('latest_digest', { length: 255 }),
-  generatedSecrets: text('generated_secrets'),
-  envOverrides: jsonb('env_overrides').$type<Record<string, string> | null>(),
-  installedAt: timestamp('installed_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (table) => ({
-  uniqueIdx: uniqueIndex('idx_marketplace_apps_unique').on(table.tenantId, table.appId),
 }));
 
 // ─── Presence Heartbeats ────────────────────────────────────────────

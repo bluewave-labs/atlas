@@ -105,27 +105,6 @@ npm run dev
 | Write | Rich text editor with cover images, comments, templates |
 | Draw | Excalidraw-based canvas with PDF export, image insertion, presentation mode |
 
-<!--
-## Marketplace (hidden — not available in current release)
-
-Atlas can also host 3rd party apps. Here is a screenshot of the Atlas Marketplace. We're adding more by time but feel free to create an issue if you would like to see your favorite app here.
-
-<img width="2466" height="2210" alt="image" src="https://github.com/user-attachments/assets/45d83b6b-6554-4369-a7ac-306ab05118ba" />
-
-| App | Category | Description | License |
-|-----|----------|-------------|---------|
-| Activepieces | Automation | Visual workflow automation — connect your apps and automate tasks | MIT |
-| Cal.com | Scheduling | Open-source scheduling platform — event types, availability, booking pages | AGPLv3 |
-| Chatwoot | Support | Open-source helpdesk and live chat — manage customer conversations | MIT |
-| Checkmate | Monitoring | Open-source uptime monitoring for your websites and APIs | AGPLv3 |
-| Formbricks | Forms | Open-source survey & experience management — in-app surveys, link surveys | AGPLv3 |
-| Listmonk | Email Marketing | High-performance newsletter and mailing list manager | AGPLv3 |
-| Mattermost | Communication | Open-source team messaging — channels, threads, and integrations | MIT |
-| Metabase | Analytics | Business intelligence and analytics dashboards — ask questions, get charts | AGPLv3 |
-| Umami | Analytics | Privacy-focused web analytics — lightweight alternative to Google Analytics | MIT |
-| Vaultwarden | Security | Bitwarden-compatible password manager — self-hosted vault for keys and secrets | AGPLv3 |
--->
-
 
 ## Tech stack
 

@@ -2,17 +2,11 @@ import { db } from '../config/database';
 import { appPermissions, tenantMembers } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
-import { logger } from '../utils/logger';
+import { canAccess, type AppRole, type AppOperation, type AppRecordAccess } from '@atlas-platform/shared';
 
-export type AppRole = 'admin' | 'editor' | 'viewer';
-export type AppOperation = 'view' | 'create' | 'update' | 'delete' | 'delete_own';
-export type AppRecordAccess = 'all' | 'own';
-
-const ROLE_MATRIX: Record<AppRole, Set<AppOperation>> = {
-  admin: new Set(['view', 'create', 'update', 'delete', 'delete_own']),
-  editor: new Set(['view', 'create', 'update', 'delete_own']),
-  viewer: new Set(['view']),
-};
+// Re-export shared types so existing server-side imports keep working.
+export { canAccess };
+export type { AppRole, AppOperation, AppRecordAccess };
 
 export interface ResolvedAppPermission {
   role: AppRole;
@@ -60,10 +54,6 @@ export async function getAppPermission(
 
   // 3. Single-user / no tenant — full admin
   return { role: 'admin', recordAccess: 'all' };
-}
-
-export function canAccess(role: AppRole, operation: AppOperation): boolean {
-  return ROLE_MATRIX[role]?.has(operation) ?? false;
 }
 
 export function isAdminCaller(perm: ResolvedAppPermission | undefined): boolean {

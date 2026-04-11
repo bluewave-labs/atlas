@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api-client';
 import { queryKeys } from '../config/query-keys';
+import { canAccess, type AppRole, type AppRecordAccess } from '@atlas-platform/shared';
 
-export type AppRole = 'admin' | 'editor' | 'viewer';
-export type AppRecordAccess = 'all' | 'own';
+export type { AppRole, AppRecordAccess };
 
 export interface AppPermission {
   role: AppRole;
@@ -23,33 +23,28 @@ export interface AppPermissionWithUser {
 }
 
 // ─── Permission action flags (convenience) ─────────────────────────
-
-type AppOp = 'create' | 'edit' | 'delete' | 'deleteOwn';
-
-/**
- * Client-side role matrix. Mirrors the server's RBAC rules for gating UI
- * affordances. The server is still the source of truth for enforcement.
- */
-const ROLE_MATRIX: Record<AppRole, Record<AppOp, boolean>> = {
-  admin:  { create: true,  edit: true,  delete: true,  deleteOwn: true  },
-  editor: { create: true,  edit: true,  delete: false, deleteOwn: true  },
-  viewer: { create: false, edit: false, delete: false, deleteOwn: false },
-};
-
-function canAccess(role: AppRole | null | undefined, op: AppOp): boolean {
-  // No permission row means unrestricted (legacy / admin-only tenants).
-  if (!role) return true;
-  return ROLE_MATRIX[role]?.[op] ?? false;
-}
+//
+// Gates UI affordances using the shared ROLE_MATRIX from @atlas-platform/shared.
+// Server remains the source of truth for enforcement. The shared matrix uses
+// snake_case op names (`update`, `delete_own`); this hook maps them to the
+// camelCase field names (`canEdit`, `canDeleteOwn`) that consumers already
+// destructure so no call sites need to change.
+//
+// Legacy behavior: when no permission row exists, treat as unrestricted. That
+// covers single-user / no-tenant deployments where the caller has implicit
+// admin on everything.
 
 export function useAppActions(appId: string) {
   const { data: perm } = useMyAppPermission(appId);
   const role = perm?.role ?? null;
+  if (!role) {
+    return { canCreate: true, canEdit: true, canDelete: true, canDeleteOwn: true, role };
+  }
   return {
     canCreate: canAccess(role, 'create'),
-    canEdit: canAccess(role, 'edit'),
+    canEdit: canAccess(role, 'update'),
     canDelete: canAccess(role, 'delete'),
-    canDeleteOwn: canAccess(role, 'deleteOwn'),
+    canDeleteOwn: canAccess(role, 'delete_own'),
     role,
   };
 }

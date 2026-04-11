@@ -50,7 +50,7 @@ export function SettingsModal() {
   const { t } = useTranslation();
   const { settingsOpen, settingsApp, settingsPanel, closeSettings } = useUIStore();
   const tenantRole = useAuthStore((s) => s.tenantRole);
-  const isSuperAdmin = useAuthStore((s) => s.isSuperAdmin);
+  const isOwner = tenantRole === 'owner';
   const isAdmin = tenantRole === 'owner' || tenantRole === 'admin';
 
   const settingsCategories = useMemo(() => {
@@ -58,12 +58,14 @@ export function SettingsModal() {
     return all.map(cat => ({
       ...cat,
       panels: cat.panels.filter(p => {
-        if (p.superAdminOnly && !isSuperAdmin) return false;
+        // `superAdminOnly` panels are reserved for the tenant owner in
+        // single-tenant Atlas (super admin === owner).
+        if (p.superAdminOnly && !isOwner) return false;
         if (p.adminOnly && !isAdmin) return false;
         return true;
       }),
     })).filter(cat => cat.panels.length > 0);
-  }, [isAdmin, isSuperAdmin]);
+  }, [isAdmin, isOwner]);
 
   // Resolve initial category from store
   const resolvedCategory = settingsCategories.find((c) => c.id === settingsApp) ?? settingsCategories[0];

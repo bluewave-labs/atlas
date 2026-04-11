@@ -39,7 +39,6 @@ describe('auth-store', () => {
       isAuthenticated: false,
       isLoading: false,
       tenantId: null,
-      isSuperAdmin: false,
     });
 
     const state = useAuthStore.getState();
@@ -56,11 +55,10 @@ describe('auth-store', () => {
       isAuthenticated: false,
       isLoading: false,
       tenantId: null,
-      isSuperAdmin: false,
     });
 
     const account = makeAccount();
-    const token = makeJwt({ userId: 'user-1', tenantId: 'tenant-1', isSuperAdmin: false });
+    const token = makeJwt({ userId: 'user-1', tenantId: 'tenant-1' });
     const refresh = 'refresh-token-1';
 
     useAuthStore.getState().addAccount(account, token, refresh);
@@ -80,7 +78,6 @@ describe('auth-store', () => {
       isAuthenticated: false,
       isLoading: false,
       tenantId: null,
-      isSuperAdmin: false,
     });
 
     const account = makeAccount();
@@ -105,7 +102,6 @@ describe('auth-store', () => {
       isAuthenticated: true,
       isLoading: false,
       tenantId: null,
-      isSuperAdmin: false,
     });
     // Also write tokens so removeAccount can function
     localStorage.setItem('atlasmail_token', token);
@@ -132,7 +128,6 @@ describe('auth-store', () => {
       isAuthenticated: true,
       isLoading: false,
       tenantId: null,
-      isSuperAdmin: false,
     });
     localStorage.setItem('atlasmail_token', token);
     localStorage.setItem('atlasmail_active_account_id', 'acc-1');
@@ -165,7 +160,6 @@ describe('auth-store', () => {
       isAuthenticated: true,
       isLoading: false,
       tenantId: null,
-      isSuperAdmin: false,
     });
 
     const updated = makeAccount({ name: 'Updated Name' });
@@ -175,7 +169,7 @@ describe('auth-store', () => {
     expect(useAuthStore.getState().accounts[0].name).toBe('Updated Name');
   });
 
-  it('isSuperAdmin is extracted from JWT', async () => {
+  it('tenantRole is extracted from JWT', async () => {
     const { useAuthStore } = await import('../src/stores/auth-store');
     useAuthStore.setState({
       account: null,
@@ -183,13 +177,12 @@ describe('auth-store', () => {
       isAuthenticated: false,
       isLoading: false,
       tenantId: null,
-      isSuperAdmin: false,
     });
 
     const account = makeAccount();
-    const token = makeJwt({ userId: 'user-1', isSuperAdmin: true });
+    const token = makeJwt({ userId: 'user-1', tenantRole: 'owner' });
 
     useAuthStore.getState().addAccount(account, token, 'refresh-1');
-    expect(useAuthStore.getState().isSuperAdmin).toBe(true);
+    expect(useAuthStore.getState().tenantRole).toBe('owner');
   });
 });

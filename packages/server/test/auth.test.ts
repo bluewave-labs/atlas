@@ -140,13 +140,13 @@ describe('authMiddleware', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('preserves tenantId and isSuperAdmin from token payload', () => {
+  it('preserves tenantId and tenantRole from token payload', () => {
     const payload = {
       userId: 'u1',
       accountId: 'a1',
       email: 'admin@test.com',
       tenantId: 't1',
-      isSuperAdmin: true,
+      tenantRole: 'owner',
     };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
 
@@ -158,6 +158,6 @@ describe('authMiddleware', () => {
 
     expect(next).toHaveBeenCalled();
     expect(req.auth.tenantId).toBe('t1');
-    expect(req.auth.isSuperAdmin).toBe(true);
+    expect(req.auth.tenantRole).toBe('owner');
   });
 });

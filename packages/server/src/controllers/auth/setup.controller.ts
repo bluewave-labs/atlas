@@ -1,8 +1,5 @@
 import type { Request, Response } from 'express';
-import { eq } from 'drizzle-orm';
 import * as authService from '../../services/auth.service';
-import { db } from '../../config/database';
-import { users } from '../../db/schema';
 import { logger } from '../../utils/logger';
 import { hashPassword, validatePasswordStrength } from '../../utils/password';
 import { slugify } from '../../utils/slugify';
@@ -56,14 +53,12 @@ export async function setup(req: Request, res: Response) {
       passwordHash,
     });
 
-    // Mark as super admin
-    await db.update(users).set({ isSuperAdmin: true }).where(eq(users.id, user.id));
-
-    // Create the single tenant
+    // Create the single tenant; the creating user becomes its owner, which is
+    // the only level of privilege we track (no separate super-admin flag).
     const tenant = await tenantService.createTenant({ slug, name: companyName }, user.id);
 
-    // Generate tokens (with tenant + superAdmin + tenantRole)
-    const jwtTokens = authService.generateTokens(account, tenant.id, true, 'owner');
+    // Generate tokens (with tenant + owner tenantRole)
+    const jwtTokens = authService.generateTokens(account, tenant.id, 'owner');
 
     logger.info({ userId: user.id, tenantId: tenant.id, email: adminEmail }, 'Atlas initial setup completed');
 

@@ -250,12 +250,6 @@ export const queryKeys = {
     emailSettings: ['system', 'email-settings'] as const,
     permissions: ['system', 'permissions'] as const,
   },
-  marketplace: {
-    catalog: ['marketplace', 'catalog'] as const,
-    installed: ['marketplace', 'installed'] as const,
-    status: (appId: string) => ['marketplace', 'status', appId] as const,
-    logs: (appId: string) => ['marketplace', 'logs', appId] as const,
-  },
   presence: {
     viewers: (appId: string, recordId: string) => ['presence', appId, recordId] as const,
   },

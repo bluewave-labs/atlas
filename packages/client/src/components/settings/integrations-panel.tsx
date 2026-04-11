@@ -16,9 +16,8 @@ import { useGoogleDriveStatus } from '../../apps/drive/hooks';
 
 export function IntegrationsPanel() {
   const { t } = useTranslation();
-  const isSuperAdmin = useAuthStore((s) => s.isSuperAdmin);
   const tenantRole = useAuthStore((s) => s.tenantRole);
-  const isAdmin = isSuperAdmin || tenantRole === 'owner' || tenantRole === 'admin';
+  const isAdmin = tenantRole === 'owner' || tenantRole === 'admin';
   const [connectingDrive, setConnectingDrive] = useState(false);
   const addToast = useToastStore((s) => s.addToast);
 

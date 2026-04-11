@@ -254,16 +254,17 @@ export function Sidebar() {
   const location = useLocation();
   const { data: myApps } = useMyAccessibleApps();
 
-  const isSuperAdmin = useAuthStore((s) => s.isSuperAdmin);
+  const tenantRole = useAuthStore((s) => s.tenantRole);
+  const isOwner = tenantRole === 'owner';
 
   const navItems = useMemo(() => {
     const all = getNavItems();
-    // Hide system app from non-super-admins
-    const filtered = isSuperAdmin ? all : all.filter((item) => item.id !== 'system');
+    // System app is reserved for the tenant owner.
+    const filtered = isOwner ? all : all.filter((item) => item.id !== 'system');
     if (!myApps || myApps.appIds === '__all__') return filtered;
     const allowedSet = new Set(myApps.appIds);
     return filtered.filter((item) => ALWAYS_SHOW_NAV.has(item.id) || allowedSet.has(item.id));
-  }, [myApps, isSuperAdmin]);
+  }, [myApps, isOwner]);
 
   // Detect Electron desktop shell (set by preload script)
   const isDesktop = !!('atlasDesktop' in window);

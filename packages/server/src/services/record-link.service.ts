@@ -100,6 +100,13 @@ export async function createLink(data: {
   return link;
 }
 
+export async function getLinkById(id: string) {
+  const [link] = await db.select().from(recordLinks)
+    .where(eq(recordLinks.id, id))
+    .limit(1);
+  return link ?? null;
+}
+
 export async function deleteLink(id: string) {
   const [deleted] = await db.delete(recordLinks)
     .where(eq(recordLinks.id, id))

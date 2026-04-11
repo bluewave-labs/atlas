@@ -11,7 +11,7 @@ import type { TenantMemberRole } from '@atlas-platform/shared';
 import { env } from '../../config/env';
 import { sendEmail } from '../email.service';
 
-// Default app permissions for new members — everything except CRM, HR, Marketplace, System
+// Default app permissions for new members — everything except CRM, HR, System
 const DEFAULT_MEMBER_APPS = ['tasks', 'drive', 'docs', 'draw', 'tables', 'sign', 'projects'];
 
 async function grantDefaultPermissions(tenantId: string, userId: string) {

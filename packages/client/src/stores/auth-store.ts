@@ -73,7 +73,6 @@ interface AuthState {
   accounts: Account[];
   tenantId: string | null;
   tenantRole: string | null;
-  isSuperAdmin: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
 
@@ -96,9 +95,10 @@ interface AuthState {
 // Restore persisted accounts and figure out the active account on startup.
 // The active account is whichever account's tokens are in `atlasmail_token`.
 // We match by looking for the active token in the token map.
-function deriveInitialState(): { account: Account | null; accounts: Account[]; tenantId: string | null; tenantRole: string | null; isSuperAdmin: boolean } {
+function deriveInitialState(): { account: Account | null; accounts: Account[]; tenantId: string | null; tenantRole: string | null } {
   const accounts = readAccounts();
-  if (accounts.length === 0) return { account: null, accounts: [], tenantId: null, tenantRole: null, isSuperAdmin: false };
+  if (accounts.length === 0) return { account: null, accounts: [], tenantId: null, tenantRole: null };
+
 
   const tokenMap = readTokenMap();
 
@@ -112,7 +112,7 @@ function deriveInitialState(): { account: Account | null; accounts: Account[]; t
       localStorage.setItem('atlasmail_token', tokens.access);
       localStorage.setItem('atlasmail_refresh_token', tokens.refresh);
       const payload = decodeJwtPayload(tokens.access);
-      return { account: active, accounts, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as string) ?? null, isSuperAdmin: !!(payload?.isSuperAdmin) };
+      return { account: active, accounts, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as string) ?? null };
     }
   }
 
@@ -122,7 +122,7 @@ function deriveInitialState(): { account: Account | null; accounts: Account[]; t
     if (tokens) {
       writeActiveTokens(acct.id, tokens.access, tokens.refresh);
       const payload = decodeJwtPayload(tokens.access);
-      return { account: acct, accounts, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as string) ?? null, isSuperAdmin: !!(payload?.isSuperAdmin) };
+      return { account: acct, accounts, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as string) ?? null };
     }
   }
 
@@ -130,7 +130,7 @@ function deriveInitialState(): { account: Account | null; accounts: Account[]; t
   clearActiveTokens();
   localStorage.removeItem('atlasmail_accounts');
   localStorage.removeItem('atlasmail_tokens');
-  return { account: null, accounts: [], tenantId: null, tenantRole: null, isSuperAdmin: false };
+  return { account: null, accounts: [], tenantId: null, tenantRole: null };
 }
 
 const initial = deriveInitialState();
@@ -140,7 +140,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   accounts: initial.accounts,
   tenantId: initial.tenantId,
   tenantRole: initial.tenantRole,
-  isSuperAdmin: initial.isSuperAdmin,
   isAuthenticated: !!initial.account,
   // deriveInitialState() always resolves to a definite state — no async step needed.
   isLoading: false,
@@ -168,7 +167,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     writeActiveTokens(account.id, accessToken, refreshToken);
 
     const payload = decodeJwtPayload(accessToken);
-    set({ accounts: updated, account, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as string) ?? null, isSuperAdmin: !!(payload?.isSuperAdmin), isAuthenticated: true, isLoading: false, sessionExpired: false });
+    set({ accounts: updated, account, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as string) ?? null, isAuthenticated: true, isLoading: false, sessionExpired: false });
   },
 
   // ── switchAccount ────────────────────────────────────────────────────────
@@ -185,7 +184,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     writeActiveTokens(accountId, tokens.access, tokens.refresh);
     const payload = decodeJwtPayload(tokens.access);
-    set({ account: target, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as string) ?? null, isSuperAdmin: !!(payload?.isSuperAdmin), isAuthenticated: true });
+    set({ account: target, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as string) ?? null, isAuthenticated: true });
 
     window.dispatchEvent(new CustomEvent('atlasmail:account-switch', { detail: { accountId } }));
   },
@@ -209,17 +208,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (nextTokens) {
           writeActiveTokens(next.id, nextTokens.access, nextTokens.refresh);
           const payload = decodeJwtPayload(nextTokens.access);
-          set({ accounts: updated, account: next, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as string) ?? null, isSuperAdmin: !!(payload?.isSuperAdmin) });
+          set({ accounts: updated, account: next, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as string) ?? null });
         } else {
           clearActiveTokens();
-          set({ accounts: updated, account: next, tenantRole: null, isSuperAdmin: false });
+          set({ accounts: updated, account: next, tenantRole: null });
         }
         window.dispatchEvent(new CustomEvent('atlasmail:account-switch', { detail: { accountId: next.id } }));
       } else {
         clearActiveTokens();
         localStorage.removeItem('atlasmail_accounts');
         localStorage.removeItem('atlasmail_tokens');
-        set({ accounts: [], account: null, isAuthenticated: false, tenantRole: null, isSuperAdmin: false });
+        set({ accounts: [], account: null, isAuthenticated: false, tenantRole: null });
       }
     } else {
       set({ accounts: updated });
@@ -256,7 +255,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       clearActiveTokens();
       localStorage.removeItem('atlasmail_accounts');
       localStorage.removeItem('atlasmail_tokens');
-      set({ account: null, accounts: [], isAuthenticated: false, tenantRole: null, isSuperAdmin: false });
+      set({ account: null, accounts: [], isAuthenticated: false, tenantRole: null });
       window.location.href = '/login';
       return;
     }
@@ -271,7 +270,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       clearActiveTokens();
       localStorage.removeItem('atlasmail_accounts');
       localStorage.removeItem('atlasmail_tokens');
-      set({ account: null, accounts: [], isAuthenticated: false, tenantRole: null, isSuperAdmin: false });
+      set({ account: null, accounts: [], isAuthenticated: false, tenantRole: null });
       window.location.href = '/login';
     } else {
       // Multi-account case: the session-expired modal should go away

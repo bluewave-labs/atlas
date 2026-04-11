@@ -15,7 +15,7 @@ export function adminAuthMiddleware(req: Request, res: Response, next: NextFunct
   try {
     const payload = jwt.verify(token, env.JWT_SECRET) as AuthPayload;
 
-    if (!payload.isSuperAdmin) {
+    if (payload.tenantRole !== 'owner') {
       res.status(403).json({ success: false, error: 'Insufficient privileges' });
       return;
     }

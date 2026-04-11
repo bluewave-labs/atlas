@@ -48,8 +48,8 @@ function param(req: Request, name: string): string {
 
 export async function createTenant(req: Request, res: Response) {
   try {
-    if (!req.auth!.isSuperAdmin) {
-      res.status(403).json({ success: false, error: 'Only super admins can create tenants' });
+    if (req.auth!.tenantRole !== 'owner') {
+      res.status(403).json({ success: false, error: 'Only tenant owners can create tenants' });
       return;
     }
 

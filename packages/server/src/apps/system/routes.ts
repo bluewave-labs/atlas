@@ -1,16 +1,26 @@
+// System app routes — two distinct admin gates live in this file:
+//
+//   1. `requireAdmin` ("tenant admin or better") guards operational routes
+//      like metrics and email settings. Tenant admins are expected to
+//      diagnose the running system (SMTP, CPU, disk) without being able to
+//      reassign each others' roles.
+//
+//   2. `requireTenantOwner` ("tenant owner only") guards the permissions
+//      management grid. Reassigning RBAC is a privileged operation reserved
+//      for the single owner; regular admins must not be able to promote
+//      themselves or each other.
+//
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import * as systemController from './controller';
 import * as permissionsController from './permissions.controller';
 import { authMiddleware } from '../../middleware/auth';
 
-// Allow super admin OR the tenant owner/admin. In single-tenant self-hosted
-// Atlas, super admin and tenant owner are effectively the same person, so
-// gating strictly on isSuperAdmin was over-restrictive for routine system
-// tasks (metrics, SMTP config).
+// Allow the tenant owner or a tenant admin. In single-tenant self-hosted
+// Atlas, tenant owner is effectively the operator, so gating routine system
+// tasks (metrics, SMTP config) strictly on the owner was over-restrictive.
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
   const allowed =
-    req.auth?.isSuperAdmin ||
     req.auth?.tenantRole === 'owner' ||
     req.auth?.tenantRole === 'admin';
   if (!allowed) {
@@ -24,9 +34,7 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
 // admins can manage system metrics and SMTP, but per-user RBAC is a privileged
 // operation reserved for the owner.
 function requireTenantOwner(req: Request, res: Response, next: NextFunction) {
-  const allowed =
-    req.auth?.isSuperAdmin ||
-    req.auth?.tenantRole === 'owner';
+  const allowed = req.auth?.tenantRole === 'owner';
   if (!allowed) {
     res.status(403).json({ success: false, error: 'Owner access required' });
     return;

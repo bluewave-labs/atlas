@@ -735,15 +735,15 @@ export function HomePage() {
 
   // Dock app definitions — filtered by user's accessible apps
   const { data: myApps } = useMyAccessibleApps();
-  const isSuperAdmin = useAuthStore((s) => s.isSuperAdmin);
   const tenantRole = useAuthStore((s) => s.tenantRole);
-  const isAdmin = isSuperAdmin || tenantRole === 'owner' || tenantRole === 'admin';
+  const isOwner = tenantRole === 'owner';
+  const isAdmin = tenantRole === 'owner' || tenantRole === 'admin';
   const dockApps = useMemo(() => {
     const accessibleSet = myApps?.appIds === '__all__'
       ? null
       : new Set(myApps?.appIds ?? []);
     return appRegistry.getAll()
-      .filter(app => app.id !== 'system' || isSuperAdmin)
+      .filter(app => app.id !== 'system' || isOwner)
       .filter(app => !accessibleSet || accessibleSet.has(app.id))
       .map(app => ({
         id: app.id,

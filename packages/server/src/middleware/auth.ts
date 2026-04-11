@@ -6,7 +6,6 @@ export interface AuthPayload {
   userId: string;
   tenantId: string;
   email: string;
-  isSuperAdmin?: boolean;
   tenantRole?: string;
 }
 
