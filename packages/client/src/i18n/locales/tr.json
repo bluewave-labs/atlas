@@ -2567,6 +2567,11 @@
       "submitted": "Harcama gönderildi",
       "saved": "Harcama kaydedildi",
       "saveFailed": "Harcama kaydedilemedi",
+      "noEmployeeRecord": {
+        "title": "Hesabınıza bağlı çalışan kaydı yok",
+        "description": "Harcama takibi için bir İK çalışan kaydına ihtiyacınız var. Çalışanlar bölümünde giriş e-postanızla ({{email}}) aynı e-postayı kullanarak bir kayıt oluşturun; sunucu kaydı otomatik olarak hesabınıza bağlayacaktır.",
+        "action": "Çalışanlara git"
+      },
       "submit": "Gönder",
       "recall": "Geri çek",
       "recalled": "Harcama geri çekildi",

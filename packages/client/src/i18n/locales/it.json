@@ -2567,6 +2567,11 @@
       "submitted": "Spesa inviata",
       "saved": "Spesa salvata",
       "saveFailed": "Salvataggio spesa fallito",
+      "noEmployeeRecord": {
+        "title": "Nessun record dipendente collegato al tuo account",
+        "description": "Per tenere traccia delle spese hai bisogno di un record dipendente HR. Creane uno in Dipendenti usando la stessa email del tuo login ({{email}}) e il server lo collegherà automaticamente.",
+        "action": "Vai a Dipendenti"
+      },
       "submit": "Invia",
       "recall": "Ritira",
       "recalled": "Spesa ritirata",

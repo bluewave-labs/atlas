@@ -2599,6 +2599,11 @@
       "submitted": "Expense submitted",
       "saved": "Expense saved",
       "saveFailed": "Failed to save expense",
+      "noEmployeeRecord": {
+        "title": "No employee record linked to your account",
+        "description": "To track expenses you need an HR employee record. Create one in Employees using the same email as your login ({{email}}) and the server will auto-link it.",
+        "action": "Go to Employees"
+      },
       "submit": "Submit",
       "recall": "Recall",
       "recalled": "Expense recalled",

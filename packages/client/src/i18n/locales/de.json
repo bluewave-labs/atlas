@@ -2567,6 +2567,11 @@
       "submitted": "Ausgabe eingereicht",
       "saved": "Ausgabe gespeichert",
       "saveFailed": "Ausgabe konnte nicht gespeichert werden",
+      "noEmployeeRecord": {
+        "title": "Kein Mitarbeiterdatensatz mit Ihrem Konto verknüpft",
+        "description": "Um Ausgaben zu erfassen, benötigen Sie einen HR-Mitarbeiterdatensatz. Erstellen Sie einen unter Mitarbeiter mit derselben E-Mail-Adresse wie Ihre Anmeldung ({{email}}); der Server verknüpft ihn automatisch.",
+        "action": "Zu Mitarbeiter gehen"
+      },
       "submit": "Einreichen",
       "recall": "Zurückrufen",
       "recalled": "Ausgabe zurückgerufen",

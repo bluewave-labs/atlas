@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, Upload } from 'lucide-react';
+import { AlertTriangle, Upload, UserPlus } from 'lucide-react';
 import { type HrExpense, type PaymentMethod } from '@atlas-platform/shared';
 import {
   useCreateExpense,
   useUpdateExpense,
   useSubmitExpense,
   useExpenseCategories,
+  useEmployeeList,
 } from '../../hooks';
 import { Modal } from '../../../../components/ui/modal';
 import { Button } from '../../../../components/ui/button';
@@ -14,6 +16,7 @@ import { Input } from '../../../../components/ui/input';
 import { Select } from '../../../../components/ui/select';
 import { Textarea } from '../../../../components/ui/textarea';
 import { useToastStore } from '../../../../stores/toast-store';
+import { useAuthStore } from '../../../../stores/auth-store';
 import { api } from '../../../../lib/api-client';
 
 interface ExpenseFormModalProps {
@@ -37,12 +40,25 @@ const PAYMENT_METHOD_OPTIONS: Array<{ value: PaymentMethod; label: string }> = [
 
 export function ExpenseFormModal({ open, onClose, expense }: ExpenseFormModalProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data: categories } = useExpenseCategories();
   const createExpense = useCreateExpense();
   const updateExpense = useUpdateExpense();
   const submitExpense = useSubmitExpense();
   const addToast = useToastStore((s) => s.addToast);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Detect whether the current logged-in user has an HR employee record
+  // linked to them. The server's /hr/expenses POST returns 400
+  // ('No employee record found for current user') when this row is
+  // missing — so we want to warn before the user even fills the form
+  // out, instead of letting them hit a confusing error.
+  const authAccount = useAuthStore((s) => s.account);
+  const { data: employeeList } = useEmployeeList({});
+  const linkedEmployee = employeeList?.employees.find(
+    (e) => e.email?.toLowerCase() === authAccount?.email?.toLowerCase(),
+  );
+  const noLinkedEmployee = open && !!authAccount && employeeList !== undefined && !linkedEmployee;
 
   const isEditing = !!expense;
 
@@ -120,25 +136,9 @@ export function ExpenseFormModal({ open, onClose, expense }: ExpenseFormModalPro
   };
 
   const handleSave = (andSubmit: boolean) => {
-    // TEMP diagnostic logging — remove once the silent-save bug is fixed.
-    // eslint-disable-next-line no-console
-    console.log('[expense-form] handleSave called', {
-      andSubmit,
-      isEditing,
-      description: description.trim(),
-      amountNum,
-      canSave,
-      isSaving,
-    });
-    if (!description.trim() || !amountNum) {
-      // eslint-disable-next-line no-console
-      console.warn('[expense-form] handleSave EARLY RETURN — missing description or amount');
-      return;
-    }
+    if (!description.trim() || !amountNum) return;
 
     const input = buildInput();
-    // eslint-disable-next-line no-console
-    console.log('[expense-form] handleSave input', input);
 
     if (isEditing) {
       updateExpense.mutate({ id: expense.id, ...input }, {
@@ -159,12 +159,8 @@ export function ExpenseFormModal({ open, onClose, expense }: ExpenseFormModalPro
         onError: showSaveError,
       });
     } else {
-      // eslint-disable-next-line no-console
-      console.log('[expense-form] calling createExpense.mutate');
       createExpense.mutate(input, {
         onSuccess: (data) => {
-          // eslint-disable-next-line no-console
-          console.log('[expense-form] createExpense.onSuccess', data);
           if (andSubmit && data?.id) {
             submitExpense.mutate(data.id, {
               onSuccess: () => {
@@ -178,15 +174,7 @@ export function ExpenseFormModal({ open, onClose, expense }: ExpenseFormModalPro
             onClose();
           }
         },
-        onError: (err) => {
-          // eslint-disable-next-line no-console
-          console.error('[expense-form] createExpense.onError', {
-            err,
-            status: (err as { response?: { status?: number } })?.response?.status,
-            data: (err as { response?: { data?: unknown } })?.response?.data,
-          });
-          showSaveError(err);
-        },
+        onError: showSaveError,
       });
     }
   };
@@ -212,7 +200,10 @@ export function ExpenseFormModal({ open, onClose, expense }: ExpenseFormModalPro
   };
 
   const isSaving = createExpense.isPending || updateExpense.isPending || submitExpense.isPending;
-  const canSave = description.trim() && amountNum > 0;
+  // Block save when the user has no linked employee record — the server
+  // would 400 anyway, and we now show an in-modal banner pointing them
+  // at HR → Employees to fix it.
+  const canSave = description.trim() && amountNum > 0 && !noLinkedEmployee;
 
   // Translate payment method options
   const translatedPaymentMethods = PAYMENT_METHOD_OPTIONS.map((o) => ({
@@ -230,6 +221,65 @@ export function ExpenseFormModal({ open, onClose, expense }: ExpenseFormModalPro
       <Modal.Header title={isEditing ? t('hr.expenses.editExpense') : t('hr.expenses.newExpense')} />
       <Modal.Body>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+          {/* Missing-employee-link banner */}
+          {noLinkedEmployee && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 'var(--spacing-sm)',
+                padding: 'var(--spacing-md)',
+                background: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--color-warning) 30%, transparent)',
+                borderRadius: 'var(--radius-md)',
+              }}
+            >
+              <AlertTriangle
+                size={16}
+                style={{ color: 'var(--color-warning)', flexShrink: 0, marginTop: 2 }}
+              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', flex: 1 }}>
+                <div
+                  style={{
+                    fontSize: 'var(--font-size-sm)',
+                    fontWeight: 'var(--font-weight-semibold)',
+                    color: 'var(--color-text-primary)',
+                    fontFamily: 'var(--font-family)',
+                  }}
+                >
+                  {t('hr.expenses.noEmployeeRecord.title', 'No employee record linked to your account')}
+                </div>
+                <div
+                  style={{
+                    fontSize: 'var(--font-size-xs)',
+                    color: 'var(--color-text-secondary)',
+                    fontFamily: 'var(--font-family)',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {t(
+                    'hr.expenses.noEmployeeRecord.description',
+                    'To track expenses you need an HR employee record. Create one in Employees using the same email as your login ({{email}}) and the server will auto-link it.',
+                    { email: authAccount?.email ?? '' },
+                  )}
+                </div>
+                <div>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={<UserPlus size={14} />}
+                    onClick={() => {
+                      onClose();
+                      navigate('/hr?view=employees');
+                    }}
+                  >
+                    {t('hr.expenses.noEmployeeRecord.action', 'Go to Employees')}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Category */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
             <label style={{

@@ -2567,6 +2567,11 @@
       "submitted": "Dépense soumise",
       "saved": "Dépense enregistrée",
       "saveFailed": "Échec de l'enregistrement de la dépense",
+      "noEmployeeRecord": {
+        "title": "Aucun enregistrement d'employé lié à votre compte",
+        "description": "Pour suivre les dépenses, vous avez besoin d'un enregistrement employé RH. Créez-en un dans Employés en utilisant la même adresse e-mail que votre connexion ({{email}}) et le serveur le liera automatiquement.",
+        "action": "Aller aux Employés"
+      },
       "submit": "Soumettre",
       "recall": "Rappeler",
       "recalled": "Dépense rappelée",
