@@ -20,7 +20,7 @@ import { ContentArea } from '../../components/ui/content-area';
 import { useTasksSettingsStore } from './settings-store';
 import { useUIStore } from '../../stores/ui-store';
 import { useAuthStore } from '../../stores/auth-store';
-import { useMyAppPermission } from '../../hooks/use-app-permissions';
+import { useAppActions } from '../../hooks/use-app-permissions';
 import { useTenantUsers } from '../../hooks/use-platform';
 import { Button } from '../../components/ui/button';
 import { IconButton } from '../../components/ui/icon-button';
@@ -41,9 +41,7 @@ export function TasksPage() {
   const { t } = useTranslation();
   const isDesktop = !!('atlasDesktop' in window);
 
-  const { data: tasksPerm } = useMyAppPermission('tasks');
-  const canCreate = !tasksPerm || tasksPerm.role === 'admin' || tasksPerm.role === 'editor';
-  const canDelete = !tasksPerm || tasksPerm.role === 'admin';
+  const { canCreate, canDelete } = useAppActions('tasks');
 
   const { account, tenantId } = useAuthStore();
   const currentUserId = account?.userId;

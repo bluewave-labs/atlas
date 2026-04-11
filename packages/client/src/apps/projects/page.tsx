@@ -6,7 +6,7 @@ import {
   Plus, Search, X,
 } from 'lucide-react';
 import { useProjects } from './hooks';
-import { useMyAppPermission } from '../../hooks/use-app-permissions';
+import { useAppActions } from '../../hooks/use-app-permissions';
 import { TimeTracker } from './components/time-tracker';
 import { ReportsView } from './components/reports-view';
 import { AppSidebar, SidebarSection, SidebarItem } from '../../components/layout/app-sidebar';
@@ -50,8 +50,7 @@ export function ProjectsPage() {
   const projects = projectsData?.projects ?? [];
 
   // Permissions
-  const { data: projPerm } = useMyAppPermission('projects');
-  const canCreate = !projPerm || projPerm.role === 'admin' || projPerm.role === 'editor';
+  const { canCreate } = useAppActions('projects');
 
   // Selected entities
   const selectedProject = selectedProjectId ? projects.find((p) => p.id === selectedProjectId) : null;

@@ -1,7 +1,7 @@
 import { ChevronDown, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Task } from '@atlas-platform/shared';
-import { useMyAppPermission } from '../../../hooks/use-app-permissions';
+import { useAppActions } from '../../../hooks/use-app-permissions';
 import { IconButton } from '../../../components/ui/icon-button';
 
 export function HeadingRow({
@@ -18,8 +18,7 @@ export function HeadingRow({
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
-  const { data: tasksPerm } = useMyAppPermission('tasks');
-  const canDelete = !tasksPerm || tasksPerm.role === 'admin';
+  const { canDelete } = useAppActions('tasks');
   return (
     <div className="task-heading-row">
       <button className="task-heading-toggle" onClick={onToggle}>

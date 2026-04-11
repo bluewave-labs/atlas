@@ -15,7 +15,7 @@ import { CustomFieldsRenderer } from '../../../components/shared/custom-fields-r
 import { EditableField } from '../../../components/ui/editable-field';
 import { StatusDot } from '../../../components/ui/status-dot';
 import { ConfirmDialog } from '../../../components/ui/confirm-dialog';
-import { useMyAppPermission } from '../../../hooks/use-app-permissions';
+import { useAppActions } from '../../../hooks/use-app-permissions';
 import { getTimeOffTypeBadge, getTimeOffStatusBadge } from '../lib/hr-utils';
 import { formatDate } from '../../../lib/format';
 import { LifecycleTimeline } from './lifecycle-timeline';
@@ -39,8 +39,7 @@ export function EmployeeDetailPanel({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const { data: hrPerm } = useMyAppPermission('hr');
-  const canDelete = !hrPerm || hrPerm.role === 'admin';
+  const { canDelete } = useAppActions('hr');
   const [activeTab, setActiveTab] = useState<'details' | 'onboarding' | 'documents' | 'timeline'>('details');
   const [status, setStatus] = useState(employee.status);
   const [departmentId, setDepartmentId] = useState(employee.departmentId || '');

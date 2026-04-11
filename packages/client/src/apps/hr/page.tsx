@@ -26,7 +26,7 @@ import { IconButton } from '../../components/ui/icon-button';
 import { ContentArea } from '../../components/ui/content-area';
 import { useUIStore } from '../../stores/ui-store';
 import { useAuthStore } from '../../stores/auth-store';
-import { useMyAppPermission } from '../../hooks/use-app-permissions';
+import { useMyAppPermission, useAppActions } from '../../hooks/use-app-permissions';
 import { useHrSettingsStore } from './settings-store';
 import { OrgChartView } from './components/org-chart';
 import { EmployeeDetailPage } from './components/employee-detail-page';
@@ -69,7 +69,7 @@ export function HrPage() {
   // (which caused a 'flash of admin view' on page load for portal users).
   const { data: hrPerm, isPending: hrPermPending } = useMyAppPermission('hr');
   const isPortalUser = hrPerm?.role === 'viewer';
-  const canCreate = !hrPerm || hrPerm.role === 'admin' || hrPerm.role === 'editor';
+  const { canCreate } = useAppActions('hr');
 
   // Navigation state (URL-driven, falls back to user's preferred default view)
   const hrDefaultView = useHrSettingsStore((s) => s.defaultView);

@@ -17,15 +17,13 @@ import { SmartButtonBar } from '../../../../components/shared/SmartButtonBar';
 import { CustomFieldsRenderer } from '../../../../components/shared/custom-fields-renderer';
 import { ConfirmDialog } from '../../../../components/ui/confirm-dialog';
 import { useToastStore } from '../../../../stores/toast-store';
-import { useMyAppPermission } from '../../../../hooks/use-app-permissions';
+import { useAppActions } from '../../../../hooks/use-app-permissions';
 import { useAuthStore } from '../../../../stores/auth-store';
 
 export function ProjectDetailPanel({ project, onClose }: { project: Project; onClose: () => void }) {
   const { t } = useTranslation();
-  const { data: projPerm } = useMyAppPermission('projects');
+  const { canDelete: isAdmin, canEdit } = useAppActions('projects');
   const currentUserId = useAuthStore((s) => s.account?.userId ?? null);
-  const isAdmin = !projPerm || projPerm.role === 'admin';
-  const canEdit = !projPerm || projPerm.role === 'admin' || projPerm.role === 'editor';
   const deleteProject = useDeleteProject();
   const updateProject = useUpdateProject();
   const updateTimeEntry = useUpdateTimeEntry();

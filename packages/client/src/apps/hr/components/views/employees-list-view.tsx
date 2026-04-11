@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Users, Building2, CalendarDays, Plus, Mail, Trash2, User, Briefcase, Tag } from 'lucide-react';
 import { useDeleteEmployee, type HrEmployee, type HrDepartment } from '../../hooks';
-import { useMyAppPermission } from '../../../../hooks/use-app-permissions';
+import { useAppActions } from '../../../../hooks/use-app-permissions';
 import { useHrSettingsStore } from '../../settings-store';
 import { Avatar } from '../../../../components/ui/avatar';
 import { StatusDot } from '../../../../components/ui/status-dot';
@@ -28,9 +28,7 @@ export function EmployeesListView({
   onAdd: () => void;
 }) {
   const { t } = useTranslation();
-  const { data: hrPerm } = useMyAppPermission('hr');
-  const isAdmin = !hrPerm || hrPerm.role === 'admin';
-  const canCreate = !hrPerm || hrPerm.role === 'admin' || hrPerm.role === 'editor';
+  const { canCreate, canDelete: isAdmin } = useAppActions('hr');
   const showDept = useHrSettingsStore((s) => s.showDepartmentInList);
   const deleteEmployee = useDeleteEmployee();
   const [selected, setSelected] = useState<Set<string>>(new Set());

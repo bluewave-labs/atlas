@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { CalendarDays, Check, XCircle, Trash2 } from 'lucide-react';
 import { type HrTimeOff } from '../../hooks';
-import { useMyAppPermission } from '../../../../hooks/use-app-permissions';
+import { useAppActions } from '../../../../hooks/use-app-permissions';
 import { IconButton } from '../../../../components/ui/icon-button';
 import { getTimeOffTypeBadge, getTimeOffStatusBadge } from '../../lib/hr-utils';
 import { formatDate } from '../../../../lib/format';
@@ -18,8 +18,7 @@ export function TimeOffView({
   onDelete: (id: string) => void;
 }) {
   const { t } = useTranslation();
-  const { data: hrPerm } = useMyAppPermission('hr');
-  const canDelete = !hrPerm || hrPerm.role === 'admin';
+  const { canDelete } = useAppActions('hr');
   if (timeOffRequests.length === 0) {
     return (
       <div className="hr-empty-state">

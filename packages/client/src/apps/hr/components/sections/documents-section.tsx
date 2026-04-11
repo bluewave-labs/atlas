@@ -8,14 +8,13 @@ import {
 import { Button } from '../../../../components/ui/button';
 import { Select } from '../../../../components/ui/select';
 import { IconButton } from '../../../../components/ui/icon-button';
-import { useMyAppPermission } from '../../../../hooks/use-app-permissions';
+import { useAppActions } from '../../../../hooks/use-app-permissions';
 import { getDocTypeBadge } from '../../lib/hr-utils';
 import { formatDate } from '../../../../lib/format';
 
 export function DocumentsSection({ employeeId }: { employeeId: string }) {
   const { t } = useTranslation();
-  const { data: hrPerm } = useMyAppPermission('hr');
-  const canDelete = !hrPerm || hrPerm.role === 'admin';
+  const { canDelete } = useAppActions('hr');
   const { data: docs } = useEmployeeDocuments(employeeId);
   const uploadDoc = useUploadEmployeeDocument();
   const deleteDoc = useDeleteEmployeeDocument();

@@ -24,15 +24,33 @@ export interface AppPermissionWithUser {
 
 // ─── Permission action flags (convenience) ─────────────────────────
 
+type AppOp = 'create' | 'edit' | 'delete' | 'deleteOwn';
+
+/**
+ * Client-side role matrix. Mirrors the server's RBAC rules for gating UI
+ * affordances. The server is still the source of truth for enforcement.
+ */
+const ROLE_MATRIX: Record<AppRole, Record<AppOp, boolean>> = {
+  admin:  { create: true,  edit: true,  delete: true,  deleteOwn: true  },
+  editor: { create: true,  edit: true,  delete: false, deleteOwn: true  },
+  viewer: { create: false, edit: false, delete: false, deleteOwn: false },
+};
+
+function canAccess(role: AppRole | null | undefined, op: AppOp): boolean {
+  // No permission row means unrestricted (legacy / admin-only tenants).
+  if (!role) return true;
+  return ROLE_MATRIX[role]?.[op] ?? false;
+}
+
 export function useAppActions(appId: string) {
   const { data: perm } = useMyAppPermission(appId);
+  const role = perm?.role ?? null;
   return {
-    canView: !perm || perm.role === 'admin' || perm.role === 'editor' || perm.role === 'viewer',
-    canCreate: !perm || perm.role === 'admin' || perm.role === 'editor',
-    canEdit: !perm || perm.role === 'admin' || perm.role === 'editor',
-    canDelete: !perm || perm.role === 'admin',
-    canDeleteOwn: !perm || perm.role === 'admin' || perm.role === 'editor',
-    role: perm?.role ?? null,
+    canCreate: canAccess(role, 'create'),
+    canEdit: canAccess(role, 'edit'),
+    canDelete: canAccess(role, 'delete'),
+    canDeleteOwn: canAccess(role, 'deleteOwn'),
+    role,
   };
 }
 

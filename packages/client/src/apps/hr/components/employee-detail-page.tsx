@@ -22,7 +22,7 @@ import { CustomFieldsRenderer } from '../../../components/shared/custom-fields-r
 import { EditableField } from '../../../components/ui/editable-field';
 import { StatusDot } from '../../../components/ui/status-dot';
 import { ConfirmDialog } from '../../../components/ui/confirm-dialog';
-import { useMyAppPermission } from '../../../hooks/use-app-permissions';
+import { useAppActions } from '../../../hooks/use-app-permissions';
 import { getTimeOffTypeBadge, getTimeOffStatusBadge } from '../lib/hr-utils';
 import { formatDate } from '../../../lib/format';
 import { LifecycleTimeline } from './lifecycle-timeline';
@@ -72,8 +72,7 @@ export function EmployeeDetailPage({
   onNavigate,
 }: EmployeeDetailPageProps) {
   const { t } = useTranslation();
-  const { data: hrPerm } = useMyAppPermission('hr');
-  const canDelete = !hrPerm || hrPerm.role === 'admin';
+  const { canDelete } = useAppActions('hr');
 
   // Find employee
   const employee = employees.find((e) => e.id === employeeId);

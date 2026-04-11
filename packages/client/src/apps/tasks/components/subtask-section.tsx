@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useMyAppPermission } from '../../../hooks/use-app-permissions';
+import { useAppActions } from '../../../hooks/use-app-permissions';
 import { useSubtasks, useCreateSubtask, useUpdateSubtask, useDeleteSubtask } from '../hooks';
 import { IconButton } from '../../../components/ui/icon-button';
 
 export function SubtaskSection({ taskId }: { taskId: string }) {
   const { t } = useTranslation();
-  const { data: tasksPerm } = useMyAppPermission('tasks');
-  const canDelete = !tasksPerm || tasksPerm.role === 'admin';
+  const { canDelete } = useAppActions('tasks');
   const { data: subtasks = [] } = useSubtasks(taskId);
   const createSubtask = useCreateSubtask();
   const updateSubtask = useUpdateSubtask();

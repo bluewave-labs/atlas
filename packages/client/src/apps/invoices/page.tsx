@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Plus, Search, X } from 'lucide-react';
 import { useInvoices } from './hooks';
-import { useMyAppPermission } from '../../hooks/use-app-permissions';
+import { useAppActions } from '../../hooks/use-app-permissions';
 import { InvoicesSidebar } from './components/invoices-sidebar';
 import { InvoicesListView } from './components/invoices-list-view';
 import { InvoiceDetailPanel } from './components/invoice-detail-panel';
@@ -40,8 +40,7 @@ export function InvoicesPage() {
   const invoices = invoicesData?.invoices ?? [];
 
   // Permissions
-  const { data: invPerm } = useMyAppPermission('invoices');
-  const canCreate = !invPerm || invPerm.role === 'admin' || invPerm.role === 'editor';
+  const { canCreate } = useAppActions('invoices');
 
   // Selected invoice
   const selectedInvoice = selectedInvoiceId ? invoices.find((i) => i.id === selectedInvoiceId) : null;

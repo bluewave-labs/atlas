@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Check, XCircle, Trash2, Download } from 'lucide-react';
 import { useLeaveTypes, useCreateLeaveType, useUpdateLeaveType, useDeleteLeaveType, useSeedLeaveTypes } from '../../hooks';
-import { useMyAppPermission } from '../../../../hooks/use-app-permissions';
+import { useAppActions } from '../../../../hooks/use-app-permissions';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Badge } from '../../../../components/ui/badge';
@@ -13,8 +13,7 @@ import { FeatureEmptyState } from '../../../../components/ui/feature-empty-state
 
 export function LeaveTypesView() {
   const { t } = useTranslation();
-  const { data: hrPerm } = useMyAppPermission('hr');
-  const canDelete = !hrPerm || hrPerm.role === 'admin';
+  const { canDelete } = useAppActions('hr');
   const { data: leaveTypes, isLoading } = useLeaveTypes(true);
   const createLeaveType = useCreateLeaveType();
   const updateLeaveType = useUpdateLeaveType();

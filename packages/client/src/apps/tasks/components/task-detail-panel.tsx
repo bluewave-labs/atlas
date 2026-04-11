@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { formatDate as formatDateGlobal } from '../../../lib/format';
 import type { Task, TaskProject, RecurrenceRule, TenantUser } from '@atlas-platform/shared';
 import { useUpdateTask, useDeleteTask, useUpdateTaskVisibility } from '../hooks';
-import { useMyAppPermission } from '../../../hooks/use-app-permissions';
+import { useAppActions } from '../../../hooks/use-app-permissions';
 import { useAuthStore } from '../../../stores/auth-store';
 import { WHEN_OPTIONS, PRIORITY_OPTIONS, RECURRENCE_OPTIONS } from '../lib/constants';
 import { TaskNotesEditor } from './task-notes-editor';
@@ -36,9 +36,7 @@ export function TaskDetailPanel({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const { data: tasksPerm } = useMyAppPermission('tasks');
-  const canDeleteAll = !tasksPerm || tasksPerm.role === 'admin';
-  const canDeleteOwn = !tasksPerm || tasksPerm.role === 'admin' || tasksPerm.role === 'editor';
+  const { canDelete: canDeleteAll, canDeleteOwn } = useAppActions('tasks');
   const [title, setTitle] = useState(task.title);
   const [when, setWhen] = useState(task.when);
   const [priority, setPriority] = useState(task.priority);

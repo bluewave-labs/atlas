@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus, Trash2, Download, Pencil, Check, X, Info } from 'lucide-react';
 import { useHolidayCalendars, useCreateHolidayCalendar, useHolidays, useCreateHoliday, useUpdateHoliday, useDeleteHoliday, useBulkImportHolidays } from '../../hooks';
 import type { HrHoliday } from '../../hooks';
-import { useMyAppPermission } from '../../../../hooks/use-app-permissions';
+import { useAppActions } from '../../../../hooks/use-app-permissions';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Select } from '../../../../components/ui/select';
@@ -44,8 +44,7 @@ function getMonthName(monthIndex: number, locale: string): string {
 export function HolidaysView() {
   const { t, i18n } = useTranslation();
   const { addToast } = useToastStore();
-  const { data: hrPerm } = useMyAppPermission('hr');
-  const canDelete = !hrPerm || hrPerm.role === 'admin';
+  const { canDelete, role: hrRole } = useAppActions('hr');
   const { data: calendars } = useHolidayCalendars();
   const createCalendar = useCreateHolidayCalendar();
 
@@ -178,7 +177,7 @@ export function HolidaysView() {
 
   const showYearNote = selectedYear > currentYear;
 
-  const isViewer = hrPerm?.role === 'viewer';
+  const isViewer = hrRole === 'viewer';
 
   return (
     <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-xl)' }}>

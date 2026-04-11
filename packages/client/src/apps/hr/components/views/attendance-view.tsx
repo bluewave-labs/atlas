@@ -7,7 +7,7 @@ import {
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Select } from '../../../../components/ui/select';
-import { useMyAppPermission } from '../../../../hooks/use-app-permissions';
+import { useAppActions } from '../../../../hooks/use-app-permissions';
 import { Avatar } from '../../../../components/ui/avatar';
 import { StatusDot } from '../../../../components/ui/status-dot';
 
@@ -19,8 +19,7 @@ export function AttendanceView({ employees }: { employees: HrEmployee[] }) {
   const { data: todaySummary } = useAttendanceToday();
   const markAttendance = useMarkAttendance();
   const bulkMark = useBulkMarkAttendance();
-  const { data: hrPerm } = useMyAppPermission('hr');
-  const canEdit = !hrPerm || hrPerm.role === 'admin' || hrPerm.role === 'editor';
+  const { canEdit } = useAppActions('hr');
 
   const activeEmployees = employees.filter(e => e.status === 'active');
 

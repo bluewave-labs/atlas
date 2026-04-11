@@ -5,7 +5,7 @@ import {
   useExpenseCategories, useCreateExpenseCategory, useUpdateExpenseCategory,
   useDeleteExpenseCategory, useSeedExpenseCategories,
 } from '../../hooks';
-import { useMyAppPermission } from '../../../../hooks/use-app-permissions';
+import { useAppActions } from '../../../../hooks/use-app-permissions';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Badge } from '../../../../components/ui/badge';
@@ -17,8 +17,7 @@ import { formatCurrency } from '../../../../lib/format';
 
 export function ExpenseCategoriesView() {
   const { t } = useTranslation();
-  const { data: hrPerm } = useMyAppPermission('hr');
-  const canDelete = !hrPerm || hrPerm.role === 'admin';
+  const { canDelete } = useAppActions('hr');
   const { data: categories, isLoading } = useExpenseCategories();
   const createCategory = useCreateExpenseCategory();
   const updateCategory = useUpdateExpenseCategory();

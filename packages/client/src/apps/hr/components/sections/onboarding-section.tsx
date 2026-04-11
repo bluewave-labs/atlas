@@ -10,14 +10,12 @@ import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Select } from '../../../../components/ui/select';
 import { IconButton } from '../../../../components/ui/icon-button';
-import { useMyAppPermission } from '../../../../hooks/use-app-permissions';
+import { useAppActions } from '../../../../hooks/use-app-permissions';
 import { getCategoryBadge } from '../../lib/hr-utils';
 
 export function OnboardingSection({ employeeId }: { employeeId: string }) {
   const { t } = useTranslation();
-  const { data: hrPerm } = useMyAppPermission('hr');
-  const canCreate = !hrPerm || hrPerm.role === 'admin' || hrPerm.role === 'editor';
-  const canDelete = !hrPerm || hrPerm.role === 'admin';
+  const { canCreate, canDelete } = useAppActions('hr');
   const { data: tasks } = useOnboardingTasks(employeeId);
   const { data: templates } = useOnboardingTemplates();
   const createTask = useCreateOnboardingTask();

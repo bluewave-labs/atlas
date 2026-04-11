@@ -24,7 +24,7 @@ import { StatusTimeline } from '../../../components/shared/status-timeline';
 import { TotalsBlock } from '../../../components/shared/totals-block';
 import { ConfirmDialog } from '../../../components/ui/confirm-dialog';
 import { useToastStore } from '../../../stores/toast-store';
-import { useMyAppPermission } from '../../../hooks/use-app-permissions';
+import { useAppActions } from '../../../hooks/use-app-permissions';
 import { useAuthStore } from '../../../stores/auth-store';
 
 function getEFaturaStatusVariant(status: string): 'default' | 'primary' | 'success' | 'warning' | 'error' {
@@ -41,10 +41,8 @@ function getEFaturaStatusVariant(status: string): 'default' | 'primary' | 'succe
 export function InvoiceDetailPanel({ invoice, onClose, onEdit, onPreview }: { invoice: Invoice; onClose: () => void; onEdit: () => void; onPreview?: () => void }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { data: invPerm } = useMyAppPermission('invoices');
+  const { canDelete: isAdmin, canEdit } = useAppActions('invoices');
   const currentUserId = useAuthStore((s) => s.account?.userId ?? null);
-  const isAdmin = !invPerm || invPerm.role === 'admin';
-  const canEdit = !invPerm || invPerm.role === 'admin' || invPerm.role === 'editor';
   const canDelete = isAdmin || (canEdit && invoice.userId === currentUserId);
   const deleteInvoice = useDeleteInvoice();
   const markPaid = useMarkInvoicePaid();

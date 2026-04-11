@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Building2, Trash2, Edit3, Users } from 'lucide-react';
 import { type HrDepartment, type HrEmployee } from '../../hooks';
-import { useMyAppPermission } from '../../../../hooks/use-app-permissions';
+import { useAppActions } from '../../../../hooks/use-app-permissions';
 import { IconButton } from '../../../../components/ui/icon-button';
 import { Avatar } from '../../../../components/ui/avatar';
 import { Card } from '../../../../components/ui/card';
@@ -21,9 +21,7 @@ export function DepartmentsView({
   onSelectDepartment?: (deptId: string) => void;
 }) {
   const { t } = useTranslation();
-  const { data: hrPerm } = useMyAppPermission('hr');
-  const canDelete = !hrPerm || hrPerm.role === 'admin';
-  const canEdit = !hrPerm || hrPerm.role === 'admin' || hrPerm.role === 'editor';
+  const { canDelete, canEdit } = useAppActions('hr');
 
   const employeesByDepartment = useMemo(() => {
     const map = new Map<string, HrEmployee[]>();
