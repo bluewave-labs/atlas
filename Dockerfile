@@ -34,8 +34,8 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Install dumb-init for proper PID 1 signal handling + Docker CLI for marketplace
-RUN apk add --no-cache dumb-init docker-cli docker-cli-compose
+# Install dumb-init for proper PID 1 signal handling
+RUN apk add --no-cache dumb-init
 
 # Copy root config files for workspace resolution
 COPY package.json package-lock.json ./
@@ -51,9 +51,6 @@ RUN npm ci --legacy-peer-deps --omit=dev
 COPY --from=builder /app/packages/shared/dist packages/shared/dist
 COPY --from=builder /app/packages/server/dist packages/server/dist
 COPY --from=builder /app/packages/client/dist packages/client/dist
-
-# Copy non-TS assets that tsc doesn't emit (JSON catalog files, etc.)
-COPY --from=builder /app/packages/server/src/apps/marketplace/catalog packages/server/dist/apps/marketplace/catalog
 
 # Patch shared package.json to point to compiled JS (source .ts is not available in production)
 RUN sed -i 's|"main": "./src/index.ts"|"main": "./dist/index.js"|' packages/shared/package.json && \
