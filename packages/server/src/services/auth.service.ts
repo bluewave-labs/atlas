@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { eq, count } from 'drizzle-orm';
+import type { TenantMemberRole } from '@atlas-platform/shared';
 import { db } from '../config/database';
 import { accounts, users, userSettings } from '../db/schema';
 import { env } from '../config/env';
@@ -7,7 +8,7 @@ import { encrypt } from '../utils/crypto';
 import type { AuthPayload } from '../middleware/auth';
 import crypto from 'node:crypto';
 
-export function generateTokens(account: { id: string; email: string; userId: string }, tenantId: string, tenantRole?: string) {
+export function generateTokens(account: { id: string; email: string; userId: string }, tenantId: string, tenantRole?: TenantMemberRole) {
   const payload: AuthPayload = { userId: account.userId, tenantId, email: account.email };
   if (tenantRole) payload.tenantRole = tenantRole;
   const accessToken = jwt.sign(payload, env.JWT_SECRET, { expiresIn: '1h' });

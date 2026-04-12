@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Account } from '@atlas-platform/shared';
+import type { Account, TenantMemberRole } from '@atlas-platform/shared';
 
 // Token storage helpers
 // Active account tokens always live in the legacy keys for api-client compatibility.
@@ -72,7 +72,7 @@ interface AuthState {
   account: Account | null;
   accounts: Account[];
   tenantId: string | null;
-  tenantRole: string | null;
+  tenantRole: TenantMemberRole | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 
@@ -95,7 +95,7 @@ interface AuthState {
 // Restore persisted accounts and figure out the active account on startup.
 // The active account is whichever account's tokens are in `atlasmail_token`.
 // We match by looking for the active token in the token map.
-function deriveInitialState(): { account: Account | null; accounts: Account[]; tenantId: string | null; tenantRole: string | null } {
+function deriveInitialState(): { account: Account | null; accounts: Account[]; tenantId: string | null; tenantRole: TenantMemberRole | null } {
   const accounts = readAccounts();
   if (accounts.length === 0) return { account: null, accounts: [], tenantId: null, tenantRole: null };
 
@@ -112,7 +112,7 @@ function deriveInitialState(): { account: Account | null; accounts: Account[]; t
       localStorage.setItem('atlasmail_token', tokens.access);
       localStorage.setItem('atlasmail_refresh_token', tokens.refresh);
       const payload = decodeJwtPayload(tokens.access);
-      return { account: active, accounts, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as string) ?? null };
+      return { account: active, accounts, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as TenantMemberRole | undefined) ?? null };
     }
   }
 
@@ -122,7 +122,7 @@ function deriveInitialState(): { account: Account | null; accounts: Account[]; t
     if (tokens) {
       writeActiveTokens(acct.id, tokens.access, tokens.refresh);
       const payload = decodeJwtPayload(tokens.access);
-      return { account: acct, accounts, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as string) ?? null };
+      return { account: acct, accounts, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as TenantMemberRole | undefined) ?? null };
     }
   }
 
@@ -167,7 +167,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     writeActiveTokens(account.id, accessToken, refreshToken);
 
     const payload = decodeJwtPayload(accessToken);
-    set({ accounts: updated, account, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as string) ?? null, isAuthenticated: true, isLoading: false, sessionExpired: false });
+    set({ accounts: updated, account, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as TenantMemberRole | undefined) ?? null, isAuthenticated: true, isLoading: false, sessionExpired: false });
   },
 
   // ── switchAccount ────────────────────────────────────────────────────────
@@ -184,7 +184,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     writeActiveTokens(accountId, tokens.access, tokens.refresh);
     const payload = decodeJwtPayload(tokens.access);
-    set({ account: target, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as string) ?? null, isAuthenticated: true });
+    set({ account: target, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as TenantMemberRole | undefined) ?? null, isAuthenticated: true });
 
     window.dispatchEvent(new CustomEvent('atlasmail:account-switch', { detail: { accountId } }));
   },
@@ -208,7 +208,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (nextTokens) {
           writeActiveTokens(next.id, nextTokens.access, nextTokens.refresh);
           const payload = decodeJwtPayload(nextTokens.access);
-          set({ accounts: updated, account: next, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as string) ?? null });
+          set({ accounts: updated, account: next, tenantId: (payload?.tenantId as string) ?? null, tenantRole: (payload?.tenantRole as TenantMemberRole | undefined) ?? null });
         } else {
           clearActiveTokens();
           set({ accounts: updated, account: next, tenantRole: null });

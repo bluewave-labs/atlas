@@ -12,30 +12,21 @@
 //
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
+import { isTenantAdmin, isTenantOwner } from '@atlas-platform/shared';
 import * as systemController from './controller';
 import * as permissionsController from './permissions.controller';
 import { authMiddleware } from '../../middleware/auth';
 
-// Allow the tenant owner or a tenant admin. In single-tenant self-hosted
-// Atlas, tenant owner is effectively the operator, so gating routine system
-// tasks (metrics, SMTP config) strictly on the owner was over-restrictive.
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
-  const allowed =
-    req.auth?.tenantRole === 'owner' ||
-    req.auth?.tenantRole === 'admin';
-  if (!allowed) {
+  if (!isTenantAdmin(req.auth?.tenantRole)) {
     res.status(403).json({ success: false, error: 'Admin access required' });
     return;
   }
   next();
 }
 
-// Only the tenant owner can view/edit the unified permissions grid. Regular
-// admins can manage system metrics and SMTP, but per-user RBAC is a privileged
-// operation reserved for the owner.
 function requireTenantOwner(req: Request, res: Response, next: NextFunction) {
-  const allowed = req.auth?.tenantRole === 'owner';
-  if (!allowed) {
+  if (!isTenantOwner(req.auth?.tenantRole)) {
     res.status(403).json({ success: false, error: 'Owner access required' });
     return;
   }

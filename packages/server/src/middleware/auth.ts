@@ -1,12 +1,13 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import type { TenantMemberRole } from '@atlas-platform/shared';
 import { env } from '../config/env';
 
 export interface AuthPayload {
   userId: string;
   tenantId: string;
   email: string;
-  tenantRole?: string;
+  tenantRole?: TenantMemberRole;
 }
 
 declare global {

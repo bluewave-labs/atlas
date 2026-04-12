@@ -119,6 +119,26 @@ async function assertNotLastAdmin(tenantId: string, userId: string) {
   }
 }
 
+export class LastOwnerError extends Error {
+  readonly code = 'LAST_OWNER' as const;
+  constructor(message = 'Cannot demote the last owner. Promote another user to owner first.') {
+    super(message);
+  }
+}
+
+async function assertNotLastOwner(tenantId: string, userId: string) {
+  const owners = await db.select({ u: tenantMembers.userId })
+    .from(tenantMembers)
+    .where(and(
+      eq(tenantMembers.tenantId, tenantId),
+      eq(tenantMembers.role, 'owner'),
+    ));
+  const targetIsOwner = owners.some((r) => r.u === userId);
+  if (targetIsOwner && owners.length <= 1) {
+    throw new LastOwnerError();
+  }
+}
+
 export async function removeTenantUser(tenantId: string, userId: string) {
   await assertNotLastAdmin(tenantId, userId);
   return db
@@ -129,6 +149,9 @@ export async function removeTenantUser(tenantId: string, userId: string) {
 export async function updateTenantUserRole(tenantId: string, userId: string, role: TenantMemberRole) {
   if (role === 'member') {
     await assertNotLastAdmin(tenantId, userId);
+  }
+  if (role !== 'owner') {
+    await assertNotLastOwner(tenantId, userId);
   }
   await db
     .update(tenantMembers)

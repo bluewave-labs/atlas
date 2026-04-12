@@ -10,6 +10,7 @@ import {
   HardDrive,
   Building2,
 } from 'lucide-react';
+import { isTenantAdmin, isTenantOwner } from '@atlas-platform/shared';
 import { useAuthStore } from '../stores/auth-store';
 import { useTaskCounts } from '../apps/tasks/hooks';
 import { ROUTES } from '../config/routes';
@@ -736,8 +737,8 @@ export function HomePage() {
   // Dock app definitions — filtered by user's accessible apps
   const { data: myApps } = useMyAccessibleApps();
   const tenantRole = useAuthStore((s) => s.tenantRole);
-  const isOwner = tenantRole === 'owner';
-  const isAdmin = tenantRole === 'owner' || tenantRole === 'admin';
+  const isOwner = isTenantOwner(tenantRole);
+  const isAdmin = isTenantAdmin(tenantRole);
   const dockApps = useMemo(() => {
     const accessibleSet = myApps?.appIds === '__all__'
       ? null

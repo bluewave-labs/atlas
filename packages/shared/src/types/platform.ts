@@ -4,6 +4,14 @@ export type TenantPlan = 'starter' | 'pro' | 'enterprise';
 export type TenantStatus = 'active' | 'suspended' | 'deleted';
 export type TenantMemberRole = 'owner' | 'admin' | 'member';
 
+export function isTenantAdmin(role: TenantMemberRole | string | null | undefined): boolean {
+  return role === 'owner' || role === 'admin';
+}
+
+export function isTenantOwner(role: TenantMemberRole | string | null | undefined): boolean {
+  return role === 'owner';
+}
+
 // ─── Tenant ──────────────────────────────────────────────────────────
 
 export interface Tenant {

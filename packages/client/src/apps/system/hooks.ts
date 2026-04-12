@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { isTenantAdmin } from '@atlas-platform/shared';
 import { api } from '../../lib/api-client';
 import { queryKeys } from '../../config/query-keys';
 import { useAuthStore } from '../../stores/auth-store';
@@ -54,7 +55,7 @@ export interface SystemMetrics {
 
 export function useSystemMetrics() {
   const tenantRole = useAuthStore((s) => s.tenantRole);
-  const isAdmin = tenantRole === 'owner' || tenantRole === 'admin';
+  const isAdmin = isTenantAdmin(tenantRole);
   return useQuery({
     queryKey: queryKeys.system.metrics,
     queryFn: async () => {

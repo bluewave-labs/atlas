@@ -10,6 +10,7 @@ import {
   SettingsSection,
   SettingsRow,
 } from './settings-primitives';
+import { isTenantAdmin } from '@atlas-platform/shared';
 import { useAuthStore } from '../../stores/auth-store';
 import { useToastStore } from '../../stores/toast-store';
 import { useGoogleDriveStatus } from '../../apps/drive/hooks';
@@ -17,7 +18,7 @@ import { useGoogleDriveStatus } from '../../apps/drive/hooks';
 export function IntegrationsPanel() {
   const { t } = useTranslation();
   const tenantRole = useAuthStore((s) => s.tenantRole);
-  const isAdmin = tenantRole === 'owner' || tenantRole === 'admin';
+  const isAdmin = isTenantAdmin(tenantRole);
   const [connectingDrive, setConnectingDrive] = useState(false);
   const addToast = useToastStore((s) => s.addToast);
 

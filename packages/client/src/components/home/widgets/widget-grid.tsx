@@ -5,6 +5,7 @@ import { api } from '../../../lib/api-client';
 import { queryKeys } from '../../../config/query-keys';
 import { widgetRegistry } from './registry';
 import { appRegistry } from '../../../config/app-registry';
+import { isTenantAdmin } from '@atlas-platform/shared';
 import { useAuthStore } from '../../../stores/auth-store';
 import { useMyAccessibleApps } from '../../../hooks/use-app-permissions';
 
@@ -75,7 +76,7 @@ export function WidgetGrid() {
 
   // Role-based widget filtering using accessible apps
   const tenantRole = useAuthStore((s) => s.tenantRole);
-  const isAdmin = tenantRole === 'owner' || tenantRole === 'admin';
+  const isAdmin = isTenantAdmin(tenantRole);
   const { data: myApps } = useMyAccessibleApps();
 
   const filteredAppWidgets = useMemo(() => {

@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { eq, and } from 'drizzle-orm';
+import type { TenantMemberRole } from '@atlas-platform/shared';
 import * as authService from '../../services/auth.service';
 import { db } from '../../config/database';
 import { accounts, tenantMembers } from '../../db/schema';
@@ -41,7 +42,7 @@ export async function loginWithPassword(req: Request, res: Response) {
       .from(tenantMembers)
       .where(and(eq(tenantMembers.tenantId, tenantId), eq(tenantMembers.userId, account.userId)))
       .limit(1);
-    const tenantRole = member?.role;
+    const tenantRole = member?.role as TenantMemberRole | undefined;
 
     const jwtTokens = authService.generateTokens(account, tenantId, tenantRole);
 
@@ -92,7 +93,7 @@ export async function refreshToken(req: Request, res: Response) {
       .from(tenantMembers)
       .where(and(eq(tenantMembers.tenantId, tenantId), eq(tenantMembers.userId, userId)))
       .limit(1);
-    const tenantRole = member?.role;
+    const tenantRole = member?.role as TenantMemberRole | undefined;
 
     const newTokens = authService.generateTokens({
       id: tenantId,
@@ -213,7 +214,7 @@ export async function acceptInvitation(req: Request, res: Response) {
       .from(tenantMembers)
       .where(and(eq(tenantMembers.tenantId, result.tenantId), eq(tenantMembers.userId, result.account.userId)))
       .limit(1);
-    const tenantRole = member?.role;
+    const tenantRole = member?.role as TenantMemberRole | undefined;
 
     const jwtTokens = authService.generateTokens(result.account, result.tenantId, tenantRole);
 

@@ -4,7 +4,7 @@ import { authMiddleware } from '../middleware/auth';
 import { db } from '../config/database';
 import { userSettings, tenantFormatSettings, crmDeals, crmContacts, crmCompanies, crmLeads, crmActivities, crmNotes, crmWorkflows, crmLeadForms } from '../db/schema';
 import { employees, departments } from '../db/schema';
-import { settingsSchema } from '@atlas-platform/shared';
+import { settingsSchema, isTenantAdmin } from '@atlas-platform/shared';
 import { encrypt, decrypt } from '../utils/crypto';
 import { testApiKey } from '../services/ai.service';
 import { logger } from '../utils/logger';
@@ -236,7 +236,7 @@ router.put('/formats-tenant', async (req: Request, res: Response) => {
   try {
     const tenantId = req.auth!.tenantId;
     if (!tenantId) { res.status(400).json({ success: false, error: 'Tenant context required' }); return; }
-    if (req.auth?.tenantRole !== 'owner' && req.auth?.tenantRole !== 'admin') {
+    if (!isTenantAdmin(req.auth?.tenantRole)) {
       res.status(403).json({ success: false, error: 'Admin access required' });
       return;
     }

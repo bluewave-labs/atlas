@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { getSettingsCategories } from '../config/settings-registry';
 import { appRegistry } from '../apps';
 import { SidebarNavButton } from '../components/settings/settings-modal';
+import { isTenantAdmin, isTenantOwner } from '@atlas-platform/shared';
 import { useUIStore } from '../stores/ui-store';
 import { useAuthStore } from '../stores/auth-store';
 
@@ -50,8 +51,8 @@ export function SettingsModal() {
   const { t } = useTranslation();
   const { settingsOpen, settingsApp, settingsPanel, closeSettings } = useUIStore();
   const tenantRole = useAuthStore((s) => s.tenantRole);
-  const isOwner = tenantRole === 'owner';
-  const isAdmin = tenantRole === 'owner' || tenantRole === 'admin';
+  const isOwner = isTenantOwner(tenantRole);
+  const isAdmin = isTenantAdmin(tenantRole);
 
   const settingsCategories = useMemo(() => {
     const all = getSettingsCategories(appRegistry.getSettingsCategories());
