@@ -38,7 +38,7 @@ function RateFormRow({
       <Input
         value={form.title}
         onChange={(e) => setForm({ ...form, title: e.target.value })}
-        placeholder={t('projects.rates.titlePlaceholder')}
+        placeholder={t('projects.rates.rateTitle')}
         size="sm"
         style={{ width: 180 }}
         autoFocus
@@ -71,7 +71,7 @@ function RateFormRow({
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', marginLeft: 'auto' }}>
         <IconButton
           icon={<Check size={14} />}
-          label={t('projects.actions.save')}
+          label={t('common.save')}
           size={28}
           onClick={() => onSave(form)}
           disabled={!form.title.trim() || isSaving}
@@ -173,7 +173,7 @@ export function RatesView() {
             {t('projects.rates.title')}
           </h3>
           <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', margin: '4px 0 0' }}>
-            {t('projects.rates.description')}
+            {t('projects.rates.noRatesDesc')}
           </p>
         </div>
         {!showNewForm && (
@@ -196,7 +196,7 @@ export function RatesView() {
       {/* Rates list */}
       {rates.length === 0 && !showNewForm && (
         <div style={{ textAlign: 'center', padding: 'var(--spacing-2xl)', color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-sm)' }}>
-          {t('projects.rates.empty')}
+          {t('projects.rates.noRates')}
         </div>
       )}
 
@@ -226,7 +226,7 @@ export function RatesView() {
       {/* Formula explanation */}
       <div style={{ marginTop: 'var(--spacing-xl)', padding: 'var(--spacing-md)', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-secondary)' }}>
         <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
-          {t('projects.rates.formulaExplanation')}
+          {t('projects.rates.formula')}
         </span>
       </div>
 
@@ -234,8 +234,8 @@ export function RatesView() {
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-        title={t('projects.rates.deleteTitle')}
-        description={t('projects.rates.deleteDescription', { name: deleteTarget?.title ?? '' })}
+        title={t('projects.rates.deleteRate')}
+        description={t('projects.rates.confirmDelete')}
         confirmLabel={t('common.delete')}
         onConfirm={handleDelete}
         destructive

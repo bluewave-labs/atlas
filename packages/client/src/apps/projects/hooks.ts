@@ -299,7 +299,8 @@ export function useProjectMembers(projectId: string | undefined) {
     queryKey: ['projects', 'members', projectId],
     queryFn: async () => {
       const { data } = await api.get(`/projects/projects/${projectId}/members`);
-      return data.data as ProjectMember[];
+      const result = data.data;
+      return (result?.members ?? result) as ProjectMember[];
     },
     enabled: !!projectId,
     staleTime: 10_000,
