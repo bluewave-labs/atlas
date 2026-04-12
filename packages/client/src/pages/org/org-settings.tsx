@@ -187,6 +187,9 @@ export function OrgSettingsPage() {
 
   const { data: users, isLoading: usersLoading } = useTenantUsers(effectiveTenantId ?? undefined);
   const { data: allPermissions } = useAllTenantPermissions(!!effectiveTenantId);
+  const updateTenantName = useUpdateTenantName();
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
 
   const isLoading = tenantsLoading || usersLoading;
 
@@ -208,9 +211,6 @@ export function OrgSettingsPage() {
   }
 
   const isOwner = tenant.role === 'owner';
-  const updateTenantName = useUpdateTenantName();
-  const [editingName, setEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState('');
 
   const memberCount = users?.length ?? 0;
 
