@@ -557,14 +557,18 @@
 .tables-grid-container {
   flex: 1;
   min-height: 200px;
+  min-width: 0;
   overflow: hidden;
 }
 
 /* ─── AG Grid — Light theme ──────────────────────────────────────── */
 
-.tables-grid-container .ag-theme-quartz {
+.tables-grid-container .ag-theme-quartz,
+.tables-grid-container .ag-theme-quartz-dark {
   height: 100%;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   --ag-font-family: var(--font-family);
   --ag-font-size: 13px;
   --ag-header-background-color: #f5f5f5;
@@ -586,8 +590,6 @@
 /* ─── AG Grid — Dark theme ───────────────────────────────────────── */
 
 .tables-grid-container .ag-theme-quartz-dark {
-  height: 100%;
-  width: 100%;
   --ag-font-family: var(--font-family);
   --ag-font-size: 13px;
   --ag-background-color: #101114;

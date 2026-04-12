@@ -115,7 +115,11 @@ export function useAutoSaveTable(delay = 2000) {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
-      lastInputRef.current = { id, ...input };
+      // Merge into the pending save so rapid updates from different
+      // fields (e.g. column move + cell edit) don't overwrite each other.
+      lastInputRef.current = lastInputRef.current && lastInputRef.current.id === id
+        ? { ...lastInputRef.current, ...input }
+        : { id, ...input };
       timerRef.current = setTimeout(() => {
         if (lastInputRef.current) {
           mutateRef.current(lastInputRef.current);
