@@ -3588,6 +3588,9 @@
     "appAccess": "App-Zugriff",
     "atlasApps": "Atlas-Apps",
     "appsDescription": "Aktivieren oder deaktivieren Sie integrierte Atlas-Apps für Ihre Organisation.",
+    "disableAppTitle": "{{appName}} deaktivieren?",
+    "disableAppDescription": "Dadurch wird der Zugriff für alle Benutzer entfernt, die diese App derzeit nutzen.",
+    "disableAppConfirm": "Deaktivieren",
     "apps": {
       "crmDesc": "Verwalten Sie Deals, Kontakte und Unternehmen. Verfolgen Sie Ihre Vertriebspipeline.",
       "hrDesc": "Mitarbeiterverwaltung, Abteilungen, Organigramme, Urlaubsverfolgung und Anwesenheit.",

@@ -3582,6 +3582,9 @@
     "appAccess": "Uygulama erişimi",
     "atlasApps": "Atlas uygulamaları",
     "appsDescription": "Organizasyonunuz için yerleşik Atlas uygulamalarını etkinleştirin veya devre dışı bırakın.",
+    "disableAppTitle": "{{appName}} devre dışı bırakılsın mı?",
+    "disableAppDescription": "Bu, şu anda bu uygulamayı kullanan tüm kullanıcıların erişimini kaldıracaktır.",
+    "disableAppConfirm": "Devre dışı bırak",
     "apps": {
       "crmDesc": "Anlaşmaları, kişileri ve şirketleri yönetin. Satış hattınızı takip edin.",
       "hrDesc": "Çalışan yönetimi, departmanlar, organizasyon şeması, izin takibi ve devamsızlık.",

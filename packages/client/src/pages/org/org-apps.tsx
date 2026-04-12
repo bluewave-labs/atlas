@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useCallback, useMemo, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isTenantOwner } from '@atlas-platform/shared';
 import { useAuthStore } from '../../stores/auth-store';
@@ -8,6 +8,7 @@ import { appRegistry } from '../../apps';
 import { LayoutGrid } from 'lucide-react';
 import { Chip } from '../../components/ui/chip';
 import { Skeleton } from '../../components/ui/skeleton';
+import { ConfirmDialog } from '../../components/ui/confirm-dialog';
 import { FULL_BLEED_BRAND_ICONS, getBrandIconScale } from '../../components/icons/app-icons';
 
 // ---------------------------------------------------------------------------
@@ -61,6 +62,26 @@ export function OrgAppsPage() {
 
   const isLoading = tenantsLoading || appsLoading;
 
+  // Disable-app confirmation dialog state
+  const [disableConfirm, setDisableConfirm] = useState<{ appId: string; appName: string } | null>(null);
+
+  const handleToggle = useCallback((appId: string, appName: string, isEnabled: boolean) => {
+    if (isEnabled) {
+      // Disabling — show confirmation first
+      setDisableConfirm({ appId, appName });
+    } else {
+      // Enabling — no confirmation needed
+      toggleMutation.mutate({ appId, enable: true });
+    }
+  }, [toggleMutation]);
+
+  const handleConfirmDisable = useCallback(() => {
+    if (disableConfirm) {
+      toggleMutation.mutate({ appId: disableConfirm.appId, enable: false });
+      setDisableConfirm(null);
+    }
+  }, [disableConfirm, toggleMutation]);
+
   if (isLoading) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xl)', maxWidth: 900 }}>
@@ -109,12 +130,21 @@ export function OrgAppsPage() {
               description={APP_DESC_KEYS[app.id] ? t(APP_DESC_KEYS[app.id]) : app.category}
               isEnabled={isEnabled}
               isPending={toggleMutation.isPending}
-              onToggle={() => toggleMutation.mutate({ appId: app.id, enable: !isEnabled })}
+              onToggle={() => handleToggle(app.id, app.name, isEnabled)}
             />
           );
         })}
       </div>
 
+      <ConfirmDialog
+        open={disableConfirm !== null}
+        onOpenChange={(open) => { if (!open) setDisableConfirm(null); }}
+        title={t('org.disableAppTitle', { appName: disableConfirm?.appName ?? '' })}
+        description={t('org.disableAppDescription')}
+        confirmLabel={t('org.disableAppConfirm')}
+        destructive
+        onConfirm={handleConfirmDisable}
+      />
     </div>
   );
 }

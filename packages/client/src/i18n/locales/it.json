@@ -3587,6 +3587,9 @@
     "appAccess": "Accesso alle app",
     "atlasApps": "App Atlas",
     "appsDescription": "Abilita o disabilita le app Atlas integrate per la tua organizzazione.",
+    "disableAppTitle": "Disattivare {{appName}}?",
+    "disableAppDescription": "Questo rimuoverà l'accesso per tutti gli utenti che attualmente utilizzano questa app.",
+    "disableAppConfirm": "Disattiva",
     "apps": {
       "crmDesc": "Gestisci trattative, contatti e aziende. Monitora la pipeline di vendita.",
       "hrDesc": "Gestione dipendenti, dipartimenti, organigrammi, monitoraggio ferie e presenze.",

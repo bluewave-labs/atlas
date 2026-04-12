@@ -3588,6 +3588,9 @@
     "appAccess": "App access",
     "atlasApps": "Atlas apps",
     "appsDescription": "Enable or disable built-in Atlas apps for your organization.",
+    "disableAppTitle": "Disable {{appName}}?",
+    "disableAppDescription": "This will remove access for all users who currently use this app.",
+    "disableAppConfirm": "Disable",
     "apps": {
       "crmDesc": "Manage deals, contacts, and companies. Track your sales pipeline and close more business.",
       "hrDesc": "Employee management, departments, org charts, time-off tracking, and attendance.",
