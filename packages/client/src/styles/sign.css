@@ -141,7 +141,7 @@
 
 /* Right sidebar panel */
 .sign-right-sidebar {
-  width: 240px;
+  width: 300px;
   flex-shrink: 0;
   border-left: 1px solid var(--color-border-primary);
   background: var(--color-bg-primary);
@@ -170,29 +170,24 @@
 }
 
 /* Empty overlay on PDF page */
-.sign-empty-overlay {
-  position: absolute;
-  inset: 0;
+.sign-hint-banner {
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: none;
-  z-index: 5;
-}
-
-.sign-empty-overlay-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   gap: var(--spacing-sm);
-  padding: var(--spacing-xl) var(--spacing-2xl);
-  background: color-mix(in srgb, var(--color-bg-primary) 90%, transparent);
-  border: 1px dashed var(--color-border-primary);
-  border-radius: var(--radius-lg);
-  color: var(--color-text-tertiary);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: #FEF9EF;
+  border-bottom: 1px solid #F5DEB3;
+  color: #8B6914;
   font-size: var(--font-size-sm);
   font-family: var(--font-family);
-  text-align: center;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .sign-hint-banner {
+  background: #2D2714;
+  border-bottom-color: #4A3D1A;
+  color: #D4B060;
 }
 
 /* Document list row status border */

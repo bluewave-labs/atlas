@@ -448,19 +448,25 @@ export function SignEditorView({
               </span>
             </div>
           ) : pdfUrl ? (
-            <div style={{ position: 'relative' }}>
-              <PdfViewer
-                url={pdfUrl}
-                scale={1.5}
-                scrollToPage={scrollToPage}
-                onPageImages={(images) => onSetPageThumbnails(images)}
-                onPageCount={(count) => {
-                  if (selectedDoc.pageCount !== count) {
-                    onUpdateDoc({ pageCount: count });
-                  }
-                }}
-                renderOverlay={(pageNumber, pageWidth, pageHeight) => (
-                  <>
+            <>
+              <div style={{ position: 'relative' }}>
+                {(!fields || fields.length === 0) && (
+                  <div className="sign-hint-banner">
+                    <PenTool size={14} />
+                    <span>{t('sign.editor.dragFieldsHint')}</span>
+                  </div>
+                )}
+                <PdfViewer
+                  url={pdfUrl}
+                  scale={1.5}
+                  scrollToPage={scrollToPage}
+                  onPageImages={(images) => onSetPageThumbnails(images)}
+                  onPageCount={(count) => {
+                    if (selectedDoc.pageCount !== count) {
+                      onUpdateDoc({ pageCount: count });
+                    }
+                  }}
+                  renderOverlay={(pageNumber, pageWidth, pageHeight) => (
                     <FieldOverlay
                       fields={fields ?? []}
                       pageNumber={pageNumber}
@@ -473,18 +479,10 @@ export function SignEditorView({
                       selectedFieldId={selectedFieldId}
                       editable={canEdit}
                     />
-                    {(!fields || fields.filter((f) => f.pageNumber === pageNumber).length === 0) && pageNumber === 1 && (
-                      <div className="sign-empty-overlay">
-                        <div className="sign-empty-overlay-content">
-                          <PenTool size={20} style={{ color: 'var(--color-text-tertiary)' }} />
-                          <span>{t('sign.editor.dragFieldsHint')}</span>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              />
-            </div>
+                  )}
+                />
+              </div>
+            </>
           ) : null}
         </div>
 
