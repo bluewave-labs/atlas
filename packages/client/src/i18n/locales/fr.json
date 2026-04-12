@@ -2866,7 +2866,10 @@
       "textAlign": "Alignement",
       "alignLeft": "Gauche",
       "alignCenter": "Centre",
-      "alignRight": "Droite"
+      "alignRight": "Droite",
+      "dropdownOptions": "Options du menu déroulant",
+      "addOption": "Ajouter une option",
+      "noOptions": "Aucune option définie"
     },
     "roles": {
       "signer": "Signataire",

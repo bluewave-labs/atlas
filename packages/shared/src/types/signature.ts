@@ -32,6 +32,7 @@ export interface FieldOptions {
   placeholder?: string;
   fontSize?: number;
   textAlign?: 'left' | 'center' | 'right';
+  dropdownOptions?: string[];
 }
 
 export interface SignatureField {

@@ -2896,7 +2896,10 @@
       "textAlign": "Alignment",
       "alignLeft": "Left",
       "alignCenter": "Center",
-      "alignRight": "Right"
+      "alignRight": "Right",
+      "dropdownOptions": "Dropdown options",
+      "addOption": "Add option",
+      "noOptions": "No options defined"
     },
     "roles": {
       "signer": "Signer",

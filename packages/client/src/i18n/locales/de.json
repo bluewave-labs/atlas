@@ -2869,7 +2869,10 @@
       "textAlign": "Ausrichtung",
       "alignLeft": "Links",
       "alignCenter": "Mitte",
-      "alignRight": "Rechts"
+      "alignRight": "Rechts",
+      "dropdownOptions": "Dropdown-Optionen",
+      "addOption": "Option hinzufügen",
+      "noOptions": "Keine Optionen definiert"
     },
     "roles": {
       "signer": "Unterzeichner",

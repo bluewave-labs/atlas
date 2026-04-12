@@ -2863,7 +2863,10 @@
       "textAlign": "Hizalama",
       "alignLeft": "Sol",
       "alignCenter": "Orta",
-      "alignRight": "Sağ"
+      "alignRight": "Sağ",
+      "dropdownOptions": "Açılır menü seçenekleri",
+      "addOption": "Seçenek ekle",
+      "noOptions": "Seçenek tanımlanmadı"
     },
     "roles": {
       "signer": "İmzacı",

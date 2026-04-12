@@ -1,8 +1,10 @@
 import { type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Settings, Trash2 } from 'lucide-react';
+import { Plus, Settings, Trash2, X } from 'lucide-react';
+import { useState } from 'react';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
+import { IconButton } from '../../../components/ui/icon-button';
 import { Select } from '../../../components/ui/select';
 import type { SignatureField, SignatureFieldType, FieldOptions } from '@atlas-platform/shared';
 import type { Signer } from './signer-panel';
@@ -23,6 +25,118 @@ interface FieldPropertiesPanelProps {
   signers: Signer[];
   onUpdateField: (data: Partial<SignatureField>) => void;
   onDeleteField: () => void;
+}
+
+function DropdownOptionsEditor({
+  field,
+  onUpdateField,
+}: {
+  field: SignatureField;
+  onUpdateField: (data: Partial<SignatureField>) => void;
+}) {
+  const { t } = useTranslation();
+  const [newOption, setNewOption] = useState('');
+
+  const options = field.options?.dropdownOptions ?? [];
+
+  const addOption = () => {
+    const trimmed = newOption.trim();
+    if (!trimmed) return;
+    const opts: FieldOptions = {
+      ...(field.options || {}),
+      dropdownOptions: [...options, trimmed],
+    };
+    onUpdateField({ options: opts } as Partial<SignatureField>);
+    setNewOption('');
+  };
+
+  const removeOption = (index: number) => {
+    const opts: FieldOptions = {
+      ...(field.options || {}),
+      dropdownOptions: options.filter((_, i) => i !== index),
+    };
+    onUpdateField({ options: opts } as Partial<SignatureField>);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+      <label
+        style={{
+          fontSize: 'var(--font-size-xs)',
+          color: 'var(--color-text-secondary)',
+          fontWeight: 'var(--font-weight-medium)' as CSSProperties['fontWeight'],
+        }}
+      >
+        {t('sign.fields.dropdownOptions')}
+      </label>
+
+      {options.length === 0 && (
+        <span
+          style={{
+            fontSize: 'var(--font-size-xs)',
+            color: 'var(--color-text-tertiary)',
+            fontStyle: 'italic',
+          }}
+        >
+          {t('sign.fields.noOptions')}
+        </span>
+      )}
+
+      {options.map((opt, idx) => (
+        <div
+          key={idx}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--spacing-xs)',
+          }}
+        >
+          <span
+            style={{
+              flex: 1,
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--color-text-primary)',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {opt}
+          </span>
+          <IconButton
+            icon={<X size={12} />}
+            label={t('common.delete')}
+            size={24}
+            onClick={() => removeOption(idx)}
+          />
+        </div>
+      ))}
+
+      <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
+        <Input
+          value={newOption}
+          onChange={(e) => setNewOption(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              addOption();
+            }
+          }}
+          placeholder={t('sign.fields.addOption')}
+          size="sm"
+          style={{ flex: 1 }}
+        />
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={<Plus size={13} />}
+          onClick={addOption}
+        >
+          {t('sign.fields.addOption')}
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 export function FieldPropertiesPanel({
@@ -312,6 +426,11 @@ export function FieldPropertiesPanel({
             size="sm"
           />
         </div>
+      )}
+
+      {/* Dropdown options */}
+      {field.type === 'dropdown' && (
+        <DropdownOptionsEditor field={field} onUpdateField={onUpdateField} />
       )}
 
       {/* Size controls */}

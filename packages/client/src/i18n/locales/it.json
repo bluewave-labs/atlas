@@ -2868,7 +2868,10 @@
       "textAlign": "Allineamento",
       "alignLeft": "Sinistra",
       "alignCenter": "Centro",
-      "alignRight": "Destra"
+      "alignRight": "Destra",
+      "dropdownOptions": "Opzioni del menu a tendina",
+      "addOption": "Aggiungi opzione",
+      "noOptions": "Nessuna opzione definita"
     },
     "roles": {
       "signer": "Firmatario",
