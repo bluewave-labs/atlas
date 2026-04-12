@@ -63,7 +63,6 @@ async function resolveRecordTitle(appId: string, recordId: string): Promise<stri
     docs: { table: 'documents', column: 'title' },
     tasks: { table: 'tasks', column: 'title' },
     draw: { table: 'drawings', column: 'title' },
-    tables: { table: 'spreadsheets', column: 'title' },
     drive: { table: 'drive_items', column: 'name' },
   };
 

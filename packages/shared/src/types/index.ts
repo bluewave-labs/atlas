@@ -4,7 +4,6 @@ export * from './api';
 export * from './document';
 export * from './drawing';
 export * from './task';
-export * from './table';
 export * from './drive';
 export * from './platform';
 export * from './app-manifest';

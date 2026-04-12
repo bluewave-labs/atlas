@@ -167,12 +167,6 @@ export const userSettings = pgTable('user_settings', {
   timeFormat: text('time_format').notNull().default('12h'),
   numberFormat: text('number_format').notNull().default('comma-period'),
   calendarStartDay: text('calendar_start_day').notNull().default('monday'),
-  // Tables settings
-  tablesDefaultView: text('tables_default_view').notNull().default('grid'),
-  tablesDefaultSort: text('tables_default_sort').notNull().default('none'),
-  tablesShowFieldTypeIcons: boolean('tables_show_field_type_icons').notNull().default(true),
-  tablesDefaultRowCount: integer('tables_default_row_count').notNull().default(3),
-  tablesIncludeRowIdsInExport: boolean('tables_include_row_ids_in_export').notNull().default(false),
   // Calendar settings
   calDefaultView: text('cal_default_view').notNull().default('week'),
   calWeekStartsOnMonday: boolean('cal_week_starts_on_monday').notNull().default(false),
@@ -461,43 +455,6 @@ export const tasks = pgTable('tasks', {
   userWhenIdx: index('idx_tasks_user_when').on(table.userId, table.when, table.status),
   projectIdx: index('idx_tasks_project').on(table.projectId, table.sortOrder),
   dueDateIdx: index('idx_tasks_due_date').on(table.userId, table.dueDate),
-}));
-
-// ─── Spreadsheets (Tables / Airtable-like) ──────────────────────────
-
-export const spreadsheets = pgTable('spreadsheets', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  title: text('title').notNull().default('Untitled table'),
-  columns: jsonb('columns').$type<import('@atlas-platform/shared').TableColumn[]>().notNull().default([]),
-  rows: jsonb('rows').$type<import('@atlas-platform/shared').TableRow[]>().notNull().default([]),
-  viewConfig: jsonb('view_config').$type<import('@atlas-platform/shared').TableViewConfig>().notNull().default({ activeView: 'grid' } as import('@atlas-platform/shared').TableViewConfig),
-  sortOrder: integer('sort_order').notNull().default(0),
-  isArchived: boolean('is_archived').notNull().default(false),
-  color: text('color'),
-  icon: text('icon'),
-  guide: text('guide'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (table) => ({
-  userIdx: index('idx_spreadsheets_user').on(table.userId, table.isArchived),
-  tenantIdx: index('idx_spreadsheets_tenant').on(table.tenantId, table.isArchived),
-}));
-
-// ─── Table Row Comments ─────────────────────────────────────────────
-
-export const tableRowComments = pgTable('table_row_comments', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  spreadsheetId: uuid('spreadsheet_id').notNull().references(() => spreadsheets.id, { onDelete: 'cascade' }),
-  rowId: text('row_id').notNull(),
-  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
-  userId: uuid('user_id').notNull(),
-  body: text('body').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (table) => ({
-  rowIdx: index('idx_table_row_comments_row').on(table.spreadsheetId, table.rowId),
 }));
 
 // ─── Drive (file storage) ────────────────────────────────────────────
