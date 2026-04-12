@@ -64,7 +64,20 @@
       "addItem": "Ajouter un élément",
       "descriptionPlaceholder": "Description de l'élément..."
     },
-    "saving": "Enregistrement..."
+    "saving": "Enregistrement...",
+    "dataTable": {
+      "search": "Rechercher\u2026",
+      "addNew": "Ajouter",
+      "showFields": "Afficher les champs",
+      "fields": "Champs",
+      "exportCsv": "Exporter en CSV",
+      "rows_one": "ligne",
+      "rows_other": "lignes",
+      "noResults": "Aucun r\u00e9sultat",
+      "page": "page",
+      "of": "sur",
+      "clear": "Effacer"
+    }
   },
   "auth": {
     "appName": "Atlas",

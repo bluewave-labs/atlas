@@ -7,6 +7,7 @@ import {
   type ReactNode,
   type CSSProperties,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Plus,
   ChevronLeft,
@@ -224,14 +225,14 @@ export function DataTable<T extends { id: string }>({
   defaultPageSize = 25,
   pageSizes = [25, 50, 100],
   onAddRow,
-  addRowLabel = 'Add new',
+  addRowLabel: addRowLabelProp,
   emptyIcon,
   emptyTitle,
   emptyDescription,
   groupBy,
   keyboardNavigation = true,
   searchable = false,
-  searchPlaceholder = 'Search…',
+  searchPlaceholder: searchPlaceholderProp,
   onSearchChange,
   exportable = false,
   columnSelector = false,
@@ -240,6 +241,11 @@ export function DataTable<T extends { id: string }>({
   className,
   rowClassName,
 }: DataTableProps<T>) {
+  // ─── i18n ───────────────────────────────────────────────────────
+  const { t } = useTranslation();
+  const addRowLabel = addRowLabelProp ?? t('common.dataTable.addNew');
+  const searchPlaceholder = searchPlaceholderProp ?? t('common.dataTable.search');
+
   // ─── Selection state ────────────────────────────────────────────
   const [internalSelectedIds, setInternalSelectedIds] = useState<Set<string>>(new Set());
   const selectedIds = controlledSelectedIds ?? internalSelectedIds;
@@ -652,9 +658,9 @@ export function DataTable<T extends { id: string }>({
                     variant="ghost"
                     size="sm"
                     icon={<Columns3 size={14} />}
-                    aria-label="Show fields"
+                    aria-label={t('common.dataTable.showFields')}
                   >
-                    Fields
+                    {t('common.dataTable.fields')}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" sideOffset={4} style={{ padding: 0, minWidth: 200 }}>
@@ -669,7 +675,7 @@ export function DataTable<T extends { id: string }>({
                       borderBottom: '1px solid var(--color-border-secondary)',
                     }}
                   >
-                    Show fields
+                    {t('common.dataTable.showFields')}
                   </div>
                   <div style={{ maxHeight: 320, overflow: 'auto', padding: 4 }}>
                     {hideableColumns.map(col => {
@@ -733,9 +739,9 @@ export function DataTable<T extends { id: string }>({
                 size="sm"
                 icon={<Download size={14} />}
                 onClick={exportCsv}
-                aria-label="Export as CSV"
+                aria-label={t('common.dataTable.exportCsv')}
               >
-                Export CSV
+                {t('common.dataTable.exportCsv')}
               </Button>
             )}
           </div>
@@ -801,7 +807,7 @@ export function DataTable<T extends { id: string }>({
             {emptyIcon && <div className="dt-empty-icon">{emptyIcon}</div>}
             {emptyTitle && <div className="dt-empty-title">{emptyTitle}</div>}
             {emptyDescription && <div className="dt-empty-desc">{emptyDescription}</div>}
-            {!emptyTitle && !emptyDescription && <div className="dt-empty-title">No data</div>}
+            {!emptyTitle && !emptyDescription && <div className="dt-empty-title">{t('common.dataTable.noResults')}</div>}
           </div>
         ) : groupBy ? (
           renderGrouped()
@@ -820,7 +826,7 @@ export function DataTable<T extends { id: string }>({
       {/* Footer */}
       {!hideFooter && (
         <div className="dt-footer">
-          <span>{totalRows} {totalRows === 1 ? 'row' : 'rows'}</span>
+          <span>{totalRows} {t('common.dataTable.rows', { count: totalRows })}</span>
           {aggregations?.map((agg, i) => (
             <span key={i} style={{ marginLeft: i === 0 ? 'auto' : 0, ...agg.style }}>
               {agg.label}: {agg.compute(paginatedData)}
@@ -860,7 +866,7 @@ export function DataTable<T extends { id: string }>({
               <Select
                 value={String(pageSize)}
                 onChange={(v) => { setPageSize(Number(v)); setPage(0); }}
-                options={pageSizes.map(s => ({ value: String(s), label: `${s} / page` }))}
+                options={pageSizes.map(s => ({ value: String(s), label: `${s} / ${t('common.dataTable.page')}` }))}
                 size="sm"
                 width={100}
               />
@@ -872,7 +878,7 @@ export function DataTable<T extends { id: string }>({
       {/* Bulk action bar */}
       {selectable && selectedIds.size > 0 && bulkActions && bulkActions.length > 0 && (
         <div className="dt-bulk-bar">
-          <span className="dt-bulk-bar-count">{selectedIds.size} selected</span>
+          <span className="dt-bulk-bar-count">{t('common.selected', { count: selectedIds.size })}</span>
           {bulkActions.map(action => {
             if (action.visible && !action.visible(selectedIdArr, selectedItems)) return null;
             if (action.render) return <span key={action.key}>{action.render(selectedIdArr, selectedItems)}</span>;
@@ -889,7 +895,7 @@ export function DataTable<T extends { id: string }>({
             );
           })}
           <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
-            Clear
+            {t('common.dataTable.clear')}
           </Button>
         </div>
       )}

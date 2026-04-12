@@ -64,7 +64,20 @@
       "addItem": "Position hinzufügen",
       "descriptionPlaceholder": "Positionsbeschreibung..."
     },
-    "saving": "Wird gespeichert..."
+    "saving": "Wird gespeichert...",
+    "dataTable": {
+      "search": "Suche\u2026",
+      "addNew": "Neu hinzuf\u00fcgen",
+      "showFields": "Felder anzeigen",
+      "fields": "Felder",
+      "exportCsv": "Als CSV exportieren",
+      "rows_one": "Zeile",
+      "rows_other": "Zeilen",
+      "noResults": "Keine Ergebnisse",
+      "page": "Seite",
+      "of": "von",
+      "clear": "Zur\u00fccksetzen"
+    }
   },
   "auth": {
     "appName": "Atlas",

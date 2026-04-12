@@ -64,7 +64,20 @@
       "addItem": "Add item",
       "descriptionPlaceholder": "Item description..."
     },
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "dataTable": {
+      "search": "Search\u2026",
+      "addNew": "Add new",
+      "showFields": "Show fields",
+      "fields": "Fields",
+      "exportCsv": "Export as CSV",
+      "rows_one": "row",
+      "rows_other": "rows",
+      "noResults": "No results",
+      "page": "page",
+      "of": "of",
+      "clear": "Clear"
+    }
   },
   "auth": {
     "appName": "Atlas",

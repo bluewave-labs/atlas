@@ -64,7 +64,20 @@
       "addItem": "Aggiungi voce",
       "descriptionPlaceholder": "Descrizione della voce..."
     },
-    "saving": "Salvataggio..."
+    "saving": "Salvataggio...",
+    "dataTable": {
+      "search": "Cerca\u2026",
+      "addNew": "Aggiungi",
+      "showFields": "Mostra campi",
+      "fields": "Campi",
+      "exportCsv": "Esporta come CSV",
+      "rows_one": "riga",
+      "rows_other": "righe",
+      "noResults": "Nessun risultato",
+      "page": "pagina",
+      "of": "di",
+      "clear": "Cancella"
+    }
   },
   "auth": {
     "appName": "Atlas",

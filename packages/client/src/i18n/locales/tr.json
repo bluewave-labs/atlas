@@ -64,7 +64,20 @@
       "addItem": "Kalem ekle",
       "descriptionPlaceholder": "Kalem açıklaması..."
     },
-    "saving": "Kaydediliyor..."
+    "saving": "Kaydediliyor...",
+    "dataTable": {
+      "search": "Ara\u2026",
+      "addNew": "Yeni ekle",
+      "showFields": "Alanlar\u0131 g\u00f6ster",
+      "fields": "Alanlar",
+      "exportCsv": "CSV olarak d\u0131\u015fa aktar",
+      "rows_one": "sat\u0131r",
+      "rows_other": "sat\u0131r",
+      "noResults": "Sonu\u00e7 bulunamad\u0131",
+      "page": "sayfa",
+      "of": "/",
+      "clear": "Temizle"
+    }
   },
   "auth": {
     "appName": "Atlas",
