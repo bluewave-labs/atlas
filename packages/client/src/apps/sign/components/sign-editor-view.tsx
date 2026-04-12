@@ -406,7 +406,7 @@ export function SignEditorView({
 
       {/* Field toolbar (vertical) + Page thumbnails + PDF viewer + Right sidebar */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {canEdit && <SignFieldToolbar onAddField={(type) => onAddField(type)} />}
+        {canEdit && <SignFieldToolbar onAddField={(type) => onAddField(type, activePageNumber)} />}
 
         {/* Page thumbnails sidebar */}
         {pageThumbnails.length > 1 && (

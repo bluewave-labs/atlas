@@ -163,14 +163,14 @@ export function useSignPageState() {
   }, [selectedDocId, voidDoc]);
 
   const handleAddField = useCallback(
-    async (type: SignatureFieldType, pageNumber = 1, x = 25, y = 40) => {
+    async (type: SignatureFieldType, pageNumber?: number, x = 25, y = 40) => {
       if (!selectedDocId) return;
       const assignedEmail = activeSignerIndex !== null && signers[activeSignerIndex]?.email.trim()
         ? signers[activeSignerIndex].email.trim()
         : null;
       await createField.mutateAsync({
         type,
-        pageNumber,
+        pageNumber: pageNumber ?? activePageNumber,
         x,
         y,
         width: type === 'checkbox' ? 5 : 20,
@@ -181,7 +181,7 @@ export function useSignPageState() {
         sortOrder: 0,
       });
     },
-    [selectedDocId, createField, activeSignerIndex, signers],
+    [selectedDocId, createField, activeSignerIndex, signers, activePageNumber],
   );
 
   const handleFieldMove = useCallback(
