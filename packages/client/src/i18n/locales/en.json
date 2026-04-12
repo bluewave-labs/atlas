@@ -1374,7 +1374,8 @@
       "contactDetail": "Contact detail",
       "deleteContact": "Delete contact",
       "duplicateEmail": "A contact named \"{{name}}\" already uses this email",
-      "groupByCompany": "Company"
+      "groupByCompany": "Company",
+      "notFound": "Contact not found"
     },
     "companies": {
       "name": "Name",
@@ -1400,7 +1401,8 @@
       "country": "Country",
       "logo": "Company logo",
       "portalToken": "Client portal token",
-      "regenerateToken": "Regenerate token"
+      "regenerateToken": "Regenerate token",
+      "notFound": "Company not found"
     },
     "confirm": {
       "deleteDeal": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",

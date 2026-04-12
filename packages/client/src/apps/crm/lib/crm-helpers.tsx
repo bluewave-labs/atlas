@@ -30,7 +30,7 @@ export interface SortState {
 
 // ─── Types ─────────────────────────────────────────────────────────
 
-export type ActiveView = 'dashboard' | 'leads' | 'lead-detail' | 'pipeline' | 'deals' | 'deal-detail' | 'contacts' | 'companies' | 'activities' | 'automations' | 'forecast' | 'leadForms' | 'proposals' | 'proposal-detail';
+export type ActiveView = 'dashboard' | 'leads' | 'lead-detail' | 'pipeline' | 'deals' | 'deal-detail' | 'contacts' | 'contact-detail' | 'companies' | 'company-detail' | 'activities' | 'automations' | 'forecast' | 'leadForms' | 'proposals' | 'proposal-detail';
 
 // ─── Avatar colors ────────────────────────────────────────────────
 

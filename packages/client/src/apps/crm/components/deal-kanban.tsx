@@ -11,6 +11,7 @@ interface DealKanbanProps {
   stages: CrmDealStage[];
   onMoveDeal: (dealId: string, newStageId: string) => void;
   onDealClick: (dealId: string) => void;
+  searchQuery?: string;
 }
 
 function getInitials(name: string): string {
@@ -27,7 +28,7 @@ function loadCollapsed(): Set<string> {
   try { return new Set(JSON.parse(localStorage.getItem(COLLAPSED_KEY) || '[]')); } catch { return new Set(); }
 }
 
-export function DealKanban({ deals, stages, onMoveDeal, onDealClick }: DealKanbanProps) {
+export function DealKanban({ deals, stages, onMoveDeal, onDealClick, searchQuery = '' }: DealKanbanProps) {
   const { t } = useTranslation();
   const [draggedDealId, setDraggedDealId] = useState<string | null>(null);
   const [dragOverStageId, setDragOverStageId] = useState<string | null>(null);
@@ -97,12 +98,16 @@ export function DealKanban({ deals, stages, onMoveDeal, onDealClick }: DealKanba
     [deals, onMoveDeal],
   );
 
-  // Group deals by stage
+  // Filter deals by search query then group by stage
+  const q = searchQuery.toLowerCase();
+  const filteredDeals = q
+    ? deals.filter(d => d.title.toLowerCase().includes(q) || d.contactName?.toLowerCase().includes(q) || d.companyName?.toLowerCase().includes(q))
+    : deals;
   const dealsByStage: Record<string, CrmDeal[]> = {};
   for (const stage of stages) {
     dealsByStage[stage.id] = [];
   }
-  for (const deal of deals) {
+  for (const deal of filteredDeals) {
     if (dealsByStage[deal.stageId]) {
       dealsByStage[deal.stageId].push(deal);
     }

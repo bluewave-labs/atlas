@@ -11,6 +11,8 @@ import { AutomationsView } from './automations-view';
 import { LeadsView } from './leads-view';
 import { LeadDetailPage } from './lead-detail-page';
 import { DealDetailPage } from './deal-detail-page';
+import { ContactDetailPage } from './contact-detail-page';
+import { CompanyDetailPage } from './company-detail-page';
 import { LeadFormsView } from './lead-forms-view';
 import { ForecastView } from './forecast-view';
 import { DealsListView } from './views/deals-list-view';
@@ -18,8 +20,6 @@ import { ContactsListView } from './views/contacts-list-view';
 import { CompaniesListView } from './views/companies-list-view';
 import { ActivitiesListView } from './views/activities-list-view';
 import { DealDetailPanel } from './panels/deal-detail-panel';
-import { ContactDetailPanel } from './panels/contact-detail-panel';
-import { CompanyDetailPanel } from './panels/company-detail-panel';
 import { ProposalsListView } from './proposals-list-view';
 import { ProposalDetailPanel } from './proposal-detail-panel';
 import { ProposalEditor } from './proposal-editor';
@@ -135,6 +135,7 @@ export function CrmContent({
             stages={stages}
             onMoveDeal={handleMoveDeal}
             onDealClick={handleDealClick}
+            searchQuery={searchQuery}
           />
         )}
 
@@ -164,7 +165,7 @@ export function CrmContent({
           <ContactsListView
             contacts={filteredContacts}
             selectedId={selectedContactId}
-            onSelect={(id) => { setSelectedContactId(id); setSelectedDealId(null); setSelectedCompanyId(null); }}
+            onSelect={(id) => { setSearchParams({ view: 'contact-detail', contactId: id }, { replace: true }); }}
             searchQuery={searchQuery}
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
@@ -181,11 +182,21 @@ export function CrmContent({
           />
         )}
 
+        {activeView === 'contact-detail' && searchParams.get('contactId') && (
+          <ContactDetailPage
+            contactId={searchParams.get('contactId')!}
+            onBack={() => setActiveView('contacts')}
+            onNavigate={(contactId) => setSearchParams({ view: 'contact-detail', contactId }, { replace: true })}
+            onCompanyClick={(companyId) => setSearchParams({ view: 'company-detail', companyId }, { replace: true })}
+            onDealClick={(dealId) => setSearchParams({ view: 'deal-detail', dealId }, { replace: true })}
+          />
+        )}
+
         {activeView === 'companies' && (
           <CompaniesListView
             companies={filteredCompanies}
             selectedId={selectedCompanyId}
-            onSelect={(id) => { setSelectedCompanyId(id); setSelectedDealId(null); setSelectedContactId(null); }}
+            onSelect={(id) => { setSearchParams({ view: 'company-detail', companyId: id }, { replace: true }); }}
             searchQuery={searchQuery}
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
@@ -198,6 +209,16 @@ export function CrmContent({
             onAdd={onShowCreateCompany}
             canEdit={canEditCompanies}
             groupBy={groupBy}
+          />
+        )}
+
+        {activeView === 'company-detail' && searchParams.get('companyId') && (
+          <CompanyDetailPage
+            companyId={searchParams.get('companyId')!}
+            onBack={() => setActiveView('companies')}
+            onNavigate={(companyId) => setSearchParams({ view: 'company-detail', companyId }, { replace: true })}
+            onContactClick={(contactId) => setSearchParams({ view: 'contact-detail', contactId }, { replace: true })}
+            onDealClick={(dealId) => setSearchParams({ view: 'deal-detail', dealId }, { replace: true })}
           />
         )}
 
@@ -243,25 +264,6 @@ export function CrmContent({
             onMarkLost={onMarkLost}
             onContactClick={(contactId) => { setActiveView('contacts'); setSelectedContactId(contactId); setSelectedDealId(null); setSelectedCompanyId(null); }}
             onCompanyClick={(companyId) => { setActiveView('companies'); setSelectedCompanyId(companyId); setSelectedDealId(null); setSelectedContactId(null); }}
-          />
-        )}
-        {activeView === 'contacts' && selectedContact && (
-          <ContactDetailPanel
-            contact={selectedContact}
-            deals={deals}
-            onClose={() => setSelectedContactId(null)}
-            onCompanyClick={(companyId) => { setActiveView('companies'); setSelectedCompanyId(companyId); setSelectedContactId(null); setSelectedDealId(null); }}
-            onDealClick={(dealId) => { setActiveView('deals'); setSelectedDealId(dealId); setSelectedContactId(null); setSelectedCompanyId(null); }}
-          />
-        )}
-        {activeView === 'companies' && selectedCompany && (
-          <CompanyDetailPanel
-            company={selectedCompany}
-            contacts={contacts}
-            deals={deals}
-            onClose={() => setSelectedCompanyId(null)}
-            onContactClick={(contactId) => { setActiveView('contacts'); setSelectedContactId(contactId); setSelectedCompanyId(null); setSelectedDealId(null); }}
-            onDealClick={(dealId) => { setActiveView('deals'); setSelectedDealId(dealId); setSelectedCompanyId(null); setSelectedContactId(null); }}
           />
         )}
       </div>

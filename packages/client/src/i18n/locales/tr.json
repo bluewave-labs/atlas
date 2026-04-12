@@ -1345,7 +1345,8 @@
       "contactDetail": "Kişi detayı",
       "deleteContact": "Kişiyi sil",
       "duplicateEmail": "\"{{name}}\" adlı bir kişi zaten bu e-postayı kullanıyor",
-      "groupByCompany": "Şirket"
+      "groupByCompany": "Şirket",
+      "notFound": "Kişi bulunamadı"
     },
     "companies": {
       "name": "İsim",
@@ -1371,7 +1372,8 @@
       "country": "Ülke",
       "logo": "Şirket logosu",
       "portalToken": "Müşteri portal jetonu",
-      "regenerateToken": "Jetonu yenile"
+      "regenerateToken": "Jetonu yenile",
+      "notFound": "Şirket bulunamadı"
     },
     "confirm": {
       "deleteDeal": "\"{{name}}\" anlaşmasını silmek istediğinizden emin misiniz?",

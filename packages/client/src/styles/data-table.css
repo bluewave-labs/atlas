@@ -63,6 +63,10 @@
   font-size: var(--font-size-sm);
 }
 
+.dt-row:nth-child(even) {
+  background: var(--color-bg-secondary);
+}
+
 .dt-row:hover {
   background: var(--color-surface-hover);
 }

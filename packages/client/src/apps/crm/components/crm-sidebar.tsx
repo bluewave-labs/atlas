@@ -100,7 +100,7 @@ export function CrmSidebar({
           label={t('crm.sidebar.contacts')}
           icon={<Users size={14} />}
           iconColor="#10b981"
-          isActive={activeView === 'contacts'}
+          isActive={activeView === 'contacts' || activeView === 'contact-detail'}
           count={contactsCount}
           onClick={() => setActiveView('contacts')}
         />
@@ -125,7 +125,7 @@ export function CrmSidebar({
           label={t('crm.sidebar.companies')}
           icon={<Building2 size={14} />}
           iconColor="#06b6d4"
-          isActive={activeView === 'companies'}
+          isActive={activeView === 'companies' || activeView === 'company-detail'}
           count={companiesCount}
           onClick={() => setActiveView('companies')}
         />

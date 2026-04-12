@@ -1351,7 +1351,8 @@
       "contactDetail": "Kontaktdetail",
       "deleteContact": "Kontakt löschen",
       "duplicateEmail": "Ein Kontakt namens \"{{name}}\" verwendet bereits diese E-Mail",
-      "groupByCompany": "Unternehmen"
+      "groupByCompany": "Unternehmen",
+      "notFound": "Kontakt nicht gefunden"
     },
     "companies": {
       "name": "Name",
@@ -1377,7 +1378,8 @@
       "country": "Land",
       "logo": "Firmenlogo",
       "portalToken": "Kundenportal-Token",
-      "regenerateToken": "Token erneuern"
+      "regenerateToken": "Token erneuern",
+      "notFound": "Unternehmen nicht gefunden"
     },
     "confirm": {
       "deleteDeal": "Möchten Sie \"{{name}}\" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",

@@ -1350,7 +1350,8 @@
       "contactDetail": "Dettaglio contatto",
       "deleteContact": "Elimina contatto",
       "duplicateEmail": "Un contatto chiamato \"{{name}}\" utilizza già questa email",
-      "groupByCompany": "Azienda"
+      "groupByCompany": "Azienda",
+      "notFound": "Contatto non trovato"
     },
     "companies": {
       "name": "Nome",
@@ -1376,7 +1377,8 @@
       "country": "Paese",
       "logo": "Logo aziendale",
       "portalToken": "Token portale clienti",
-      "regenerateToken": "Rigenera token"
+      "regenerateToken": "Rigenera token",
+      "notFound": "Azienda non trovata"
     },
     "confirm": {
       "deleteDeal": "Sei sicuro di voler eliminare \"{{name}}\"? Questa azione non può essere annullata.",

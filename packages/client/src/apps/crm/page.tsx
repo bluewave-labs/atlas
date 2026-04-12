@@ -258,8 +258,7 @@ export function CrmPage() {
   }, [selectedIds, updateDeal]);
 
   const hasDetailPanel = !!(
-    (activeView === 'pipeline' && selectedDeal) || (activeView === 'deals' && selectedDeal) ||
-    (activeView === 'contacts' && selectedContact) || (activeView === 'companies' && selectedCompany)
+    (activeView === 'pipeline' && selectedDeal) || (activeView === 'deals' && selectedDeal)
   );
 
   return (
@@ -278,7 +277,7 @@ export function CrmPage() {
       <ContentArea
         title={sectionTitle ?? ''}
         actions={
-          activeView !== 'dashboard' && activeView !== 'automations' ? (
+          activeView !== 'dashboard' && activeView !== 'automations' && activeView !== 'deal-detail' && activeView !== 'lead-detail' && activeView !== 'contact-detail' && activeView !== 'company-detail' ? (
             <>
               <IconButton icon={<Search size={14} />} label={t('crm.actions.search')} size={28} active={showSearch}
                 onClick={() => { setShowSearch(!showSearch); if (!showSearch) setTimeout(() => searchInputRef.current?.focus(), 50); }} />

@@ -1,7 +1,7 @@
 /* ─── Sidebar sections ─────────────────────────────────────────── */
 
 .app-sidebar-section + .app-sidebar-section {
-  border-top: 1px solid var(--color-border-secondary);
+  /* no separator between sections */
 }
 
 /* ─── Shared context menu ──────────────────────────────────────── */

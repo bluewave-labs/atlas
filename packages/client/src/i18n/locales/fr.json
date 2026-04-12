@@ -1348,7 +1348,8 @@
       "contactDetail": "Détail du contact",
       "deleteContact": "Supprimer le contact",
       "duplicateEmail": "Un contact nommé \"{{name}}\" utilise déjà cet e-mail",
-      "groupByCompany": "Entreprise"
+      "groupByCompany": "Entreprise",
+      "notFound": "Contact introuvable"
     },
     "companies": {
       "name": "Nom",
@@ -1374,7 +1375,8 @@
       "country": "Pays",
       "logo": "Logo de l'entreprise",
       "portalToken": "Jeton du portail client",
-      "regenerateToken": "Régénérer le jeton"
+      "regenerateToken": "Régénérer le jeton",
+      "notFound": "Entreprise introuvable"
     },
     "confirm": {
       "deleteDeal": "Voulez-vous vraiment supprimer \"{{name}}\" ? Cette action est irréversible.",
