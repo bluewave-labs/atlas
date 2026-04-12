@@ -1172,13 +1172,6 @@
     "clearSelection": "Seçimi temizle",
     "saved": "Kaydedildi",
     "settings": {
-      "0": "A",
-      "1": "y",
-      "2": "a",
-      "3": "r",
-      "4": "l",
-      "5": "a",
-      "6": "r",
       "newTables": "Yeni tablolar",
       "newTablesDesc": "Yeni tablo oluştururken uygulanan varsayılanlar.",
       "defaultView": "Varsayılan görünüm",
