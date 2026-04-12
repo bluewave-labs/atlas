@@ -217,7 +217,8 @@ export async function seedLeavePolicies(req: Request, res: Response) {
       return;
     }
 
-    const result = await hrService.seedDefaultPolicies(tenantId);
+    const language = (req.query.language as string) || undefined;
+    const result = await hrService.seedDefaultPolicies(tenantId, language);
     res.json({ success: true, data: result });
   } catch (error) {
     logger.error({ error }, 'Failed to seed leave policies');

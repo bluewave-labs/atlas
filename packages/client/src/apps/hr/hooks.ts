@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import i18n from '../../i18n';
 import { api } from '../../lib/api-client';
 import { queryKeys } from '../../config/query-keys';
 
@@ -627,7 +628,8 @@ export function useSeedLeavePolicies() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
-      const { data } = await api.post('/hr/leave-policies/seed');
+      const lang = i18n.language?.split('-')[0] || 'en';
+      const { data } = await api.post(`/hr/leave-policies/seed?language=${lang}`);
       return data.data;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: queryKeys.hr.all }); },

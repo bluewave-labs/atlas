@@ -1,4 +1,4 @@
-import { useState, useEffect, type CSSProperties } from 'react';
+import { useState, useEffect, useRef, type CSSProperties } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
@@ -12,6 +12,10 @@ import { useSettingsStore } from '../stores/settings-store';
 import type { ThemeMode } from '@atlas-platform/shared';
 
 const BG_IMAGE = '/wallpapers/04-mountain-golden.jpg';
+
+const LANGUAGE_CURRENCY_MAP: Record<string, string> = {
+  en: '$', tr: '₺', de: '€', fr: '€', it: '€',
+};
 
 const LANGUAGES = [
   { value: 'en', label: 'English', flag: '\u{1F1EC}\u{1F1E7}' },
@@ -90,10 +94,17 @@ export function OnboardingPage() {
   const [theme, setTheme] = useState<ThemeMode>('system');
   const [withDemoData, setWithDemoData] = useState(true);
   const settingsStore = useSettingsStore();
+  const currencyTouched = useRef(false);
 
   useEffect(() => {
     i18n.changeLanguage(language);
     document.documentElement.lang = language;
+  }, [language]);
+
+  useEffect(() => {
+    if (!currencyTouched.current) {
+      setCurrency(LANGUAGE_CURRENCY_MAP[language] ?? '$');
+    }
   }, [language]);
 
   if (!isAuthenticated) {
@@ -261,7 +272,7 @@ export function OnboardingPage() {
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
                     <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-family)' }}>{t('setup.currency', 'Currency')}</label>
-                    <Select value={currency} onChange={setCurrency} options={CURRENCIES} size="md" />
+                    <Select value={currency} onChange={(v) => { currencyTouched.current = true; setCurrency(v); }} options={CURRENCIES} size="md" />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
                     <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-family)' }}>{t('setup.theme', 'Appearance')}</label>

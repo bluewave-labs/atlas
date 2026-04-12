@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
@@ -125,19 +126,22 @@ interface ObjectDetail {
 // Field type options
 // ---------------------------------------------------------------------------
 
-const FIELD_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: 'text', label: 'Text' },
-  { value: 'number', label: 'Number' },
-  { value: 'date', label: 'Date' },
-  { value: 'boolean', label: 'Boolean' },
-  { value: 'select', label: 'Select' },
-  { value: 'multi_select', label: 'Multi-select' },
-  { value: 'email', label: 'Email' },
-  { value: 'phone', label: 'Phone' },
-  { value: 'url', label: 'URL' },
-  { value: 'json', label: 'JSON' },
-  { value: 'relation', label: 'Relation' },
-];
+function useFieldTypeOptions(): Array<{ value: string; label: string }> {
+  const { t } = useTranslation();
+  return useMemo(() => [
+    { value: 'text', label: t('settingsPanel.dataModel.fieldText', 'Text') },
+    { value: 'number', label: t('settingsPanel.dataModel.fieldNumber', 'Number') },
+    { value: 'date', label: t('settingsPanel.dataModel.fieldDate', 'Date') },
+    { value: 'boolean', label: t('settingsPanel.dataModel.fieldBoolean', 'Boolean') },
+    { value: 'select', label: t('settingsPanel.dataModel.fieldSelect', 'Select') },
+    { value: 'multi_select', label: t('settingsPanel.dataModel.fieldMultiSelect', 'Multi-select') },
+    { value: 'email', label: t('settingsPanel.dataModel.fieldEmail', 'Email') },
+    { value: 'phone', label: t('settingsPanel.dataModel.fieldPhone', 'Phone') },
+    { value: 'url', label: t('settingsPanel.dataModel.fieldUrl', 'URL') },
+    { value: 'json', label: t('settingsPanel.dataModel.fieldJson', 'JSON') },
+    { value: 'relation', label: t('settingsPanel.dataModel.fieldRelation', 'Relation') },
+  ], [t]);
+}
 
 // ---------------------------------------------------------------------------
 // Field type badge color
@@ -219,6 +223,7 @@ function DataModelDiagram({
   allObjects: DataModelObject[];
   onSelect: (appId: string, objectId: string) => void;
 }) {
+  const { t } = useTranslation();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   // Group by app to keep related objects together
@@ -417,7 +422,7 @@ function DataModelDiagram({
                 fill="var(--color-text-tertiary)"
                 fontFamily="var(--font-family)"
               >
-                {pos.obj.totalFieldCount} fields
+                {pos.obj.totalFieldCount} {t('settingsPanel.dataModel.fields', 'fields')}
               </text>
               <text
                 x={pos.x + DIAGRAM_BOX_W - 12}
@@ -443,6 +448,7 @@ function DataModelDiagram({
 // ---------------------------------------------------------------------------
 
 function ObjectListView({ onSelect }: { onSelect: (appId: string, objectId: string) => void }) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'diagram'>('list');
@@ -473,7 +479,7 @@ function ObjectListView({ onSelect }: { onSelect: (appId: string, objectId: stri
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search objects..."
+          placeholder={t('settingsPanel.dataModel.searchObjects', 'Search objects...')}
           size="sm"
           iconLeft={<Search size={14} />}
           style={{ maxWidth: 300 }}
@@ -496,7 +502,7 @@ function ObjectListView({ onSelect }: { onSelect: (appId: string, objectId: stri
               boxShadow: viewMode === 'list' ? 'var(--shadow-sm)' : 'none',
               transition: 'all var(--transition-normal)',
             }}
-            aria-label="List view"
+            aria-label={t('settingsPanel.dataModel.listView', 'List view')}
           >
             <List size={14} />
           </button>
@@ -517,7 +523,7 @@ function ObjectListView({ onSelect }: { onSelect: (appId: string, objectId: stri
               boxShadow: viewMode === 'diagram' ? 'var(--shadow-sm)' : 'none',
               transition: 'all var(--transition-normal)',
             }}
-            aria-label="Diagram view"
+            aria-label={t('settingsPanel.dataModel.diagramView', 'Diagram view')}
           >
             <GitBranch size={14} />
           </button>
@@ -534,7 +540,7 @@ function ObjectListView({ onSelect }: { onSelect: (appId: string, objectId: stri
             fontFamily: 'var(--font-family)',
           }}
         >
-          Loading data model...
+          {t('settingsPanel.dataModel.loading', 'Loading data model...')}
         </div>
       ) : filtered.length === 0 ? (
         <div
@@ -546,7 +552,7 @@ function ObjectListView({ onSelect }: { onSelect: (appId: string, objectId: stri
             fontFamily: 'var(--font-family)',
           }}
         >
-          {search ? 'No objects match your search.' : 'No objects found.'}
+          {search ? t('settingsPanel.dataModel.noSearchResults', 'No objects match your search.') : t('settingsPanel.dataModel.noObjects', 'No objects found.')}
         </div>
       ) : viewMode === 'diagram' ? (
         <DataModelDiagram objects={filtered} allObjects={objects} onSelect={onSelect} />
@@ -569,10 +575,10 @@ function ObjectListView({ onSelect }: { onSelect: (appId: string, objectId: stri
               borderBottom: '1px solid var(--color-border-secondary)',
             }}
           >
-            <div style={headerCellStyle}>Name</div>
-            <div style={{ ...headerCellStyle, textAlign: 'center' }}>App</div>
-            <div style={{ ...headerCellStyle, textAlign: 'center' }}>Fields</div>
-            <div style={{ ...headerCellStyle, textAlign: 'center' }}>Records</div>
+            <div style={headerCellStyle}>{t('settingsPanel.dataModel.name', 'Name')}</div>
+            <div style={{ ...headerCellStyle, textAlign: 'center' }}>{t('settingsPanel.dataModel.app', 'App')}</div>
+            <div style={{ ...headerCellStyle, textAlign: 'center' }}>{t('settingsPanel.dataModel.fields', 'Fields')}</div>
+            <div style={{ ...headerCellStyle, textAlign: 'center' }}>{t('settingsPanel.dataModel.records', 'Records')}</div>
             <div />
           </div>
 
@@ -721,7 +727,9 @@ function ObjectDetailView({
   objectId: string;
   onBack: () => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const fieldTypeOptions = useFieldTypeOptions();
   const [showAddField, setShowAddField] = useState(false);
   const [newFieldName, setNewFieldName] = useState('');
   const [newFieldType, setNewFieldType] = useState<string>('text');
@@ -772,7 +780,7 @@ function ObjectDetailView({
   if (isLoading || !data) {
     return (
       <div style={{ padding: 'var(--spacing-2xl)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
-        Loading...
+        {t('common.loading', 'Loading...')}
       </div>
     );
   }
@@ -802,7 +810,7 @@ function ObjectDetailView({
         onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-tertiary)'; }}
       >
         <ArrowLeft size={14} />
-        Back to objects
+        {t('settingsPanel.dataModel.backToObjects', 'Back to objects')}
       </button>
 
       {/* Heading */}
@@ -842,7 +850,7 @@ function ObjectDetailView({
       )}
 
       {/* Standard fields */}
-      <SettingsSection title="Standard fields" description="Built-in fields defined by the app. These cannot be modified.">
+      <SettingsSection title={t('settingsPanel.dataModel.standardFields', 'Standard fields')} description={t('settingsPanel.dataModel.standardFieldsDesc', 'Built-in fields defined by the app. These cannot be modified.')}>
         <div
           style={{
             border: '1px solid var(--color-border-secondary)',
@@ -877,7 +885,7 @@ function ObjectDetailView({
               </Chip>
               {f.isRequired && (
                 <Chip color="var(--color-warning)" height={20}>
-                  required
+                  {t('settingsPanel.dataModel.required', 'required')}
                 </Chip>
               )}
             </div>
@@ -886,7 +894,7 @@ function ObjectDetailView({
       </SettingsSection>
 
       {/* Custom fields */}
-      <SettingsSection title="Custom fields" description="User-defined fields added to this object.">
+      <SettingsSection title={t('settingsPanel.dataModel.customFields', 'Custom fields')} description={t('settingsPanel.dataModel.customFieldsDesc', 'User-defined fields added to this object.')}>
         {customFields.length > 0 && (
           <div
             style={{
@@ -932,12 +940,12 @@ function ObjectDetailView({
                 </Chip>
                 {f.isRequired && (
                   <Chip color="var(--color-warning)" height={20}>
-                    required
+                    {t('settingsPanel.dataModel.required', 'required')}
                   </Chip>
                 )}
                 <IconButton
                   icon={<Trash2 size={14} />}
-                  label="Delete field"
+                  label={t('settingsPanel.dataModel.deleteField', 'Delete field')}
                   size={26}
                   destructive
                   onClick={() => deleteMutation.mutate(f.id)}
@@ -960,7 +968,7 @@ function ObjectDetailView({
               marginBottom: 'var(--spacing-md)',
             }}
           >
-            No custom fields yet.
+            {t('settingsPanel.dataModel.noCustomFields', 'No custom fields yet.')}
           </div>
         )}
 
@@ -983,14 +991,14 @@ function ObjectDetailView({
                 <Input
                   value={newFieldName}
                   onChange={(e) => setNewFieldName(e.target.value)}
-                  placeholder="Field name"
+                  placeholder={t('settingsPanel.dataModel.fieldName', 'Field name')}
                   size="sm"
                   onKeyDown={(e) => e.key === 'Enter' && handleCreateField()}
                 />
               </div>
               <SettingsSelect
                 value={newFieldType}
-                options={FIELD_TYPE_OPTIONS}
+                options={fieldTypeOptions}
                 onChange={(v) => setNewFieldType(v)}
               />
             </div>
@@ -1003,12 +1011,12 @@ function ObjectDetailView({
                     fontFamily: 'var(--font-family)',
                   }}
                 >
-                  Required
+                  {t('settingsPanel.dataModel.required', 'Required')}
                 </span>
                 <SettingsToggle
                   checked={newFieldRequired}
                   onChange={setNewFieldRequired}
-                  label="Required"
+                  label={t('settingsPanel.dataModel.required', 'Required')}
                 />
               </div>
               <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
@@ -1022,7 +1030,7 @@ function ObjectDetailView({
                     setNewFieldRequired(false);
                   }}
                 >
-                  Cancel
+                  {t('common.cancel', 'Cancel')}
                 </Button>
                 <Button
                   variant="primary"
@@ -1030,7 +1038,7 @@ function ObjectDetailView({
                   onClick={handleCreateField}
                   disabled={!newFieldName.trim() || createMutation.isPending}
                 >
-                  {createMutation.isPending ? 'Saving...' : 'Save'}
+                  {createMutation.isPending ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
                 </Button>
               </div>
             </div>
@@ -1042,7 +1050,7 @@ function ObjectDetailView({
                   fontFamily: 'var(--font-family)',
                 }}
               >
-                Slug: <code style={{ background: 'var(--color-bg-secondary)', padding: '1px 4px', borderRadius: 'var(--radius-sm)' }}>{toSlug(newFieldName)}</code>
+                {t('settingsPanel.dataModel.slug', 'Slug')}: <code style={{ background: 'var(--color-bg-secondary)', padding: '1px 4px', borderRadius: 'var(--radius-sm)' }}>{toSlug(newFieldName)}</code>
               </div>
             )}
           </div>
@@ -1055,13 +1063,13 @@ function ObjectDetailView({
           onClick={() => setShowAddField(true)}
           disabled={showAddField}
         >
-          Add custom field
+          {t('settingsPanel.dataModel.addCustomField', 'Add custom field')}
         </Button>
       </SettingsSection>
 
       {/* Relations */}
       {object.relations.length > 0 && (
-        <SettingsSection title="Relations" description="Connections to other objects in the data model.">
+        <SettingsSection title={t('settingsPanel.dataModel.relations', 'Relations')} description={t('settingsPanel.dataModel.relationsDesc', 'Connections to other objects in the data model.')}>
           <div
             style={{
               border: '1px solid var(--color-border-secondary)',
@@ -1101,7 +1109,7 @@ function ObjectDetailView({
                       fontFamily: 'var(--font-family)',
                     }}
                   >
-                    via {r.foreignKey}
+                    {t('settingsPanel.dataModel.via', 'via')} {r.foreignKey}
                   </span>
                 )}
               </div>

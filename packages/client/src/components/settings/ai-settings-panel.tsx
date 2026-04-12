@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Sparkles, Check, X, Loader2, Key, Trash2 } from 'lucide-react';
 import { api } from '../../lib/api-client';
@@ -37,6 +38,7 @@ function useAiSettings() {
 }
 
 function useUpdateAiSettings() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
   return useMutation({
@@ -45,12 +47,13 @@ function useUpdateAiSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings', 'ai'] });
-      addToast({ message: 'AI settings saved', type: 'success' });
+      addToast({ message: t('settingsPanel.ai.settingsSaved', 'AI settings saved'), type: 'success' });
     },
   });
 }
 
 function useRemoveAiKey() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
   return useMutation({
@@ -59,7 +62,7 @@ function useRemoveAiKey() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings', 'ai'] });
-      addToast({ message: 'API key removed', type: 'success' });
+      addToast({ message: t('settingsPanel.ai.keyRemoved', 'API key removed'), type: 'success' });
     },
   });
 }
@@ -90,6 +93,7 @@ function ProviderKeyRow({
   onRemove: () => void;
   onTest: (key: string) => Promise<{ valid: boolean; error?: string }>;
 }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [keyValue, setKeyValue] = useState('');
   const [testing, setTesting] = useState(false);
@@ -132,7 +136,7 @@ function ProviderKeyRow({
           <Input
             value={keyValue}
             onChange={(e) => { setKeyValue(e.target.value); setTestResult(null); }}
-            placeholder={`Enter ${label} API key`}
+            placeholder={t('settingsPanel.ai.enterApiKey', 'Enter {{provider}} API key', { provider: label })}
             size="sm"
             style={{ flex: 1 }}
             type="password"
@@ -140,15 +144,15 @@ function ProviderKeyRow({
             onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') { setEditing(false); setKeyValue(''); } }}
           />
           <Button variant="ghost" size="sm" onClick={handleTest} disabled={!keyValue.trim() || testing}>
-            {testing ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : 'Test'}
+            {testing ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : t('settingsPanel.ai.test', 'Test')}
           </Button>
           {testResult && (
             testResult.valid
-              ? <Badge variant="success">Valid</Badge>
-              : <Badge variant="error">Invalid</Badge>
+              ? <Badge variant="success">{t('settingsPanel.ai.valid', 'Valid')}</Badge>
+              : <Badge variant="error">{t('settingsPanel.ai.invalid', 'Invalid')}</Badge>
           )}
-          <Button variant="primary" size="sm" onClick={handleSave} disabled={!keyValue.trim()}>Save</Button>
-          <IconButton icon={<X size={13} />} label="Cancel" size={24} onClick={() => { setEditing(false); setKeyValue(''); setTestResult(null); }} />
+          <Button variant="primary" size="sm" onClick={handleSave} disabled={!keyValue.trim()}>{t('common.save', 'Save')}</Button>
+          <IconButton icon={<X size={13} />} label={t('common.cancel', 'Cancel')} size={24} onClick={() => { setEditing(false); setKeyValue(''); setTestResult(null); }} />
         </div>
       ) : hasKey ? (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
@@ -159,19 +163,19 @@ function ProviderKeyRow({
           }}>
             {maskedKey}
           </code>
-          <Badge variant="success">Configured</Badge>
+          <Badge variant="success">{t('settingsPanel.ai.configured', 'Configured')}</Badge>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 'var(--spacing-xs)' }}>
-            <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>Update</Button>
-            <IconButton icon={<Trash2 size={13} />} label="Remove" size={24} destructive onClick={onRemove} />
+            <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>{t('settingsPanel.ai.update', 'Update')}</Button>
+            <IconButton icon={<Trash2 size={13} />} label={t('settingsPanel.ai.remove', 'Remove')} size={24} destructive onClick={onRemove} />
           </div>
         </div>
       ) : (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
           <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
-            Not configured
+            {t('settingsPanel.ai.notConfigured', 'Not configured')}
           </span>
           <Button variant="ghost" size="sm" icon={<Key size={13} />} onClick={() => setEditing(true)} style={{ marginLeft: 'auto' }}>
-            Add key
+            {t('settingsPanel.ai.addKey', 'Add key')}
           </Button>
         </div>
       )}
@@ -180,19 +184,20 @@ function ProviderKeyRow({
 }
 
 export function AiSettingsPanel() {
+  const { t } = useTranslation();
   const { data: settings, isLoading } = useAiSettings();
   const updateSettings = useUpdateAiSettings();
   const removeKey = useRemoveAiKey();
   const testKey = useTestAiKey();
 
   if (isLoading || !settings) {
-    return <div style={{ padding: 'var(--spacing-xl)', color: 'var(--color-text-tertiary)' }}>Loading...</div>;
+    return <div style={{ padding: 'var(--spacing-xl)', color: 'var(--color-text-tertiary)' }}>{t('common.loading', 'Loading...')}</div>;
   }
 
   return (
     <div>
-      <SettingsSection title="AI configuration" description="Configure AI providers to enable enrichment, writing assistance, and other AI features.">
-        <SettingsRow label="Enable AI features" description="Allow AI features across the platform">
+      <SettingsSection title={t('settingsPanel.ai.title', 'AI configuration')} description={t('settingsPanel.ai.description', 'Configure AI providers to enable enrichment, writing assistance, and other AI features.')}>
+        <SettingsRow label={t('settingsPanel.ai.enableFeatures', 'Enable AI features')} description={t('settingsPanel.ai.enableFeaturesDesc', 'Allow AI features across the platform')}>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
             <input
               type="checkbox"
@@ -201,12 +206,12 @@ export function AiSettingsPanel() {
               style={{ width: 16, height: 16, accentColor: 'var(--color-accent-primary)' }}
             />
             <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
-              {settings.enabled ? 'Enabled' : 'Disabled'}
+              {settings.enabled ? t('settingsPanel.ai.enabled', 'Enabled') : t('settingsPanel.ai.disabled', 'Disabled')}
             </span>
           </label>
         </SettingsRow>
 
-        <SettingsRow label="Default provider" description="Provider used for AI features when no specific provider is requested">
+        <SettingsRow label={t('settingsPanel.ai.defaultProvider', 'Default provider')} description={t('settingsPanel.ai.defaultProviderDesc', 'Provider used for AI features when no specific provider is requested')}>
           <Select
             value={settings.provider}
             onChange={(v) => updateSettings.mutate({ provider: v })}
@@ -217,7 +222,7 @@ export function AiSettingsPanel() {
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection title="API keys" description="Add API keys for each provider you want to use. Keys are encrypted at rest.">
+      <SettingsSection title={t('settingsPanel.ai.apiKeys', 'API keys')} description={t('settingsPanel.ai.apiKeysDesc', 'Add API keys for each provider you want to use. Keys are encrypted at rest.')}>
         {AI_PROVIDERS.map((p) => {
           const keyInfo = settings.keys[p.value] || { hasKey: false, maskedKey: null };
           return (

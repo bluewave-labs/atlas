@@ -75,6 +75,7 @@ const selectedSwatch: CSSProperties = {
 };
 
 export function HomeBackgroundPanel() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const { data: settings } = useQuery({
@@ -114,14 +115,14 @@ export function HomeBackgroundPanel() {
   };
 
   const typeOptions: Array<{ value: BgType; label: string; desc: string }> = [
-    { value: 'unsplash', label: 'Photo', desc: 'Choose a wallpaper from curated photos' },
-    { value: 'solid', label: 'Solid color', desc: 'Dark colors curated for readability' },
-    { value: 'gradient', label: 'Gradient', desc: 'Dark gradients curated for readability' },
+    { value: 'unsplash', label: t('widgets.bgTypePhoto', 'Photo'), desc: t('widgets.bgTypePhotoDesc', 'Choose a wallpaper from curated photos') },
+    { value: 'solid', label: t('widgets.bgTypeSolid', 'Solid color'), desc: t('widgets.bgTypeSolidDesc', 'Dark colors curated for readability') },
+    { value: 'gradient', label: t('widgets.bgTypeGradient', 'Gradient'), desc: t('widgets.bgTypeGradientDesc', 'Dark gradients curated for readability') },
   ];
 
   return (
     <div>
-      <SettingsSection title="Background type" description="Choose what appears behind the home screen">
+      <SettingsSection title={t('widgets.bgType', 'Background type')} description={t('widgets.bgTypeDesc', 'Choose what appears behind the home screen')}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {typeOptions.map((opt) => {
             const isActive = bgType === opt.value;
@@ -174,14 +175,14 @@ export function HomeBackgroundPanel() {
 
       {bgType === 'unsplash' && (
         <>
-          <SettingsSection title="Auto-rotate" description="Cycle through wallpapers automatically">
-            <SettingsRow label="Rotate wallpapers" description="Change wallpaper every 5 minutes">
-              <SettingsToggle checked={bgRotate} onChange={setRotate} label="Rotate wallpapers" />
+          <SettingsSection title={t('widgets.autoRotate', 'Auto-rotate')} description={t('widgets.autoRotateDesc', 'Cycle through wallpapers automatically')}>
+            <SettingsRow label={t('widgets.rotateWallpapers', 'Rotate wallpapers')} description={t('widgets.rotateWallpapersDesc', 'Change wallpaper every 5 minutes')}>
+              <SettingsToggle checked={bgRotate} onChange={setRotate} label={t('widgets.rotateWallpapers', 'Rotate wallpapers')} />
             </SettingsRow>
           </SettingsSection>
 
           {!bgRotate && (
-            <SettingsSection title="Choose a wallpaper" description="Select a photo for your home screen">
+            <SettingsSection title={t('widgets.chooseWallpaper', 'Choose a wallpaper')} description={t('widgets.chooseWallpaperDesc', 'Select a photo for your home screen')}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {WALLPAPER_PHOTOS.map((photo) => (
                   <div
@@ -209,7 +210,7 @@ export function HomeBackgroundPanel() {
       )}
 
       {bgType === 'solid' && (
-        <SettingsSection title="Pick a color" description="Select a background color for the home screen">
+        <SettingsSection title={t('widgets.pickColor', 'Pick a color')} description={t('widgets.pickColorDesc', 'Select a background color for the home screen')}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {SOLID_COLORS.map((color) => (
               <div
@@ -226,7 +227,7 @@ export function HomeBackgroundPanel() {
       )}
 
       {bgType === 'gradient' && (
-        <SettingsSection title="Pick a gradient" description="Select a gradient for the home screen">
+        <SettingsSection title={t('widgets.pickGradient', 'Pick a gradient')} description={t('widgets.pickGradientDesc', 'Select a gradient for the home screen')}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {GRADIENTS.map((grad) => (
               <div
@@ -243,8 +244,8 @@ export function HomeBackgroundPanel() {
       )}
 
       {bgType === 'custom' && (
-        <SettingsSection title="Custom color" description="Enter a hex color code">
-          <SettingsRow label="Hex color" description="e.g. #1a1a2e or #f5f5f5">
+        <SettingsSection title={t('widgets.customColor', 'Custom color')} description={t('widgets.customColorDesc', 'Enter a hex color code')}>
+          <SettingsRow label={t('widgets.hexColor', 'Hex color')} description={t('widgets.hexColorDesc', 'e.g. #1a1a2e or #f5f5f5')}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div
                 style={{
@@ -289,15 +290,15 @@ export function HomeBackgroundPanel() {
         </SettingsSection>
       )}
 
-      <SettingsSection title="Clock" description="Configure the home screen clock display">
-        <SettingsRow label="Show seconds" description="Display seconds on the clock">
+      <SettingsSection title={t('widgets.clockSection', 'Clock')} description={t('widgets.clockDesc', 'Configure the home screen clock display')}>
+        <SettingsRow label={t('widgets.showSeconds', 'Show seconds')} description={t('widgets.showSecondsDesc', 'Display seconds on the clock')}>
           <SettingsToggle
             checked={!!(settings?.homeShowSeconds)}
             onChange={(val) => {
               mutation.mutate({ homeShowSeconds: val } as any);
               queryClient.setQueryData(queryKeys.settings.all, (old: any) => old ? { ...old, homeShowSeconds: val } : old);
             }}
-            label="Show seconds"
+            label={t('widgets.showSeconds', 'Show seconds')}
           />
         </SettingsRow>
       </SettingsSection>

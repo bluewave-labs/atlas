@@ -1,6 +1,6 @@
-import { type CSSProperties, useMemo, useState } from 'react';
+import { type CSSProperties, useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Shield } from 'lucide-react';
+import { Shield, Check } from 'lucide-react';
 import {
   useAppPermissions,
   useSetAppPermission,
@@ -16,6 +16,8 @@ import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Avatar } from '../../../components/ui/avatar';
 import { Skeleton } from '../../../components/ui/skeleton';
+import { appRegistry } from '../../../config/app-registry';
+import { useAuthStore } from '../../../stores/auth-store';
 
 export function PermissionsView() {
   const { t } = useTranslation();
@@ -23,6 +25,28 @@ export function PermissionsView() {
   const { data, isLoading, error } = useAppPermissions();
   const setPerm = useSetAppPermission();
   const revertPerm = useRevertAppPermission();
+  const currentUserId = useAuthStore((s) => s.account?.userId);
+  const [savedCells, setSavedCells] = useState<Record<string, boolean>>({});
+  const savedTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const showSaved = useCallback((key: string) => {
+    if (savedTimers.current[key]) clearTimeout(savedTimers.current[key]);
+    setSavedCells((prev) => ({ ...prev, [key]: true }));
+    savedTimers.current[key] = setTimeout(() => {
+      setSavedCells((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+      delete savedTimers.current[key];
+    }, 1500);
+  }, []);
+
+  const registeredApps = useMemo(() => {
+    const all = appRegistry.getAll();
+    const map = new Map(all.map((a) => [a.id, a]));
+    return map;
+  }, []);
 
   const roleOptions = useMemo(
     () => [
@@ -66,7 +90,16 @@ export function PermissionsView() {
     );
   }
 
-  const { users, apps } = data;
+  const { apps } = data;
+  const users = useMemo(() => {
+    const sorted = [...data.users];
+    sorted.sort((a, b) => {
+      if (a.userId === currentUserId) return -1;
+      if (b.userId === currentUserId) return 1;
+      return 0;
+    });
+    return sorted;
+  }, [data.users, currentUserId]);
 
   const handleRoleChange = (
     userId: string,
@@ -74,7 +107,11 @@ export function PermissionsView() {
     role: AppPermissionRole,
     recordAccess: AppPermissionRecordAccess,
   ) => {
-    setPerm.mutate({ userId, appId, role, recordAccess });
+    const key = `${userId}:${appId}`;
+    setPerm.mutate(
+      { userId, appId, role, recordAccess },
+      { onSuccess: () => showSaved(key) },
+    );
   };
 
   const handleRevert = (userId: string, appId: string) => {
@@ -149,19 +186,34 @@ export function PermissionsView() {
               <th style={{ ...headerStyle, minWidth: 220 }}>
                 {t('system.permissions.columnUser')}
               </th>
-              {apps.map((app) => (
-                <th key={app.id} style={{ ...headerStyle, minWidth: 220 }}>
-                  {app.name}
-                </th>
-              ))}
+              {apps.map((app) => {
+                const reg = registeredApps.get(app.id);
+                const Icon = reg?.icon;
+                const color = reg?.color;
+                return (
+                  <th key={app.id} style={{ ...headerStyle, minWidth: 220 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      {Icon && <Icon size={16} style={{ color, flexShrink: 0 }} />}
+                      {app.name}
+                    </span>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
             {users.map((user) => {
               const isOwner = user.tenantRole === 'owner';
+              const isCurrentUser = user.userId === currentUserId;
+              const rowBg = isCurrentUser
+                ? 'color-mix(in srgb, var(--color-accent-primary) 4%, transparent)'
+                : undefined;
+              const rowBorder = isCurrentUser
+                ? '2px solid color-mix(in srgb, var(--color-accent-primary) 12%, transparent)'
+                : undefined;
               return (
-                <tr key={user.userId}>
-                  <td style={cellStyle}>
+                <tr key={user.userId} style={{ background: rowBg }}>
+                  <td style={{ ...cellStyle, borderBottom: rowBorder ?? cellStyle.borderBottom }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                       <Avatar name={user.userName} email={user.userEmail} size={32} />
                       <div style={{ minWidth: 0 }}>
@@ -208,7 +260,7 @@ export function PermissionsView() {
                   </td>
                   {apps.map((app) => {
                     const cell = cellMap.get(`${user.userId}:${app.id}`);
-                    if (!cell) return <td key={app.id} style={cellStyle} />;
+                    if (!cell) return <td key={app.id} style={{ ...cellStyle, borderBottom: rowBorder ?? cellStyle.borderBottom }} />;
                     const disabled = isOwner;
                     const tooltip = cell.inherited
                       ? t('system.permissions.inheritedTooltip')
@@ -216,8 +268,10 @@ export function PermissionsView() {
                     const cellColor = cell.inherited
                       ? 'var(--color-text-tertiary)'
                       : 'var(--color-text-primary)';
+                    const cellKey = `${user.userId}:${app.id}`;
+                    const justSaved = savedCells[cellKey];
                     return (
-                      <td key={app.id} style={cellStyle}>
+                      <td key={app.id} style={{ ...cellStyle, borderBottom: rowBorder ?? cellStyle.borderBottom }}>
                         <div
                           title={tooltip}
                           style={{
@@ -228,20 +282,25 @@ export function PermissionsView() {
                             opacity: cell.inherited ? 0.75 : 1,
                           }}
                         >
-                          <Select
-                            value={cell.role}
-                            onChange={(v) =>
-                              handleRoleChange(
-                                user.userId,
-                                app.id,
-                                v as AppPermissionRole,
-                                cell.recordAccess,
-                              )
-                            }
-                            options={roleOptions}
-                            size="sm"
-                            disabled={disabled}
-                          />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <Select
+                              value={cell.role}
+                              onChange={(v) =>
+                                handleRoleChange(
+                                  user.userId,
+                                  app.id,
+                                  v as AppPermissionRole,
+                                  cell.recordAccess,
+                                )
+                              }
+                              options={roleOptions}
+                              size="sm"
+                              disabled={disabled}
+                            />
+                            {justSaved && (
+                              <Check size={12} style={{ color: 'var(--color-success)', flexShrink: 0 }} />
+                            )}
+                          </div>
                           <Select
                             value={cell.recordAccess}
                             onChange={(v) =>
@@ -314,47 +373,83 @@ function TabButton({
 
 function HistoryTab() {
   const { t } = useTranslation();
-  const { data, isLoading } = useAppPermissionsAudit({ limit: 100 });
+  const { data: permData } = useAppPermissions();
+  const [filterUser, setFilterUser] = useState('');
+  const [filterApp, setFilterApp] = useState('');
+  const { data, isLoading } = useAppPermissionsAudit({
+    limit: 100,
+    targetUserId: filterUser || undefined,
+    appId: filterApp || undefined,
+  });
 
-  if (isLoading) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Skeleton style={{ height: 40 }} />
-        <Skeleton style={{ height: 40 }} />
-        <Skeleton style={{ height: 40 }} />
-      </div>
-    );
-  }
+  const userOptions = useMemo(() => {
+    const opts = [{ value: '', label: t('system.permissions.historyAllUsers') }];
+    for (const u of permData?.users ?? []) {
+      opts.push({ value: u.userId, label: u.userName || u.userEmail });
+    }
+    return opts;
+  }, [permData, t]);
 
-  if (!data || data.length === 0) {
-    return (
-      <div
-        style={{
-          padding: 24,
-          border: '1px solid var(--color-border-primary)',
-          borderRadius: 'var(--radius-lg)',
-          color: 'var(--color-text-tertiary)',
-          fontSize: 'var(--font-size-sm)',
-          textAlign: 'center',
-        }}
-      >
-        {t('system.permissions.historyEmpty')}
-      </div>
-    );
-  }
+  const appOptions = useMemo(() => {
+    const opts = [{ value: '', label: t('system.permissions.historyAllApps') }];
+    for (const a of permData?.apps ?? []) {
+      opts.push({ value: a.id, label: a.name });
+    }
+    return opts;
+  }, [permData, t]);
 
   return (
-    <div
-      style={{
-        border: '1px solid var(--color-border-primary)',
-        borderRadius: 'var(--radius-lg)',
-        background: 'var(--color-bg-primary)',
-        overflow: 'hidden',
-      }}
-    >
-      {data.map((row) => (
-        <HistoryRow key={row.id} row={row} />
-      ))}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Select
+          value={filterUser}
+          onChange={setFilterUser}
+          options={userOptions}
+          size="sm"
+          width="200px"
+        />
+        <Select
+          value={filterApp}
+          onChange={setFilterApp}
+          options={appOptions}
+          size="sm"
+          width="200px"
+        />
+      </div>
+
+      {isLoading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <Skeleton style={{ height: 40 }} />
+          <Skeleton style={{ height: 40 }} />
+          <Skeleton style={{ height: 40 }} />
+        </div>
+      ) : !data || data.length === 0 ? (
+        <div
+          style={{
+            padding: 24,
+            border: '1px solid var(--color-border-primary)',
+            borderRadius: 'var(--radius-lg)',
+            color: 'var(--color-text-tertiary)',
+            fontSize: 'var(--font-size-sm)',
+            textAlign: 'center',
+          }}
+        >
+          {t('system.permissions.historyEmpty')}
+        </div>
+      ) : (
+        <div
+          style={{
+            border: '1px solid var(--color-border-primary)',
+            borderRadius: 'var(--radius-lg)',
+            background: 'var(--color-bg-primary)',
+            overflow: 'hidden',
+          }}
+        >
+          {data.map((row) => (
+            <HistoryRow key={row.id} row={row} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

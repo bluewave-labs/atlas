@@ -100,40 +100,74 @@ export async function seedDefaultLeaveTypes(tenantId: string) {
   return { leaveTypes: created };
 }
 
-const DEFAULT_POLICY_TEMPLATES: Array<{
+interface PolicyTemplate {
   name: string; description: string; isDefault: boolean;
   slugAllocations: Array<{ slug: string; daysPerYear: number }>;
-}> = [
-  {
-    name: 'Full-time', description: 'Standard allocation for full-time employees', isDefault: true,
-    slugAllocations: [
-      { slug: 'annual-leave', daysPerYear: 20 }, { slug: 'sick-leave', daysPerYear: 10 },
-      { slug: 'personal', daysPerYear: 3 }, { slug: 'maternity', daysPerYear: 90 },
-      { slug: 'paternity', daysPerYear: 10 }, { slug: 'bereavement', daysPerYear: 5 },
-      { slug: 'jury-duty', daysPerYear: 5 }, { slug: 'unpaid', daysPerYear: 30 },
-      { slug: 'study', daysPerYear: 5 }, { slug: 'wfh', daysPerYear: 52 },
-    ],
-  },
-  {
-    name: 'Part-time', description: 'Prorated allocation for part-time employees', isDefault: false,
-    slugAllocations: [
-      { slug: 'annual-leave', daysPerYear: 10 }, { slug: 'sick-leave', daysPerYear: 5 },
-      { slug: 'personal', daysPerYear: 2 }, { slug: 'maternity', daysPerYear: 90 },
-      { slug: 'paternity', daysPerYear: 10 }, { slug: 'bereavement', daysPerYear: 3 },
-      { slug: 'jury-duty', daysPerYear: 5 }, { slug: 'unpaid', daysPerYear: 15 },
-      { slug: 'study', daysPerYear: 3 }, { slug: 'wfh', daysPerYear: 26 },
-    ],
-  },
-  {
-    name: 'Contractor', description: 'Minimal allocation for contractors', isDefault: false,
-    slugAllocations: [
-      { slug: 'annual-leave', daysPerYear: 0 }, { slug: 'sick-leave', daysPerYear: 5 },
-      { slug: 'personal', daysPerYear: 0 }, { slug: 'unpaid', daysPerYear: 30 },
-    ],
-  },
-];
+}
 
-export async function seedDefaultPolicies(tenantId: string) {
+const POLICY_NAMES: Record<string, Record<string, { name: string; description: string }>> = {
+  en: {
+    fulltime: { name: 'Full-time', description: 'Standard allocation for full-time employees' },
+    parttime: { name: 'Part-time', description: 'Prorated allocation for part-time employees' },
+    contractor: { name: 'Contractor', description: 'Minimal allocation for contractors' },
+  },
+  tr: {
+    fulltime: { name: 'Tam zamanlı', description: 'Tam zamanlı çalışanlar için standart tahsis' },
+    parttime: { name: 'Yarı zamanlı', description: 'Yarı zamanlı çalışanlar için oranlanmış tahsis' },
+    contractor: { name: 'Yüklenici', description: 'Yükleniciler için minimum tahsis' },
+  },
+  de: {
+    fulltime: { name: 'Vollzeit', description: 'Standardzuteilung für Vollzeitbeschäftigte' },
+    parttime: { name: 'Teilzeit', description: 'Anteilige Zuteilung für Teilzeitbeschäftigte' },
+    contractor: { name: 'Auftragnehmer', description: 'Minimale Zuteilung für Auftragnehmer' },
+  },
+  fr: {
+    fulltime: { name: 'Temps plein', description: 'Allocation standard pour les employés à temps plein' },
+    parttime: { name: 'Temps partiel', description: 'Allocation au prorata pour les employés à temps partiel' },
+    contractor: { name: 'Prestataire', description: 'Allocation minimale pour les prestataires' },
+  },
+  it: {
+    fulltime: { name: 'Tempo pieno', description: 'Allocazione standard per dipendenti a tempo pieno' },
+    parttime: { name: 'Part-time', description: 'Allocazione proporzionale per dipendenti part-time' },
+    contractor: { name: 'Collaboratore', description: 'Allocazione minima per collaboratori' },
+  },
+};
+
+function getDefaultPolicyTemplates(language?: string): PolicyTemplate[] {
+  const lang = language && POLICY_NAMES[language] ? language : 'en';
+  const names = POLICY_NAMES[lang];
+  return [
+    {
+      ...names.fulltime, isDefault: true,
+      slugAllocations: [
+        { slug: 'annual-leave', daysPerYear: 20 }, { slug: 'sick-leave', daysPerYear: 10 },
+        { slug: 'personal', daysPerYear: 3 }, { slug: 'maternity', daysPerYear: 90 },
+        { slug: 'paternity', daysPerYear: 10 }, { slug: 'bereavement', daysPerYear: 5 },
+        { slug: 'jury-duty', daysPerYear: 5 }, { slug: 'unpaid', daysPerYear: 30 },
+        { slug: 'study', daysPerYear: 5 }, { slug: 'wfh', daysPerYear: 52 },
+      ],
+    },
+    {
+      ...names.parttime, isDefault: false,
+      slugAllocations: [
+        { slug: 'annual-leave', daysPerYear: 10 }, { slug: 'sick-leave', daysPerYear: 5 },
+        { slug: 'personal', daysPerYear: 2 }, { slug: 'maternity', daysPerYear: 90 },
+        { slug: 'paternity', daysPerYear: 10 }, { slug: 'bereavement', daysPerYear: 3 },
+        { slug: 'jury-duty', daysPerYear: 5 }, { slug: 'unpaid', daysPerYear: 15 },
+        { slug: 'study', daysPerYear: 3 }, { slug: 'wfh', daysPerYear: 26 },
+      ],
+    },
+    {
+      ...names.contractor, isDefault: false,
+      slugAllocations: [
+        { slug: 'annual-leave', daysPerYear: 0 }, { slug: 'sick-leave', daysPerYear: 5 },
+        { slug: 'personal', daysPerYear: 0 }, { slug: 'unpaid', daysPerYear: 30 },
+      ],
+    },
+  ];
+}
+
+export async function seedDefaultPolicies(tenantId: string, language?: string) {
   // Only seed if no policies exist
   const existing = await db.select({ id: hrLeavePolicies.id }).from(hrLeavePolicies)
     .where(and(eq(hrLeavePolicies.tenantId, tenantId), eq(hrLeavePolicies.isArchived, false))).limit(1);
@@ -145,7 +179,7 @@ export async function seedDefaultPolicies(tenantId: string) {
   const slugToId = new Map(leaveTypes.map(lt => [lt.slug, lt.id]));
 
   const created = [];
-  for (const template of DEFAULT_POLICY_TEMPLATES) {
+  for (const template of getDefaultPolicyTemplates(language)) {
     const allocations = template.slugAllocations
       .filter(a => slugToId.has(a.slug))
       .map(a => ({ leaveTypeId: slugToId.get(a.slug)!, daysPerYear: a.daysPerYear }));

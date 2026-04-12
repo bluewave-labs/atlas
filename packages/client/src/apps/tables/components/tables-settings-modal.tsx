@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   useTablesSettingsStore,
   type TablesDefaultView,
@@ -81,6 +82,7 @@ const TIMEZONE_OPTIONS: Array<{ value: string; label: string }> = [
 // ---------------------------------------------------------------------------
 
 export function TablesGeneralPanel(): ReactElement {
+  const { t } = useTranslation();
   const {
     defaultView, setDefaultView,
     defaultSort, setDefaultSort,
@@ -91,22 +93,22 @@ export function TablesGeneralPanel(): ReactElement {
 
   return (
     <div>
-      <SettingsSection title="New tables" description="Defaults applied when creating a new table.">
-        <SettingsRow label="Default view" description="Which view to open when creating a new table.">
+      <SettingsSection title={t('tables.settings.newTables')} description={t('tables.settings.newTablesDesc')}>
+        <SettingsRow label={t('tables.settings.defaultView')} description={t('tables.settings.defaultViewDesc')}>
           <SettingsSelect
             value={defaultView}
             options={DEFAULT_VIEW_OPTIONS}
             onChange={setDefaultView}
           />
         </SettingsRow>
-        <SettingsRow label="Default sort" description="Initial sort order for new tables.">
+        <SettingsRow label={t('tables.settings.defaultSort')} description={t('tables.settings.defaultSortDesc')}>
           <SettingsSelect
             value={defaultSort}
             options={DEFAULT_SORT_OPTIONS}
             onChange={setDefaultSort}
           />
         </SettingsRow>
-        <SettingsRow label="Default empty rows" description="Number of blank rows added to new tables.">
+        <SettingsRow label={t('tables.settings.defaultEmptyRows')} description={t('tables.settings.defaultEmptyRowsDesc')}>
           <SettingsSelect
             value={defaultRowCount}
             options={ROW_COUNT_OPTIONS}
@@ -115,15 +117,15 @@ export function TablesGeneralPanel(): ReactElement {
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection title="Display" description="How data is displayed in the grid.">
-        <SettingsRow label="Field type icons" description="Show type icons in column headers (text, number, date, etc.).">
-          <SettingsToggle checked={showFieldTypeIcons} onChange={setShowFieldTypeIcons} label="Field type icons" />
+      <SettingsSection title={t('tables.settings.display')} description={t('tables.settings.displayDesc')}>
+        <SettingsRow label={t('tables.settings.fieldTypeIcons')} description={t('tables.settings.fieldTypeIconsDesc')}>
+          <SettingsToggle checked={showFieldTypeIcons} onChange={setShowFieldTypeIcons} label={t('tables.settings.fieldTypeIcons')} />
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection title="Export" description="Options for exporting tables to Excel or CSV.">
-        <SettingsRow label="Include row IDs" description="Add a hidden _id column when exporting to Excel.">
-          <SettingsToggle checked={includeRowIdsInExport} onChange={setIncludeRowIdsInExport} label="Include row IDs" />
+      <SettingsSection title={t('tables.settings.export')} description={t('tables.settings.exportDesc')}>
+        <SettingsRow label={t('tables.settings.includeRowIds')} description={t('tables.settings.includeRowIdsDesc')}>
+          <SettingsToggle checked={includeRowIdsInExport} onChange={setIncludeRowIdsInExport} label={t('tables.settings.includeRowIds')} />
         </SettingsRow>
       </SettingsSection>
     </div>
@@ -135,6 +137,7 @@ export function TablesGeneralPanel(): ReactElement {
 // ---------------------------------------------------------------------------
 
 export function TablesRegionalPanel(): ReactElement {
+  const { t } = useTranslation();
   const {
     dateFormat, setDateFormat,
     currencySymbol, setCurrencySymbol,
@@ -143,15 +146,15 @@ export function TablesRegionalPanel(): ReactElement {
 
   return (
     <div>
-      <SettingsSection title="Date & time" description="These settings apply across all apps.">
-        <SettingsRow label="Date format" description="How dates are displayed everywhere in the app.">
+      <SettingsSection title={t('tables.settings.dateTime')} description={t('tables.settings.dateTimeDesc')}>
+        <SettingsRow label={t('tables.settings.dateFormat')} description={t('tables.settings.dateFormatDesc')}>
           <SettingsSelect
             value={dateFormat}
             options={DATE_FORMAT_OPTIONS}
             onChange={setDateFormat}
           />
         </SettingsRow>
-        <SettingsRow label="Timezone" description="Default timezone for date fields. Leave on auto to use your browser's timezone.">
+        <SettingsRow label={t('tables.settings.timezone')} description={t('tables.settings.timezoneDesc')}>
           <SettingsSelect
             value={timezone}
             options={TIMEZONE_OPTIONS}
@@ -160,8 +163,8 @@ export function TablesRegionalPanel(): ReactElement {
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection title="Currency" description="These settings apply across all apps.">
-        <SettingsRow label="Currency symbol" description="Symbol used for currency fields in tables and other apps.">
+      <SettingsSection title={t('tables.settings.currency')} description={t('tables.settings.currencyDesc')}>
+        <SettingsRow label={t('tables.settings.currencySymbol')} description={t('tables.settings.currencySymbolDesc')}>
           <SettingsSelect
             value={currencySymbol}
             options={CURRENCY_OPTIONS}
