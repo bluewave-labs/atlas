@@ -202,7 +202,7 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
         padding: 'var(--spacing-sm) var(--spacing-lg)',
         borderBottom: '1px solid var(--color-border-secondary)', flexShrink: 0,
       }}>
-        <StagePipeline stages={stages} currentStageId={deal.stageId} isWon={!!deal.wonAt} isLost={!!deal.lostAt} onChange={(stageId) => updateDeal.mutate({ id: deal.id, stageId })} />
+        <StagePipeline stages={stages} currentStageId={deal.stageId} isWon={!!deal.wonAt} isLost={!!deal.lostAt} onChange={(stageId) => updateDeal.mutate({ id: deal.id, updatedAt: deal.updatedAt, stageId })} />
       </div>
 
       {/* Main content */}
@@ -220,14 +220,14 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
               label={t('crm.deals.value')}
               value={String(deal.value)}
               type="number"
-              onSave={(v) => updateDeal.mutate({ id: deal.id, value: Number(v) || 0 })}
+              onSave={(v) => updateDeal.mutate({ id: deal.id, updatedAt: deal.updatedAt, value: Number(v) || 0 })}
             />
             <EditableField
               label={t('crm.deals.probability')}
               value={String(deal.probability)}
               type="number"
               suffix="%"
-              onSave={(v) => updateDeal.mutate({ id: deal.id, probability: Number(v) || 0 })}
+              onSave={(v) => updateDeal.mutate({ id: deal.id, updatedAt: deal.updatedAt, probability: Number(v) || 0 })}
             />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-medium)', textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'var(--font-family)' }}>
@@ -235,7 +235,7 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
               </span>
               <Select
                 value={deal.contactId || ''}
-                onChange={(v) => updateDeal.mutate({ id: deal.id, contactId: v || null })}
+                onChange={(v) => updateDeal.mutate({ id: deal.id, updatedAt: deal.updatedAt, contactId: v || null })}
                 options={[{ value: '', label: t('crm.deals.noneAssigned') }, ...contacts.map(c => ({ value: c.id, label: c.name }))]}
                 size="sm"
               />
@@ -246,7 +246,7 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
               </span>
               <Select
                 value={deal.companyId || ''}
-                onChange={(v) => updateDeal.mutate({ id: deal.id, companyId: v || null })}
+                onChange={(v) => updateDeal.mutate({ id: deal.id, updatedAt: deal.updatedAt, companyId: v || null })}
                 options={[{ value: '', label: t('crm.deals.noneAssigned') }, ...companies.map(c => ({ value: c.id, label: c.name }))]}
                 size="sm"
               />
@@ -255,7 +255,7 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
               label={t('crm.deals.expectedClose')}
               value={deal.expectedCloseDate ? deal.expectedCloseDate.split('T')[0] : ''}
               type="date"
-              onSave={(v) => updateDeal.mutate({ id: deal.id, expectedCloseDate: v || null })}
+              onSave={(v) => updateDeal.mutate({ id: deal.id, updatedAt: deal.updatedAt, expectedCloseDate: v || null })}
             />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-medium)', textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'var(--font-family)' }}>
@@ -263,7 +263,7 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
               </span>
               <Select
                 value={deal.stageId}
-                onChange={(v) => updateDeal.mutate({ id: deal.id, stageId: v })}
+                onChange={(v) => updateDeal.mutate({ id: deal.id, updatedAt: deal.updatedAt, stageId: v })}
                 options={stages.map(s => ({ value: s.id, label: s.name }))}
                 size="sm"
               />
