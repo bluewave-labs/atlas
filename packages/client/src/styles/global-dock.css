@@ -104,3 +104,11 @@
 .global-dock-item:hover .global-dock-tooltip {
   opacity: 1;
 }
+
+/* Hide dock when a bulk action bar is visible */
+body:has(.crm-bulk-bar) .global-dock,
+body:has(.dt-bulk-bar) .global-dock,
+body:has(.drive-bulk-bar) .global-dock {
+  opacity: 0;
+  pointer-events: none;
+}
