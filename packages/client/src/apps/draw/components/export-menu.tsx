@@ -149,6 +149,7 @@ export function ExportMenu({
             right: 0,
             marginTop: 4,
             minWidth: 180,
+            width: 'max-content',
             background: 'var(--color-bg-elevated)',
             border: '1px solid var(--color-border-primary)',
             borderRadius: 'var(--radius-md)',
@@ -175,6 +176,8 @@ export function ExportMenu({
                 fontFamily: 'var(--font-family)',
                 cursor: 'pointer',
                 transition: 'background 0.12s ease',
+                whiteSpace: 'nowrap',
+                textAlign: 'left',
               }}
               onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-surface-hover)')}
               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}

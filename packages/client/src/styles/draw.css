@@ -1,0 +1,77 @@
+/* ─── Draw app: Excalidraw context menu override ─────────────────── */
+/* Match Excalidraw's right-click menu to Atlas dropdown styling.
+ * Excalidraw exposes predictable classes: .context-menu, .context-menu-item,
+ * .context-menu-item__label, .context-menu-item__shortcut, .context-menu-item-separator.
+ * We target them under .excalidraw to avoid affecting other menus. */
+
+.excalidraw .context-menu {
+  background: var(--color-bg-elevated) !important;
+  border: 1px solid var(--color-border-primary) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+  padding: 4px !important;
+  font-family: var(--font-family) !important;
+  min-width: 200px;
+}
+
+.excalidraw .context-menu-item {
+  background: transparent !important;
+  border: none !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 6px 10px !important;
+  margin: 0 !important;
+  color: var(--color-text-primary) !important;
+  font-size: var(--font-size-sm) !important;
+  font-family: var(--font-family) !important;
+  transition: background 0.12s ease !important;
+}
+
+.excalidraw .context-menu-item:hover,
+.excalidraw .context-menu-item:focus {
+  background: var(--color-surface-hover) !important;
+  color: var(--color-text-primary) !important;
+}
+
+.excalidraw .context-menu-item__label {
+  color: inherit !important;
+  font-size: var(--font-size-sm) !important;
+  font-weight: var(--font-weight-normal) !important;
+}
+
+.excalidraw .context-menu-item__shortcut {
+  color: var(--color-text-tertiary) !important;
+  font-size: var(--font-size-xs) !important;
+  font-family: var(--font-family) !important;
+  opacity: 1 !important;
+}
+
+.excalidraw .context-menu-item-separator {
+  background: var(--color-border-secondary) !important;
+  margin: 4px 2px !important;
+  height: 1px !important;
+}
+
+/* Dark theme: inherit Atlas dark tokens (excalidraw's .theme--dark may also be applied) */
+[data-theme="dark"] .excalidraw .context-menu {
+  background: var(--color-bg-elevated) !important;
+  border-color: var(--color-border-primary) !important;
+}
+
+/* Also restyle the Excalidraw main menu (hamburger) to feel consistent */
+.excalidraw .dropdown-menu {
+  background: var(--color-bg-elevated) !important;
+  border: 1px solid var(--color-border-primary) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+  font-family: var(--font-family) !important;
+}
+
+.excalidraw .dropdown-menu-item {
+  border-radius: var(--radius-sm) !important;
+  font-family: var(--font-family) !important;
+  font-size: var(--font-size-sm) !important;
+}
+
+.excalidraw .dropdown-menu-item:hover {
+  background: var(--color-surface-hover) !important;
+}
