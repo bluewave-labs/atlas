@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next';
-import { CalendarDays, Check, XCircle, Trash2 } from 'lucide-react';
+import { CalendarDays, Check, XCircle, Trash2, CheckCircle, BarChart3 } from 'lucide-react';
 import { type HrTimeOff } from '../../hooks';
 import { useAppActions } from '../../../../hooks/use-app-permissions';
 import { IconButton } from '../../../../components/ui/icon-button';
 import { getTimeOffTypeBadge, getTimeOffStatusBadge } from '../../lib/hr-utils';
 import { formatDate } from '../../../../lib/format';
+import { FeatureEmptyState } from '../../../../components/ui/feature-empty-state';
 
 export function TimeOffView({
   timeOffRequests,
@@ -21,11 +22,16 @@ export function TimeOffView({
   const { canDelete } = useAppActions('hr');
   if (timeOffRequests.length === 0) {
     return (
-      <div className="hr-empty-state">
-        <CalendarDays size={48} className="hr-empty-state-icon" />
-        <div className="hr-empty-state-title">{t('hr.timeOff.empty')}</div>
-        <div className="hr-empty-state-desc">{t('hr.timeOff.emptyDesc')}</div>
-      </div>
+      <FeatureEmptyState
+        illustration="calendar"
+        title={t('hr.leave.noRequests', 'No leave requests')}
+        description={t('hr.leave.noRequestsDesc', 'Leave requests from your team will appear here.')}
+        highlights={[
+          { icon: <CalendarDays size={14} />, title: t('hr.leave.requestLeave', 'Request time off'), description: t('hr.leave.requestLeaveDesc', 'Submit vacation, sick leave, or personal days') },
+          { icon: <CheckCircle size={14} />, title: t('hr.leave.approvals', 'Approval workflow'), description: t('hr.leave.approvalsDesc', 'Managers review and approve requests') },
+          { icon: <BarChart3 size={14} />, title: t('hr.leave.balances', 'Track balances'), description: t('hr.leave.balancesDesc', 'See remaining days for each leave type') },
+        ]}
+      />
     );
   }
 

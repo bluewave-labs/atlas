@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Building2, Trash2, Edit3, Users } from 'lucide-react';
+import { Building2, Trash2, Edit3, Users, BarChart3 } from 'lucide-react';
 import { type HrDepartment, type HrEmployee } from '../../hooks';
 import { useAppActions } from '../../../../hooks/use-app-permissions';
 import { IconButton } from '../../../../components/ui/icon-button';
 import { Avatar } from '../../../../components/ui/avatar';
 import { Card } from '../../../../components/ui/card';
+import { FeatureEmptyState } from '../../../../components/ui/feature-empty-state';
 
 export function DepartmentsView({
   departments,
@@ -43,11 +44,16 @@ export function DepartmentsView({
 
   if (departments.length === 0) {
     return (
-      <div className="hr-empty-state">
-        <Building2 size={48} className="hr-empty-state-icon" />
-        <div className="hr-empty-state-title">{t('hr.departments.empty')}</div>
-        <div className="hr-empty-state-desc">{t('hr.departments.emptyDesc')}</div>
-      </div>
+      <FeatureEmptyState
+        illustration="employees"
+        title={t('hr.departments.noDepartments', 'No departments')}
+        description={t('hr.departments.noDepartmentsDesc', 'Create your first department to organize your team.')}
+        highlights={[
+          { icon: <Building2 size={14} />, title: t('hr.departments.organize', 'Organize teams'), description: t('hr.departments.organizeDesc', 'Group employees by department') },
+          { icon: <Users size={14} />, title: t('hr.departments.managers', 'Assign managers'), description: t('hr.departments.managersDesc', 'Set department leads and reporting lines') },
+          { icon: <BarChart3 size={14} />, title: t('hr.departments.insights', 'Track headcount'), description: t('hr.departments.insightsDesc', 'See department size and growth') },
+        ]}
+      />
     );
   }
 

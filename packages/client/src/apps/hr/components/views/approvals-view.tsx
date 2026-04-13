@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle, XCircle, Clock, CheckSquare } from 'lucide-react';
+import { CheckCircle, XCircle, Clock } from 'lucide-react';
 import {
   usePendingApprovals,
   useApproveLeaveApplication,
@@ -14,6 +14,7 @@ import { Skeleton } from '../../../../components/ui/skeleton';
 import { Input } from '../../../../components/ui/input';
 import { formatDate } from '../../../../lib/format';
 import { useToastStore } from '../../../../stores/toast-store';
+import { FeatureEmptyState } from '../../../../components/ui/feature-empty-state';
 
 export function ApprovalsView() {
   const { t } = useTranslation();
@@ -68,20 +69,14 @@ export function ApprovalsView() {
 
   if (!approvals || approvals.length === 0) {
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-        gap: 'var(--spacing-md)',
-        color: 'var(--color-text-tertiary)',
-
-        padding: 'var(--spacing-2xl)',
-      }}>
-        <CheckSquare size={40} strokeWidth={1.2} />
-        <span style={{ fontSize: 'var(--font-size-md)' }}>{t('hr.approvals.empty')}</span>
-      </div>
+      <FeatureEmptyState
+        illustration="tasks"
+        title={t('hr.approvals.noPending', 'No pending approvals')}
+        description={t('hr.approvals.noPendingDesc', 'All leave requests have been reviewed.')}
+        highlights={[
+          { icon: <CheckCircle size={14} />, title: t('hr.approvals.upToDate', 'All caught up'), description: t('hr.approvals.upToDateDesc', 'No requests waiting for your review') },
+        ]}
+      />
     );
   }
 
