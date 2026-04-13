@@ -18,6 +18,7 @@ import { CommandPalette } from './components/ui/command-palette';
 import { ToastContainer } from './components/ui/toast';
 import { ErrorBoundary } from './components/ui/error-boundary';
 import { SessionExpiredModal } from './components/ui/session-expired-modal';
+import { ConflictDialog } from './components/shared/conflict-dialog';
 import { type ReactNode } from 'react';
 import { useMyAccessibleApps } from './hooks/use-app-permissions';
 import { GlobalDock } from './components/layout/global-dock';
@@ -158,6 +159,7 @@ export function App() {
               <GlobalDockWrapper />
               <CommandPalette />
               <SettingsModal />
+              <ConflictDialog />
             </ErrorBoundary>
             </BrowserRouter>
           </ShortcutProvider>

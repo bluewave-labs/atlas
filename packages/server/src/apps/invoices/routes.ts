@@ -2,6 +2,8 @@ import { Router, Request, Response, NextFunction } from 'express';
 import * as invoiceController from './controller';
 import { authMiddleware } from '../../middleware/auth';
 import { requireAppPermission } from '../../middleware/require-app-permission';
+import { withConcurrencyCheck } from '../../middleware/concurrency-check';
+import { invoices, recurringInvoices } from '../../db/schema';
 import { isTenantAdmin } from '@atlas-platform/shared';
 
 function requireSeedAdmin(req: Request, res: Response, next: NextFunction) {
@@ -35,7 +37,7 @@ router.get('/dashboard', invoiceController.getInvoicesDashboard);
 router.get('/recurring', invoiceController.listRecurring);
 router.post('/recurring', invoiceController.createRecurring);
 router.get('/recurring/:id', invoiceController.getRecurring);
-router.patch('/recurring/:id', invoiceController.updateRecurring);
+router.patch('/recurring/:id', withConcurrencyCheck(recurringInvoices), invoiceController.updateRecurring);
 router.delete('/recurring/:id', invoiceController.deleteRecurring);
 router.post('/recurring/:id/pause', invoiceController.pauseRecurring);
 router.post('/recurring/:id/resume', invoiceController.resumeRecurring);
@@ -50,7 +52,7 @@ router.get('/next-number', invoiceController.getNextInvoiceNumber);
 router.post('/', invoiceController.createInvoice);
 router.get('/:id/pdf', invoiceController.getInvoicePdf);
 router.get('/:id', invoiceController.getInvoice);
-router.patch('/:id', invoiceController.updateInvoice);
+router.patch('/:id', withConcurrencyCheck(invoices), invoiceController.updateInvoice);
 router.delete('/:id', invoiceController.deleteInvoice);
 router.post('/:id/send', invoiceController.sendInvoice);
 router.post('/:id/email', invoiceController.emailInvoice);

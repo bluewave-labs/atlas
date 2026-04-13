@@ -2,6 +2,8 @@ import { Router, Request, Response, NextFunction } from 'express';
 import * as documentController from './controller';
 import { authMiddleware } from '../../middleware/auth';
 import { requireAppPermission } from '../../middleware/require-app-permission';
+import { withConcurrencyCheck } from '../../middleware/concurrency-check';
+import { documents } from '../../db/schema';
 import { isTenantAdmin } from '@atlas-platform/shared';
 
 function requireSeedAdmin(req: Request, res: Response, next: NextFunction) {
@@ -32,7 +34,7 @@ router.delete('/comments/:commentId', documentController.deleteComment);
 router.patch('/comments/:commentId/resolve', documentController.resolveComment);
 
 router.get('/:id', documentController.getDocument);
-router.patch('/:id', documentController.updateDocument);
+router.patch('/:id', withConcurrencyCheck(documents), documentController.updateDocument);
 router.patch('/:id/visibility', documentController.updateDocumentVisibility);
 router.delete('/:id', documentController.deleteDocument);
 router.patch('/:id/move', documentController.moveDocument);

@@ -2,6 +2,12 @@
   "common": {
     "loading": "Yükleniyor...",
     "cancel": "İptal",
+    "conflict": {
+      "title": "Çakışan değişiklikler",
+      "description": "Bu kayıt siz düzenlerken başka biri tarafından değiştirildi. Değişiklikleriniz daha eski bir sürüme dayanıyor.",
+      "refresh": "Yenile",
+      "override": "Üzerine yaz"
+    },
     "confirm": "Onayla",
     "save": "Kaydet",
     "delete": "Sil",

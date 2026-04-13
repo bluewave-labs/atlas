@@ -2,9 +2,18 @@ import { Router, Request, Response, NextFunction } from 'express';
 import * as crmController from './controller';
 import { authMiddleware } from '../../middleware/auth';
 import { requireAppPermission } from '../../middleware/require-app-permission';
+import { withConcurrencyCheck } from '../../middleware/concurrency-check';
 import { isTenantAdmin } from '@atlas-platform/shared';
 import { db } from '../../config/database';
-import { accounts, tenantMembers } from '../../db/schema';
+import {
+  accounts,
+  tenantMembers,
+  crmCompanies,
+  crmContacts,
+  crmDeals,
+  crmLeads,
+  crmActivities,
+} from '../../db/schema';
 import { eq, inArray } from 'drizzle-orm';
 
 function requireSeedAdmin(req: Request, res: Response, next: NextFunction) {
@@ -38,7 +47,7 @@ router.get('/companies/list', crmController.listCompanies);
 router.post('/companies/import', crmController.importCompanies);
 router.post('/companies', crmController.createCompany);
 router.get('/companies/:id', crmController.getCompany);
-router.patch('/companies/:id', crmController.updateCompany);
+router.patch('/companies/:id', withConcurrencyCheck(crmCompanies), crmController.updateCompany);
 router.delete('/companies/:id', crmController.deleteCompany);
 router.post('/companies/:id/regenerate-token', crmController.regeneratePortalToken);
 
@@ -47,7 +56,7 @@ router.get('/contacts/list', crmController.listContacts);
 router.post('/contacts/import', crmController.importContacts);
 router.post('/contacts', crmController.createContact);
 router.get('/contacts/:id', crmController.getContact);
-router.patch('/contacts/:id', crmController.updateContact);
+router.patch('/contacts/:id', withConcurrencyCheck(crmContacts), crmController.updateContact);
 router.delete('/contacts/:id', crmController.deleteContact);
 
 // Deal Stages
@@ -65,7 +74,7 @@ router.get('/deals/pipeline-value', crmController.pipelineValue);
 router.post('/deals/import', crmController.importDeals);
 router.post('/deals', crmController.createDeal);
 router.get('/deals/:id', crmController.getDeal);
-router.patch('/deals/:id', crmController.updateDeal);
+router.patch('/deals/:id', withConcurrencyCheck(crmDeals), crmController.updateDeal);
 router.delete('/deals/:id', crmController.deleteDeal);
 router.post('/deals/:id/won', crmController.markDealWon);
 router.post('/deals/:id/lost', crmController.markDealLost);
@@ -92,7 +101,7 @@ router.delete('/activity-types/:id', crmController.deleteActivityType);
 router.get('/activities/list', crmController.listActivities);
 router.post('/activities', crmController.createActivity);
 router.post('/activities/:id/complete', crmController.completeActivity);
-router.patch('/activities/:id', crmController.updateActivity);
+router.patch('/activities/:id', withConcurrencyCheck(crmActivities), crmController.updateActivity);
 router.delete('/activities/:id', crmController.deleteActivity);
 
 // Workflow Automations
@@ -107,7 +116,7 @@ router.post('/workflows/:id/toggle', crmController.toggleWorkflow);
 router.get('/leads/list', crmController.listLeads);
 router.post('/leads', crmController.createLead);
 router.get('/leads/:id', crmController.getLead);
-router.patch('/leads/:id', crmController.updateLead);
+router.patch('/leads/:id', withConcurrencyCheck(crmLeads), crmController.updateLead);
 router.delete('/leads/:id', crmController.deleteLead);
 router.post('/leads/:id/convert', crmController.convertLead);
 router.post('/leads/:id/enrich', crmController.enrichLead);

@@ -2,6 +2,12 @@
   "common": {
     "loading": "Caricamento...",
     "cancel": "Annulla",
+    "conflict": {
+      "title": "Modifiche in conflitto",
+      "description": "Questo record è stato modificato da qualcun altro mentre lo stavi modificando. Le tue modifiche si basano su una versione precedente.",
+      "refresh": "Aggiorna",
+      "override": "Sovrascrivi"
+    },
     "confirm": "Conferma",
     "save": "Salva",
     "delete": "Elimina",

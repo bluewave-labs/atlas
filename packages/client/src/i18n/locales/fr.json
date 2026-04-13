@@ -2,6 +2,12 @@
   "common": {
     "loading": "Chargement...",
     "cancel": "Annuler",
+    "conflict": {
+      "title": "Modifications conflictuelles",
+      "description": "Cet enregistrement a été modifié par quelqu'un d'autre pendant que vous l'éditiez. Vos modifications sont basées sur une version plus ancienne.",
+      "refresh": "Actualiser",
+      "override": "Écraser"
+    },
     "confirm": "Confirmer",
     "save": "Enregistrer",
     "delete": "Supprimer",

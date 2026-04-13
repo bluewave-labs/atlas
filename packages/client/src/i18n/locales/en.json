@@ -2,6 +2,12 @@
   "common": {
     "loading": "Loading...",
     "cancel": "Cancel",
+    "conflict": {
+      "title": "Conflicting changes",
+      "description": "This record was modified by someone else while you were editing. Your changes are based on an older version.",
+      "refresh": "Refresh",
+      "override": "Override"
+    },
     "confirm": "Confirm",
     "save": "Save",
     "delete": "Delete",

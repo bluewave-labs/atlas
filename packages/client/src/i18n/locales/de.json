@@ -2,6 +2,12 @@
   "common": {
     "loading": "Wird geladen…",
     "cancel": "Abbrechen",
+    "conflict": {
+      "title": "Konflikt bei Änderungen",
+      "description": "Dieser Datensatz wurde von jemand anderem geändert, während Sie ihn bearbeitet haben. Ihre Änderungen basieren auf einer älteren Version.",
+      "refresh": "Aktualisieren",
+      "override": "Überschreiben"
+    },
     "confirm": "Bestätigen",
     "save": "Speichern",
     "delete": "Löschen",

@@ -4,6 +4,8 @@ import path from 'path';
 import * as hrController from './controller';
 import { authMiddleware } from '../../middleware/auth';
 import { requireAppPermission } from '../../middleware/require-app-permission';
+import { withConcurrencyCheck } from '../../middleware/concurrency-check';
+import { hrEmployees } from '../../db/schema';
 import { isTenantAdmin } from '@atlas-platform/shared';
 
 function requireSeedAdmin(req: Request, res: Response, next: NextFunction) {
@@ -175,7 +177,7 @@ router.post('/', hrController.createEmployee);
 router.get('/search', hrController.searchEmployees);
 router.get('/counts', hrController.getEmployeeCounts);
 router.get('/:id', hrController.getEmployee);
-router.patch('/:id', hrController.updateEmployee);
+router.patch('/:id', withConcurrencyCheck(hrEmployees), hrController.updateEmployee);
 router.delete('/:id', hrController.deleteEmployee);
 
 // Employee leave balances

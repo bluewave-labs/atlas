@@ -2,6 +2,8 @@ import { Router, Request, Response, NextFunction } from 'express';
 import * as projectsController from './controller';
 import { authMiddleware } from '../../middleware/auth';
 import { requireAppPermission } from '../../middleware/require-app-permission';
+import { withConcurrencyCheck } from '../../middleware/concurrency-check';
+import { projectProjects, projectTimeEntries } from '../../db/schema';
 import { isTenantAdmin } from '@atlas-platform/shared';
 
 function requireSeedAdmin(req: Request, res: Response, next: NextFunction) {
@@ -28,7 +30,7 @@ router.get('/dashboard', projectsController.getDashboardData);
 router.get('/projects/list', projectsController.listProjects);
 router.post('/projects', projectsController.createProject);
 router.get('/projects/:id', projectsController.getProject);
-router.patch('/projects/:id', projectsController.updateProject);
+router.patch('/projects/:id', withConcurrencyCheck(projectProjects), projectsController.updateProject);
 router.delete('/projects/:id', projectsController.deleteProject);
 
 // Members
@@ -45,7 +47,7 @@ router.post('/time-entries/bulk', projectsController.bulkSaveTimeEntries);
 router.post('/time-entries/copy-last-week', projectsController.copyLastWeek);
 router.post('/time-entries', projectsController.createTimeEntry);
 router.get('/time-entries/:id', projectsController.getTimeEntry);
-router.patch('/time-entries/:id', projectsController.updateTimeEntry);
+router.patch('/time-entries/:id', withConcurrencyCheck(projectTimeEntries), projectsController.updateTimeEntry);
 router.delete('/time-entries/:id', projectsController.deleteTimeEntry);
 
 // Time Billing (populate invoices from time entries)

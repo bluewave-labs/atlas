@@ -5,6 +5,8 @@ import path from 'path';
 import * as signController from './controller';
 import { authMiddleware } from '../../middleware/auth';
 import { requireAppPermission } from '../../middleware/require-app-permission';
+import { withConcurrencyCheck } from '../../middleware/concurrency-check';
+import { signatureDocuments } from '../../db/schema';
 import { isTenantAdmin } from '@atlas-platform/shared';
 
 function requireSeedAdmin(req: Request, res: Response, next: NextFunction) {
@@ -78,7 +80,7 @@ router.get('/', signController.listDocuments);
 router.post('/', signController.createDocument);
 router.post('/upload', upload.single('pdf'), signController.uploadPDF);
 router.get('/:id', signController.getDocument);
-router.put('/:id', signController.updateDocument);
+router.put('/:id', withConcurrencyCheck(signatureDocuments), signController.updateDocument);
 router.delete('/:id', signController.deleteDocument);
 router.get('/:id/view', signController.viewPDF);
 router.get('/:id/download', signController.downloadPDF);

@@ -5,6 +5,8 @@ import path from 'path';
 import * as taskController from './controller';
 import { authMiddleware } from '../../middleware/auth';
 import { requireAppPermission } from '../../middleware/require-app-permission';
+import { withConcurrencyCheck } from '../../middleware/concurrency-check';
+import { tasks, taskProjects } from '../../db/schema';
 import { isTenantAdmin } from '@atlas-platform/shared';
 
 function requireSeedAdmin(req: Request, res: Response, next: NextFunction) {
@@ -87,7 +89,7 @@ router.get('/search', taskController.searchTasks);
 router.get('/counts', taskController.getTaskCounts);
 router.patch('/reorder', taskController.reorderTasks);
 router.get('/:id', taskController.getTask);
-router.patch('/:id', taskController.updateTask);
+router.patch('/:id', withConcurrencyCheck(tasks), taskController.updateTask);
 router.patch('/:id/visibility', taskController.updateTaskVisibility);
 router.delete('/:id', taskController.deleteTask);
 router.patch('/:id/restore', taskController.restoreTask);
@@ -98,7 +100,7 @@ router.post('/seed', requireSeedAdmin, taskController.seedSampleTasks);
 // Projects
 router.get('/projects/list', taskController.listProjects);
 router.post('/projects', taskController.createProject);
-router.patch('/projects/:id', taskController.updateProject);
+router.patch('/projects/:id', withConcurrencyCheck(taskProjects), taskController.updateProject);
 router.patch('/projects/:id/visibility', taskController.updateProjectVisibility);
 router.delete('/projects/:id', taskController.deleteProject);
 

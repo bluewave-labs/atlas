@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { config } from '../config/env';
 import { useAuthStore } from '../stores/auth-store';
+import { useConflictStore } from '../stores/conflict-store';
 
 export const api = axios.create({
   baseURL: config.apiUrl,
@@ -119,6 +120,23 @@ api.interceptors.response.use(
         isRefreshing = false;
       }
     }
+
+    // ─── 409 STALE_RESOURCE conflict handling ────────────────────────────────
+    if (
+      error.response?.status === 409 &&
+      error.response.data?.code === 'STALE_RESOURCE'
+    ) {
+      const conflictRequest = error.config;
+      const currentUpdatedAt = error.response.data?.current?.updatedAt;
+      if (currentUpdatedAt && conflictRequest) {
+        return new Promise((resolve, reject) => {
+          useConflictStore
+            .getState()
+            .openConflict(conflictRequest, currentUpdatedAt, resolve, reject);
+        });
+      }
+    }
+
     return Promise.reject(error);
   },
 );
