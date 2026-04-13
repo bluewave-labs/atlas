@@ -214,23 +214,3 @@ export async function createLinkedDrawing(req: Request, res: Response) {
   }
 }
 
-// POST /api/drive/create-spreadsheet
-export async function createLinkedSpreadsheet(req: Request, res: Response) {
-  try {
-    const perm = req.drivePerm!;
-    if (!canAccess(perm.role, 'create')) {
-      res.status(403).json({ success: false, error: 'No permission to create in drive' });
-      return;
-    }
-
-    const userId = req.auth!.userId;
-    const tenantId = req.auth!.tenantId;
-    const { parentId } = req.body as { parentId?: string };
-
-    const result = await driveService.createLinkedSpreadsheet(userId, tenantId, parentId);
-    res.json({ success: true, data: result });
-  } catch (error) {
-    logger.error({ error }, 'Failed to create linked spreadsheet');
-    res.status(500).json({ success: false, error: 'Failed to create linked spreadsheet' });
-  }
-}

@@ -70,34 +70,3 @@ export async function createLinkedDrawing(userId: string, tenantId: string, pare
   return { driveItem: normalizeTags(created), resourceId: drawing.id };
 }
 
-export async function createLinkedSpreadsheet(userId: string, tenantId: string, parentId?: string | null) {
-  const { createSpreadsheet } = await import('../../tables/service');
-  const spreadsheet = await createSpreadsheet(userId, tenantId, { title: 'Untitled spreadsheet' });
-
-  const now = new Date();
-  const [maxSort] = await db
-    .select({ max: sql<number>`COALESCE(MAX(${driveItems.sortOrder}), -1)` })
-    .from(driveItems)
-    .where(eq(driveItems.userId, userId));
-  const sortOrder = (maxSort?.max ?? -1) + 1;
-
-  const [created] = await db
-    .insert(driveItems)
-    .values({
-      tenantId,
-      userId,
-      name: 'Untitled spreadsheet',
-      type: 'file',
-      mimeType: 'application/vnd.atlasmail.spreadsheet',
-      parentId: parentId || null,
-      linkedResourceType: 'spreadsheet',
-      linkedResourceId: spreadsheet.id,
-      sortOrder,
-      createdAt: now,
-      updatedAt: now,
-    })
-    .returning();
-
-  logger.info({ userId, itemId: created.id, resourceId: spreadsheet.id }, 'Linked spreadsheet created in Drive');
-  return { driveItem: normalizeTags(created), resourceId: spreadsheet.id };
-}

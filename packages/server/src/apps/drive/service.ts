@@ -53,7 +53,6 @@ export {
 export {
   createLinkedDocument,
   createLinkedDrawing,
-  createLinkedSpreadsheet,
 } from './services/linked-resources.service';
 
 export {

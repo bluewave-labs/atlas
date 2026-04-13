@@ -33,7 +33,6 @@ export {
   previewFile,
   createLinkedDocument,
   createLinkedDrawing,
-  createLinkedSpreadsheet,
 } from './controllers/file-ops.controller';
 
 export {

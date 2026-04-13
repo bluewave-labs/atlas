@@ -78,7 +78,6 @@ router.post('/batch/favourite', driveController.batchFavourite);
 router.post('/seed', requireSeedAdmin, driveController.seedSampleData);
 router.post('/create-document', driveController.createLinkedDocument);
 router.post('/create-drawing', driveController.createLinkedDrawing);
-router.post('/create-spreadsheet', driveController.createLinkedSpreadsheet);
 router.get('/shared-with-me', driveController.getSharedWithMe);
 router.delete('/share/:linkId', driveController.deleteShareLink);
 router.delete('/comments/:commentId', driveController.deleteComment);
