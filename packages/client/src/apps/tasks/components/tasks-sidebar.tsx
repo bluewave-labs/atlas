@@ -4,7 +4,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { TaskProject } from '@atlas-platform/shared';
-import { AppSidebar } from '../../../components/layout/app-sidebar';
+import { AppSidebar, SidebarItem, SidebarSection } from '../../../components/layout/app-sidebar';
 import { IconButton } from '../../../components/ui/icon-button';
 import { Button } from '../../../components/ui/button';
 import { NAV_ITEMS, type NavSection } from '../lib/constants';
@@ -69,44 +69,31 @@ export function TasksSidebar({
   return (
     <AppSidebar storageKey="atlas_tasks_sidebar" title={t('tasks.title')}>
       {/* Nav items */}
-      <div className="tasks-nav-section">
+      <SidebarSection>
         {NAV_ITEMS.map(item => (
-          <button
+          <SidebarItem
             key={item.id}
-            className={`task-nav-item${activeSection === item.id ? ' active' : ''}`}
+            label={t(item.labelKey)}
+            icon={<item.icon size={15} />}
+            isActive={activeSection === item.id}
+            count={navCounts[item.id as keyof typeof navCounts] > 0 ? navCounts[item.id as keyof typeof navCounts] : undefined}
             onClick={() => onSectionChange(item.id)}
-          >
-            <item.icon size={16} color={item.color} strokeWidth={1.8} />
-            <span style={{ flex: 1 }}>{t(item.labelKey)}</span>
-            {navCounts[item.id as keyof typeof navCounts] > 0 && (
-              <span className="task-nav-count">
-                {navCounts[item.id as keyof typeof navCounts]}
-              </span>
-            )}
-          </button>
+          />
         ))}
-        {/* Assigned to me */}
-        <button
-          className={`task-nav-item${activeSection === 'assignedToMe' ? ' active' : ''}`}
+        <SidebarItem
+          label={t('tasks.assignedToMe')}
+          icon={<User size={15} />}
+          isActive={activeSection === 'assignedToMe'}
+          count={navCounts.assignedToMe > 0 ? navCounts.assignedToMe : undefined}
           onClick={() => onSectionChange('assignedToMe')}
-        >
-          <User size={16} color="#8b5cf6" strokeWidth={1.8} />
-          <span style={{ flex: 1 }}>{t('tasks.assignedToMe')}</span>
-          {navCounts.assignedToMe > 0 && (
-            <span className="task-nav-count">
-              {navCounts.assignedToMe}
-            </span>
-          )}
-        </button>
-        {/* Calendar */}
-        <button
-          className={`task-nav-item${activeSection === 'calendar' ? ' active' : ''}`}
+        />
+        <SidebarItem
+          label={t('tasks.sidebar.calendar')}
+          icon={<CalendarDays size={15} />}
+          isActive={activeSection === 'calendar'}
           onClick={() => onSectionChange('calendar')}
-        >
-          <CalendarDays size={16} color="#10b981" strokeWidth={1.8} />
-          <span style={{ flex: 1 }}>{t('tasks.sidebar.calendar')}</span>
-        </button>
-      </div>
+        />
+      </SidebarSection>
 
       {/* Projects section */}
       <div style={{ marginTop: 16, padding: '0 8px' }}>

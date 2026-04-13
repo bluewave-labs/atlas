@@ -7,7 +7,7 @@ import {
   FileImage, FileText, FileVideo, X, FolderInput, Settings,
   Music, Table2, Pencil, Users,
 } from 'lucide-react';
-import { AppSidebar } from '../../components/layout/app-sidebar';
+import { AppSidebar, SidebarItem, SidebarSection } from '../../components/layout/app-sidebar';
 import { Button } from '../../components/ui/button';
 import { IconButton } from '../../components/ui/icon-button';
 import { Chip } from '../../components/ui/chip';
@@ -93,19 +93,23 @@ export function DrivePage() {
           );
         })() : undefined}
       >
-        <nav className="drive-sidebar-nav">
-          <button className={`drive-nav-item ${d.sidebarView === 'files' && !d.folderId ? 'active' : ''}`} onClick={() => { d.setSidebarView('files'); d.setSearchQuery(''); d.navigate(ROUTES.DRIVE); }} onDragOver={(e) => { if (d.dragItemId) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }} onDrop={d.handleSidebarRootDrop}><HardDrive size={16} style={{ color: '#3b82f6' }} /> {t('drive.sidebar.myDrive')}</button>
-          <button className={`drive-nav-item ${d.sidebarView === 'favourites' ? 'active' : ''}`} onClick={() => { d.setSidebarView('favourites'); d.setSearchQuery(''); }}><Heart size={16} style={{ color: '#ef4444' }} /> {t('drive.sidebar.favourites')}</button>
-          <button className={`drive-nav-item ${d.sidebarView === 'recent' ? 'active' : ''}`} onClick={() => { d.setSidebarView('recent'); d.setSearchQuery(''); }}><Clock size={16} style={{ color: '#f59e0b' }} /> {t('drive.sidebar.recent')}</button>
-          <button className={`drive-nav-item ${d.sidebarView === 'trash' ? 'active' : ''}`} onClick={() => { d.setSidebarView('trash'); d.setSearchQuery(''); }} onDragOver={(e) => { if (d.dragItemId) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }} onDrop={d.handleSidebarTrashDrop}><Trash2 size={16} style={{ color: '#78716c' }} /> {t('drive.sidebar.trash')}</button>
-          <button className={`drive-nav-item ${d.sidebarView === 'shared' ? 'active' : ''}`} onClick={() => { d.setSidebarView('shared'); d.setSearchQuery(''); }}><Users size={16} style={{ color: '#8b5cf6' }} /> {d.t('drive.sidebar.sharedWithMe')}</button>
-          <div className="drive-nav-divider" />
-          <div className="drive-nav-section-label">{t('drive.sidebar.fileTypes')}</div>
-          <button className={`drive-nav-item ${d.sidebarView === 'images' ? 'active' : ''}`} onClick={() => { d.setSidebarView('images'); d.setSearchQuery(''); }}><FileImage size={16} style={{ color: '#e06c9f' }} /> {t('drive.sidebar.images')}</button>
-          <button className={`drive-nav-item ${d.sidebarView === 'documents' ? 'active' : ''}`} onClick={() => { d.setSidebarView('documents'); d.setSearchQuery(''); }}><FileText size={16} style={{ color: '#3b82f6' }} /> {t('drive.sidebar.documents')}</button>
-          <button className={`drive-nav-item ${d.sidebarView === 'videos' ? 'active' : ''}`} onClick={() => { d.setSidebarView('videos'); d.setSearchQuery(''); }}><FileVideo size={16} style={{ color: '#8b5cf6' }} /> {t('drive.sidebar.videos')}</button>
-          <button className={`drive-nav-item ${d.sidebarView === 'audio' ? 'active' : ''}`} onClick={() => { d.setSidebarView('audio'); d.setSearchQuery(''); }}><Music size={16} style={{ color: '#f59e0b' }} /> {t('drive.sidebar.audio')}</button>
-        </nav>
+        <SidebarSection>
+          <div onDragOver={(e) => { if (d.dragItemId) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }} onDrop={d.handleSidebarRootDrop}>
+            <SidebarItem label={t('drive.sidebar.myDrive')} icon={<HardDrive size={15} />} isActive={d.sidebarView === 'files' && !d.folderId} onClick={() => { d.setSidebarView('files'); d.setSearchQuery(''); d.navigate(ROUTES.DRIVE); }} />
+          </div>
+          <SidebarItem label={t('drive.sidebar.favourites')} icon={<Heart size={15} />} isActive={d.sidebarView === 'favourites'} onClick={() => { d.setSidebarView('favourites'); d.setSearchQuery(''); }} />
+          <SidebarItem label={t('drive.sidebar.recent')} icon={<Clock size={15} />} isActive={d.sidebarView === 'recent'} onClick={() => { d.setSidebarView('recent'); d.setSearchQuery(''); }} />
+          <div onDragOver={(e) => { if (d.dragItemId) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }} onDrop={d.handleSidebarTrashDrop}>
+            <SidebarItem label={t('drive.sidebar.trash')} icon={<Trash2 size={15} />} isActive={d.sidebarView === 'trash'} onClick={() => { d.setSidebarView('trash'); d.setSearchQuery(''); }} />
+          </div>
+          <SidebarItem label={d.t('drive.sidebar.sharedWithMe')} icon={<Users size={15} />} isActive={d.sidebarView === 'shared'} onClick={() => { d.setSidebarView('shared'); d.setSearchQuery(''); }} />
+        </SidebarSection>
+        <SidebarSection title={t('drive.sidebar.fileTypes')}>
+          <SidebarItem label={t('drive.sidebar.images')} icon={<FileImage size={15} />} isActive={d.sidebarView === 'images'} onClick={() => { d.setSidebarView('images'); d.setSearchQuery(''); }} />
+          <SidebarItem label={t('drive.sidebar.documents')} icon={<FileText size={15} />} isActive={d.sidebarView === 'documents'} onClick={() => { d.setSidebarView('documents'); d.setSearchQuery(''); }} />
+          <SidebarItem label={t('drive.sidebar.videos')} icon={<FileVideo size={15} />} isActive={d.sidebarView === 'videos'} onClick={() => { d.setSidebarView('videos'); d.setSearchQuery(''); }} />
+          <SidebarItem label={t('drive.sidebar.audio')} icon={<Music size={15} />} isActive={d.sidebarView === 'audio'} onClick={() => { d.setSidebarView('audio'); d.setSearchQuery(''); }} />
+        </SidebarSection>
       </AppSidebar>
 
       {/* Main content */}
