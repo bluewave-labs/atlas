@@ -2267,6 +2267,9 @@
       "clear": "Clear selection",
       "selectAll": "Select all",
       "favourite": "Favourite"
+    },
+    "linkedFrom": {
+      "title": "Linked records"
     }
   },
   "hr": {

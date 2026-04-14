@@ -2205,6 +2205,9 @@
       "clear": "Seçimi temizle",
       "selectAll": "Tümünü seç",
       "favourite": "Favori"
+    },
+    "linkedFrom": {
+      "title": "Bağlı kayıtlar"
     }
   },
   "hr": {

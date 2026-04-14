@@ -2205,6 +2205,9 @@
       "clear": "Deseleziona",
       "selectAll": "Seleziona tutto",
       "favourite": "Preferito"
+    },
+    "linkedFrom": {
+      "title": "Record collegati"
     }
   },
   "hr": {

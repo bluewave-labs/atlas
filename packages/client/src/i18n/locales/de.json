@@ -2205,6 +2205,9 @@
       "clear": "Auswahl aufheben",
       "selectAll": "Alle auswählen",
       "favourite": "Favorit"
+    },
+    "linkedFrom": {
+      "title": "Verknüpfte Datensätze"
     }
   },
   "hr": {

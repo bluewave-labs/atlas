@@ -2205,6 +2205,9 @@
       "clear": "Désélectionner",
       "selectAll": "Tout sélectionner",
       "favourite": "Favori"
+    },
+    "linkedFrom": {
+      "title": "Enregistrements liés"
     }
   },
   "hr": {
