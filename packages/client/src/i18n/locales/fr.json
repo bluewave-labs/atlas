@@ -2201,7 +2201,9 @@
       "copy": "Copier",
       "download": "Télécharger",
       "trash": "Corbeille",
-      "clear": "Désélectionner"
+      "clear": "Désélectionner",
+      "selectAll": "Tout sélectionner",
+      "favourite": "Favori"
     }
   },
   "hr": {

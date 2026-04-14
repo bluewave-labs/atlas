@@ -26,9 +26,11 @@ import { DriveDataTableList } from './components/drive-data-table-list';
 import { DriveGridView } from './components/drive-grid-view';
 import { DrivePreviewPanel } from './components/drive-preview-panel';
 import { DriveContextMenuView } from './components/drive-context-menu';
+import { DriveBulkBar } from './components/drive-bulk-bar';
 import { NewFolderModal, MoveModal, TagModal, ShareModal, GoogleDriveModal } from './components/modals';
 import { getSortOptions, getTypeFilterOptions, getModifiedFilterOptions, parseTag } from './lib/helpers';
 import { useDrivePage } from './use-drive-page';
+import { useBatchTrash } from './hooks';
 
 export function DrivePage() {
   const { t } = useTranslation();
@@ -38,6 +40,22 @@ export function DrivePage() {
   const canDeleteAny = d.perm.canDelete;
   const canDeleteOwn = d.perm.canDeleteOwn;
   const currentUserId = d.account?.userId;
+
+  const batchTrash = useBatchTrash();
+
+  const handleBulkTrash = () => {
+    if (d.selectedIds.size === 0) return;
+    batchTrash.mutate(Array.from(d.selectedIds), {
+      onSuccess: () => d.setSelectedIds(new Set()),
+    });
+  };
+
+  const handleBulkDownload = () => {
+    const token = localStorage.getItem('atlasmail_token');
+    for (const id of d.selectedIds) {
+      window.open(`/api/v1/drive/${id}/download${token ? `?token=${encodeURIComponent(token)}` : ''}`, '_blank');
+    }
+  };
 
   const renderTags = (item: DriveItem) => {
     if (!item.tags || item.tags.length === 0) return null;
@@ -233,17 +251,18 @@ export function DrivePage() {
       <input type="file" ref={d.replaceFileInputRef} style={{ display: 'none' }} onChange={(e) => { const file = e.target.files?.[0]; if (file && d.replaceTargetId) { d.replaceFile.mutate({ itemId: d.replaceTargetId, file }, { onSuccess: () => { d.addToast({ type: 'success', message: t('drive.actions.newVersionUploaded') }); d.setReplaceTargetId(null); } }); } e.target.value = ''; }} />
 
       {/* Floating bulk action bar */}
-      {d.hasSelection && (
-        <div className="drive-bulk-bar">
-          <span className="drive-bulk-count">{t('drive.selected', { count: d.selectedIds.size })}</span>
-          <Button variant="ghost" size="sm" icon={<Check size={14} />} onClick={d.handleSelectAll}>{t('drive.actions.selectAll')}</Button>
-          <Button variant="ghost" size="sm" icon={<X size={14} />} onClick={d.handleClearSelection}>{t('drive.actions.clear')}</Button>
-          <div style={{ width: 1, height: 20, background: 'var(--color-border-primary)' }} />
-          {canEdit && <Button variant="ghost" size="sm" icon={<FolderInput size={14} />} onClick={() => { d.setBatchMoveTargetId(null); d.setBatchMoveOpen(true); }}>{t('drive.actions.move')}</Button>}
-          <Button variant="ghost" size="sm" icon={<Star size={14} />} onClick={d.handleBulkFavourite}>{t('drive.actions.favourite')}</Button>
-          {(canDeleteAny || canDeleteOwn) && <Button variant="danger" size="sm" icon={<Trash2 size={14} />} onClick={d.handleBulkDelete}>{t('drive.actions.delete')}</Button>}
-        </div>
-      )}
+      <DriveBulkBar
+        selectedCount={d.selectedIds.size}
+        onSelectAll={d.handleSelectAll}
+        onClear={d.handleClearSelection}
+        onMove={() => { d.setBatchMoveTargetId(null); d.setBatchMoveOpen(true); }}
+        onCopy={() => { d.setCopyTargetId(null); d.setCopyModalOpen(true); }}
+        onDownload={handleBulkDownload}
+        onFavourite={d.handleBulkFavourite}
+        onTrash={handleBulkTrash}
+        canDelete={canDeleteAny || canDeleteOwn}
+        canEdit={canEdit}
+      />
 
       {/* Confirm dialogs */}
       <ConfirmDialog open={!!d.confirmDelete} onOpenChange={() => d.setConfirmDelete(null)} title={t('drive.confirm.moveToTrashTitle')} description={t('drive.confirm.moveToTrashDesc', { name: d.confirmDelete?.name })} confirmLabel={t('drive.confirm.moveToTrashConfirm')} onConfirm={d.confirmMoveToTrash} destructive />

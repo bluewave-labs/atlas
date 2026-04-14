@@ -2263,7 +2263,9 @@
       "copy": "Copy",
       "download": "Download",
       "trash": "Trash",
-      "clear": "Clear selection"
+      "clear": "Clear selection",
+      "selectAll": "Select all",
+      "favourite": "Favourite"
     }
   },
   "hr": {

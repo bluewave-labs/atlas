@@ -2201,7 +2201,9 @@
       "copy": "Kopyala",
       "download": "İndir",
       "trash": "Çöpe at",
-      "clear": "Seçimi temizle"
+      "clear": "Seçimi temizle",
+      "selectAll": "Tümünü seç",
+      "favourite": "Favori"
     }
   },
   "hr": {

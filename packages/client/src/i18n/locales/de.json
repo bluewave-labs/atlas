@@ -2201,7 +2201,9 @@
       "copy": "Kopieren",
       "download": "Herunterladen",
       "trash": "In Papierkorb",
-      "clear": "Auswahl aufheben"
+      "clear": "Auswahl aufheben",
+      "selectAll": "Alle auswählen",
+      "favourite": "Favorit"
     }
   },
   "hr": {

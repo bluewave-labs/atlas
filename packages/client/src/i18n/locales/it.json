@@ -2201,7 +2201,9 @@
       "copy": "Copia",
       "download": "Scarica",
       "trash": "Cestina",
-      "clear": "Deseleziona"
+      "clear": "Deseleziona",
+      "selectAll": "Seleziona tutto",
+      "favourite": "Preferito"
     }
   },
   "hr": {
