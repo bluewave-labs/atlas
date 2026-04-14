@@ -178,6 +178,11 @@ export function DrawPage() {
         isCreating={createDrawing.isPending}
       />
 
+      {/*
+        Draw is intentionally exempt from ContentArea because Excalidraw owns the
+        full viewport and has no app-level header. We keep our own flex column
+        and honor the dock-bottom reserve via padding-bottom directly here.
+      */}
       <div
         style={{
           flex: 1,
