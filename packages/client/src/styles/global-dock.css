@@ -12,6 +12,37 @@ body:has(.global-dock) {
   --global-dock-offset: 72px;
 }
 
+/* Dock chrome tokens — overridden per-theme below. */
+:root {
+  --global-dock-bg: rgba(20, 20, 22, 0.75);
+  --global-dock-border: rgba(255, 255, 255, 0.08);
+  --global-dock-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --global-dock-tooltip-bg: rgba(30, 30, 30, 0.85);
+  --global-dock-tooltip-color: #ffffff;
+  --global-dock-tooltip-border: rgba(255, 255, 255, 0.08);
+  --global-dock-active-dot: #ffffff;
+}
+
+[data-theme="light"] {
+  --global-dock-bg: rgba(245, 245, 247, 0.78);
+  --global-dock-border: rgba(0, 0, 0, 0.08);
+  --global-dock-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  --global-dock-tooltip-bg: rgba(245, 245, 247, 0.95);
+  --global-dock-tooltip-color: #111111;
+  --global-dock-tooltip-border: rgba(0, 0, 0, 0.08);
+  --global-dock-active-dot: #1f1f1f;
+}
+
+[data-theme="dark"] {
+  --global-dock-bg: rgba(20, 20, 22, 0.75);
+  --global-dock-border: rgba(255, 255, 255, 0.08);
+  --global-dock-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --global-dock-tooltip-bg: rgba(30, 30, 30, 0.85);
+  --global-dock-tooltip-color: #ffffff;
+  --global-dock-tooltip-border: rgba(255, 255, 255, 0.08);
+  --global-dock-active-dot: #ffffff;
+}
+
 .global-dock {
   position: fixed;
   bottom: 8px;
@@ -21,13 +52,14 @@ body:has(.global-dock) {
   align-items: flex-end;
   gap: 8px;
   padding: 6px 12px;
-  background: rgba(20, 20, 22, 0.75);
+  background: var(--global-dock-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--color-border-secondary);
+  border: 1px solid var(--global-dock-border);
   border-radius: 16px;
+  box-shadow: var(--global-dock-shadow);
   z-index: 100;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, background 0.2s, border-color 0.2s;
 }
 
 .global-dock-item {
@@ -59,7 +91,7 @@ body:has(.global-dock) {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--global-dock-active-dot);
 }
 
 /* Icon card inside each dock item */
@@ -99,18 +131,18 @@ body:has(.global-dock) {
   transform: translateX(-50%);
   opacity: 0;
   transition: opacity 120ms ease;
-  background: rgba(30, 30, 30, 0.85);
+  background: var(--global-dock-tooltip-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   padding: 4px 10px;
   border-radius: 5px;
   font-size: 11px;
   font-weight: 500;
-  color: #fff;
+  color: var(--global-dock-tooltip-color);
   white-space: nowrap;
   pointer-events: none;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--global-dock-tooltip-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .global-dock-item:hover .global-dock-tooltip {
