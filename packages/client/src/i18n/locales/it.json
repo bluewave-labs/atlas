@@ -493,7 +493,8 @@
     "goToOther": "Vai ad altro",
     "goToNewsletters": "Vai a newsletter",
     "goToNotifications": "Vai a notifiche",
-    "composeNewEmail": "Scrivi nuova email"
+    "composeNewEmail": "Scrivi nuova email",
+    "newDrawing": "Nuovo disegno"
   },
   "toast": {
     "messageSent": "Messaggio inviato",
@@ -1660,7 +1661,9 @@
       "suggestedTags": "Tag suggeriti",
       "enriched": "Arricchito",
       "refreshing": "Aggiornamento...",
-      "refresh": "Aggiorna"
+      "refresh": "Aggiorna",
+      "createdAt": "Creato",
+      "lead": "lead"
     },
     "notes": {
       "title": "Note",
@@ -2261,7 +2264,9 @@
       "holidays": "Festivita",
       "policies": "Politiche",
       "approvals": "Approvazioni",
-      "expensesSection": "Spese"
+      "expensesSection": "Spese",
+      "myProfile": "Il mio profilo",
+      "noProfile": "Nessun profilo dipendente trovato. Chiedi al tuo amministratore di aggiungerti."
     },
     "status": {
       "active": "Attivo",

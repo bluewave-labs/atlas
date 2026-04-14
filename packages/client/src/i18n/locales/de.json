@@ -493,7 +493,8 @@
     "goToOther": "Zu Sonstige wechseln",
     "goToNewsletters": "Zu Newsletter wechseln",
     "goToNotifications": "Zu Benachrichtigungen wechseln",
-    "composeNewEmail": "Neue E-Mail verfassen"
+    "composeNewEmail": "Neue E-Mail verfassen",
+    "newDrawing": "Neue Zeichnung"
   },
   "toast": {
     "messageSent": "Nachricht gesendet",
@@ -1660,7 +1661,9 @@
       "suggestedTags": "Vorgeschlagene Tags",
       "enriched": "Angereichert",
       "refreshing": "Aktualisieren...",
-      "refresh": "Aktualisieren"
+      "refresh": "Aktualisieren",
+      "createdAt": "Erstellt",
+      "lead": "Lead"
     },
     "notes": {
       "title": "Notizen",
@@ -2261,7 +2264,9 @@
       "holidays": "Feiertage",
       "policies": "Richtlinien",
       "approvals": "Genehmigungen",
-      "expensesSection": "Ausgaben"
+      "expensesSection": "Ausgaben",
+      "myProfile": "Mein Profil",
+      "noProfile": "Kein Mitarbeiterprofil gefunden. Bitten Sie Ihren Administrator, Sie hinzuzufügen."
     },
     "status": {
       "active": "Aktiv",

@@ -493,7 +493,8 @@
     "goToOther": "Aller aux autres",
     "goToNewsletters": "Aller aux newsletters",
     "goToNotifications": "Aller aux notifications",
-    "composeNewEmail": "Rédiger un nouvel e-mail"
+    "composeNewEmail": "Rédiger un nouvel e-mail",
+    "newDrawing": "Nouveau dessin"
   },
   "toast": {
     "messageSent": "Message envoyé",
@@ -1660,7 +1661,9 @@
       "suggestedTags": "Tags suggérés",
       "enriched": "Enrichi",
       "refreshing": "Actualisation...",
-      "refresh": "Actualiser"
+      "refresh": "Actualiser",
+      "createdAt": "Créé le",
+      "lead": "prospect"
     },
     "notes": {
       "title": "Notes",
@@ -2261,7 +2264,9 @@
       "holidays": "Jours feries",
       "policies": "Politiques",
       "approvals": "Approbations",
-      "expensesSection": "Depenses"
+      "expensesSection": "Depenses",
+      "myProfile": "Mon profil",
+      "noProfile": "Aucun profil d'employé trouvé. Demandez à votre administrateur de vous ajouter."
     },
     "status": {
       "active": "Actif",

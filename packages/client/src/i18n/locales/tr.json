@@ -493,7 +493,8 @@
     "goToOther": "Diğerlerine git",
     "goToNewsletters": "Bültenlere git",
     "goToNotifications": "Bildirimlere git",
-    "composeNewEmail": "Yeni e-posta yaz"
+    "composeNewEmail": "Yeni e-posta yaz",
+    "newDrawing": "Yeni çizim"
   },
   "toast": {
     "messageSent": "İleti gönderildi",
@@ -1660,7 +1661,9 @@
       "suggestedTags": "Önerilen etiketler",
       "enriched": "Zenginleştirildi",
       "refreshing": "Yenileniyor...",
-      "refresh": "Yenile"
+      "refresh": "Yenile",
+      "createdAt": "Oluşturuldu",
+      "lead": "aday"
     },
     "notes": {
       "title": "Notlar",
@@ -2261,7 +2264,9 @@
       "holidays": "Tatiller",
       "policies": "Politikalar",
       "approvals": "Onaylar",
-      "expensesSection": "Harcamalar"
+      "expensesSection": "Harcamalar",
+      "myProfile": "Profilim",
+      "noProfile": "Çalışan profili bulunamadı. Lütfen yöneticinizden sizi eklemesini isteyin."
     },
     "status": {
       "active": "Aktif",
