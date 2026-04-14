@@ -73,7 +73,7 @@
     },
     "saving": "Saving...",
     "dataTable": {
-      "search": "Search\u2026",
+      "search": "Search…",
       "addNew": "Add new",
       "showFields": "Show fields",
       "fields": "Fields",
@@ -140,7 +140,16 @@
     "systemMode": "System mode",
     "themeAriaLabel": "Theme: {{label}}. Click to cycle theme",
     "invoices": "Invoices",
-    "sign": "Agreements"
+    "sign": "Agreements",
+    "crm": "CRM",
+    "hr": "HR",
+    "drive": "Drive",
+    "calendar": "Calendar",
+    "tasks": "Tasks",
+    "docs": "Write",
+    "draw": "Draw",
+    "projects": "Projects",
+    "system": "System"
   },
   "inbox": {
     "selectConversation": "Select a conversation",

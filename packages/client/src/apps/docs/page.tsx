@@ -243,6 +243,7 @@ export function DocsPage() {
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
+          paddingBottom: 'var(--global-dock-offset, 0px)',
         }}
       >
         {/* Top bar: breadcrumbs + actions */}

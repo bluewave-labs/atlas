@@ -73,14 +73,14 @@
     },
     "saving": "Kaydediliyor...",
     "dataTable": {
-      "search": "Ara\u2026",
+      "search": "Ara…",
       "addNew": "Yeni ekle",
-      "showFields": "Alanlar\u0131 g\u00f6ster",
+      "showFields": "Alanları göster",
       "fields": "Alanlar",
-      "exportCsv": "CSV olarak d\u0131\u015fa aktar",
-      "rows_one": "sat\u0131r",
-      "rows_other": "sat\u0131r",
-      "noResults": "Sonu\u00e7 bulunamad\u0131",
+      "exportCsv": "CSV olarak dışa aktar",
+      "rows_one": "satır",
+      "rows_other": "satır",
+      "noResults": "Sonuç bulunamadı",
       "page": "sayfa",
       "of": "/",
       "clear": "Temizle"
@@ -140,7 +140,16 @@
     "allMail": "Tüm postalar",
     "starred": "Yıldızlı",
     "unread": "Okunmamış",
-    "sign": "Sözleşmeler"
+    "sign": "Sözleşmeler",
+    "crm": "CRM",
+    "hr": "İK",
+    "drive": "Drive",
+    "calendar": "Takvim",
+    "tasks": "Görevler",
+    "docs": "Yazı",
+    "draw": "Çizim",
+    "projects": "Projeler",
+    "system": "Sistem"
   },
   "inbox": {
     "selectConversation": "Bir görüşme seçin",

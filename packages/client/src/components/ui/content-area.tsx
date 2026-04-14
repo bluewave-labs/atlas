@@ -105,7 +105,16 @@ export function ContentArea({ title, breadcrumbs, actions, children }: ContentAr
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          position: 'relative',
+          paddingBottom: 'var(--global-dock-offset, 0px)',
+        }}
+      >
         {children}
       </div>
     </div>

@@ -1,5 +1,17 @@
 /* ── Global dock (bottom app switcher) ── */
 
+/* When the dock is mounted, expose its reserved vertical space as a CSS
+   variable so page right-side content containers can reserve room for it via
+   `padding-bottom: var(--global-dock-offset)`. The sidebar stays full-height
+   (dock floats over its bottom). Default is 0 so pages without the dock
+   (login, onboarding, home, public sign/proposal) render unchanged. */
+:root {
+  --global-dock-offset: 0px;
+}
+body:has(.global-dock) {
+  --global-dock-offset: 72px;
+}
+
 .global-dock {
   position: fixed;
   bottom: 8px;

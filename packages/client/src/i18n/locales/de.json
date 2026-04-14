@@ -73,8 +73,8 @@
     },
     "saving": "Wird gespeichert...",
     "dataTable": {
-      "search": "Suche\u2026",
-      "addNew": "Neu hinzuf\u00fcgen",
+      "search": "Suche…",
+      "addNew": "Neu hinzufügen",
       "showFields": "Felder anzeigen",
       "fields": "Felder",
       "exportCsv": "Als CSV exportieren",
@@ -83,7 +83,7 @@
       "noResults": "Keine Ergebnisse",
       "page": "Seite",
       "of": "von",
-      "clear": "Zur\u00fccksetzen"
+      "clear": "Zurücksetzen"
     }
   },
   "auth": {
@@ -140,7 +140,16 @@
     "allMail": "Alle E-Mails",
     "starred": "Markiert",
     "unread": "Ungelesen",
-    "sign": "Vereinbarungen"
+    "sign": "Vereinbarungen",
+    "crm": "CRM",
+    "hr": "HR",
+    "drive": "Drive",
+    "calendar": "Kalender",
+    "tasks": "Aufgaben",
+    "docs": "Schreiben",
+    "draw": "Zeichnen",
+    "projects": "Projekte",
+    "system": "System"
   },
   "inbox": {
     "selectConversation": "Konversation auswählen",

@@ -222,7 +222,7 @@ export function SystemPage() {
         </SidebarSection>
       </AppSidebar>
 
-      <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
+      <div style={{ flex: 1, overflow: 'auto', padding: 24, paddingBottom: 'calc(24px + var(--global-dock-offset, 0px))' }}>
         {activeView === 'overview' && (
           <>
             {isLoading ? (

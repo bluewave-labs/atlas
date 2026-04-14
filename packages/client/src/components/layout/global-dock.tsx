@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { isTenantOwner } from '@atlas-platform/shared';
 import { appRegistry } from '../../apps';
 import { useMyAccessibleApps } from '../../hooks/use-app-permissions';
@@ -40,6 +41,7 @@ const BRAND_ICON_BACKGROUNDS: Record<string, string> = {
 export function GlobalDock() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const dockRef = useRef<HTMLDivElement>(null);
 
   // Accessible apps for the current user
@@ -60,11 +62,11 @@ export function GlobalDock() {
       .map((app) => ({
         id: app.id,
         icon: app.icon,
-        label: app.name,
+        label: t(app.labelKey, app.name),
         color: app.color,
         route: app.routes[0]?.path ?? `/${app.id}`,
       }));
-  }, [myApps, isOwner]);
+  }, [myApps, isOwner, t]);
 
   // ── Magnification handlers ──────────────────────────────────────────────
 

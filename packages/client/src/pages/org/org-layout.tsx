@@ -118,6 +118,7 @@ export function OrgLayout() {
         flexDirection: 'column',
         overflow: 'hidden',
         minWidth: 0,
+        paddingBottom: 'var(--global-dock-offset, 0px)',
       }}>
         {/* Top bar */}
         <header style={{

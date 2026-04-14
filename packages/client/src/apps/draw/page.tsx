@@ -184,6 +184,7 @@ export function DrawPage() {
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
+          paddingBottom: 'var(--global-dock-offset, 0px)',
         }}
       >
         {!selectedId ? (

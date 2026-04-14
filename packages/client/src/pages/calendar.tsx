@@ -1264,7 +1264,7 @@ export function CalendarPage() {
         )}
 
         {/* Calendar grid */}
-        <div data-calendar-grid style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        <div data-calendar-grid style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative', paddingBottom: 'var(--global-dock-offset, 0px)' }}>
           {showLoadingOverlay && (
             <div
               aria-label="Loading events"

@@ -73,14 +73,14 @@
     },
     "saving": "Enregistrement...",
     "dataTable": {
-      "search": "Rechercher\u2026",
+      "search": "Rechercher…",
       "addNew": "Ajouter",
       "showFields": "Afficher les champs",
       "fields": "Champs",
       "exportCsv": "Exporter en CSV",
       "rows_one": "ligne",
       "rows_other": "lignes",
-      "noResults": "Aucun r\u00e9sultat",
+      "noResults": "Aucun résultat",
       "page": "page",
       "of": "sur",
       "clear": "Effacer"
@@ -140,7 +140,16 @@
     "allMail": "Tous les e-mails",
     "starred": "Favoris",
     "unread": "Non lus",
-    "sign": "Accords"
+    "sign": "Accords",
+    "crm": "CRM",
+    "hr": "RH",
+    "drive": "Drive",
+    "calendar": "Calendrier",
+    "tasks": "Tâches",
+    "docs": "Écrire",
+    "draw": "Dessiner",
+    "projects": "Projets",
+    "system": "Système"
   },
   "inbox": {
     "selectConversation": "Sélectionnez une conversation",

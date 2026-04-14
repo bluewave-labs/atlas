@@ -73,7 +73,7 @@
     },
     "saving": "Salvataggio...",
     "dataTable": {
-      "search": "Cerca\u2026",
+      "search": "Cerca…",
       "addNew": "Aggiungi",
       "showFields": "Mostra campi",
       "fields": "Campi",
@@ -140,7 +140,16 @@
     "allMail": "Tutte le email",
     "starred": "Speciali",
     "unread": "Non letti",
-    "sign": "Accordi"
+    "sign": "Accordi",
+    "crm": "CRM",
+    "hr": "HR",
+    "drive": "Drive",
+    "calendar": "Calendario",
+    "tasks": "Attività",
+    "docs": "Scrivi",
+    "draw": "Disegna",
+    "projects": "Progetti",
+    "system": "Sistema"
   },
   "inbox": {
     "selectConversation": "Seleziona una conversazione",
