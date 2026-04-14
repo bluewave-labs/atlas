@@ -475,6 +475,7 @@ export const driveItems = pgTable('drive_items', {
   isFavourite: boolean('is_favourite').notNull().default(false),
   isArchived: boolean('is_archived').notNull().default(false),
   tags: jsonb('tags').$type<string[]>().notNull().default([]),
+  uploadSource: jsonb('upload_source'),
   sortOrder: integer('sort_order').notNull().default(0),
   visibility: varchar('visibility', { length: 10 }).notNull().default('private'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

@@ -57,13 +57,6 @@ export async function handlePublicUpload(req: Request, res: Response) {
       fileMetadatas.push({ storageRel, file });
     }
 
-    const uploadSourceTag = JSON.stringify({
-      type: 'upload_source',
-      name: name || 'Anonymous',
-      email: email || null,
-      uploadedAt: new Date().toISOString(),
-    });
-
     const rows = fileMetadatas.length > 0
       ? await db.insert(driveItems).values(
           fileMetadatas.map(({ storageRel, file }) => ({
@@ -75,7 +68,13 @@ export async function handlePublicUpload(req: Request, res: Response) {
             mimeType: file.mimetype,
             size: file.size,
             storagePath: storageRel,
-            tags: [uploadSourceTag],
+            uploadSource: {
+              name: name || null,
+              email: email || null,
+              shareToken: token,
+              uploadedAt: new Date().toISOString(),
+              ip: req.ip ?? undefined,
+            },
           })),
         ).returning()
       : [];

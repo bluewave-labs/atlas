@@ -1,3 +1,11 @@
+export interface UploadSource {
+  name: string | null;
+  email: string | null;
+  shareToken: string;
+  uploadedAt: string;
+  ip?: string;
+}
+
 export interface DriveItem {
   id: string;
   tenantId: string;
@@ -14,6 +22,7 @@ export interface DriveItem {
   isFavourite: boolean;
   isArchived: boolean;
   tags: string[];
+  uploadSource?: UploadSource | null;
   sortOrder: number;
   visibility?: 'private' | 'team';
   createdAt: string;
