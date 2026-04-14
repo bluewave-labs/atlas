@@ -82,13 +82,10 @@
 
 /* ─── Main area ───────────────────────────────────────────────────── */
 
-.drive-main {
-  flex: 1;
+.drive-main-header {
   display: flex;
   flex-direction: column;
-  min-width: 0;
-  overflow: hidden;
-  padding-bottom: var(--global-dock-offset, 0px);
+  width: 100%;
 }
 
 /* ─── Toolbar ─────────────────────────────────────────────────────── */

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Settings2 } from 'lucide-react';
 import { AppSidebar, SidebarItem, SidebarSection } from '../../components/layout/app-sidebar';
+import { ContentArea } from '../../components/ui/content-area';
 import { Button } from '../../components/ui/button';
 import { IconButton } from '../../components/ui/icon-button';
 import { Chip } from '../../components/ui/chip';
@@ -126,16 +127,16 @@ export function DrivePage() {
       </AppSidebar>
 
       {/* Main content */}
-      <div className="drive-main" style={{ flex: d.previewItem ? undefined : 1 }}>
-        {d.uploadProgress && (
-          <div className="drive-upload-progress">
-            <div className="drive-upload-progress-info"><span>{t('drive.actions.uploading')}</span><span>{Math.round((d.uploadProgress.loaded / d.uploadProgress.total) * 100)}%</span></div>
-            <div className="drive-upload-progress-bar"><div className="drive-upload-progress-fill" style={{ width: `${Math.round((d.uploadProgress.loaded / d.uploadProgress.total) * 100)}%` }} /></div>
-          </div>
-        )}
-
-        {/* Toolbar */}
-        <div className="drive-toolbar">
+      <ContentArea
+        headerSlot={
+          <div className="drive-main-header">
+            {d.uploadProgress && (
+              <div className="drive-upload-progress">
+                <div className="drive-upload-progress-info"><span>{t('drive.actions.uploading')}</span><span>{Math.round((d.uploadProgress.loaded / d.uploadProgress.total) * 100)}%</span></div>
+                <div className="drive-upload-progress-bar"><div className="drive-upload-progress-fill" style={{ width: `${Math.round((d.uploadProgress.loaded / d.uploadProgress.total) * 100)}%` }} /></div>
+              </div>
+            )}
+            <div className="drive-toolbar">
           <div className="drive-toolbar-left">
             {d.sidebarView === 'files' && !d.searchQuery.trim() ? (
               <div className="drive-breadcrumbs">
@@ -177,9 +178,11 @@ export function DrivePage() {
             </div>
             <IconButton icon={d.viewMode === 'list' ? <LayoutGrid size={16} /> : <LayoutList size={16} />} label={d.viewMode === 'list' ? t('drive.toolbar.gridView') : t('drive.toolbar.listView')} size={32} onClick={() => d.setViewMode(d.viewMode === 'list' ? 'grid' : 'list')} style={{ border: '1px solid var(--color-border-primary)' }} />
             <IconButton icon={<Settings size={16} />} label={t('drive.toolbar.driveSettings')} size={32} onClick={() => d.openSettings('drive')} style={{ border: '1px solid var(--color-border-primary)' }} />
+            </div>
+            </div>
           </div>
-        </div>
-
+        }
+      >
         {/* Content area */}
         <div className="drive-content" onDragEnter={d.handleDragEnter} onDragLeave={d.handleDragLeave} onDragOver={d.handleDragOver} onDrop={d.handleDrop} onClick={() => { if (!d.hasSelection) d.setSelectedIds(new Set()); d.setContextMenu(null); }}>
           {d.isDraggingOver && (<div className="drive-dropzone-overlay"><div className="drive-dropzone-label"><UploadIcon size={32} /> {t('drive.dropzone.dropToUpload')}</div></div>)}
@@ -199,7 +202,7 @@ export function DrivePage() {
             <DriveGridView displayItems={d.displayItems} selectedIds={d.selectedIds} setSelectedIds={d.setSelectedIds} renameId={d.renameId} renameValue={d.renameValue} setRenameValue={d.setRenameValue} setRenameId={d.setRenameId} handleRenameSubmit={d.handleRenameSubmit} handleItemClick={d.handleItemClick} handleItemDoubleClick={d.handleItemDoubleClick} handleContextMenu={d.handleContextMenu} handleItemDragStart={d.handleItemDragStart} handleItemDragEnd={d.handleItemDragEnd} handleFolderDragOver={d.handleFolderDragOver} handleFolderDragLeave={d.handleFolderDragLeave} handleFolderDrop={d.handleFolderDrop} dragOverFolderId={d.dragOverFolderId} sidebarView={d.sidebarView} tenantUsersData={d.tenantUsersData ?? []} driveSettings={d.driveSettings} renderTags={renderTags} />
           )}
         </div>
-      </div>
+      </ContentArea>
 
       {/* Preview panel */}
       {d.previewItem && (
