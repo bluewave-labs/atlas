@@ -23,6 +23,8 @@ export {
   batchDelete,
   batchMove,
   batchFavourite,
+  batchTrash,
+  batchTag,
   listItemsByType,
   getFolderContents,
   updateDriveItemVisibility,

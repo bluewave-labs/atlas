@@ -518,6 +518,52 @@ export async function batchFavourite(req: Request, res: Response) {
   }
 }
 
+// POST /api/drive/batch/trash
+export async function batchTrash(req: Request, res: Response) {
+  try {
+    const perm = req.drivePerm!;
+    if (!canAccess(perm.role, 'delete') && !canAccess(perm.role, 'delete_own')) {
+      res.status(403).json({ success: false, error: 'No permission to delete in drive' });
+      return;
+    }
+
+    const userId = req.auth!.userId;
+    const { itemIds } = req.body as { itemIds: string[] };
+    if (!Array.isArray(itemIds)) {
+      res.status(400).json({ success: false, error: 'itemIds required' });
+      return;
+    }
+    const result = await driveService.batchTrash(userId, itemIds);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error({ error }, 'Failed to batch trash drive items');
+    res.status(500).json({ success: false, error: 'Failed to trash items' });
+  }
+}
+
+// POST /api/drive/batch/tag
+export async function batchTag(req: Request, res: Response) {
+  try {
+    const perm = req.drivePerm!;
+    if (!canAccess(perm.role, 'update')) {
+      res.status(403).json({ success: false, error: 'No permission to update in drive' });
+      return;
+    }
+
+    const userId = req.auth!.userId;
+    const { itemIds, tags, op } = req.body as { itemIds: string[]; tags: string[]; op: 'add' | 'remove' };
+    if (!Array.isArray(itemIds) || !Array.isArray(tags) || !['add', 'remove'].includes(op)) {
+      res.status(400).json({ success: false, error: 'Invalid payload' });
+      return;
+    }
+    const result = await driveService.batchTag(userId, itemIds, tags, op);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error({ error }, 'Failed to batch tag drive items');
+    res.status(500).json({ success: false, error: 'Failed to tag items' });
+  }
+}
+
 // GET /api/drive/by-type?type=images|documents|videos|audio
 export async function listItemsByType(req: Request, res: Response) {
   try {

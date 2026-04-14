@@ -21,6 +21,8 @@ export {
   batchDelete,
   batchMove,
   batchFavourite,
+  batchTrash,
+  batchTag,
   listItemsByType,
   seedSampleData,
   updateDriveItemVisibility,

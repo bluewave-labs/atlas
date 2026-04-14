@@ -691,3 +691,50 @@ export async function updateDriveItemVisibility(userId: string, itemId: string, 
   await db.update(driveItems).set({ visibility, updatedAt: new Date() })
     .where(and(eq(driveItems.id, itemId), eq(driveItems.userId, userId)));
 }
+
+// ─── Batch trash (soft) ──────────────────────────────────────────────
+
+export async function batchTrash(userId: string, itemIds: string[]) {
+  if (itemIds.length === 0) return { trashed: 0 };
+  const result = await db
+    .update(driveItems)
+    .set({ isArchived: true, updatedAt: new Date() })
+    .where(and(
+      eq(driveItems.userId, userId),
+      inArray(driveItems.id, itemIds),
+    ))
+    .returning({ id: driveItems.id });
+  return { trashed: result.length };
+}
+
+// ─── Batch tag (add/remove tags on multiple items) ───────────────────
+
+export async function batchTag(
+  userId: string,
+  itemIds: string[],
+  tags: string[],
+  op: 'add' | 'remove',
+) {
+  if (itemIds.length === 0 || tags.length === 0) return { updated: 0 };
+  const rows = await db
+    .select({ id: driveItems.id, tags: driveItems.tags })
+    .from(driveItems)
+    .where(and(
+      eq(driveItems.userId, userId),
+      inArray(driveItems.id, itemIds),
+    ));
+  let updated = 0;
+  for (const row of rows) {
+    const current = new Set((row.tags as string[]) ?? []);
+    for (const t of tags) {
+      if (op === 'add') current.add(t);
+      else current.delete(t);
+    }
+    await db
+      .update(driveItems)
+      .set({ tags: Array.from(current), updatedAt: new Date() })
+      .where(eq(driveItems.id, row.id));
+    updated++;
+  }
+  return { updated };
+}
