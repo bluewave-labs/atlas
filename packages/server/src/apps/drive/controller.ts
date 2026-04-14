@@ -8,6 +8,7 @@ export {
   listTrash,
   listFavourites,
   listRecent,
+  listUploads,
   listFolders,
   getStorageUsage,
   getItem,

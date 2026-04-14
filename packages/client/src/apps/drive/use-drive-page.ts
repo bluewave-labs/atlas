@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   useDriveItems, useDriveBreadcrumbs, useDriveFavourites, useDriveRecent,
-  useDriveTrash, useDriveSearch, useCreateFolder, useUploadFiles,
+  useDriveTrash, useDriveUploads, useDriveSearch, useCreateFolder, useUploadFiles,
   useUpdateDriveItem, useDeleteDriveItem, useRestoreDriveItem,
   usePermanentDeleteDriveItem, useDriveStorage, useDriveFolders,
   useDuplicateDriveItem, useCopyDriveItem, useBatchDeleteDriveItems,
@@ -104,6 +104,7 @@ export function useDrivePage() {
   const { data: favouritesData } = useDriveFavourites();
   const { data: recentData } = useDriveRecent();
   const { data: trashData } = useDriveTrash();
+  const { data: uploadsData } = useDriveUploads();
   const { data: searchData } = useDriveSearch(searchQuery);
   const { data: storageData } = useDriveStorage();
   const { data: tenantsData } = useMyTenants();
@@ -192,13 +193,14 @@ export function useDrivePage() {
     else if (sidebarView === 'favourites') items = favouritesData?.items ?? [];
     else if (sidebarView === 'recent') items = recentData?.items ?? [];
     else if (sidebarView === 'trash') items = trashData?.items ?? [];
+    else if (sidebarView === 'uploaded') items = uploadsData?.items ?? [];
     else if (sidebarView === 'shared') items = sharedWithMeData ?? [];
     else if (['images', 'documents', 'videos', 'audio'].includes(sidebarView)) items = typeData?.items ?? [];
     else items = itemsData?.items ?? [];
     if (typeFilter !== 'all') items = items.filter((item) => matchesTypeFilter(item, typeFilter));
     if (modifiedFilter !== 'any') items = items.filter((item) => matchesModifiedFilter(item, modifiedFilter));
     return items;
-  }, [sidebarView, searchQuery, itemsData, favouritesData, recentData, trashData, searchData, typeData, sharedWithMeData, typeFilter, modifiedFilter]);
+  }, [sidebarView, searchQuery, itemsData, favouritesData, recentData, trashData, uploadsData, searchData, typeData, sharedWithMeData, typeFilter, modifiedFilter]);
 
   const isLoading = sidebarView === 'files' && itemsLoading;
   const breadcrumbs = breadcrumbsData?.breadcrumbs ?? [];
@@ -432,6 +434,7 @@ export function useDrivePage() {
     if (sidebarView === 'favourites') return t('drive.sidebar.favourites');
     if (sidebarView === 'recent') return t('drive.sidebar.recent');
     if (sidebarView === 'trash') return t('drive.sidebar.trash');
+    if (sidebarView === 'uploaded') return t('drive.sidebar.uploaded');
     if (sidebarView === 'shared') return t('drive.sidebar.sharedWithMe');
     return '';
   }, [sidebarView, searchQuery]);

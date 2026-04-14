@@ -2010,7 +2010,8 @@
       "documents": "Documents",
       "videos": "Videos",
       "audio": "Audio",
-      "settings": "Settings"
+      "settings": "Settings",
+      "uploaded": "Uploaded"
     },
     "sharing": {
       "shareWithUser": "Share with team member",

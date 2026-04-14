@@ -643,3 +643,14 @@ export async function updateDriveItemVisibility(req: Request, res: Response) {
     res.status(500).json({ success: false, error: 'Failed to update drive item visibility' });
   }
 }
+
+// GET /api/drive/uploads
+export async function listUploads(req: Request, res: Response) {
+  try {
+    const rows = await driveService.listUploads(req.auth!.userId);
+    res.json({ success: true, data: rows });
+  } catch (error) {
+    logger.error({ error }, 'Failed to list uploads');
+    res.status(500).json({ success: false, error: 'Failed to list uploads' });
+  }
+}

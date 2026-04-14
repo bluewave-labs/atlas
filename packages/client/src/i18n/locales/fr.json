@@ -1948,7 +1948,8 @@
       "documents": "Documents",
       "videos": "Vidéos",
       "audio": "Audio",
-      "settings": "Paramètres"
+      "settings": "Paramètres",
+      "uploaded": "Téléversés"
     },
     "sharing": {
       "shareWithUser": "Partager avec un membre",

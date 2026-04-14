@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction, ReactNode } from 'react';
 import type { DriveItem } from '@atlas-platform/shared';
 
 export type ViewMode = 'list' | 'grid';
-export type SidebarView = 'files' | 'favourites' | 'recent' | 'trash' | 'shared' | 'images' | 'documents' | 'videos' | 'audio';
+export type SidebarView = 'files' | 'favourites' | 'recent' | 'trash' | 'shared' | 'uploaded' | 'images' | 'documents' | 'videos' | 'audio';
 export type SortBy = 'default' | 'name' | 'size' | 'date' | 'type';
 export type TypeFilter = 'all' | 'folders' | 'documents' | 'spreadsheets' | 'presentations' | 'photos' | 'pdfs' | 'videos' | 'archives' | 'audio' | 'drawings' | 'word' | 'excel' | 'powerpoint' | 'code' | 'text';
 export type ModifiedFilter = 'any' | 'today' | '7days' | '30days' | 'thisYear' | 'lastYear';

@@ -1948,7 +1948,8 @@
       "documents": "Belgeler",
       "videos": "Videolar",
       "audio": "Ses",
-      "settings": "Ayarlar"
+      "settings": "Ayarlar",
+      "uploaded": "Yüklenenler"
     },
     "sharing": {
       "shareWithUser": "Ekip üyesiyle paylaş",

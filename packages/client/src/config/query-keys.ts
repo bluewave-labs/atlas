@@ -122,6 +122,7 @@ export const queryKeys = {
     favourites: ['drive', 'favourites'] as const,
     recent: ['drive', 'recent'] as const,
     trash: ['drive', 'trash'] as const,
+    uploads: ['drive', 'uploads'] as const,
     search: (q: string) => ['drive', 'search', q] as const,
     folders: ['drive', 'folders'] as const,
     storage: ['drive', 'storage'] as const,

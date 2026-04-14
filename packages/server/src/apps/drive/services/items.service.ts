@@ -744,3 +744,18 @@ export async function batchTag(
   }
   return { updated };
 }
+
+// ─── List uploads (files received via public upload links) ───────────
+
+export async function listUploads(userId: string) {
+  const rows = await db
+    .select()
+    .from(driveItems)
+    .where(and(
+      eq(driveItems.userId, userId),
+      eq(driveItems.isArchived, false),
+      sql`${driveItems.uploadSource} IS NOT NULL`,
+    ))
+    .orderBy(desc(driveItems.createdAt));
+  return normalizeAll(rows);
+}

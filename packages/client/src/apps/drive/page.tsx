@@ -5,7 +5,7 @@ import {
   Star, ChevronRight, LayoutGrid, LayoutList, Clock, Heart,
   HardDrive, Upload as UploadIcon, Check, ChevronDown, FileArchive, Share2,
   FileImage, FileText, FileVideo, X, FolderInput, Settings,
-  Music, Table2, Pencil, Users,
+  Music, Table2, Pencil, Users, Inbox,
 } from 'lucide-react';
 import { Settings2 } from 'lucide-react';
 import { AppSidebar, SidebarItem, SidebarSection } from '../../components/layout/app-sidebar';
@@ -90,26 +90,12 @@ export function DrivePage() {
   };
 
   const renderTags = (item: DriveItem) => {
-    const visibleWithIdx = (item.tags ?? [])
-      .map((tag, i) => ({ tag, originalIndex: i }))
-      .filter(({ tag }) => {
-        // Hide upload-source markers stored as JSON-stringified objects by the
-        // public upload controller. They are surfaced elsewhere (activity log,
-        // preview panel), not in the list row.
-        if (typeof tag !== 'string') return true;
-        if (!tag.startsWith('{')) return true;
-        try {
-          return JSON.parse(tag)?.type !== 'upload_source';
-        } catch {
-          return true;
-        }
-      });
-    if (visibleWithIdx.length === 0) return null;
+    if (!item.tags || item.tags.length === 0) return null;
     return (
       <div className="drive-tags">
-        {visibleWithIdx.map(({ tag, originalIndex }) => {
+        {item.tags.map((tag, i) => {
           const { color, label } = parseTag(tag);
-          return <Chip key={originalIndex} color={color} height={18} onRemove={() => d.handleRemoveTag(item, originalIndex)}>{label}</Chip>;
+          return <Chip key={i} color={color} height={18} onRemove={() => d.handleRemoveTag(item, i)}>{label}</Chip>;
         })}
       </div>
     );
@@ -177,6 +163,7 @@ export function DrivePage() {
           </div>
           <SidebarItem label={t('drive.sidebar.favourites')} icon={<Heart size={15} />} isActive={d.sidebarView === 'favourites'} onClick={() => { d.setSidebarView('favourites'); d.setSearchQuery(''); }} />
           <SidebarItem label={t('drive.sidebar.recent')} icon={<Clock size={15} />} isActive={d.sidebarView === 'recent'} onClick={() => { d.setSidebarView('recent'); d.setSearchQuery(''); }} />
+          <SidebarItem label={t('drive.sidebar.uploaded')} icon={<Inbox size={15} />} isActive={d.sidebarView === 'uploaded'} onClick={() => { d.setSidebarView('uploaded'); d.setSearchQuery(''); }} />
           <div onDragOver={(e) => { if (d.dragItemId) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }} onDrop={d.handleSidebarTrashDrop}>
             <SidebarItem label={t('drive.sidebar.trash')} icon={<Trash2 size={15} />} isActive={d.sidebarView === 'trash'} onClick={() => { d.setSidebarView('trash'); d.setSearchQuery(''); }} />
           </div>

@@ -11,6 +11,7 @@ export {
   listTrash,
   listFavourites,
   listRecent,
+  listUploads,
   searchItems,
   getBreadcrumbs,
   getStorageUsage,

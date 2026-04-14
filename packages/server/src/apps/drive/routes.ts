@@ -69,6 +69,7 @@ router.get('/search', driveController.searchItems);
 router.get('/trash', driveController.listTrash);
 router.get('/favourites', driveController.listFavourites);
 router.get('/recent', driveController.listRecent);
+router.get('/uploads', driveController.listUploads);
 router.get('/folders', driveController.listFolders);
 router.get('/storage', driveController.getStorageUsage);
 router.get('/by-type', driveController.listItemsByType);

@@ -89,6 +89,19 @@ export function useDriveTrash() {
   });
 }
 
+export function useDriveUploads() {
+  return useQuery({
+    queryKey: queryKeys.drive.uploads,
+    queryFn: async () => {
+      const { data } = await api.get('/drive/uploads');
+      const payload = data.data as DriveItem[] | ListItemsResponse;
+      const items = Array.isArray(payload) ? payload : (payload?.items ?? []);
+      return { items } as ListItemsResponse;
+    },
+    staleTime: 30_000,
+  });
+}
+
 export function useDriveSearch(query: string) {
   return useQuery({
     queryKey: queryKeys.drive.search(query),
