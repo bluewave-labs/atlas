@@ -1944,7 +1944,8 @@
       "images": "Görseller",
       "documents": "Belgeler",
       "videos": "Videolar",
-      "audio": "Ses"
+      "audio": "Ses",
+      "settings": "Ayarlar"
     },
     "sharing": {
       "shareWithUser": "Ekip üyesiyle paylaş",

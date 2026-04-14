@@ -126,7 +126,7 @@ export function DrivePage() {
           return (
             <>
               <SidebarItem
-                label={t('drive.settings', 'Settings')}
+                label={t('drive.sidebar.settings', 'Settings')}
                 icon={<Settings2 size={14} />}
                 onClick={() => d.openSettings('drive')}
               />

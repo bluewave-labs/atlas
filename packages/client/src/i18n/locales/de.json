@@ -1944,7 +1944,8 @@
       "images": "Bilder",
       "documents": "Dokumente",
       "videos": "Videos",
-      "audio": "Audio"
+      "audio": "Audio",
+      "settings": "Einstellungen"
     },
     "sharing": {
       "shareWithUser": "Mit Teammitglied teilen",

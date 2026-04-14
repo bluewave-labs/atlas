@@ -1944,7 +1944,8 @@
       "images": "Immagini",
       "documents": "Documenti",
       "videos": "Video",
-      "audio": "Audio"
+      "audio": "Audio",
+      "settings": "Impostazioni"
     },
     "sharing": {
       "shareWithUser": "Condividi con un membro",

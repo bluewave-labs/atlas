@@ -2006,7 +2006,8 @@
       "images": "Images",
       "documents": "Documents",
       "videos": "Videos",
-      "audio": "Audio"
+      "audio": "Audio",
+      "settings": "Settings"
     },
     "sharing": {
       "shareWithUser": "Share with team member",
