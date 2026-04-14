@@ -7,10 +7,25 @@ import { hashPassword, verifyPassword } from '../../../utils/password';
 
 // ─── Link sharing ────────────────────────────────────────────────────
 
-export async function createShareLink(userId: string, itemId: string, expiresAt?: string | null, password?: string | null) {
+export async function createShareLink(
+  userId: string,
+  itemId: string,
+  expiresAt?: string | null,
+  password?: string | null,
+  options: {
+    mode?: 'view' | 'edit' | 'upload_only';
+    uploadInstructions?: string | null;
+    requireUploaderEmail?: boolean;
+  } = {},
+) {
   const { getItem } = await import('./items.service');
   const item = await getItem(userId, itemId);
   if (!item) return null;
+
+  const mode = options.mode ?? 'view';
+  if (mode === 'upload_only' && item.type !== 'folder') {
+    throw new Error('Upload-only links require a folder');
+  }
 
   const shareToken = crypto.randomUUID();
   const passwordHashValue = password ? await hashPassword(password) : null;
@@ -22,6 +37,9 @@ export async function createShareLink(userId: string, itemId: string, expiresAt?
       shareToken,
       passwordHash: passwordHashValue,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
+      mode,
+      uploadInstructions: options.uploadInstructions ?? null,
+      requireUploaderEmail: options.requireUploaderEmail ?? true,
       createdAt: new Date(),
     })
     .returning();

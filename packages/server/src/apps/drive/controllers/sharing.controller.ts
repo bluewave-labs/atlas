@@ -149,9 +149,17 @@ export async function createShareLink(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const tenantId = req.auth!.tenantId;
     const itemId = req.params.id as string;
-    const { expiresAt, password } = req.body as { expiresAt?: string; password?: string };
+    const { expiresAt, password, mode, uploadInstructions, requireUploaderEmail } = req.body as {
+      expiresAt?: string;
+      password?: string;
+      mode?: 'view' | 'edit' | 'upload_only';
+      uploadInstructions?: string | null;
+      requireUploaderEmail?: boolean;
+    };
 
-    const link = await driveService.createShareLink(userId, itemId, expiresAt, password);
+    const link = await driveService.createShareLink(userId, itemId, expiresAt, password, {
+      mode, uploadInstructions, requireUploaderEmail,
+    });
     if (!link) {
       res.status(404).json({ success: false, error: 'Item not found' });
       return;
@@ -172,6 +180,10 @@ export async function createShareLink(req: Request, res: Response) {
     driveService.logDriveActivity({ driveItemId: itemId, tenantId, userId, action: 'share_link.created' }).catch((err) => logger.warn({ err }, 'Drive activity log failed'));
     res.json({ success: true, data: link });
   } catch (error) {
+    if (error instanceof Error && error.message === 'Upload-only links require a folder') {
+      res.status(400).json({ success: false, error: error.message });
+      return;
+    }
     logger.error({ error }, 'Failed to create share link');
     res.status(500).json({ success: false, error: 'Failed to create share link' });
   }
