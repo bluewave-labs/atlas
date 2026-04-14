@@ -50,6 +50,8 @@ export interface DriveItemVersion {
   createdAt: string;
 }
 
+export type ShareLinkMode = 'view' | 'edit' | 'upload_only';
+
 export interface DriveShareLink {
   id: string;
   driveItemId: string;
@@ -57,6 +59,9 @@ export interface DriveShareLink {
   shareToken: string;
   passwordHash: string | null;
   expiresAt: string | null;
+  mode: ShareLinkMode;
+  uploadInstructions: string | null;
+  requireUploaderEmail: boolean;
   createdAt: string;
 }
 

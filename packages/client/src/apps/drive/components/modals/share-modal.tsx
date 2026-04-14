@@ -309,7 +309,9 @@ export function ShareModal({
         {shareLinksData && shareLinksData.links.length > 0 && (
           <div className="drive-share-links-list">
             {shareLinksData.links.map((link) => {
-              const shareUrl = `${window.location.origin}/api/v1/share/${link.shareToken}/download`;
+              const shareUrl = link.mode === 'upload_only'
+                ? `${window.location.origin}/drive/upload/${link.shareToken}`
+                : `${window.location.origin}/api/v1/share/${link.shareToken}/download`;
               return (
                 <div key={link.id} className="drive-share-link-row">
                   <div style={{ flex: 1, minWidth: 0 }}>
