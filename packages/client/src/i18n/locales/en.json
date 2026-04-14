@@ -2254,6 +2254,16 @@
       "emptyFolder": "This folder is empty",
       "importing": "Importing...",
       "importButton": "Import {{count}}"
+    },
+    "bulk": {
+      "toolbar": "Bulk actions",
+      "selected_one": "{{count}} selected",
+      "selected_other": "{{count}} selected",
+      "move": "Move",
+      "copy": "Copy",
+      "download": "Download",
+      "trash": "Trash",
+      "clear": "Clear selection"
     }
   },
   "hr": {

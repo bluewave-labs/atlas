@@ -2192,6 +2192,16 @@
       "emptyFolder": "Questa cartella è vuota",
       "importing": "Importazione in corso...",
       "importButton": "Importa {{count}}"
+    },
+    "bulk": {
+      "toolbar": "Azioni in blocco",
+      "selected_one": "{{count}} selezionato",
+      "selected_other": "{{count}} selezionati",
+      "move": "Sposta",
+      "copy": "Copia",
+      "download": "Scarica",
+      "trash": "Cestina",
+      "clear": "Deseleziona"
     }
   },
   "hr": {

@@ -2192,6 +2192,16 @@
       "emptyFolder": "Ce dossier est vide",
       "importing": "Importation en cours...",
       "importButton": "Importer {{count}}"
+    },
+    "bulk": {
+      "toolbar": "Actions en masse",
+      "selected_one": "{{count}} sélectionné",
+      "selected_other": "{{count}} sélectionnés",
+      "move": "Déplacer",
+      "copy": "Copier",
+      "download": "Télécharger",
+      "trash": "Corbeille",
+      "clear": "Désélectionner"
     }
   },
   "hr": {

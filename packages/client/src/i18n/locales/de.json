@@ -2192,6 +2192,16 @@
       "emptyFolder": "Dieser Ordner ist leer",
       "importing": "Importiere...",
       "importButton": "{{count}} importieren"
+    },
+    "bulk": {
+      "toolbar": "Sammelaktionen",
+      "selected_one": "{{count}} ausgewählt",
+      "selected_other": "{{count}} ausgewählt",
+      "move": "Verschieben",
+      "copy": "Kopieren",
+      "download": "Herunterladen",
+      "trash": "In Papierkorb",
+      "clear": "Auswahl aufheben"
     }
   },
   "hr": {

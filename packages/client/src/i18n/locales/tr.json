@@ -2192,6 +2192,16 @@
       "emptyFolder": "Bu klasör boş",
       "importing": "İçe aktarılıyor...",
       "importButton": "{{count}} dosya içe aktar"
+    },
+    "bulk": {
+      "toolbar": "Toplu işlemler",
+      "selected_one": "{{count}} seçildi",
+      "selected_other": "{{count}} seçildi",
+      "move": "Taşı",
+      "copy": "Kopyala",
+      "download": "İndir",
+      "trash": "Çöpe at",
+      "clear": "Seçimi temizle"
     }
   },
   "hr": {
