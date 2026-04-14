@@ -1,5 +1,4 @@
 import { type ReactNode } from 'react';
-import type { CSSProperties } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutGrid,
@@ -10,6 +9,7 @@ import { useAuthStore } from '../../stores/auth-store';
 import { useMyTenants } from '../../hooks/use-platform';
 import { ROUTES } from '../../config/routes';
 import { AppSidebar, SidebarSection, SidebarItem } from '../../components/layout/app-sidebar';
+import { ContentArea } from '../../components/ui/content-area';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -112,52 +112,16 @@ export function OrgLayout() {
       </AppSidebar>
 
       {/* Content area */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        minWidth: 0,
-        paddingBottom: 'var(--global-dock-offset, 0px)',
-      }}>
-        {/* Top bar */}
-        <header style={{
-          height: 48,
-          flexShrink: 0,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--spacing-sm)',
-          padding: '0 var(--spacing-xl)',
-          borderBottom: '1px solid var(--color-border-primary)',
-          background: 'var(--color-bg-primary)',
-        }}>
-          <span style={{
-            fontSize: 'var(--font-size-xs)',
-            color: 'var(--color-text-tertiary)',
-          }}>
-            Organization
-          </span>
-          <span style={{
-            fontSize: 'var(--font-size-xs)',
-            color: 'var(--color-text-tertiary)',
-            userSelect: 'none',
-          }}>
-            /
-          </span>
-          <span style={{
-            fontSize: 'var(--font-size-sm)',
-            fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'],
-            color: 'var(--color-text-primary)',
-          }}>
-            {pageTitle}
-          </span>
-        </header>
-
-        {/* Page content */}
+      <ContentArea
+        breadcrumbs={[
+          { label: 'Organization' },
+          { label: pageTitle },
+        ]}
+      >
         <main style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-xl)' }}>
           <Outlet />
         </main>
-      </div>
+      </ContentArea>
     </div>
   );
 }
