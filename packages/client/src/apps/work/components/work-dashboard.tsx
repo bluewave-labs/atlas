@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDate, formatRelativeDate, formatCurrency, formatNumber } from '../../../lib/format';
+import { ContentArea } from '../../../components/ui/content-area';
 import { StatCard } from '../../../components/ui/stat-card';
 import {
   Clock, FolderKanban, FileText, DollarSign, AlertCircle, Plus,
@@ -223,10 +224,8 @@ export function WorkDashboard() {
   const { canCreate } = useAppActions('work');
 
   return (
-    <div style={{ overflow: 'auto', flex: 1, padding: 'var(--spacing-lg)' }}>
-      <h1 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', margin: '0 0 var(--spacing-lg) 0' }}>
-        {t('work.sidebar.dashboard')}
-      </h1>
+    <ContentArea title={t('work.sidebar.dashboard')}>
+      <div style={{ overflow: 'auto', flex: 1, padding: 'var(--spacing-lg)' }}>
       <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)', flexWrap: 'wrap' }}>
         <StatCard
           label={t('projects.dashboard.hoursThisWeek')}
@@ -284,6 +283,7 @@ export function WorkDashboard() {
         recentTimeEntries={data?.recentTimeEntries ?? []}
         recentInvoiceActions={data?.recentInvoiceActions ?? []}
       />
-    </div>
+      </div>
+    </ContentArea>
   );
 }
