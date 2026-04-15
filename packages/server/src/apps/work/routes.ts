@@ -15,9 +15,43 @@ router.get('/tasks', controller.listTasks);
 router.post('/tasks', controller.createTask);
 router.get('/tasks/search', controller.searchTasks);
 router.get('/tasks/counts', controller.getTaskCounts);
+router.get('/tasks/blocked', controller.getBlockedTaskIds);
 router.get('/tasks/:id', controller.getTask);
 router.patch('/tasks/:id', withConcurrencyCheck(tasks), controller.updateTask);
 router.delete('/tasks/:id', controller.deleteTask);
+
+// Task subtasks
+router.get('/tasks/:id/subtasks', controller.listSubtasks);
+router.post('/tasks/:id/subtasks', controller.createSubtask);
+router.patch('/tasks/:id/subtasks/:subtaskId', controller.updateSubtask);
+router.delete('/tasks/:id/subtasks/:subtaskId', controller.deleteSubtask);
+router.post('/tasks/:id/subtasks/reorder', controller.reorderSubtasks);
+
+// Task activities
+router.get('/tasks/:id/activities', controller.listActivities);
+
+// Task comments
+router.get('/tasks/:taskId/comments', controller.listComments);
+router.post('/tasks/:taskId/comments', controller.createComment);
+router.delete('/tasks/:taskId/comments/:commentId', controller.deleteComment);
+
+// Task attachments
+router.get('/tasks/:taskId/attachments', controller.listAttachments);
+router.post('/tasks/:taskId/attachments', controller.uploadAttachment);
+router.get('/tasks/:taskId/attachments/:attachmentId/download', controller.downloadAttachment);
+router.delete('/tasks/:taskId/attachments/:attachmentId', controller.deleteAttachment);
+
+// Task dependencies
+router.get('/tasks/:taskId/dependencies', controller.listDependencies);
+router.post('/tasks/:taskId/dependencies', controller.addDependency);
+router.delete('/tasks/:taskId/dependencies/:blockerTaskId', controller.removeDependency);
+
+// Task templates
+router.get('/templates', controller.listTemplates);
+router.post('/templates', controller.createTemplate);
+router.patch('/templates/:templateId', controller.updateTemplate);
+router.delete('/templates/:templateId', controller.deleteTemplate);
+router.post('/templates/:templateId/use', controller.createTaskFromTemplate);
 
 // Projects
 router.get('/projects', controller.listProjects);

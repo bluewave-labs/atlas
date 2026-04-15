@@ -1,3 +1,42 @@
-// Work-app services. Business logic lives here; controllers thin-wrap these.
-// Implemented incrementally by later tasks.
-export {};
+// Work-app service barrel — re-exports from sub-service files.
+export {
+  listTasks,
+  getTask,
+  createTask,
+  updateTask,
+  deleteTask,
+  restoreTask,
+  searchTasks,
+  reorderTasks,
+  getTaskCounts,
+  type TaskView,
+} from './services/task.service';
+
+export {
+  listSubtasks,
+  createSubtask,
+  updateSubtask,
+  deleteSubtask,
+  getSubtaskById,
+  reorderSubtasks,
+  logActivity,
+  listActivities,
+  listTemplates,
+  createTemplate,
+  updateTemplate,
+  deleteTemplate,
+  deleteTemplateById,
+  getTemplateById,
+  createTaskFromTemplate,
+  listComments,
+  createComment,
+  deleteComment,
+  listAttachments,
+  addAttachment,
+  deleteAttachment,
+  getAttachment,
+  listDependencies,
+  addDependency,
+  removeDependency,
+  getBlockedTaskIds,
+} from './services/extras.service';

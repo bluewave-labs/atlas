@@ -1,16 +1,43 @@
 import type { Request, Response } from 'express';
 
+// Re-export ported task handlers
+export {
+  listTasks,
+  createTask,
+  searchTasks,
+  getTaskCounts,
+  getTask,
+  updateTask,
+  deleteTask,
+  reorderTasks,
+  listSubtasks,
+  createSubtask,
+  updateSubtask,
+  deleteSubtask,
+  reorderSubtasks,
+  listActivities,
+  listTemplates,
+  createTemplate,
+  updateTemplate,
+  deleteTemplate,
+  createTaskFromTemplate,
+  listComments,
+  createComment,
+  deleteComment,
+  listAttachments,
+  uploadAttachment,
+  deleteAttachment,
+  downloadAttachment,
+  listDependencies,
+  addDependency,
+  removeDependency,
+  getBlockedTaskIds,
+} from './controllers/tasks.controller';
+
+// Stubs for project/financials handlers (implemented in later tasks)
 const NOT_IMPLEMENTED = (_req: Request, res: Response) => {
   res.status(501).json({ success: false, error: 'Not implemented yet' });
 };
-
-export const listTasks = NOT_IMPLEMENTED;
-export const createTask = NOT_IMPLEMENTED;
-export const searchTasks = NOT_IMPLEMENTED;
-export const getTaskCounts = NOT_IMPLEMENTED;
-export const getTask = NOT_IMPLEMENTED;
-export const updateTask = NOT_IMPLEMENTED;
-export const deleteTask = NOT_IMPLEMENTED;
 
 export const listProjects = NOT_IMPLEMENTED;
 export const createProject = NOT_IMPLEMENTED;

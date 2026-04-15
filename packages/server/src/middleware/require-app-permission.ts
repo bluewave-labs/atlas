@@ -23,6 +23,7 @@ declare global {
       signPerm?: ResolvedAppPermission;
       tablesPerm?: ResolvedAppPermission;
       tasksPerm?: ResolvedAppPermission;
+      workPerm?: ResolvedAppPermission;
     }
   }
 }
