@@ -630,4 +630,47 @@ export function InvoicesIcon({ size = 24, className, style }: IconProps) {
   );
 }
 
+export function WorkIcon({ size = 24, className, style }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 128 128"
+      preserveAspectRatio="xMidYMid meet"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      style={style}
+    >
+      {/* Briefcase body */}
+      <rect x="14" y="48" width="100" height="66" rx="8" fill="url(#work_paint0)" />
+      {/* Briefcase handle */}
+      <path d="M44 48V36C44 30 50 24 64 24C78 24 84 30 84 36V48" stroke="url(#work_paint1)" strokeWidth="8" strokeLinecap="round" fill="none" />
+      {/* Center band */}
+      <rect opacity="0.6" x="14" y="76" width="100" height="12" fill="url(#work_paint2)" />
+      {/* Clasp */}
+      <rect x="56" y="70" width="16" height="16" rx="4" fill="url(#work_paint3)" />
+      <defs>
+        <linearGradient id="work_paint0" x1="64" y1="48" x2="64" y2="114" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#818cf8" />
+          <stop offset="1" stopColor="#4338ca" />
+        </linearGradient>
+        <linearGradient id="work_paint1" x1="64" y1="24" x2="64" y2="48" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#a5b4fc" />
+          <stop offset="1" stopColor="#6366f1" />
+        </linearGradient>
+        <linearGradient id="work_paint2" x1="14" y1="82" x2="114" y2="82" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#312e81" stopOpacity="0" />
+          <stop offset="0.5" stopColor="#312e81" stopOpacity="0.8" />
+          <stop offset="1" stopColor="#312e81" stopOpacity="0" />
+        </linearGradient>
+        <linearGradient id="work_paint3" x1="64" y1="70" x2="64" y2="86" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#e0e7ff" />
+          <stop offset="1" stopColor="#a5b4fc" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
 
