@@ -4221,7 +4221,9 @@
       "sectionNotes": "Notes",
       "sectionPayments": "Paiements",
       "sectionActivity": "Activité",
-      "deleteConfirmMessage": "Êtes-vous sûr de vouloir supprimer cette facture ? Cette action est irréversible."
+      "deleteConfirmMessage": "Êtes-vous sûr de vouloir supprimer cette facture ? Cette action est irréversible.",
+      "saveFailed": "Échec de l'enregistrement de la facture",
+      "shareNoCompany": "Impossible de générer le lien de partage — société introuvable"
     },
     "payments": {
       "recordPayment": "Enregistrer un paiement",

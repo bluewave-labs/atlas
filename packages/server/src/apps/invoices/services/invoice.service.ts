@@ -8,6 +8,7 @@ import { eq, and, asc, desc, inArray, sql } from 'drizzle-orm';
 import { logger } from '../../../utils/logger';
 import { getInvoiceSettings } from './settings.service';
 import { recordPayment } from './payment.service';
+import { replaceLineItems } from './line-item.service';
 
 // ─── Input types ────────────────────────────────────────────────────
 
@@ -49,6 +50,7 @@ interface UpdateInvoiceInput {
   dueDate?: string | null;
   notes?: string | null;
   isArchived?: boolean;
+  lineItems?: Array<{ description: string; quantity: number; unitPrice: number; taxRate?: number }>;
 }
 
 // ─── Invoices ───────────────────────────────────────────────────────
@@ -368,7 +370,13 @@ export async function updateInvoice(userId: string, tenantId: string, id: string
     .where(and(...conditions))
     .returning();
 
-  return updated ?? null;
+  if (!updated) return null;
+
+  if (input.lineItems !== undefined) {
+    await replaceLineItems(id, input.lineItems);
+  }
+
+  return updated;
 }
 
 export async function deleteInvoice(userId: string, tenantId: string, id: string, ownerUserId?: string) {

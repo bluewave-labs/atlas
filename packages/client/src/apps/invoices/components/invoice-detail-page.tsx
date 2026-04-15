@@ -18,6 +18,7 @@ import { TotalsBlock } from '../../../components/shared/totals-block';
 import { SendInvoiceModal } from './send-invoice-modal';
 import { RecordPaymentModal } from './record-payment-modal';
 import { ConfirmDialog } from '../../../components/ui/confirm-dialog';
+import { useCompanies } from '../../crm/hooks';
 import type { Invoice } from '@atlas-platform/shared';
 
 interface Props {
@@ -41,6 +42,7 @@ function statusToIndex(status: Invoice['status']): number {
 export function InvoiceDetailPage({ invoiceId, onBack }: Props) {
   const { t } = useTranslation();
   const { data: invoice, isLoading } = useInvoice(invoiceId);
+  const { data: companiesData } = useCompanies();
   const updateInvoice = useUpdateInvoice();
   const deleteInvoice = useDeleteInvoice();
   const markPaid = useMarkInvoicePaid();
@@ -145,7 +147,17 @@ export function InvoiceDetailPage({ invoiceId, onBack }: Props) {
             onMarkPaid={() => markPaid.mutate(invoice.id)}
             onWaive={() => waive.mutate(invoice.id)}
             onDelete={() => setConfirmDelete(true)}
-            onShareLink={() => {}}
+            onShareLink={() => {
+              const companies = companiesData?.companies ?? [];
+              const company = companies.find((c) => c.id === invoice.companyId);
+              if (!company?.portalToken) {
+                addToast({ type: 'error', message: t('invoices.detail.shareNoCompany') });
+                return;
+              }
+              const portalUrl = `${window.location.origin}/api/invoices/portal/${company.portalToken}/${invoice.id}`;
+              navigator.clipboard.writeText(portalUrl);
+              addToast({ type: 'success', message: t('invoices.linkCopied') });
+            }}
             onImportTime={() => {}}
           />
         }

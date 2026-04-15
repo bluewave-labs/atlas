@@ -4221,7 +4221,9 @@
       "sectionNotes": "Note",
       "sectionPayments": "Pagamenti",
       "sectionActivity": "Attività",
-      "deleteConfirmMessage": "Sei sicuro di voler eliminare questa fattura? Questa azione non può essere annullata."
+      "deleteConfirmMessage": "Sei sicuro di voler eliminare questa fattura? Questa azione non può essere annullata.",
+      "saveFailed": "Salvataggio della fattura non riuscito",
+      "shareNoCompany": "Impossibile generare il link di condivisione — azienda non trovata"
     },
     "payments": {
       "recordPayment": "Registra pagamento",

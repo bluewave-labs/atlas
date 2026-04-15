@@ -4221,7 +4221,9 @@
       "sectionNotes": "Notlar",
       "sectionPayments": "Ödemeler",
       "sectionActivity": "Etkinlik",
-      "deleteConfirmMessage": "Bu faturayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
+      "deleteConfirmMessage": "Bu faturayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+      "saveFailed": "Fatura kaydedilemedi",
+      "shareNoCompany": "Paylaşım bağlantısı oluşturulamadı — şirket bulunamadı"
     },
     "payments": {
       "recordPayment": "Ödeme kaydet",

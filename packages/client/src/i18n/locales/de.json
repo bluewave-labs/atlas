@@ -4221,7 +4221,9 @@
       "sectionNotes": "Notizen",
       "sectionPayments": "Zahlungen",
       "sectionActivity": "Aktivität",
-      "deleteConfirmMessage": "Sind Sie sicher, dass Sie diese Rechnung löschen möchten? Dies kann nicht rückgängig gemacht werden."
+      "deleteConfirmMessage": "Sind Sie sicher, dass Sie diese Rechnung löschen möchten? Dies kann nicht rückgängig gemacht werden.",
+      "saveFailed": "Rechnung konnte nicht gespeichert werden",
+      "shareNoCompany": "Freigabe-Link konnte nicht erstellt werden — Unternehmen nicht gefunden"
     },
     "payments": {
       "recordPayment": "Zahlung erfassen",

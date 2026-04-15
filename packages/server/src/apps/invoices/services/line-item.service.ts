@@ -86,6 +86,31 @@ export async function updateLineItem(id: string, input: UpdateLineItemInput) {
   return updated ?? null;
 }
 
+export async function replaceLineItems(
+  invoiceId: string,
+  items: Array<{ description: string; quantity: number; unitPrice: number; taxRate?: number }>,
+) {
+  // Delete existing line items (simple ones without time entries for bulk replace)
+  await db.delete(invoiceLineItems).where(eq(invoiceLineItems.invoiceId, invoiceId));
+
+  if (items.length === 0) return [];
+
+  const now = new Date();
+  const rows = items.map((item, i) => ({
+    invoiceId,
+    timeEntryId: null as string | null,
+    description: item.description,
+    quantity: item.quantity,
+    unitPrice: item.unitPrice,
+    amount: item.quantity * item.unitPrice,
+    taxRate: item.taxRate ?? 0,
+    sortOrder: i,
+    createdAt: now,
+  }));
+
+  return db.insert(invoiceLineItems).values(rows).returning();
+}
+
 export async function deleteLineItem(id: string) {
   // If the line item had a time entry, unmark it
   const [lineItem] = await db

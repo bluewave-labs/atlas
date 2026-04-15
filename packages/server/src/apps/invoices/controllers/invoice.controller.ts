@@ -115,7 +115,7 @@ export async function updateInvoice(req: Request, res: Response) {
       companyId, contactId, dealId, proposalId,
       invoiceNumber, status, subtotal, taxPercent, taxAmount,
       discountPercent, discountAmount, total, currency,
-      issueDate, dueDate, notes, isArchived,
+      issueDate, dueDate, notes, isArchived, lineItems,
     } = req.body;
 
     const isAdmin = perm.role === 'admin';
@@ -123,7 +123,7 @@ export async function updateInvoice(req: Request, res: Response) {
       companyId, contactId, dealId, proposalId,
       invoiceNumber, status, subtotal, taxPercent, taxAmount,
       discountPercent, discountAmount, total, currency,
-      issueDate, dueDate, notes, isArchived,
+      issueDate, dueDate, notes, isArchived, lineItems,
     }, isAdmin ? undefined : userId);
 
     if (!invoice) {
