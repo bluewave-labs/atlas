@@ -21,7 +21,7 @@ export async function getProjectFinancials(tenantId: string, projectId: string) 
       total: invoices.total,
       status: invoices.status,
       currency: invoices.currency,
-      amountPaid: sql<number>`COALESCE(${payments.amountPaid}, 0)`.as('amount_paid'),
+      amountPaid: sql<number>`COALESCE("payments"."amount_paid", 0)`.as('amount_paid'),
     })
     .from(invoices)
     .leftJoin(payments, eq(payments.invoiceId, invoices.id))
