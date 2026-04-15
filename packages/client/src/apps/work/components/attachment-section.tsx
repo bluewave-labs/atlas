@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { Plus, Paperclip, Download, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { formatBytes } from '../../../lib/format';
 import { useAuthStore } from '../../../stores/auth-store';
 import { useAppActions } from '../../../hooks/use-app-permissions';
 import { useTaskAttachments, useAddAttachment, useDeleteAttachment } from '../hooks';
@@ -15,12 +16,6 @@ export function AttachmentSection({ taskId }: { taskId: string }) {
   const addAttachment = useAddAttachment();
   const deleteAttachment = useDeleteAttachment();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  function formatFileSize(bytes: number): string {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  }
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -111,7 +106,7 @@ export function AttachmentSection({ taskId }: { taskId: string }) {
                 fontSize: 'var(--font-size-xs)',
                 color: 'var(--color-text-tertiary)',
               }}>
-                {formatFileSize(att.size)}
+                {formatBytes(att.size)}
               </div>
             </div>
             <IconButton

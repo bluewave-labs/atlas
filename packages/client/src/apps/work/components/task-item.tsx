@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import {
   Check, ChevronRight, GripVertical, Hash, Repeat, FileText,
 } from 'lucide-react';
@@ -12,7 +12,7 @@ import { WhenBadge } from './when-badge';
 import { Avatar } from '../../../components/ui/avatar';
 import { Badge } from '../../../components/ui/badge';
 
-export function TaskItem({
+function TaskItemInner({
   task,
   isSelected,
   onClick,
@@ -232,9 +232,9 @@ export function TaskItem({
       })()}
 
       {/* Creator badge for team tasks */}
-      {task.visibility === 'team' && task.userId !== currentUserId && (task as any).creatorName && (
+      {task.visibility === 'team' && task.userId !== currentUserId && task.creatorName && (
         <span style={{ fontSize: 10, color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', flexShrink: 0 }}>
-          {t('tasks.createdBy', { name: (task as any).creatorName })}
+          {t('tasks.createdBy', { name: task.creatorName })}
         </span>
       )}
 
@@ -249,3 +249,5 @@ export function TaskItem({
     </div>
   );
 }
+
+export const TaskItem = memo(TaskItemInner);

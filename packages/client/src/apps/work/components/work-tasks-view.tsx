@@ -174,7 +174,10 @@ export function WorkTasksView({ view, title }: Props) {
 
   const showDueDateInList = view !== 'my';
 
-  const selectedTask = displayTasks.find(t => t.id === selectedTaskId) ?? null;
+  const selectedTask = useMemo(
+    () => displayTasks.find(t => t.id === selectedTaskId) ?? null,
+    [displayTasks, selectedTaskId],
+  );
   const updateTask = useUpdateTask();
   const reorderTasks = useReorderTasks();
   const queryClient = useQueryClient();
@@ -216,7 +219,7 @@ export function WorkTasksView({ view, title }: Props) {
   }, [displayTasks, selectedIds]);
 
   const handleBulkDelete = useCallback(async () => {
-    for (const id of Array.from(selectedIds)) await deleteTaskMutation.mutateAsync(id);
+    await Promise.all(Array.from(selectedIds).map(id => deleteTaskMutation.mutateAsync(id)));
     setSelectedIds(new Set());
     setShowDeleteConfirm(false);
     setSelectedTaskId(null);
@@ -246,8 +249,8 @@ export function WorkTasksView({ view, title }: Props) {
   const handleDragOver = useCallback((e: React.DragEvent, targetId: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setDropTargetId(targetId);
-  }, []);
+    if (targetId !== dropTargetId) setDropTargetId(targetId);
+  }, [dropTargetId]);
 
   const handleDrop = useCallback((e: React.DragEvent, targetId: string) => {
     e.preventDefault();

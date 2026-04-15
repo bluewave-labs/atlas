@@ -26,9 +26,23 @@ export function SubtaskSection({ taskId }: { taskId: string }) {
   };
 
   return (
-    <div className="px-4 py-3 border-t border-gray-100">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+    <div style={{
+      padding: 'var(--spacing-md) var(--spacing-lg)',
+      borderTop: '1px solid var(--color-border-secondary)',
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 'var(--spacing-sm)',
+      }}>
+        <span style={{
+          fontSize: 'var(--font-size-xs)',
+          fontWeight: 'var(--font-weight-medium)',
+          color: 'var(--color-text-tertiary)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+        }}>
           {t('tasks.subtasks.title')} {subtasks.length > 0 && `(${completedCount}/${subtasks.length})`}
         </span>
         {canCreate && (
@@ -44,18 +58,30 @@ export function SubtaskSection({ taskId }: { taskId: string }) {
 
       {/* Progress bar */}
       {subtasks.length > 0 && (
-        <div className="w-full h-1.5 bg-gray-100 rounded-full mb-2">
+        <div style={{
+          width: '100%',
+          height: 6,
+          background: 'var(--color-bg-tertiary)',
+          borderRadius: 'var(--radius-sm)',
+          marginBottom: 'var(--spacing-sm)',
+          overflow: 'hidden',
+        }}>
           <div
-            className="h-full bg-green-500 rounded-full transition-all duration-300"
-            style={{ width: `${(completedCount / subtasks.length) * 100}%` }}
+            style={{
+              height: '100%',
+              background: 'var(--color-success)',
+              borderRadius: 'var(--radius-sm)',
+              width: `${(completedCount / subtasks.length) * 100}%`,
+              transition: 'width 300ms',
+            }}
           />
         </div>
       )}
 
       {/* Subtask list */}
-      <div className="space-y-1">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {subtasks.map((subtask) => (
-          <div key={subtask.id} className="flex items-center gap-2 group">
+          <div key={subtask.id} className="group" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
             <input
               type="checkbox"
               checked={subtask.isCompleted}
@@ -68,9 +94,21 @@ export function SubtaskSection({ taskId }: { taskId: string }) {
                   isCompleted: e.target.checked,
                 });
               }}
-              className="w-3.5 h-3.5 rounded border-gray-300 text-green-600 cursor-pointer"
+              style={{
+                width: 14,
+                height: 14,
+                cursor: 'pointer',
+                accentColor: 'var(--color-success)',
+                border: '1px solid var(--color-border-primary)',
+                flexShrink: 0,
+              }}
             />
-            <span className={`flex-1 text-sm ${subtask.isCompleted ? 'line-through text-gray-400' : 'text-gray-700'}`}>
+            <span style={{
+              flex: 1,
+              fontSize: 'var(--font-size-sm)',
+              color: subtask.isCompleted ? 'var(--color-text-tertiary)' : 'var(--color-text-primary)',
+              textDecoration: subtask.isCompleted ? 'line-through' : 'none',
+            }}>
               {subtask.title}
             </span>
             {(canDelete || (canDeleteOwn && subtask.userId === account?.userId)) && (
@@ -90,14 +128,23 @@ export function SubtaskSection({ taskId }: { taskId: string }) {
 
       {/* Add subtask input */}
       {isAdding && canCreate && (
-        <div className="flex items-center gap-2 mt-2">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginTop: 'var(--spacing-sm)' }}>
           <input
             type="text"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') setIsAdding(false); }}
             placeholder={t('tasks.subtasks.placeholder')}
-            className="flex-1 text-sm px-2 py-1 border border-gray-200 rounded focus:outline-none focus:border-blue-400"
+            style={{
+              flex: 1,
+              fontSize: 'var(--font-size-sm)',
+              padding: 'var(--spacing-xs) var(--spacing-sm)',
+              border: '1px solid var(--color-border-primary)',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--color-bg-tertiary)',
+              color: 'var(--color-text-primary)',
+              outline: 'none',
+            }}
             autoFocus
           />
         </div>

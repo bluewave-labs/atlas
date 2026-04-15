@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, X, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { formatDate as formatDateGlobal } from '../../../lib/format';
-import type { Task, TaskProject, RecurrenceRule, TenantUser } from '@atlas-platform/shared';
+import type { Task, TaskProject, RecurrenceRule, TenantUser, UpdateTaskInput } from '@atlas-platform/shared';
 import { useUpdateTask, useDeleteTask, useUpdateTaskVisibility } from '../hooks';
 import { useAppActions } from '../../../hooks/use-app-permissions';
 import { useAuthStore } from '../../../stores/auth-store';
@@ -58,10 +58,10 @@ export function TaskDetailPanel({
     setDueDate(task.dueDate || '');
   }, [task.id, task.title, task.when, task.priority, task.dueDate]);
 
-  const autoSave = useCallback((updates: Record<string, unknown>) => {
+  const autoSave = useCallback((updates: Partial<UpdateTaskInput>) => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
-      updateTask.mutate({ id: task.id, updatedAt: task.updatedAt, ...updates } as any);
+      updateTask.mutate({ id: task.id, updatedAt: task.updatedAt, ...updates } as Parameters<typeof updateTask.mutate>[0]);
     }, 500);
   }, [task.id, updateTask]);
 

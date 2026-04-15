@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MessageSquare, Trash2, Send } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { formatRelativeDate } from '../../../lib/format';
 import { useAuthStore } from '../../../stores/auth-store';
 import { useAppActions } from '../../../hooks/use-app-permissions';
 import { useTaskComments, useCreateComment, useDeleteComment } from '../hooks';
@@ -24,19 +25,6 @@ export function CommentSection({ taskId }: { taskId: string }) {
     createComment.mutate({ taskId, body });
     setNewComment('');
   };
-
-  function getRelativeTime(dateStr: string): string {
-    const now = Date.now();
-    const then = new Date(dateStr).getTime();
-    const diff = now - then;
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return t('tasks.activity.justNow');
-    if (mins < 60) return t('tasks.activity.minutesAgo', { count: mins });
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return t('tasks.activity.hoursAgo', { count: hours });
-    const days = Math.floor(hours / 24);
-    return t('tasks.activity.daysAgo', { count: days });
-  }
 
   return (
     <div style={{
@@ -101,7 +89,7 @@ export function CommentSection({ taskId }: { taskId: string }) {
                   fontSize: 'var(--font-size-xs)',
                   color: 'var(--color-text-tertiary)',
                 }}>
-                  {getRelativeTime(comment.createdAt)}
+                  {formatRelativeDate(comment.createdAt)}
                 </span>
                 {account && comment.userId === account.userId && (
                   <IconButton
