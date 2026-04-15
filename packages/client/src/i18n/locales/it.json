@@ -4220,7 +4220,8 @@
       "sectionTotals": "Totali",
       "sectionNotes": "Note",
       "sectionPayments": "Pagamenti",
-      "sectionActivity": "Attività"
+      "sectionActivity": "Attività",
+      "deleteConfirmMessage": "Sei sicuro di voler eliminare questa fattura? Questa azione non può essere annullata."
     },
     "payments": {
       "recordPayment": "Registra pagamento",

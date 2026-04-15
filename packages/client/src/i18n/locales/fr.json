@@ -4220,7 +4220,8 @@
       "sectionTotals": "Totaux",
       "sectionNotes": "Notes",
       "sectionPayments": "Paiements",
-      "sectionActivity": "Activité"
+      "sectionActivity": "Activité",
+      "deleteConfirmMessage": "Êtes-vous sûr de vouloir supprimer cette facture ? Cette action est irréversible."
     },
     "payments": {
       "recordPayment": "Enregistrer un paiement",

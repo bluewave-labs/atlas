@@ -4220,7 +4220,8 @@
       "sectionTotals": "Toplamlar",
       "sectionNotes": "Notlar",
       "sectionPayments": "Ödemeler",
-      "sectionActivity": "Etkinlik"
+      "sectionActivity": "Etkinlik",
+      "deleteConfirmMessage": "Bu faturayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
     },
     "payments": {
       "recordPayment": "Ödeme kaydet",

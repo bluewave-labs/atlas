@@ -4220,7 +4220,8 @@
       "sectionTotals": "Summen",
       "sectionNotes": "Notizen",
       "sectionPayments": "Zahlungen",
-      "sectionActivity": "Aktivität"
+      "sectionActivity": "Aktivität",
+      "deleteConfirmMessage": "Sind Sie sicher, dass Sie diese Rechnung löschen möchten? Dies kann nicht rückgängig gemacht werden."
     },
     "payments": {
       "recordPayment": "Zahlung erfassen",
