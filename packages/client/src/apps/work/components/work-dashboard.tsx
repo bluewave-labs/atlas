@@ -1,74 +1,19 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatDate, formatRelativeDate, formatCurrency, formatNumber } from '../../../lib/format';
 import { StatCard } from '../../../components/ui/stat-card';
 import {
-  Clock, FolderKanban, FileText, Plus, DollarSign, AlertCircle,
+  Clock, FolderKanban, FileText, DollarSign, AlertCircle, Plus,
 } from 'lucide-react';
 import {
-  useDashboard, useProjects, useCreateTimeEntry, useCreateProject,
+  useDashboard, useProjects, useCreateTimeEntry,
 } from '../hooks';
 import type { WorkProject } from '../hooks';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Select } from '../../../components/ui/select';
-import { Modal } from '../../../components/ui/modal';
 import { useAppActions } from '../../../hooks/use-app-permissions';
 import '../../../styles/projects.css';
-
-function CreateProjectModal({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const createProject = useCreateProject();
-
-  const handleSubmit = () => {
-    if (!name.trim()) return;
-    createProject.mutate({ name: name.trim() }, {
-      onSuccess: (project) => {
-        onOpenChange(false);
-        setName('');
-        navigate(`/work?projectId=${project.id}`);
-      },
-    });
-  };
-
-  const handleClose = (next: boolean) => {
-    if (!next) setName('');
-    onOpenChange(next);
-  };
-
-  return (
-    <Modal open={open} onOpenChange={handleClose} width={400} title={t('work.createProject.title')}>
-      <Modal.Header title={t('work.createProject.title')} />
-      <Modal.Body>
-        <Input
-          label={t('work.createProject.namePlaceholder')}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t('work.createProject.namePlaceholder')}
-          size="md"
-          autoFocus
-          onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
-        />
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="ghost" size="md" onClick={() => handleClose(false)}>
-          {t('work.createProject.cancel')}
-        </Button>
-        <Button
-          variant="primary"
-          size="md"
-          onClick={handleSubmit}
-          disabled={!name.trim() || createProject.isPending}
-        >
-          {t('work.createProject.submit')}
-        </Button>
-      </Modal.Footer>
-    </Modal>
-  );
-}
 
 // ─── Revenue Chart ───────────────────────────────────────────────────
 
@@ -276,21 +221,12 @@ export function WorkDashboard() {
   const { data: projectsData } = useProjects();
   const projects = projectsData?.projects ?? [];
   const { canCreate } = useAppActions('work');
-  const [createOpen, setCreateOpen] = useState(false);
 
   return (
     <div style={{ overflow: 'auto', flex: 1, padding: 'var(--spacing-lg)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--spacing-lg)' }}>
-        <h1 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', margin: 0 }}>
-          {t('work.sidebar.dashboard')}
-        </h1>
-        {canCreate && (
-          <Button variant="primary" size="sm" icon={<Plus size={13} />} onClick={() => setCreateOpen(true)}>
-            {t('work.sidebar.newProject')}
-          </Button>
-        )}
-      </div>
-      <CreateProjectModal open={createOpen} onOpenChange={setCreateOpen} />
+      <h1 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', margin: '0 0 var(--spacing-lg) 0' }}>
+        {t('work.sidebar.dashboard')}
+      </h1>
       <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)', flexWrap: 'wrap' }}>
         <StatCard
           label={t('projects.dashboard.hoursThisWeek')}
