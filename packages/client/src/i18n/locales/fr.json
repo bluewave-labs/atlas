@@ -4394,11 +4394,19 @@
   },
   "work": {
     "sidebar": {
+      "dashboard": "Tableau de bord",
       "myTasks": "Mes tâches",
       "assignedToMe": "Qui me sont assignées",
       "createdByMe": "Créées par moi",
       "allTasks": "Toutes les tâches",
-      "projects": "Projets"
+      "projects": "Projets",
+      "newProject": "Nouveau projet"
+    },
+    "createProject": {
+      "title": "Créer un projet",
+      "namePlaceholder": "Nom du projet",
+      "submit": "Créer",
+      "cancel": "Annuler"
     },
     "tabs": {
       "overview": "Aperçu",
@@ -4429,6 +4437,13 @@
       "projects": "Aucun projet pour le moment."
     },
     "loading": "Chargement…",
-    "projectNotFound": "Projet introuvable"
+    "projectNotFound": "Projet introuvable",
+    "files": {
+      "empty": "Aucun fichier lié à ce projet",
+      "emptyHint": "Liez des fichiers depuis Drive pour les voir ici",
+      "count_one": "{{count}} fichier",
+      "count_other": "{{count}} fichiers",
+      "openInDrive": "Ouvrir dans Drive"
+    }
   }
 }

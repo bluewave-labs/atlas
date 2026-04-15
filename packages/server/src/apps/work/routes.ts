@@ -53,6 +53,9 @@ router.patch('/templates/:templateId', controller.updateTemplate);
 router.delete('/templates/:templateId', controller.deleteTemplate);
 router.post('/templates/:templateId/use', controller.createTaskFromTemplate);
 
+// Dashboard
+router.get('/projects/dashboard', controller.getDashboard);
+
 // Projects
 router.get('/projects', controller.listProjects);
 router.post('/projects', controller.createProject);
@@ -63,7 +66,7 @@ router.delete('/projects/:id', controller.deleteProject);
 // Project members
 router.get('/projects/:id/members', controller.listProjectMembers);
 router.post('/projects/:id/members', controller.addProjectMember);
-router.delete('/projects/:id/members/:userId', controller.removeProjectMember);
+router.delete('/projects/:id/members/:memberId', controller.removeProjectMember);
 
 // Project time entries
 router.get('/projects/:id/time-entries', controller.listProjectTimeEntries);

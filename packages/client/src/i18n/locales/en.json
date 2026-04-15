@@ -4426,11 +4426,19 @@
   },
   "work": {
     "sidebar": {
+      "dashboard": "Dashboard",
       "myTasks": "My tasks",
       "assignedToMe": "Assigned to me",
       "createdByMe": "Created by me",
       "allTasks": "All tasks",
-      "projects": "Projects"
+      "projects": "Projects",
+      "newProject": "New project"
+    },
+    "createProject": {
+      "title": "Create project",
+      "namePlaceholder": "Project name",
+      "submit": "Create",
+      "cancel": "Cancel"
     },
     "tabs": {
       "overview": "Overview",
@@ -4461,6 +4469,13 @@
       "projects": "No projects yet."
     },
     "loading": "Loading…",
-    "projectNotFound": "Project not found"
+    "projectNotFound": "Project not found",
+    "files": {
+      "empty": "No files linked to this project",
+      "emptyHint": "Link files from Drive to make them appear here",
+      "count_one": "{{count}} file",
+      "count_other": "{{count}} files",
+      "openInDrive": "Open in Drive"
+    }
   }
 }

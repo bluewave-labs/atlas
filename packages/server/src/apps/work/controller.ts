@@ -34,6 +34,7 @@ export {
 
 // Re-export ported project handlers
 export {
+  getDashboard,
   listProjects,
   createProject,
   getProject,

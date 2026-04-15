@@ -4394,11 +4394,19 @@
   },
   "work": {
     "sidebar": {
+      "dashboard": "Dashboard",
       "myTasks": "Le mie attività",
       "assignedToMe": "Assegnate a me",
       "createdByMe": "Create da me",
       "allTasks": "Tutte le attività",
-      "projects": "Progetti"
+      "projects": "Progetti",
+      "newProject": "Nuovo progetto"
+    },
+    "createProject": {
+      "title": "Crea progetto",
+      "namePlaceholder": "Nome del progetto",
+      "submit": "Crea",
+      "cancel": "Annulla"
     },
     "tabs": {
       "overview": "Panoramica",
@@ -4429,6 +4437,13 @@
       "projects": "Nessun progetto ancora."
     },
     "loading": "Caricamento…",
-    "projectNotFound": "Progetto non trovato"
+    "projectNotFound": "Progetto non trovato",
+    "files": {
+      "empty": "Nessun file collegato a questo progetto",
+      "emptyHint": "Collega file da Drive per farli apparire qui",
+      "count_one": "{{count}} file",
+      "count_other": "{{count}} file",
+      "openInDrive": "Apri in Drive"
+    }
   }
 }

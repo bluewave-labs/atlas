@@ -1,9 +1,24 @@
 import type { Request, Response } from 'express';
 import * as projectService from '../services/project.service';
 import * as financialService from '../services/financial.service';
+import * as dashboardService from '../services/dashboard.service';
 import { logger } from '../../../utils/logger';
 import { emitAppEvent } from '../../../services/event.service';
 import { canAccess } from '../../../services/app-permissions.service';
+
+// ─── Dashboard ───────────────────────────────────────────────────────
+
+export async function getDashboard(req: Request, res: Response) {
+  try {
+    const userId = req.auth!.userId;
+    const tenantId = req.auth!.tenantId!;
+    const data = await dashboardService.getDashboardData(userId, tenantId);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error({ error }, 'Failed to get work dashboard');
+    res.status(500).json({ success: false, error: 'Failed to get work dashboard' });
+  }
+}
 
 // ─── Projects ───────────────────────────────────────────────────────
 
@@ -218,9 +233,7 @@ export async function removeProjectMember(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const tenantId = req.auth!.tenantId!;
     const projectId = req.params.id as string;
-    // Route uses :userId for the member's userId, but DB stores by member row id.
-    // The route is DELETE /projects/:id/members/:userId — we remove by userId match.
-    const memberUserId = req.params.userId as string;
+    const memberId = req.params.memberId as string;
 
     const project = await projectService.getProject(userId, tenantId, projectId);
     if (!project) {
@@ -233,10 +246,7 @@ export async function removeProjectMember(req: Request, res: Response) {
       return;
     }
 
-    // removeProjectMember takes (projectId, memberId) where memberId is the row id.
-    // The route exposes :userId — pass it as memberId; the service deletes WHERE id = memberId AND project_id = projectId.
-    // For the work app the route param is :userId so we treat it as the member row id for backward compat.
-    await projectService.removeProjectMember(projectId, memberUserId);
+    await projectService.removeProjectMember(projectId, memberId);
     res.json({ success: true, data: null });
   } catch (error) {
     logger.error({ error }, 'Failed to remove project member');

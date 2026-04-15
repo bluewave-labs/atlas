@@ -205,10 +205,12 @@ export function AppSidebar({
 
 export interface SidebarSectionProps {
   title?: string;
+  /** Optional action node shown inline with the section title */
+  action?: ReactNode;
   children: ReactNode;
 }
 
-export function SidebarSection({ title, children }: SidebarSectionProps) {
+export function SidebarSection({ title, action, children }: SidebarSectionProps) {
   return (
     <div className="app-sidebar-section" style={{ marginBottom: 2, paddingTop: 2 }}>
       {title && (
@@ -220,9 +222,13 @@ export function SidebarSection({ title, children }: SidebarSectionProps) {
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
             padding: '8px 8px 4px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
           }}
         >
-          {title}
+          <span>{title}</span>
+          {action && <span style={{ textTransform: 'none', letterSpacing: 'normal' }}>{action}</span>}
         </div>
       )}
       {children}

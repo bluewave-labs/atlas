@@ -4394,11 +4394,19 @@
   },
   "work": {
     "sidebar": {
+      "dashboard": "Gösterge paneli",
       "myTasks": "Görevlerim",
       "assignedToMe": "Bana atanan",
       "createdByMe": "Benim oluşturduğum",
       "allTasks": "Tüm görevler",
-      "projects": "Projeler"
+      "projects": "Projeler",
+      "newProject": "Yeni proje"
+    },
+    "createProject": {
+      "title": "Proje oluştur",
+      "namePlaceholder": "Proje adı",
+      "submit": "Oluştur",
+      "cancel": "İptal"
     },
     "tabs": {
       "overview": "Genel bakış",
@@ -4429,6 +4437,13 @@
       "projects": "Henüz proje yok."
     },
     "loading": "Yükleniyor…",
-    "projectNotFound": "Proje bulunamadı"
+    "projectNotFound": "Proje bulunamadı",
+    "files": {
+      "empty": "Bu projeye bağlı dosya yok",
+      "emptyHint": "Burada görünmesi için Drive üzerinden dosya bağlayın",
+      "count_one": "{{count}} dosya",
+      "count_other": "{{count}} dosya",
+      "openInDrive": "Drive’da aç"
+    }
   }
 }
