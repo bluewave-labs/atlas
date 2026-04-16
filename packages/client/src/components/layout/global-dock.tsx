@@ -27,6 +27,7 @@ const ICON_RATIO = BASE_ICON / BASE;
  */
 const BRAND_ICON_BACKGROUNDS: Record<string, string> = {
   crm: '#ffffff',
+  work: '#ffffff',
   projects: '#ffffff',
   invoices: '#ffffff',
   hr: '#fff1ea',

@@ -561,6 +561,7 @@ export function InvoicesIcon({ size = 24, className, style }: IconProps) {
 }
 
 export function WorkIcon({ size = 24, className, style }: IconProps) {
+  // Wider, ~30% larger W centered in 128x128 (extends from x=4 to x=124, y=10 to y=118).
   return (
     <svg
       width={size}
@@ -571,19 +572,25 @@ export function WorkIcon({ size = 24, className, style }: IconProps) {
       className={className}
       style={style}
     >
-      <path d="M73.6667 74.6667C92.0762 74.6667 107 59.7428 107 41.3333C107 22.9238 92.0762 8 73.6667 8H27V74.6667H73.6667Z" fill="url(#work_paint0)"/>
-      <path d="M27 74.6667V8L67 64V120H27V74.6667Z" fill="url(#work_paint1)"/>
-      <path d="M79.8721 74.0901C77.8615 74.4687 75.7872 74.6667 73.6667 74.6667H27V8L79.8721 74.0901Z" fill="url(#work_paint2)"/>
+      {/* Left outer stroke of the W */}
+      <path d="M4 10H29L54 118H39L4 10Z" fill="url(#work_paint0)"/>
+      {/* Right outer stroke of the W */}
+      <path d="M124 10H99L74 118H89L124 10Z" fill="url(#work_paint0)"/>
+      {/* Center inverted V (orange peak) */}
+      <path d="M39 118L64 50L89 118H74L64 92L54 118H39Z" fill="url(#work_paint1)"/>
+      {/* Light highlight diagonals along the inner edges */}
+      <path d="M29 10L54 118H44L21 10H29Z" fill="url(#work_paint2)"/>
+      <path d="M99 10L74 118H84L107 10H99Z" fill="url(#work_paint2)"/>
       <defs>
-        <linearGradient id="work_paint0" x1="67" y1="8" x2="67" y2="74.6667" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#F38744"/>
-          <stop offset="1" stopColor="#8D4E27"/>
-        </linearGradient>
-        <linearGradient id="work_paint1" x1="47" y1="8" x2="47" y2="120" gradientUnits="userSpaceOnUse">
+        <linearGradient id="work_paint0" x1="64" y1="10" x2="64" y2="118" gradientUnits="userSpaceOnUse">
           <stop stopColor="#CAE3FF"/>
           <stop offset="1" stopColor="#1B5594"/>
         </linearGradient>
-        <linearGradient id="work_paint2" x1="53.436" y1="8" x2="53.436" y2="74.6667" gradientUnits="userSpaceOnUse">
+        <linearGradient id="work_paint1" x1="64" y1="50" x2="64" y2="118" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#F38744"/>
+          <stop offset="1" stopColor="#8D4E27"/>
+        </linearGradient>
+        <linearGradient id="work_paint2" x1="64" y1="10" x2="64" y2="118" gradientUnits="userSpaceOnUse">
           <stop stopColor="#53B1FD"/>
           <stop offset="1" stopColor="#326A97"/>
         </linearGradient>

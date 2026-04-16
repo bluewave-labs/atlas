@@ -32,6 +32,7 @@ import '../styles/home.css';
 // against a white card.
 const BRAND_ICON_BACKGROUNDS: Record<string, string> = {
   crm: '#ffffff',
+  work: '#ffffff',
   invoices: '#ffffff',
   hr: '#fff1ea',
   // System glyph is multicolour — neutral light slate keeps colours honest.

@@ -20,7 +20,7 @@ export const workManifest: ClientAppManifest = {
   dependencies: [],
   defaultEnabled: true,
   version: '1.0.0',
-  sidebarOrder: 55,
+  sidebarOrder: 25,
 
   routes: [
     { path: '/work', component: WorkPage },
