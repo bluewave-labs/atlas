@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { ActiveView, EditingCell, SortState } from '../lib/crm-helpers';
 import type {
@@ -282,6 +282,16 @@ function ProposalsListViewWrapper({
 }) {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorPrefill, setEditorPrefill] = useState<{ dealId?: string; companyId?: string; contactId?: string } | undefined>();
+
+  // Auto-open create modal from quick action URL param
+  const [sp, setSp] = useSearchParams();
+  useEffect(() => {
+    if (sp.get('action') === 'create') {
+      setEditorOpen(true);
+      sp.delete('action');
+      setSp(sp, { replace: true });
+    }
+  }, []);
 
   return (
     <>

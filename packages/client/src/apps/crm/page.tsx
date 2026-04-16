@@ -87,6 +87,19 @@ export function CrmPage() {
   const [showMergeContacts, setShowMergeContacts] = useState(false);
   const [showMergeCompanies, setShowMergeCompanies] = useState(false);
 
+  // Auto-open create modals from quick action URL params
+  useEffect(() => {
+    if (searchParams.get('action') === 'create') {
+      const view = searchParams.get('view');
+      if (view === 'pipeline') setShowCreateDeal(true);
+      else if (view === 'contacts') setShowCreateContact(true);
+      // proposals handled in ProposalsListViewWrapper (crm-content.tsx)
+      const next = new URLSearchParams(searchParams);
+      next.delete('action');
+      setSearchParams(next, { replace: true });
+    }
+  }, []);
+
   // Data
   const { data: companiesData } = useCompanies();
   const companies = companiesData?.companies ?? [];

@@ -85,6 +85,16 @@ export function ExpensesTabs({ searchQuery = '' }: ExpensesTabsProps) {
   const { data: selectedExpense } = useExpense(selectedExpenseId ?? undefined);
   const { data: editingExpense } = useExpense(editingExpenseId ?? undefined);
 
+  // Auto-open create modal from quick action URL param
+  useEffect(() => {
+    if (searchParams.get('action') === 'create') {
+      setShowExpenseForm(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('action');
+      setSearchParams(next, { replace: true });
+    }
+  }, []);
+
   // Resolve the active tab: URL > localStorage > default 'my-expenses'.
   const urlTab = searchParams.get('tab') as ExpenseTabId | null;
   const persistedTab = readPersistedTab();

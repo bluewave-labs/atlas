@@ -369,7 +369,7 @@ export function LeadsView() {
   const canCreateLead = canAccess(perm?.role, 'leads', 'create');
   const canUpdateLead = canAccess(perm?.role, 'leads', 'update');
   const canDeleteLead = canAccess(perm?.role, 'leads', 'delete');
-  const [, setSearchParams] = useSearchParams();
+  const [leadsSearchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
@@ -385,6 +385,15 @@ export function LeadsView() {
 
   const updateLead = useUpdateLead();
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Auto-open create modal from quick action URL param
+  useEffect(() => {
+    if (leadsSearchParams.get('action') === 'create') {
+      setShowCreateModal(true);
+      leadsSearchParams.delete('action');
+      setSearchParams(leadsSearchParams, { replace: true });
+    }
+  }, []);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [editingCell, setEditingCell] = useState<{ rowId: string; column: string } | null>(null);
   const [convertingLead, setConvertingLead] = useState<CrmLead | null>(null);

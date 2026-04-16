@@ -43,6 +43,16 @@ export function InvoicesPage() {
   // Permissions
   const { canCreate } = useAppActions('invoices');
 
+  // Auto-open create modal from quick action URL param
+  useEffect(() => {
+    if (searchParams.get('action') === 'create') {
+      setShowBuilder(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('action');
+      setSearchParams(next, { replace: true });
+    }
+  }, []);
+
   // Reset search on view change
   useEffect(() => {
     setSearchQuery('');

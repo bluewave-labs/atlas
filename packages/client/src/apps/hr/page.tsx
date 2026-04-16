@@ -100,6 +100,19 @@ export function HrPage() {
   const [showCreateTimeOff, setShowCreateTimeOff] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<HrDepartment | null>(null);
 
+  // Auto-open create modals from quick action URL params
+  useEffect(() => {
+    if (searchParams.get('action') === 'create') {
+      const view = searchParams.get('view');
+      if (view === 'employees') setShowCreateEmployee(true);
+      else if (view === 'time-off') setShowCreateTimeOff(true);
+      // expenses handled inside ExpensesTabs component
+      const next = new URLSearchParams(searchParams);
+      next.delete('action');
+      setSearchParams(next, { replace: true });
+    }
+  }, []);
+
   // Data
   const { data: countsData } = useEmployeeCounts();
   const counts = countsData ?? {

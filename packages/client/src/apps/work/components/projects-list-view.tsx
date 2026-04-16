@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
@@ -120,6 +120,16 @@ export function ProjectsListView() {
   const projects = data?.projects ?? [];
   const { canCreate } = useAppActions('work');
   const [createOpen, setCreateOpen] = useState(false);
+
+  // Auto-open create modal from quick action URL param
+  const [sp, setSp] = useSearchParams();
+  useEffect(() => {
+    if (sp.get('action') === 'create') {
+      setCreateOpen(true);
+      sp.delete('action');
+      setSp(sp, { replace: true });
+    }
+  }, []);
 
   const columns: DataTableColumn<WorkProject>[] = [
     {
