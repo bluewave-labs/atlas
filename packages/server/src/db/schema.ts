@@ -1702,6 +1702,20 @@ export const crmProposals = pgTable('crm_proposals', {
   publicTokenIdx: uniqueIndex('idx_crm_proposals_token').on(table.publicToken),
 }));
 
+// ─── CRM: Proposal Revisions ─────────────────────────────────────
+export const crmProposalRevisions = pgTable('crm_proposal_revisions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  proposalId: uuid('proposal_id').notNull().references(() => crmProposals.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull(),
+  revisionNumber: integer('revision_number').notNull(),
+  snapshotJson: jsonb('snapshot_json').notNull(),
+  changedBy: uuid('changed_by').notNull(),
+  changeReason: varchar('change_reason', { length: 200 }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  proposalIdx: index('idx_crm_proposal_revisions_proposal').on(table.proposalId),
+}));
+
 // ─── Projects: Projects ───────────────────────────────────────────
 export const projectProjects = pgTable('project_projects', {
   id: uuid('id').primaryKey().defaultRandom(),

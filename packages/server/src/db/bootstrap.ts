@@ -85,6 +85,32 @@ async function migrateLegacyData() {
     logger.error({ err }, 'invoices.project_id backfill failed');
   }
 
+  // CRM proposal revisions table — idempotent create for existing dev DBs.
+  try {
+    const c = await pool.connect();
+    try {
+      await c.query(`
+        CREATE TABLE IF NOT EXISTS crm_proposal_revisions (
+          id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+          proposal_id uuid NOT NULL REFERENCES crm_proposals(id) ON DELETE CASCADE,
+          tenant_id uuid NOT NULL,
+          revision_number integer NOT NULL,
+          snapshot_json jsonb NOT NULL,
+          changed_by uuid NOT NULL,
+          change_reason varchar(200),
+          created_at timestamptz NOT NULL DEFAULT now()
+        )
+      `);
+      await c.query(`
+        CREATE INDEX IF NOT EXISTS idx_crm_proposal_revisions_proposal ON crm_proposal_revisions(proposal_id)
+      `);
+    } finally {
+      c.release();
+    }
+  } catch (err) {
+    logger.error({ err }, 'crm_proposal_revisions create failed');
+  }
+
   // Work-app merge: copy task_projects → project_projects, seed isPrivate,
   // collapse tenant_apps. Guard: only run while task_projects still exists.
   try {
