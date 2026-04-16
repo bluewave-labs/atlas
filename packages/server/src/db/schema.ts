@@ -1475,6 +1475,7 @@ export const crmDeals = pgTable('crm_deals', {
   userId: uuid('user_id').notNull(),
   title: varchar('title', { length: 500 }).notNull(),
   value: real('value').notNull().default(0),
+  currency: varchar('currency', { length: 10 }).notNull().default('USD'),
   stageId: uuid('stage_id').notNull().references(() => crmDealStages.id),
   contactId: uuid('contact_id').references(() => crmContacts.id, { onDelete: 'set null' }),
   companyId: uuid('company_id').references(() => crmCompanies.id, { onDelete: 'set null' }),
@@ -2090,4 +2091,15 @@ export const presenceHeartbeats = pgTable('presence_heartbeats', {
   uniquePresence: uniqueIndex('idx_presence_unique').on(table.userId, table.appId, table.recordId),
   lookupIdx: index('idx_presence_lookup').on(table.tenantId, table.appId, table.recordId),
 }));
+
+// ─── Exchange Rates (cached from external providers) ────────────────
+
+export const exchangeRates = pgTable('exchange_rates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  baseCurrency: varchar('base_currency', { length: 10 }).notNull(),
+  targetCurrency: varchar('target_currency', { length: 10 }).notNull(),
+  rate: real('rate').notNull(),
+  provider: varchar('provider', { length: 50 }).notNull(),
+  fetchedAt: timestamp('fetched_at', { withTimezone: true }).defaultNow().notNull(),
+});
 

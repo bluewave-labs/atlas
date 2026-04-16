@@ -16,6 +16,7 @@ import stocksRoutes from './stocks.routes';
 import presenceRoutes from './presence.routes';
 import calendarRoutes from './calendar.routes';
 import updatesRoutes from './updates.routes';
+import { exchangeRateRoutes } from './exchange-rate.routes';
 import { adminLimiter } from '../middleware/rate-limit';
 import { serverAppRegistry } from '../apps';
 
@@ -39,6 +40,7 @@ router.use('/stocks', stocksRoutes);
 router.use('/presence', presenceRoutes);
 router.use('/calendar', calendarRoutes);
 router.use('/updates', updatesRoutes);
+router.use('/exchange-rates', exchangeRateRoutes);
 
 // App routes mounted dynamically from registry
 serverAppRegistry.mountAll(router);
