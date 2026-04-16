@@ -75,6 +75,7 @@
     "react-router-dom": "^7.1.0",
     "react-signature-canvas": "^1.1.0-alpha.2",
     "react-virtuoso": "^4.12.0",
+    "tesseract.js": "^7.0.0",
     "tiptap-extension-global-drag-handle": "^0.1.18",
     "zustand": "^5.0.0"
   },
