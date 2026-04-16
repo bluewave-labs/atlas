@@ -390,8 +390,9 @@ export function LeadsView() {
   useEffect(() => {
     if (leadsSearchParams.get('action') === 'create') {
       setShowCreateModal(true);
-      leadsSearchParams.delete('action');
-      setSearchParams(leadsSearchParams, { replace: true });
+      const next = new URLSearchParams(leadsSearchParams);
+      next.delete('action');
+      setSearchParams(next, { replace: true });
     }
   }, []);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);

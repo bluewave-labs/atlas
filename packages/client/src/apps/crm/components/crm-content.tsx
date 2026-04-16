@@ -288,8 +288,9 @@ function ProposalsListViewWrapper({
   useEffect(() => {
     if (sp.get('action') === 'create') {
       setEditorOpen(true);
-      sp.delete('action');
-      setSp(sp, { replace: true });
+      const next = new URLSearchParams(sp);
+      next.delete('action');
+      setSp(next, { replace: true });
     }
   }, []);
 

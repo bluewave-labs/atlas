@@ -126,8 +126,9 @@ export function ProjectsListView() {
   useEffect(() => {
     if (sp.get('action') === 'create') {
       setCreateOpen(true);
-      sp.delete('action');
-      setSp(sp, { replace: true });
+      const next = new URLSearchParams(sp);
+      next.delete('action');
+      setSp(next, { replace: true });
     }
   }, []);
 
