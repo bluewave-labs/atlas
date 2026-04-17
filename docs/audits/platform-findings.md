@@ -10,7 +10,9 @@ Cross-cutting patterns surfaced during module audits. Entries here are hypothese
 
 | ID | Source module | Dimension | Pattern / check | Modules affected | Fix location | Status |
 |----|---------------|-----------|-----------------|------------------|--------------|--------|
-| _no findings yet_ | | | | | | |
+| P-1 | CRM | 2 | useMutation definitions lack a default `onError`; error surfacing is opt-in per call site. Grep: `useMutation({` in `**/hooks.ts` — if no `onError` key, any forgetful caller gets a silent failure. | CRM (60+) | Fixed centrally: `packages/client/src/providers/query-provider.tsx` now has a `defaultMutationErrorHandler` that shows a toast. | fixed-centrally |
+| P-2 | CRM | 8 | Hard-delete (`db.delete(...)`) on user-created data that should soft-delete. Grep: `db\.delete\(` in every `services/*.service.ts` — every hit is a candidate. | CRM (lead forms, saved views) | Per-entity fix (add `isArchived` column + switch delete to update). | hypothesis |
+| P-3 | CRM | 5 | Entities with `updatedAt` column but no `withConcurrencyCheck` on PATCH/PUT route. Grep: every `routes.ts` — find `router.patch\|router.put` lines without `withConcurrencyCheck`. Cross-reference the table in DB — if it has `updatedAt`, concurrency should be wired. | CRM (stage, proposal, workflow, note) | Per-entity fix (client hook forwards `updatedAt`, server route wraps with `withConcurrencyCheck`). | hypothesis |
 
 ---
 
