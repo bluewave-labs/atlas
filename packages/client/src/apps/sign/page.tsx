@@ -13,6 +13,7 @@ import { AppSidebar, SidebarSection, SidebarItem } from '../../components/layout
 import { ContentArea } from '../../components/ui/content-area';
 import { Button } from '../../components/ui/button';
 import { ConfirmDialog } from '../../components/ui/confirm-dialog';
+import { QueryErrorState } from '../../components/ui/query-error-state';
 import { SignatureModal } from './components/signature-modal';
 import { SignListView } from './components/sign-list-view';
 import { SignEditorView } from './components/sign-editor-view';
@@ -135,7 +136,11 @@ export function SignPage() {
           ) : undefined
         }
       >
-        {s.view === 'list' && (
+        {s.view === 'list' && s.docsError && (
+          <QueryErrorState onRetry={() => s.refetchDocs()} />
+        )}
+
+        {s.view === 'list' && !s.docsError && (
           <SignListView
             searchQuery={s.searchQuery}
             onSearchChange={s.setSearchQuery}
@@ -157,7 +162,11 @@ export function SignPage() {
           />
         )}
 
-        {s.view === 'editor' && s.selectedDoc && (
+        {s.view === 'editor' && s.selectedDoc && s.fieldsError && (
+          <QueryErrorState onRetry={() => s.refetchFields()} />
+        )}
+
+        {s.view === 'editor' && s.selectedDoc && !s.fieldsError && (
           <SignEditorView
             selectedDoc={s.selectedDoc}
             fields={s.fields}
@@ -198,7 +207,11 @@ export function SignPage() {
           />
         )}
 
-        {s.view === 'templates' && (
+        {s.view === 'templates' && s.templatesError && (
+          <QueryErrorState onRetry={() => s.refetchTemplates()} />
+        )}
+
+        {s.view === 'templates' && !s.templatesError && (
           <SignTemplatesView
             templates={s.templates}
             templatesLoading={s.templatesLoading}

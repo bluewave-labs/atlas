@@ -65,12 +65,26 @@ export function useSignPageState() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Queries
-  const { data: documents, isLoading: docsLoading } = useSignDocuments();
+  const {
+    data: documents,
+    isLoading: docsLoading,
+    isError: docsError,
+    refetch: refetchDocs,
+  } = useSignDocuments();
   const { data: selectedDoc } = useSignDocument(selectedDocId ?? undefined);
-  const { data: fields } = useSignFields(selectedDocId ?? undefined);
+  const {
+    data: fields,
+    isError: fieldsError,
+    refetch: refetchFields,
+  } = useSignFields(selectedDocId ?? undefined);
   const { data: signingLinks } = useSigningLinks(selectedDocId ?? undefined);
   const { data: auditEntries } = useAuditLog(selectedDocId ?? undefined);
-  const { data: templates, isLoading: templatesLoading } = useTemplates();
+  const {
+    data: templates,
+    isLoading: templatesLoading,
+    isError: templatesError,
+    refetch: refetchTemplates,
+  } = useTemplates();
 
   // Mutations
   const createDoc = useCreateSignDoc();
@@ -433,9 +447,9 @@ export function useSignPageState() {
     fileInputRef,
 
     // Query data
-    documents, docsLoading,
-    selectedDoc, fields, signingLinks, auditEntries,
-    templates, templatesLoading,
+    documents, docsLoading, docsError, refetchDocs,
+    selectedDoc, fields, fieldsError, refetchFields, signingLinks, auditEntries,
+    templates, templatesLoading, templatesError, refetchTemplates,
 
     // Mutations
     createFromTemplate, saveAsTemplate, deleteTemplate,
