@@ -169,7 +169,7 @@ export function ConvertLeadModal({
     <Modal open={open} onOpenChange={(o) => !o && handleClose()}>
       <Modal.Header title={result ? t('crm.leads.convertSuccess') : t('crm.leads.convertTitle')} />
       <Modal.Body>
-        {result ? (
+        {result && result.deal ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-lg)', padding: 'var(--spacing-xl) 0' }}>
             <CheckCircle2 size={48} color="var(--color-success)" />
             <div style={{ textAlign: 'center' }}>
