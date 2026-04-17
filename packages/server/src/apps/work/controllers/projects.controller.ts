@@ -257,6 +257,38 @@ export async function removeProjectMember(req: Request, res: Response) {
   }
 }
 
+export async function updateProjectMemberRate(req: Request, res: Response) {
+  try {
+    const perm = req.workPerm!;
+    const userId = req.auth!.userId;
+    const tenantId = req.auth!.tenantId!;
+    const projectId = req.params.id as string;
+    const memberId = req.params.memberId as string;
+    const { hourlyRate } = req.body;
+
+    const project = await projectService.getProject(userId, tenantId, projectId);
+    if (!project) {
+      res.status(404).json({ success: false, error: 'Project not found' });
+      return;
+    }
+
+    if (!canAccess(perm.role, 'update') && project.userId !== userId) {
+      res.status(403).json({ success: false, error: 'Only the project owner or an admin can update member rates' });
+      return;
+    }
+
+    const member = await projectService.updateProjectMemberRate(projectId, memberId, hourlyRate ?? null);
+    if (!member) {
+      res.status(404).json({ success: false, error: 'Project member not found' });
+      return;
+    }
+    res.json({ success: true, data: member });
+  } catch (error) {
+    logger.error({ error }, 'Failed to update project member rate');
+    res.status(500).json({ success: false, error: 'Failed to update project member rate' });
+  }
+}
+
 // ─── Time Entries ────────────────────────────────────────────────────
 
 export async function listProjectTimeEntries(req: Request, res: Response) {

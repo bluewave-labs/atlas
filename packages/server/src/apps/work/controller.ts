@@ -44,6 +44,7 @@ export {
   listProjectMembers,
   addProjectMember,
   removeProjectMember,
+  updateProjectMemberRate,
   listProjectTimeEntries,
   createProjectTimeEntry,
   updateProjectTimeEntry,
