@@ -24,7 +24,10 @@ interface UpdateSavedViewInput {
 // ─── Saved Views ──────────────────────────────────────────────────
 
 export async function listSavedViews(userId: string, tenantId: string, appSection?: string) {
-  const conditions = [eq(crmSavedViews.tenantId, tenantId)];
+  const conditions = [
+    eq(crmSavedViews.tenantId, tenantId),
+    eq(crmSavedViews.isArchived, false),
+  ];
 
   // Return user's own views + shared views from other users
   conditions.push(
@@ -82,6 +85,7 @@ export async function updateSavedView(userId: string, tenantId: string, id: stri
 }
 
 export async function deleteSavedView(userId: string, tenantId: string, id: string) {
-  await db.delete(crmSavedViews)
+  await db.update(crmSavedViews)
+    .set({ isArchived: true, updatedAt: new Date() })
     .where(and(eq(crmSavedViews.id, id), eq(crmSavedViews.userId, userId), eq(crmSavedViews.tenantId, tenantId)));
 }

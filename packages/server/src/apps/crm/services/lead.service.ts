@@ -291,7 +291,7 @@ interface UpdateLeadFormInput {
 
 export async function listLeadForms(userId: string, tenantId: string) {
   return db.select().from(crmLeadForms)
-    .where(eq(crmLeadForms.tenantId, tenantId))
+    .where(and(eq(crmLeadForms.tenantId, tenantId), eq(crmLeadForms.isArchived, false)))
     .orderBy(desc(crmLeadForms.createdAt));
 }
 
@@ -332,7 +332,8 @@ export async function updateLeadForm(userId: string, tenantId: string, id: strin
 }
 
 export async function deleteLeadForm(userId: string, tenantId: string, id: string) {
-  await db.delete(crmLeadForms)
+  await db.update(crmLeadForms)
+    .set({ isArchived: true, isActive: false, updatedAt: new Date() })
     .where(and(eq(crmLeadForms.id, id), eq(crmLeadForms.tenantId, tenantId)));
 }
 
