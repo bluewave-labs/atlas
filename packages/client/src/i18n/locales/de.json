@@ -4265,7 +4265,9 @@
       "duplicateSuccess": "Rechnung dupliziert",
       "markPaidSuccess": "Als bezahlt markiert",
       "waiveSuccess": "Rechnung erlassen",
-      "metaProject": "Projekt"
+      "metaProject": "Projekt",
+      "skipAutoReminders": "Automatische Erinnerungen überspringen",
+      "skipAutoRemindersHelp": "Diese Rechnung ist vom geplanten Überfälligkeits-Erinnerungsablauf ausgeschlossen."
     },
     "payments": {
       "recordPayment": "Zahlung erfassen",

@@ -4265,7 +4265,9 @@
       "duplicateSuccess": "Facture dupliquée",
       "markPaidSuccess": "Marquée comme payée",
       "waiveSuccess": "Facture annulée",
-      "metaProject": "Projet"
+      "metaProject": "Projet",
+      "skipAutoReminders": "Ignorer les rappels automatiques",
+      "skipAutoRemindersHelp": "Cette facture est exclue du flux de rappels automatiques en cas de retard."
     },
     "payments": {
       "recordPayment": "Enregistrer un paiement",

@@ -4297,7 +4297,9 @@
       "duplicateSuccess": "Invoice duplicated",
       "markPaidSuccess": "Marked as paid",
       "waiveSuccess": "Invoice waived",
-      "metaProject": "Project"
+      "metaProject": "Project",
+      "skipAutoReminders": "Skip automatic reminders",
+      "skipAutoRemindersHelp": "This invoice is excluded from the scheduled overdue reminder flow."
     },
     "payments": {
       "recordPayment": "Record payment",

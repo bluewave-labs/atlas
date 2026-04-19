@@ -4265,7 +4265,9 @@
       "duplicateSuccess": "Fatura kopyalandı",
       "markPaidSuccess": "Ödenmiş olarak işaretlendi",
       "waiveSuccess": "Faturadan ferâgat edildi",
-      "metaProject": "Proje"
+      "metaProject": "Proje",
+      "skipAutoReminders": "Otomatik hatırlatmaları atla",
+      "skipAutoRemindersHelp": "Bu fatura, zamanlanmış gecikme hatırlatma akışının dışında tutulur."
     },
     "payments": {
       "recordPayment": "Ödeme kaydet",

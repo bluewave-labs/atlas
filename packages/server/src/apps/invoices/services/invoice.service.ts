@@ -52,6 +52,7 @@ interface UpdateInvoiceInput {
   dueDate?: string | null;
   notes?: string | null;
   isArchived?: boolean;
+  excludeFromAutoReminders?: boolean;
   lineItems?: Array<{ description: string; quantity: number; unitPrice: number; taxRate?: number }>;
 }
 
@@ -147,6 +148,7 @@ export async function listInvoices(userId: string, tenantId: string, filters?: {
       viewedAt: invoices.viewedAt,
       paidAt: invoices.paidAt,
       isArchived: invoices.isArchived,
+      excludeFromAutoReminders: invoices.excludeFromAutoReminders,
       createdAt: invoices.createdAt,
       updatedAt: invoices.updatedAt,
       eFaturaType: invoices.eFaturaType,
@@ -208,6 +210,7 @@ export async function getInvoice(userId: string, tenantId: string, id: string, o
       viewedAt: invoices.viewedAt,
       paidAt: invoices.paidAt,
       isArchived: invoices.isArchived,
+      excludeFromAutoReminders: invoices.excludeFromAutoReminders,
       createdAt: invoices.createdAt,
       updatedAt: invoices.updatedAt,
       eFaturaType: invoices.eFaturaType,
@@ -367,6 +370,7 @@ export async function updateInvoice(userId: string, tenantId: string, id: string
   if (input.dueDate !== undefined) updates.dueDate = input.dueDate ? new Date(input.dueDate) : null;
   if (input.notes !== undefined) updates.notes = input.notes;
   if (input.isArchived !== undefined) updates.isArchived = input.isArchived;
+  if (input.excludeFromAutoReminders !== undefined) updates.excludeFromAutoReminders = input.excludeFromAutoReminders;
 
   const conditions = [eq(invoices.id, id), eq(invoices.tenantId, tenantId)];
   if (ownerUserId) {

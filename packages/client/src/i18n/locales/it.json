@@ -4265,7 +4265,9 @@
       "duplicateSuccess": "Fattura duplicata",
       "markPaidSuccess": "Segnata come pagata",
       "waiveSuccess": "Fattura annullata",
-      "metaProject": "Progetto"
+      "metaProject": "Progetto",
+      "skipAutoReminders": "Salta i promemoria automatici",
+      "skipAutoRemindersHelp": "Questa fattura è esclusa dal flusso automatico di promemoria per insoluti."
     },
     "payments": {
       "recordPayment": "Registra pagamento",

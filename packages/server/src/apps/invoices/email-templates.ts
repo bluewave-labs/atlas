@@ -324,6 +324,9 @@ export function buildInvoiceReminderTemplate(
   let subject: string;
   let reminderLine: string | undefined;
 
+  const automatedSuffix = 'This is an automated reminder — if payment has already been sent, please disregard.';
+  const withAutomatedSuffix = (base?: string) => (base ? `${base} ${automatedSuffix}` : automatedSuffix);
+
   switch (stage) {
     case 1:
       intro = `A quick reminder that invoice ${data.invoice.invoiceNumber} for ${balanceStr} is now due. If you've already paid, please disregard this message.`;
@@ -332,7 +335,7 @@ export function buildInvoiceReminderTemplate(
       </p>`;
       ctaLabel = 'View invoice';
       subject = `Friendly reminder: Invoice ${data.invoice.invoiceNumber}`;
-      reminderLine = data.invoice.dueDate ? `Originally due ${formatDate(data.invoice.dueDate)}.` : undefined;
+      reminderLine = withAutomatedSuffix(data.invoice.dueDate ? `Originally due ${formatDate(data.invoice.dueDate)}.` : undefined);
       break;
     case 2:
       intro = `Your invoice ${data.invoice.invoiceNumber} for ${balanceStr} is now ${overdueDays} day${overdueDays === 1 ? '' : 's'} overdue. Please arrange payment at your earliest convenience.`;
@@ -341,7 +344,7 @@ export function buildInvoiceReminderTemplate(
       </p>`;
       ctaLabel = 'Pay now';
       subject = `Second reminder: Invoice ${data.invoice.invoiceNumber}`;
-      reminderLine = `This is our second reminder regarding this invoice.`;
+      reminderLine = withAutomatedSuffix('This is our second reminder regarding this invoice.');
       break;
     case 3:
       intro = `This is our third notice regarding invoice ${data.invoice.invoiceNumber}, which remains unpaid (${balanceStr}, ${overdueDays} days overdue). Please arrange payment as soon as possible to avoid further action.`;
@@ -350,7 +353,7 @@ export function buildInvoiceReminderTemplate(
       </p>`;
       ctaLabel = 'Pay now';
       subject = `Third notice: Invoice ${data.invoice.invoiceNumber}`;
-      reminderLine = `If payment has been made, please send us confirmation so we can update our records.`;
+      reminderLine = withAutomatedSuffix('If payment has been made, please send us confirmation so we can update our records.');
       break;
     case 4:
     default:
@@ -360,7 +363,7 @@ export function buildInvoiceReminderTemplate(
       </p>`;
       ctaLabel = 'Settle balance now';
       subject = `Overdue: Invoice ${data.invoice.invoiceNumber} — final notice`;
-      reminderLine = `Failure to respond may result in collection action. Please contact ${companyName} immediately if you are unable to pay in full.`;
+      reminderLine = withAutomatedSuffix(`Failure to respond may result in collection action. Please contact ${companyName} immediately if you are unable to pay in full.`);
       break;
   }
 

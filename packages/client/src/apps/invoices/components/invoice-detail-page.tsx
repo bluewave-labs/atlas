@@ -17,13 +17,16 @@ import { InvoiceLineItemsTable, type LineItem } from './invoice-line-items-table
 import { InvoicePaymentsList } from './invoice-payments-list';
 import { QueryErrorState } from '../../../components/ui/query-error-state';
 import { StatusTimeline } from '../../../components/shared/status-timeline';
+import { SettingsRow, SettingsToggle } from '../../../components/settings/settings-primitives';
+
+const REMINDER_ELIGIBLE_STATUSES = new Set<InvoiceStatus>(['sent', 'viewed', 'overdue']);
 import { TotalsBlock } from '../../../components/shared/totals-block';
 import { SendInvoiceModal } from './send-invoice-modal';
 import { RecordPaymentModal } from './record-payment-modal';
 import { ImportTimeEntriesModal } from './import-time-entries-modal';
 import { ConfirmDialog } from '../../../components/ui/confirm-dialog';
 import { useCompanies } from '../../crm/hooks';
-import type { Invoice } from '@atlas-platform/shared';
+import type { Invoice, InvoiceStatus } from '@atlas-platform/shared';
 
 interface Props {
   invoiceId: string;
@@ -220,6 +223,27 @@ export function InvoiceDetailPage({ invoiceId, onBack }: Props) {
                 isDraft={invoice.status === 'draft'}
               />
             </div>
+
+            {REMINDER_ELIGIBLE_STATUSES.has(invoice.status) && (
+              <div style={{ padding: '0 var(--spacing-md)' }}>
+                <SettingsRow
+                  label={t('invoices.detail.skipAutoReminders')}
+                  description={t('invoices.detail.skipAutoRemindersHelp')}
+                >
+                  <SettingsToggle
+                    checked={invoice.excludeFromAutoReminders ?? false}
+                    onChange={(v) =>
+                      updateInvoice.mutate({
+                        id: invoice.id,
+                        updatedAt: invoice.updatedAt,
+                        excludeFromAutoReminders: v,
+                      })
+                    }
+                    label={t('invoices.detail.skipAutoReminders')}
+                  />
+                </SettingsRow>
+              </div>
+            )}
 
             <div style={{ padding: 'var(--spacing-md)' }}>
               <StatusTimeline

@@ -184,6 +184,22 @@ async function migrateLegacyData() {
     logger.error({ err }, 'tasks.is_private backfill failed');
   }
 
+  // invoices.exclude_from_auto_reminders — lets users opt a single
+  // invoice out of the hourly reminder scheduler without disabling
+  // reminders tenant-wide.
+  try {
+    const c = await pool.connect();
+    try {
+      await c.query(
+        `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS exclude_from_auto_reminders boolean NOT NULL DEFAULT false`,
+      );
+    } finally {
+      c.release();
+    }
+  } catch (err) {
+    logger.error({ err }, 'invoices.exclude_from_auto_reminders backfill failed');
+  }
+
   // Work-app merge: copy task_projects → project_projects, seed isPrivate,
   // collapse tenant_apps. Guard: only run while task_projects still exists.
   try {

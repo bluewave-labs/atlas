@@ -127,6 +127,7 @@ export function useUpdateInvoice() {
       discountPercent: number;
       notes: string | null;
       eFaturaType: string;
+      excludeFromAutoReminders: boolean;
     }>) => {
       const { data } = await api.patch(`/invoices/${id}`, input, {
         headers: updatedAt ? { 'If-Unmodified-Since': updatedAt } : undefined,

@@ -42,6 +42,7 @@ export interface Invoice {
   eFaturaStatus?: string | null;
   lastReminderStage?: number;
   lastReminderAt?: Date | string | null;
+  excludeFromAutoReminders?: boolean;
   isArchived: boolean;
   createdAt: string;
   updatedAt: string;
@@ -98,6 +99,7 @@ export interface UpdateInvoiceInput {
   issueDate?: string;
   dueDate?: string;
   eFaturaType?: string;
+  excludeFromAutoReminders?: boolean;
 }
 
 export interface InvoiceSettings {
