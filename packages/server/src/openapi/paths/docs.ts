@@ -83,3 +83,6 @@ register({ method: 'patch', path: '/docs/comments/:commentId/resolve', tags: [TA
 // Backlinks
 register({ method: 'get', path: '/docs/:id/backlinks', tags: [TAG], summary: 'List documents that link to this one',
   params: z.object({ id: Uuid }), response: envelope(z.array(Document)) });
+
+// Seed
+register({ method: 'post', path: '/docs/seed', tags: [TAG], summary: 'Seed sample documents (admin only)' });

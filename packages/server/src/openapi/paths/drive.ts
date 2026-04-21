@@ -124,6 +124,20 @@ register({ method: 'post', path: '/drive/:id/replace', tags: [TAG], summary: 'Re
   response: envelope(DriveItem) });
 register({ method: 'delete', path: '/drive/:id/permanent', tags: [TAG], summary: 'Permanently delete a drive item (bypass trash)',
   params: z.object({ id: Uuid }) });
+register({ method: 'patch', path: '/drive/:id/restore', tags: [TAG], summary: 'Restore a drive item from trash',
+  params: z.object({ id: Uuid }) });
+register({ method: 'patch', path: '/drive/:id/visibility', tags: [TAG], summary: 'Change drive item visibility (private/team)',
+  params: z.object({ id: Uuid }),
+  body: z.object({ visibility: z.enum(['private', 'team']) }) });
+register({ method: 'post', path: '/drive/:id/copy', tags: [TAG], summary: 'Copy a drive item',
+  params: z.object({ id: Uuid }),
+  body: z.object({ parentId: Uuid.nullable().optional(), name: z.string().optional() }),
+  response: envelope(DriveItem) });
+register({ method: 'post', path: '/drive/:id/duplicate', tags: [TAG], summary: 'Duplicate a drive item in place',
+  params: z.object({ id: Uuid }),
+  response: envelope(DriveItem) });
+
+register({ method: 'post', path: '/drive/seed', tags: [TAG], summary: 'Seed sample drive items (admin only)' });
 register({ method: 'get', path: '/drive/:id/versions', tags: [TAG], summary: 'List file versions',
   params: z.object({ id: Uuid }), response: envelope(z.array(DriveVersion)) });
 register({ method: 'post', path: '/drive/:id/versions/:versionId/restore', tags: [TAG], summary: 'Restore a specific version',

@@ -36,3 +36,5 @@ register({ method: 'delete', path: '/drawings/:id', tags: [TAG], summary: 'Delet
   params: z.object({ id: Uuid }) });
 register({ method: 'patch', path: '/drawings/:id/restore', tags: [TAG], summary: 'Restore an archived drawing',
   params: z.object({ id: Uuid }) });
+
+register({ method: 'post', path: '/drawings/seed', tags: [TAG], summary: 'Seed sample drawings (admin only)' });

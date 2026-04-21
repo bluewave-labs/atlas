@@ -254,6 +254,24 @@ register({ method: 'post', path: '/hr/leave-applications/:id/reject', tags: [TAG
   params: z.object({ id: Uuid }), body: z.object({ comment: z.string().optional() }) });
 register({ method: 'post', path: '/hr/leave-applications/:id/cancel', tags: [TAG], summary: 'Cancel a leave application',
   params: z.object({ id: Uuid }) });
+register({ method: 'post', path: '/hr/leave-applications/:id/submit', tags: [TAG], summary: 'Submit a draft leave application',
+  params: z.object({ id: Uuid }) });
+register({ method: 'get', path: '/hr/leave-applications/pending', tags: [TAG], summary: 'List leave applications awaiting my approval',
+  response: envelope(z.array(LeaveApplication)) });
+
+register({ method: 'get', path: '/hr/leave-balances/summary', tags: [TAG], summary: 'Summarize leave balances across all employees (admin)',
+  response: envelope(z.record(z.string(), z.unknown())) });
+register({ method: 'post', path: '/hr/leave-balances/allocate', tags: [TAG], summary: 'Bulk-allocate leave balances (admin)',
+  body: z.object({
+    year: z.number().int(),
+    leaveTypeId: Uuid,
+    employeeIds: z.array(Uuid).optional(),
+    amount: z.number().int(),
+  }) });
+
+register({ method: 'get', path: '/hr/leave-calendar', tags: [TAG], summary: 'Team leave calendar for a date range',
+  query: z.object({ from: IsoDate, to: IsoDate }),
+  response: envelope(z.array(z.record(z.string(), z.unknown()))) });
 
 // Balances — per-employee only (there's no flat /hr/leave-balances route)
 register({ method: 'get', path: '/hr/:id/leave-balances', tags: [TAG], summary: 'Get leave balances for an employee',
@@ -267,10 +285,18 @@ register({ method: 'post', path: '/hr/:id/leave-balances', tags: [TAG], summary:
   params: z.object({ id: Uuid }),
   body: z.object({ leaveTypeId: Uuid, year: z.number().int(), allocated: z.number().int() }) });
 
-// Attendance (read-only in the public API — writes go through leave/attendance service)
+// Attendance
 register({ method: 'get', path: '/hr/attendance', tags: [TAG], summary: 'List attendance records',
   query: z.object({ employeeId: Uuid.optional(), from: IsoDate.optional(), to: IsoDate.optional() }),
   response: envelope(z.array(Attendance)) });
+register({ method: 'post', path: '/hr/attendance', tags: [TAG], summary: 'Create/update an attendance record',
+  body: Attendance.omit({ id: true }).partial().extend({ employeeId: Uuid, date: IsoDate }),
+  response: envelope(Attendance) });
+register({ method: 'post', path: '/hr/attendance/bulk', tags: [TAG], summary: 'Bulk upsert attendance records',
+  body: z.object({ records: z.array(Attendance.omit({ id: true }).partial().extend({ employeeId: Uuid, date: IsoDate })) }) });
+register({ method: 'patch', path: '/hr/attendance/:id', tags: [TAG], summary: 'Update an attendance record',
+  params: z.object({ id: Uuid }), body: Attendance.partial(),
+  response: envelope(Attendance) });
 register({ method: 'get', path: '/hr/attendance/today', tags: [TAG], summary: 'Get today’s attendance roll-up',
   response: envelope(z.array(Attendance)) });
 register({ method: 'get', path: '/hr/attendance/report', tags: [TAG], summary: 'Attendance report by date range',
@@ -291,6 +317,59 @@ register({ method: 'post', path: '/hr/:id/onboarding', tags: [TAG], summary: 'Cr
 register({ method: 'post', path: '/hr/:id/onboarding/from-template', tags: [TAG], summary: 'Seed onboarding tasks from a template',
   params: z.object({ id: Uuid }),
   body: z.object({ templateId: Uuid }) });
+register({ method: 'patch', path: '/hr/onboarding/:taskId', tags: [TAG], summary: 'Update an onboarding task',
+  params: z.object({ taskId: Uuid }), body: OnboardingTask.partial(),
+  response: envelope(OnboardingTask) });
+register({ method: 'delete', path: '/hr/onboarding/:taskId', tags: [TAG], summary: 'Delete an onboarding task',
+  params: z.object({ taskId: Uuid }) });
+
+// Onboarding templates (tenant-level)
+const OnboardingTemplate = z.object({
+  id: Uuid, tenantId: Uuid, name: z.string(),
+  tasks: z.array(z.record(z.string(), z.unknown())),
+  createdAt: IsoDateTime,
+});
+register({ method: 'get', path: '/hr/onboarding-templates', tags: [TAG], summary: 'List onboarding templates',
+  response: envelope(z.array(OnboardingTemplate)) });
+register({ method: 'post', path: '/hr/onboarding-templates', tags: [TAG], summary: 'Create an onboarding template',
+  body: z.object({ name: z.string(), tasks: z.array(z.record(z.string(), z.unknown())) }),
+  response: envelope(OnboardingTemplate) });
+
+// Time-off (distinct from leave-applications — this is the simpler "book time off" flow)
+const TimeOff = z.object({
+  id: Uuid, tenantId: Uuid, employeeId: Uuid,
+  startDate: IsoDate, endDate: IsoDate,
+  type: z.string(), reason: z.string().nullable(),
+  status: z.enum(['pending', 'approved', 'rejected']),
+  createdAt: IsoDateTime,
+});
+register({ method: 'get', path: '/hr/time-off/list', tags: [TAG], summary: 'List time-off requests',
+  query: z.object({ employeeId: Uuid.optional(), status: TimeOff.shape.status.optional() }),
+  response: envelope(z.array(TimeOff)) });
+register({ method: 'post', path: '/hr/time-off', tags: [TAG], summary: 'Create a time-off request',
+  body: TimeOff.omit({ id: true, tenantId: true, status: true, createdAt: true }).partial()
+    .extend({ employeeId: Uuid, startDate: IsoDate, endDate: IsoDate, type: z.string() }),
+  response: envelope(TimeOff) });
+register({ method: 'patch', path: '/hr/time-off/:id', tags: [TAG], summary: 'Update a time-off request',
+  params: z.object({ id: Uuid }), body: TimeOff.partial(),
+  response: envelope(TimeOff) });
+register({ method: 'delete', path: '/hr/time-off/:id', tags: [TAG], summary: 'Delete a time-off request',
+  params: z.object({ id: Uuid }) });
+
+// Employee document download
+register({ method: 'get', path: '/hr/documents/:docId/download', tags: [TAG], summary: 'Download an HR document',
+  params: z.object({ docId: Uuid }),
+  extraResponses: { 200: { description: 'File binary', schema: z.string().openapi({ format: 'binary' }) } } });
+
+// Seed routes (admin-only — populate demo data)
+for (const [path, what] of [
+  ['/hr/seed', 'all HR demo data'],
+  ['/hr/leave-types/seed', 'default leave types'],
+  ['/hr/leave-policies/seed', 'default leave policies'],
+  ['/hr/expense-categories/seed', 'default expense categories'],
+] as const) {
+  register({ method: 'post', path, tags: [TAG], summary: `Seed ${what} (admin only)` });
+}
 
 // Employee documents
 register({ method: 'get', path: '/hr/:id/documents', tags: [TAG], summary: 'List HR documents attached to an employee',

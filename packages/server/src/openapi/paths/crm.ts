@@ -574,6 +574,17 @@ register({ method: 'post', path: '/crm/events/create', tags: [TAG], summary: 'Cr
     dealId: Uuid.optional(),
   }) });
 
+// Seed routes (admin-only — populate demo data)
+for (const [path, what] of [
+  ['/crm/seed', 'all CRM demo data'],
+  ['/crm/stages/seed', 'default deal stages'],
+  ['/crm/activity-types/seed', 'default activity types'],
+  ['/crm/leads/seed', 'sample leads'],
+  ['/crm/workflows/seed', 'example workflow automations'],
+] as const) {
+  register({ method: 'post', path, tags: [TAG], summary: `Seed ${what} (admin only)` });
+}
+
 // Permissions
 register({ method: 'get', path: '/crm/permissions/me', tags: [TAG], summary: 'Get the current user’s CRM permissions',
   response: envelope(z.object({

@@ -54,6 +54,29 @@ register({
 });
 
 register({
+  method: 'post',
+  path: '/settings/clear-demo',
+  tags: ['User settings'],
+  summary: 'Clear seeded demo data from the tenant (admin only)',
+});
+
+register({
+  method: 'get',
+  path: '/settings/formats-tenant',
+  tags: ['User settings'],
+  summary: 'Get tenant-wide format defaults (date/number/currency)',
+  response: envelope(z.record(z.string(), z.unknown())),
+});
+
+register({
+  method: 'put',
+  path: '/settings/formats-tenant',
+  tags: ['User settings'],
+  summary: 'Update tenant-wide format defaults',
+  body: z.record(z.string(), z.unknown()),
+});
+
+register({
   method: 'get',
   path: '/settings/ai',
   tags: ['User settings'],

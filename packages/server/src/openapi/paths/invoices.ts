@@ -229,6 +229,9 @@ register({ method: 'post', path: '/invoices/recurring/:id/resume', tags: [TAG], 
 register({ method: 'post', path: '/invoices/recurring/:id/run-now', tags: [TAG], summary: 'Manually run a recurring invoice now',
   params: z.object({ id: Uuid }), response: envelope(Invoice) });
 
+// Seed
+register({ method: 'post', path: '/invoices/seed', tags: [TAG], summary: 'Seed sample invoices (admin only)' });
+
 // Public client portal
 register({ method: 'get', path: '/invoices/portal/:token/list', tags: [TAG], summary: 'Public — list invoices for a client portal token',
   public: true, params: z.object({ token: z.string() }), response: envelope(z.array(Invoice)) });

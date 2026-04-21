@@ -125,6 +125,9 @@ register({ method: 'post', path: '/sign/:id/tokens/:tokenId/remind', tags: [TAG]
 // Starter templates
 register({ method: 'post', path: '/sign/templates/seed-starter', tags: [TAG], summary: 'Seed starter templates (admin)' });
 
+// Seed
+register({ method: 'post', path: '/sign/seed', tags: [TAG], summary: 'Seed sample sign documents (admin only)' });
+
 // Templates
 register({ method: 'get', path: '/sign/templates', tags: [TAG], summary: 'List signature templates',
   response: envelope(z.object({ templates: z.array(Template) })) });
