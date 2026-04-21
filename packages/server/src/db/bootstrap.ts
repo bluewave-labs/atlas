@@ -11,6 +11,19 @@ const MIGRATIONS_DIR = join(__dirname, 'migrations');
 // the statement has already been applied; undefined-object errors on ALTER
 // mean the target table was never on this DB (a later CREATE will handle
 // it if needed).
+async function addColumnIfMissing(table: string, column: string, ddl: string) {
+  try {
+    const c = await pool.connect();
+    try {
+      await c.query(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS ${column} ${ddl}`);
+    } finally {
+      c.release();
+    }
+  } catch (err) {
+    logger.error({ err }, `${table}.${column} backfill failed`);
+  }
+}
+
 const BENIGN_MIGRATION_ERRORS = new Set([
   '42P07', // duplicate_table
   '42701', // duplicate_column
@@ -187,31 +200,10 @@ async function migrateLegacyData() {
   // invoices.exclude_from_auto_reminders — lets users opt a single
   // invoice out of the hourly reminder scheduler without disabling
   // reminders tenant-wide.
-  try {
-    const c = await pool.connect();
-    try {
-      await c.query(
-        `ALTER TABLE invoices ADD COLUMN IF NOT EXISTS exclude_from_auto_reminders boolean NOT NULL DEFAULT false`,
-      );
-    } finally {
-      c.release();
-    }
-  } catch (err) {
-    logger.error({ err }, 'invoices.exclude_from_auto_reminders backfill failed');
-  }
-
-  try {
-    const c = await pool.connect();
-    try {
-      await c.query(
-        `ALTER TABLE project_settings ADD COLUMN IF NOT EXISTS time_rounding integer NOT NULL DEFAULT 0`,
-      );
-    } finally {
-      c.release();
-    }
-  } catch (err) {
-    logger.error({ err }, 'project_settings.time_rounding backfill failed');
-  }
+  await addColumnIfMissing('invoices', 'exclude_from_auto_reminders',
+    'boolean NOT NULL DEFAULT false');
+  await addColumnIfMissing('project_settings', 'time_rounding',
+    'integer NOT NULL DEFAULT 0');
 
   // Work-app merge: copy task_projects → project_projects, seed isPrivate,
   // collapse tenant_apps. Guard: only run while task_projects still exists.

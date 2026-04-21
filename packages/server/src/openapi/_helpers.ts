@@ -1,5 +1,6 @@
 import { OpenAPIRegistry, extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
+import { validate } from './validate';
 
 extendZodWithOpenApi(z);
 
@@ -79,8 +80,6 @@ export interface RouteDef {
  */
 export function defineRoute(def: RouteDef) {
   register(def);
-  // Lazy-import to avoid circular dependency at module load.
-  const { validate } = require('./validate') as typeof import('./validate');
   return {
     validate: validate({
       params: def.params,
@@ -100,6 +99,8 @@ export function register(def: RouteDef) {
   if (!def.public) responses[401] = UnauthorizedResp;
   if (def.path.includes('/:')) responses[404] = NotFoundResp;
   if (def.concurrency) responses[409] = ConflictResp;
+  // extraResponses overrides auto-generated entries — used e.g. on /invoices/:id/pdf
+  // to replace the default JSON 200 with a binary PDF response schema.
   if (def.extraResponses) {
     for (const [code, r] of Object.entries(def.extraResponses)) {
       responses[Number(code)] = {

@@ -5,6 +5,7 @@ import * as hrController from './controller';
 import { authMiddleware } from '../../middleware/auth';
 import { requireAppPermission } from '../../middleware/require-app-permission';
 import { withConcurrencyCheck } from '../../middleware/concurrency-check';
+import { UUID_REGEX } from '../../middleware/require-uuid';
 import {
   employees,
   departments,
@@ -30,12 +31,10 @@ const router = Router();
 router.use(authMiddleware);
 router.use(requireAppPermission('hr'));
 
-// Every HR route exposing `/:id` expects a UUID — reject non-UUID segments
-// here so they never reach the DB as a SQL cast error (e.g. the old
-// `GET /hr/employees` → `id = "employees"` bug).
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// HR's top-level `/:id` used to SQL-cast-crash on non-UUID segments like
+// `GET /hr/employees` (see commit f08b01e).
 router.param('id', (_req, res, next, value) => {
-  if (!UUID_RE.test(value)) {
+  if (!UUID_REGEX.test(value)) {
     res.status(400).json({ success: false, error: 'Invalid id: not a UUID', code: 'INVALID_UUID' });
     return;
   }

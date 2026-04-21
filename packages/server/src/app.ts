@@ -8,6 +8,7 @@ import { openApiRoutes } from './openapi/routes';
 import { errorHandler } from './middleware/error-handler';
 import { apiLimiter } from './middleware/rate-limit';
 import { authMiddleware } from './middleware/auth';
+import { UUID_REGEX } from './middleware/require-uuid';
 import { auditMiddleware } from './middleware/audit';
 import { env } from './config/env';
 
@@ -86,8 +87,7 @@ export function createApp() {
     const urlPath = req.path.replace(/^\/+/, '');
     const firstSegment = urlPath.split('/')[0];
     // If the first segment looks like a tenant id (UUID), enforce it matches.
-    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (uuidRe.test(firstSegment)) {
+    if (UUID_REGEX.test(firstSegment)) {
       const callerTenant = req.auth?.tenantId;
       if (!callerTenant || firstSegment !== callerTenant) {
         res.status(403).json({ success: false, error: 'Forbidden' });
