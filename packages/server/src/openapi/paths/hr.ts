@@ -35,9 +35,15 @@ const Employee = z.object({
 
 const Department = z.object({
   id: Uuid,
+  tenantId: Uuid,
   name: z.string(),
   description: z.string().nullable(),
+  color: z.string().nullable(),
+  headEmployeeId: Uuid.nullable(),
+  sortOrder: z.number().int(),
+  isArchived: z.boolean(),
   createdAt: IsoDateTime,
+  updatedAt: IsoDateTime,
 });
 
 const LeaveType = z.object({
@@ -144,25 +150,35 @@ register({ method: 'get', path: '/hr/dashboard', tags: [TAG], summary: 'Get HR d
   })) });
 
 // Employees
-register({ method: 'get', path: '/hr/employees', tags: [TAG], summary: 'List employees',
+// NOTE: the HR app mounts employees at the app root (/hr/). Historical quirk,
+// not the cleaner /hr/employees path one would expect.
+register({ method: 'get', path: '/hr/', tags: [TAG], summary: 'List employees',
   query: z.object({ status: Employee.shape.status.optional(), departmentId: Uuid.optional() }),
-  response: envelope(z.array(Employee)) });
-register({ method: 'post', path: '/hr/employees', tags: [TAG], summary: 'Create an employee',
+  response: envelope(z.object({ employees: z.array(Employee) })) });
+register({ method: 'post', path: '/hr/', tags: [TAG], summary: 'Create an employee',
   body: Employee.omit({ id: true, tenantId: true, createdAt: true, updatedAt: true, isArchived: true }).partial()
     .extend({ name: z.string(), email: z.string().email() }),
   response: envelope(Employee) });
-register({ method: 'get', path: '/hr/employees/:id', tags: [TAG], summary: 'Get an employee',
+register({ method: 'get', path: '/hr/:id', tags: [TAG], summary: 'Get an employee',
   params: z.object({ id: Uuid }), response: envelope(Employee) });
-register({ method: 'patch', path: '/hr/employees/:id', tags: [TAG], summary: 'Update an employee',
+register({ method: 'patch', path: '/hr/:id', tags: [TAG], summary: 'Update an employee',
   params: z.object({ id: Uuid }), body: Employee.partial(), concurrency: true, response: envelope(Employee) });
-register({ method: 'delete', path: '/hr/employees/:id', tags: [TAG], summary: 'Delete (archive) an employee',
+register({ method: 'delete', path: '/hr/:id', tags: [TAG], summary: 'Delete (archive) an employee',
   params: z.object({ id: Uuid }) });
 
 // Departments
-register({ method: 'get', path: '/hr/departments', tags: [TAG], summary: 'List departments',
-  response: envelope(z.array(Department)) });
+register({ method: 'get', path: '/hr/departments/list', tags: [TAG], summary: 'List departments',
+  response: envelope(z.object({ departments: z.array(Department.extend({
+    userId: Uuid,
+    headEmployeeId: Uuid.nullable(),
+    color: z.string().nullable(),
+    sortOrder: z.number().int(),
+    isArchived: z.boolean(),
+    updatedAt: IsoDateTime,
+    employeeCount: z.number().int(),
+  })) })) });
 register({ method: 'post', path: '/hr/departments', tags: [TAG], summary: 'Create a department',
-  body: z.object({ name: z.string(), description: z.string().optional() }),
+  body: z.object({ name: z.string(), description: z.string().optional(), color: z.string().optional() }),
   response: envelope(Department) });
 register({ method: 'patch', path: '/hr/departments/:id', tags: [TAG], summary: 'Update a department',
   params: z.object({ id: Uuid }), body: Department.partial(), response: envelope(Department) });

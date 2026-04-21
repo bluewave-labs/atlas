@@ -200,6 +200,19 @@ async function migrateLegacyData() {
     logger.error({ err }, 'invoices.exclude_from_auto_reminders backfill failed');
   }
 
+  try {
+    const c = await pool.connect();
+    try {
+      await c.query(
+        `ALTER TABLE project_settings ADD COLUMN IF NOT EXISTS time_rounding integer NOT NULL DEFAULT 0`,
+      );
+    } finally {
+      c.release();
+    }
+  } catch (err) {
+    logger.error({ err }, 'project_settings.time_rounding backfill failed');
+  }
+
   // Work-app merge: copy task_projects → project_projects, seed isPrivate,
   // collapse tenant_apps. Guard: only run while task_projects still exists.
   try {

@@ -88,10 +88,25 @@ const ProjectMember = z.object({
 // ============================================================
 // Settings
 // ============================================================
+const WorkSettings = z.object({
+  id: Uuid,
+  tenantId: Uuid,
+  defaultHourlyRate: z.number(),
+  companyName: z.string().nullable(),
+  companyAddress: z.string().nullable(),
+  companyLogo: z.string().nullable(),
+  weekStartDay: z.enum(['monday', 'sunday', 'saturday']),
+  defaultProjectVisibility: z.enum(['private', 'team']),
+  defaultBillable: z.boolean(),
+  timeRounding: z.number().int().openapi({ description: 'Rounding in minutes (0 = off)' }),
+  createdAt: IsoDateTime,
+  updatedAt: IsoDateTime,
+});
+
 register({ method: 'get', path: '/work/settings', tags: [TAG], summary: 'Get Work app settings',
-  response: envelope(z.record(z.string(), z.unknown())) });
+  response: envelope(WorkSettings) });
 register({ method: 'patch', path: '/work/settings', tags: [TAG], summary: 'Update Work app settings',
-  body: z.record(z.string(), z.unknown()) });
+  body: WorkSettings.partial(), response: envelope(WorkSettings) });
 
 // ============================================================
 // Tasks
