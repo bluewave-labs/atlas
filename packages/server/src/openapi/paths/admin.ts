@@ -61,3 +61,23 @@ register({
   params: z.object({ id: Uuid }),
   body: z.object({ storageQuotaBytes: z.number().int().nonnegative() }),
 });
+
+register({
+  method: 'get', path: '/admin/users', tags: [TAG],
+  summary: 'List every user across every tenant (super-admin only)',
+  response: envelope(z.array(z.object({
+    id: Uuid,
+    name: z.string().nullable(),
+    email: z.string().email().nullable(),
+    provider: z.string().nullable(),
+    pictureUrl: z.string().url().nullable(),
+    isSuperAdmin: z.boolean(),
+    createdAt: IsoDateTime,
+    tenants: z.array(z.object({
+      id: Uuid,
+      name: z.string().nullable(),
+      slug: z.string().nullable(),
+      role: z.enum(['owner', 'admin', 'member']),
+    })),
+  }))),
+});

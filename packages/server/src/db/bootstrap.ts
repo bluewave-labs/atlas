@@ -204,6 +204,8 @@ async function migrateLegacyData() {
     'boolean NOT NULL DEFAULT false');
   await addColumnIfMissing('project_settings', 'time_rounding',
     'integer NOT NULL DEFAULT 0');
+  await addColumnIfMissing('users', 'is_super_admin',
+    'boolean NOT NULL DEFAULT false');
 
   // Work-app merge: copy task_projects → project_projects, seed isPrivate,
   // collapse tenant_apps. Guard: only run while task_projects still exists.

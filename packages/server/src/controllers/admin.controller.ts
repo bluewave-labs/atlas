@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { db } from '../config/database';
-import { tenants, tenantMembers } from '../db/schema';
-import { eq, count } from 'drizzle-orm';
+import { tenants, tenantMembers, users, accounts } from '../db/schema';
+import { eq, count, desc } from 'drizzle-orm';
 import { logger } from '../utils/logger';
 import * as tenantService from '../services/platform/tenant.service';
 import { createPasswordAccount } from '../services/auth.service';
@@ -212,5 +212,77 @@ export async function updateTenantPlanHandler(req: Request, res: Response) {
   } catch (err) {
     logger.error({ err }, 'Failed to update tenant plan');
     res.status(500).json({ success: false, error: 'Failed to update tenant plan' });
+  }
+}
+
+// ─── List all users across all tenants ──────────────────────────────────────
+
+export async function listAllUsers(_req: Request, res: Response) {
+  try {
+    // Users (identity layer, 1 per person). Super-admin view.
+    const allUsers = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        isSuperAdmin: users.isSuperAdmin,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .orderBy(desc(users.createdAt));
+
+    // Collect primary account email + provider per user (first one wins).
+    const allAccounts = await db
+      .select({
+        userId: accounts.userId,
+        email: accounts.email,
+        provider: accounts.provider,
+        pictureUrl: accounts.pictureUrl,
+      })
+      .from(accounts);
+    const accountByUser = new Map<string, typeof allAccounts[number]>();
+    for (const a of allAccounts) {
+      if (!accountByUser.has(a.userId)) accountByUser.set(a.userId, a);
+    }
+
+    // Tenant memberships per user.
+    const memberships = await db
+      .select({
+        userId: tenantMembers.userId,
+        tenantId: tenantMembers.tenantId,
+        role: tenantMembers.role,
+        tenantName: tenants.name,
+        tenantSlug: tenants.slug,
+      })
+      .from(tenantMembers)
+      .leftJoin(tenants, eq(tenantMembers.tenantId, tenants.id));
+    const tenantsByUser = new Map<string, Array<typeof memberships[number]>>();
+    for (const m of memberships) {
+      if (!tenantsByUser.has(m.userId)) tenantsByUser.set(m.userId, []);
+      tenantsByUser.get(m.userId)!.push(m);
+    }
+
+    const data = allUsers.map((u) => {
+      const acct = accountByUser.get(u.id);
+      return {
+        id: u.id,
+        name: u.name,
+        email: acct?.email ?? null,
+        provider: acct?.provider ?? null,
+        pictureUrl: acct?.pictureUrl ?? null,
+        isSuperAdmin: u.isSuperAdmin,
+        createdAt: u.createdAt,
+        tenants: (tenantsByUser.get(u.id) ?? []).map((m) => ({
+          id: m.tenantId,
+          name: m.tenantName,
+          slug: m.tenantSlug,
+          role: m.role,
+        })),
+      };
+    });
+
+    res.json({ success: true, data });
+  } catch (err) {
+    logger.error({ err }, 'Failed to list all users');
+    res.status(500).json({ success: false, error: 'Failed to list users' });
   }
 }

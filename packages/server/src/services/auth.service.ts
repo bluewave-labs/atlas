@@ -8,8 +8,18 @@ import { encrypt } from '../utils/crypto';
 import type { AuthPayload } from '../middleware/auth';
 import crypto from 'node:crypto';
 
-export function generateTokens(account: { id: string; email: string; userId: string }, tenantId: string, tenantRole?: TenantMemberRole) {
-  const payload: AuthPayload = { userId: account.userId, tenantId, email: account.email };
+export async function generateTokens(account: { id: string; email: string; userId: string }, tenantId: string, tenantRole?: TenantMemberRole) {
+  const [user] = await db
+    .select({ isSuperAdmin: users.isSuperAdmin })
+    .from(users)
+    .where(eq(users.id, account.userId))
+    .limit(1);
+  const payload: AuthPayload = {
+    userId: account.userId,
+    tenantId,
+    email: account.email,
+    isSuperAdmin: user?.isSuperAdmin === true,
+  };
   if (tenantRole) payload.tenantRole = tenantRole;
   const accessToken = jwt.sign(payload, env.JWT_SECRET, { expiresIn: '1h' });
   const refreshToken = jwt.sign(payload, env.JWT_REFRESH_SECRET, { expiresIn: '30d' });

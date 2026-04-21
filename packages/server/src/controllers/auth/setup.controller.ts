@@ -58,7 +58,7 @@ export async function setup(req: Request, res: Response) {
     const tenant = await tenantService.createTenant({ slug, name: companyName }, user.id);
 
     // Generate tokens (with tenant + owner tenantRole)
-    const jwtTokens = authService.generateTokens(account, tenant.id, 'owner');
+    const jwtTokens = await authService.generateTokens(account, tenant.id, 'owner');
 
     logger.info({ userId: user.id, tenantId: tenant.id, email: adminEmail }, 'Atlas initial setup completed');
 

@@ -49,7 +49,7 @@ export async function register(req: Request, res: Response) {
     const tenant = await tenantService.createTenant({ slug, name: companyName }, user.id);
 
     // Generate tokens with tenantId
-    const tokens = authService.generateTokens(account, tenant.id, 'owner');
+    const tokens = await authService.generateTokens(account, tenant.id, 'owner');
 
     logger.info({ userId: user.id, tenantId: tenant.id, email }, 'New registration completed');
 

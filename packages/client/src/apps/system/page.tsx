@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Cpu, MemoryStick, HardDrive, Clock, Server, Globe, Activity, LayoutDashboard, Mail, Send, CheckCircle2, Shield, Settings2 } from 'lucide-react';
+import { Cpu, MemoryStick, HardDrive, Clock, Server, Globe, Activity, LayoutDashboard, Mail, Send, CheckCircle2, Shield, Settings2, Building2, Users } from 'lucide-react';
 import { AlertBanner } from '../../components/ui/alert-banner';
 import { ContentArea } from '../../components/ui/content-area';
 import { StatCard, InfoCard } from '../../components/ui/stat-card';
@@ -16,6 +16,8 @@ import { useSystemMetrics } from './hooks';
 import { useAuthStore } from '../../stores/auth-store';
 import { useUIStore } from '../../stores/ui-store';
 import { PermissionsView } from './components/permissions-view';
+import { TenantsView } from './components/tenants-view';
+import { AllUsersView } from './components/all-users-view';
 import { formatBytes } from '../../lib/format';
 import { api } from '../../lib/api-client';
 import { queryKeys } from '../../config/query-keys';
@@ -167,7 +169,7 @@ function RefreshDot() {
 
 // ─── Main Page ─────────────────────────────────────────────────────
 
-type SystemView = 'overview' | 'email' | 'permissions';
+type SystemView = 'overview' | 'email' | 'permissions' | 'tenants' | 'users';
 
 export function SystemPage() {
   const { t } = useTranslation();
@@ -175,6 +177,7 @@ export function SystemPage() {
   const [activeView, setActiveView] = useState<SystemView>('overview');
   const tenantRole = useAuthStore((s) => s.tenantRole);
   const isOwner = tenantRole === 'owner';
+  const isSuperAdmin = useAuthStore((s) => s.isSuperAdmin);
   const { openSettings } = useUIStore();
 
   return (
@@ -221,6 +224,24 @@ export function SystemPage() {
             />
           )}
         </SidebarSection>
+        {isSuperAdmin && (
+          <SidebarSection title="Super admin">
+            <SidebarItem
+              label="All tenants"
+              icon={<Building2 size={15} />}
+              iconColor="#8b5cf6"
+              isActive={activeView === 'tenants'}
+              onClick={() => setActiveView('tenants')}
+            />
+            <SidebarItem
+              label="All users"
+              icon={<Users size={15} />}
+              iconColor="#8b5cf6"
+              isActive={activeView === 'users'}
+              onClick={() => setActiveView('users')}
+            />
+          </SidebarSection>
+        )}
       </AppSidebar>
 
       <ContentArea title={t('system.title')}>
@@ -248,6 +269,8 @@ export function SystemPage() {
         )}
         {activeView === 'email' && <EmailSettingsView />}
         {activeView === 'permissions' && isOwner && <PermissionsView />}
+        {activeView === 'tenants' && isSuperAdmin && <TenantsView />}
+        {activeView === 'users' && isSuperAdmin && <AllUsersView />}
         </div>
       </ContentArea>
     </div>

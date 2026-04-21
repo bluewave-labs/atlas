@@ -3,7 +3,7 @@ import { eq, and } from 'drizzle-orm';
 import type { TenantMemberRole } from '@atlas-platform/shared';
 import * as authService from '../../services/auth.service';
 import { db } from '../../config/database';
-import { accounts, tenantMembers } from '../../db/schema';
+import { accounts, tenantMembers, users } from '../../db/schema';
 import { logger } from '../../utils/logger';
 import { verifyPassword } from '../../utils/password';
 import * as tenantService from '../../services/platform/tenant.service';
@@ -44,7 +44,7 @@ export async function loginWithPassword(req: Request, res: Response) {
       .limit(1);
     const tenantRole = member?.role as TenantMemberRole | undefined;
 
-    const jwtTokens = authService.generateTokens(account, tenantId, tenantRole);
+    const jwtTokens = await authService.generateTokens(account, tenantId, tenantRole);
 
     res.json({
       success: true,
@@ -95,7 +95,7 @@ export async function refreshToken(req: Request, res: Response) {
       .limit(1);
     const tenantRole = member?.role as TenantMemberRole | undefined;
 
-    const newTokens = authService.generateTokens({
+    const newTokens = await authService.generateTokens({
       id: tenantId,
       email: payload.email,
       userId,
@@ -128,7 +128,16 @@ export async function getMe(req: Request, res: Response) {
       return;
     }
 
-    res.json({ success: true, data: account });
+    const [user] = await db
+      .select({ isSuperAdmin: users.isSuperAdmin })
+      .from(users)
+      .where(eq(users.id, req.auth!.userId))
+      .limit(1);
+
+    res.json({
+      success: true,
+      data: { ...account, isSuperAdmin: user?.isSuperAdmin === true },
+    });
   } catch (error) {
     logger.error({ error }, 'Failed to fetch account');
     res.status(500).json({ success: false, error: 'Failed to fetch account' });
@@ -216,7 +225,7 @@ export async function acceptInvitation(req: Request, res: Response) {
       .limit(1);
     const tenantRole = member?.role as TenantMemberRole | undefined;
 
-    const jwtTokens = authService.generateTokens(result.account, result.tenantId, tenantRole);
+    const jwtTokens = await authService.generateTokens(result.account, result.tenantId, tenantRole);
 
     res.json({
       success: true,
