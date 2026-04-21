@@ -84,7 +84,22 @@ register({ method: 'patch', path: '/invoices/settings', tags: [TAG], summary: 'U
 
 // Dashboard
 register({ method: 'get', path: '/invoices/dashboard', tags: [TAG], summary: 'Get invoices dashboard (receivables, aging, KPIs)',
-  response: envelope(z.record(z.string(), z.unknown())) });
+  response: envelope(z.object({
+    receivables: z.object({
+      total: z.number(),
+      current: z.number(),
+      '1to15': z.number().optional(),
+      '16to30': z.number().optional(),
+      '31to45': z.number().optional(),
+      over45: z.number().optional(),
+    }).passthrough(),
+    monthlyActivity: z.array(z.object({
+      month: z.string(),
+      invoiced: z.number(),
+      received: z.number(),
+    })),
+    periodSummary: z.record(z.string(), z.unknown()),
+  })) });
 
 // List / create / get / update / delete
 register({ method: 'get', path: '/invoices/list', tags: [TAG], summary: 'List invoices',
@@ -93,7 +108,7 @@ register({ method: 'get', path: '/invoices/list', tags: [TAG], summary: 'List in
     companyId: Uuid.optional(),
     archived: z.coerce.boolean().optional(),
   }),
-  response: envelope(z.array(Invoice)) });
+  response: envelope(z.object({ invoices: z.array(Invoice) })) });
 register({ method: 'get', path: '/invoices/next-number', tags: [TAG], summary: 'Get the next invoice number for the tenant',
   response: envelope(z.object({ invoiceNumber: z.string() })) });
 register({ method: 'post', path: '/invoices', tags: [TAG], summary: 'Create an invoice',

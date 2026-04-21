@@ -2,12 +2,47 @@ import { z } from 'zod';
 import { register, envelope, EnvelopeError, Uuid, IsoDateTime } from '../_helpers';
 
 // ---------- User settings ----------
+const UserSettings = z.object({
+  id: Uuid,
+  accountId: Uuid,
+  theme: z.enum(['light', 'dark', 'system']),
+  density: z.enum(['compact', 'comfortable']),
+  shortcutsPreset: z.string(),
+  customShortcuts: z.record(z.string(), z.unknown()),
+  autoAdvance: z.string(),
+  readingPane: z.string(),
+  desktopNotifications: z.boolean(),
+  notificationSound: z.boolean(),
+  signatureHtml: z.string().nullable(),
+  trackingEnabled: z.boolean(),
+  // Tasks section
+  tasksDefaultView: z.string(),
+  tasksConfirmDelete: z.boolean(),
+  tasksShowCalendar: z.boolean(),
+  tasksShowEvening: z.boolean(),
+  tasksShowWhenBadges: z.boolean(),
+  tasksShowProject: z.boolean(),
+  tasksShowNotesIndicator: z.boolean(),
+  tasksCompactMode: z.boolean(),
+  tasksCompletedBehavior: z.string(),
+  tasksDefaultSort: z.string(),
+  tasksViewMode: z.string(),
+  // Format / locale
+  dateFormat: z.string(),
+  currencySymbol: z.string(),
+  timezone: z.string(),
+  timeFormat: z.string(),
+  numberFormat: z.string(),
+  calendarStartDay: z.string(),
+  calDefaultView: z.string(),
+}).passthrough();
+
 register({
   method: 'get',
   path: '/settings',
   tags: ['User settings'],
   summary: 'Get user settings',
-  response: envelope(z.record(z.string(), z.unknown())),
+  response: envelope(UserSettings),
 });
 
 register({
@@ -66,7 +101,11 @@ register({
   tags: ['Notifications'],
   summary: 'List notifications for the current user',
   query: z.object({ limit: z.coerce.number().int().min(1).max(100).optional() }),
-  response: envelope(z.array(Notification)),
+  response: envelope(z.object({
+    items: z.array(Notification),
+    hasMore: z.boolean(),
+    unreadCount: z.number().int(),
+  })),
 });
 
 register({

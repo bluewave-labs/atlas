@@ -5,9 +5,9 @@ register({
   method: 'get',
   path: '/auth/setup-status',
   tags: ['Authentication'],
-  summary: 'Check if first-run setup is complete',
+  summary: 'Check if first-run setup is required',
   public: true,
-  response: envelope(z.object({ setupComplete: z.boolean() })),
+  response: envelope(z.object({ needsSetup: z.boolean() })),
 });
 
 register({
@@ -80,8 +80,14 @@ register({
   method: 'get',
   path: '/auth/me',
   tags: ['Authentication'],
-  summary: 'Get the currently authenticated user',
-  response: envelope(User),
+  summary: 'Get the currently authenticated account',
+  response: envelope(z.object({
+    id: z.string().uuid(),
+    email: z.string().email(),
+    name: z.string().nullable(),
+    pictureUrl: z.string().url().nullable(),
+    provider: z.enum(['local', 'google', 'microsoft']),
+  })),
 });
 
 register({

@@ -22,7 +22,7 @@ register({
   path: '/platform/tenants',
   tags: ['Platform'],
   summary: 'List tenants the current user belongs to',
-  response: envelope(z.array(Tenant)),
+  response: envelope(z.object({ tenants: z.array(Tenant) })),
 });
 
 register({

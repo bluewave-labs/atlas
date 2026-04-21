@@ -39,7 +39,7 @@ const DocComment = z.object({
 
 register({ method: 'get', path: '/docs', tags: [TAG], summary: 'List documents',
   query: z.object({ parentId: Uuid.optional(), archived: z.coerce.boolean().optional() }),
-  response: envelope(z.array(Document)) });
+  response: envelope(z.object({ documents: z.array(Document) })) });
 register({ method: 'post', path: '/docs', tags: [TAG], summary: 'Create a document',
   body: z.object({ title: z.string().optional(), parentId: Uuid.optional() }), response: envelope(Document) });
 register({ method: 'get', path: '/docs/search', tags: [TAG], summary: 'Search documents',

@@ -5,12 +5,20 @@ const TAG = 'Calendar';
 
 const Calendar = z.object({
   id: Uuid,
-  name: z.string(),
-  color: z.string(),
-  source: z.enum(['local', 'google']),
-  googleCalendarId: z.string().nullable(),
-  isEnabled: z.boolean(),
+  accountId: Uuid.openapi({ description: 'Which account owns this calendar (Google/etc)' }),
+  googleCalendarId: z.string(),
+  summary: z.string().openapi({ description: 'Calendar name (Google terminology)' }),
+  description: z.string().nullable(),
+  backgroundColor: z.string(),
+  foregroundColor: z.string(),
+  timeZone: z.string(),
+  accessRole: z.enum(['owner', 'writer', 'reader', 'freeBusyReader']),
+  isPrimary: z.boolean(),
+  isSelected: z.boolean().openapi({ description: 'Whether the user has this calendar toggled on in their view' }),
+  syncToken: z.string().nullable(),
+  lastSyncAt: IsoDateTime.nullable(),
   createdAt: IsoDateTime,
+  updatedAt: IsoDateTime,
 });
 
 const CalendarEvent = z.object({
@@ -28,10 +36,10 @@ const CalendarEvent = z.object({
 });
 
 // Calendars
-register({ method: 'get', path: '/calendar/calendars', tags: [TAG], summary: 'List calendars',
+register({ method: 'get', path: '/calendar/calendars', tags: [TAG], summary: 'List calendars (flat Google-style list)',
   response: envelope(z.array(Calendar)) });
 register({ method: 'post', path: '/calendar/calendars', tags: [TAG], summary: 'Create a local calendar',
-  body: z.object({ name: z.string(), color: z.string().optional() }),
+  body: z.object({ summary: z.string(), backgroundColor: z.string().optional() }),
   response: envelope(Calendar) });
 register({ method: 'patch', path: '/calendar/calendars/:calendarId/toggle', tags: [TAG], summary: 'Enable/disable a calendar in views',
   params: z.object({ calendarId: Uuid }), body: z.object({ isEnabled: z.boolean() }) });

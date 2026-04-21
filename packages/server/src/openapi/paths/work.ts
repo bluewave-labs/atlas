@@ -103,7 +103,7 @@ register({ method: 'get', path: '/work/tasks', tags: [TAG], summary: 'List tasks
     when: Task.shape.when.optional(),
     assigneeId: Uuid.optional(),
   }),
-  response: envelope(z.array(Task)) });
+  response: envelope(z.object({ tasks: z.array(Task) })) });
 register({ method: 'post', path: '/work/tasks', tags: [TAG], summary: 'Create a task',
   body: Task.omit({ id: true, tenantId: true, userId: true, createdAt: true, updatedAt: true, completedAt: true, lastReminderAt: true }).partial().extend({ title: z.string() }),
   response: envelope(Task) });
@@ -111,7 +111,16 @@ register({ method: 'get', path: '/work/tasks/search', tags: [TAG], summary: 'Sea
   query: z.object({ q: z.string().min(1) }),
   response: envelope(z.array(Task)) });
 register({ method: 'get', path: '/work/tasks/counts', tags: [TAG], summary: 'Get task counts by bucket',
-  response: envelope(z.record(z.string(), z.number().int())) });
+  response: envelope(z.object({
+    inbox: z.number().int(),
+    today: z.number().int(),
+    upcoming: z.number().int(),
+    anytime: z.number().int(),
+    someday: z.number().int(),
+    logbook: z.number().int(),
+    total: z.number().int(),
+    assignedToMe: z.number().int(),
+  })) });
 register({ method: 'get', path: '/work/tasks/blocked', tags: [TAG], summary: 'Get IDs of tasks blocked by dependencies',
   response: envelope(z.array(Uuid)) });
 register({ method: 'get', path: '/work/tasks/:id', tags: [TAG], summary: 'Get a task',
@@ -150,7 +159,7 @@ register({ method: 'delete', path: '/work/tasks/:taskId/comments/:commentId', ta
 // ============================================================
 register({ method: 'get', path: '/work/projects', tags: [TAG], summary: 'List projects',
   query: z.object({ status: Project.shape.status.optional() }),
-  response: envelope(z.array(Project)) });
+  response: envelope(z.object({ projects: z.array(Project) })) });
 register({ method: 'post', path: '/work/projects', tags: [TAG], summary: 'Create a project',
   body: Project.omit({ id: true, createdAt: true, updatedAt: true, isArchived: true, sortOrder: true }).partial().extend({ name: z.string() }),
   response: envelope(Project) });

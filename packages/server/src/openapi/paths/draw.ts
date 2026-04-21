@@ -8,7 +8,9 @@ const Drawing = z.object({
   tenantId: Uuid,
   userId: Uuid,
   title: z.string(),
-  excalidrawData: z.unknown(),
+  thumbnailUrl: z.string().nullable(),
+  excalidrawData: z.unknown().optional().openapi({ description: 'Only present when fetching a single drawing' }),
+  sortOrder: z.number().int(),
   isArchived: z.boolean(),
   visibility: z.enum(['private', 'team']),
   createdAt: IsoDateTime,
@@ -17,7 +19,7 @@ const Drawing = z.object({
 
 register({ method: 'get', path: '/drawings', tags: [TAG], summary: 'List drawings',
   query: z.object({ archived: z.coerce.boolean().optional() }),
-  response: envelope(z.array(Drawing)) });
+  response: envelope(z.object({ drawings: z.array(Drawing) })) });
 register({ method: 'post', path: '/drawings', tags: [TAG], summary: 'Create a drawing',
   body: z.object({ title: z.string().optional() }), response: envelope(Drawing) });
 register({ method: 'get', path: '/drawings/search', tags: [TAG], summary: 'Search drawings',

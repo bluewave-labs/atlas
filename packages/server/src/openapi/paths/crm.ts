@@ -257,17 +257,34 @@ const Proposal = z.object({
 register({ method: 'get', path: '/crm/widget', tags: [TAG], summary: 'Get CRM widget data for home dashboard',
   response: envelope(z.record(z.string(), z.unknown())) });
 register({ method: 'get', path: '/crm/dashboard', tags: [TAG], summary: 'Get CRM dashboard KPIs',
-  response: envelope(z.record(z.string(), z.unknown())) });
+  response: envelope(z.object({
+    totalPipelineValue: z.number(),
+    dealsWonCount: z.number().int(),
+    dealsWonValue: z.number(),
+    dealsLostCount: z.number().int(),
+    winRate: z.number().openapi({ description: '0..1' }),
+    averageDealSize: z.number(),
+    dealCount: z.number().int(),
+    valueByStage: z.array(z.object({ stageId: Uuid, stageName: z.string(), value: z.number(), count: z.number().int() })),
+    recentActivities: z.array(z.record(z.string(), z.unknown())),
+    dealsClosingSoon: z.array(z.record(z.string(), z.unknown())),
+    topDeals: z.array(z.record(z.string(), z.unknown())),
+  })) });
 register({ method: 'get', path: '/crm/dashboard/charts', tags: [TAG], summary: 'Get CRM dashboard time-series charts',
   response: envelope(z.record(z.string(), z.unknown())) });
 register({ method: 'get', path: '/crm/forecast', tags: [TAG], summary: 'Get revenue forecast by stage/period',
-  response: envelope(z.record(z.string(), z.unknown())) });
+  response: envelope(z.object({
+    months: z.array(z.object({ month: z.string(), weightedValue: z.number() })),
+    totalWeighted: z.number(),
+    bestCase: z.number(),
+    committed: z.number(),
+  })) });
 
 // ============================================================
 // Companies
 // ============================================================
 register({ method: 'get', path: '/crm/companies/list', tags: [TAG], summary: 'List companies',
-  response: envelope(z.array(Company)) });
+  response: envelope(z.object({ companies: z.array(Company) })) });
 register({ method: 'post', path: '/crm/companies', tags: [TAG], summary: 'Create a company',
   body: Company.omit({ id: true, tenantId: true, userId: true, createdAt: true, updatedAt: true, isArchived: true, portalToken: true }).partial().extend({ name: z.string() }),
   response: envelope(Company) });
@@ -289,7 +306,7 @@ register({ method: 'post', path: '/crm/companies/merge', tags: [TAG], summary: '
 // Contacts
 // ============================================================
 register({ method: 'get', path: '/crm/contacts/list', tags: [TAG], summary: 'List contacts',
-  response: envelope(z.array(Contact)) });
+  response: envelope(z.object({ contacts: z.array(Contact) })) });
 register({ method: 'post', path: '/crm/contacts', tags: [TAG], summary: 'Create a contact',
   body: Contact.omit({ id: true, tenantId: true, userId: true, createdAt: true, updatedAt: true, isArchived: true }).partial().extend({ name: z.string() }),
   response: envelope(Contact) });
@@ -313,7 +330,7 @@ register({ method: 'get', path: '/crm/contacts/:id/events', tags: [TAG], summary
 // Deal stages
 // ============================================================
 register({ method: 'get', path: '/crm/stages/list', tags: [TAG], summary: 'List deal stages',
-  response: envelope(z.array(DealStage)) });
+  response: envelope(z.object({ stages: z.array(DealStage) })) });
 register({ method: 'post', path: '/crm/stages', tags: [TAG], summary: 'Create a deal stage',
   body: DealStage.omit({ id: true }).partial().extend({ name: z.string() }), response: envelope(DealStage) });
 register({ method: 'post', path: '/crm/stages/reorder', tags: [TAG], summary: 'Reorder deal stages',
@@ -328,7 +345,7 @@ register({ method: 'delete', path: '/crm/stages/:id', tags: [TAG], summary: 'Del
 // ============================================================
 register({ method: 'get', path: '/crm/deals/list', tags: [TAG], summary: 'List deals',
   query: z.object({ stageId: Uuid.optional(), status: z.enum(['open', 'won', 'lost']).optional() }),
-  response: envelope(z.array(Deal)) });
+  response: envelope(z.object({ deals: z.array(Deal) })) });
 register({ method: 'get', path: '/crm/deals/counts-by-stage', tags: [TAG], summary: 'Get deal counts grouped by stage',
   response: envelope(z.record(Uuid, z.number().int())) });
 register({ method: 'get', path: '/crm/deals/pipeline-value', tags: [TAG], summary: 'Get total pipeline value',
@@ -409,7 +426,7 @@ register({ method: 'delete', path: '/crm/activities/:id', tags: [TAG], summary: 
 // Workflows (automations)
 // ============================================================
 register({ method: 'get', path: '/crm/workflows', tags: [TAG], summary: 'List workflow automations',
-  response: envelope(z.array(Workflow)) });
+  response: envelope(z.object({ workflows: z.array(Workflow) })) });
 register({ method: 'post', path: '/crm/workflows', tags: [TAG], summary: 'Create a workflow automation',
   body: Workflow.omit({ id: true, executionCount: true, lastExecutedAt: true, createdAt: true, updatedAt: true }).partial()
     .extend({ name: z.string(), trigger: z.string(), action: z.string() }),
@@ -426,7 +443,7 @@ register({ method: 'post', path: '/crm/workflows/:id/toggle', tags: [TAG], summa
 // ============================================================
 register({ method: 'get', path: '/crm/leads/list', tags: [TAG], summary: 'List leads',
   query: z.object({ status: z.string().optional(), source: z.string().optional() }),
-  response: envelope(z.array(Lead)) });
+  response: envelope(z.object({ leads: z.array(Lead) })) });
 register({ method: 'post', path: '/crm/leads', tags: [TAG], summary: 'Create a lead',
   body: Lead.omit({ id: true, tenantId: true, userId: true, createdAt: true, updatedAt: true, isArchived: true, convertedContactId: true, convertedDealId: true, enrichedData: true, enrichedAt: true }).partial().extend({ name: z.string() }),
   response: envelope(Lead) });
@@ -447,7 +464,7 @@ register({ method: 'post', path: '/crm/leads/:id/enrich', tags: [TAG], summary: 
 // ============================================================
 register({ method: 'get', path: '/crm/notes/list', tags: [TAG], summary: 'List notes',
   query: z.object({ dealId: Uuid.optional(), contactId: Uuid.optional(), companyId: Uuid.optional() }),
-  response: envelope(z.array(Note)) });
+  response: envelope(z.object({ notes: z.array(Note) })) });
 register({ method: 'post', path: '/crm/notes', tags: [TAG], summary: 'Create a note',
   body: Note.omit({ id: true, createdAt: true, updatedAt: true, isArchived: true, isPinned: true }).partial().extend({ title: z.string() }),
   response: envelope(Note) });
@@ -491,7 +508,7 @@ register({ method: 'post', path: '/crm/forms/public/:token', tags: [TAG], summar
 // ============================================================
 register({ method: 'get', path: '/crm/proposals/list', tags: [TAG], summary: 'List proposals',
   query: z.object({ status: Proposal.shape.status.optional(), dealId: Uuid.optional() }),
-  response: envelope(z.array(Proposal)) });
+  response: envelope(z.object({ proposals: z.array(Proposal) })) });
 register({ method: 'post', path: '/crm/proposals', tags: [TAG], summary: 'Create a proposal',
   body: Proposal.omit({ id: true, publicToken: true, sentAt: true, viewedAt: true, acceptedAt: true, declinedAt: true, createdAt: true, updatedAt: true, isArchived: true })
     .partial().extend({ title: z.string() }),
@@ -539,6 +556,12 @@ register({ method: 'post', path: '/crm/events/create', tags: [TAG], summary: 'Cr
 
 // Permissions
 register({ method: 'get', path: '/crm/permissions/me', tags: [TAG], summary: 'Get the current user’s CRM permissions',
-  response: envelope(z.record(z.string(), z.boolean())) });
+  response: envelope(z.object({
+    id: Uuid,
+    tenantId: Uuid,
+    userId: Uuid,
+    role: z.string(),
+    recordAccess: z.record(z.string(), z.unknown()),
+  })) });
 register({ method: 'get', path: '/crm/permissions', tags: [TAG], summary: 'Get CRM permissions for all users (admin)',
   response: envelope(z.array(z.record(z.string(), z.unknown()))) });

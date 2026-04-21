@@ -48,7 +48,7 @@ register({ method: 'get', path: '/drive/widget', tags: [TAG], summary: 'Get Driv
 
 // Listing + navigation
 register({ method: 'get', path: '/drive', tags: [TAG], summary: 'List drive items',
-  query: z.object({ parentId: Uuid.optional() }), response: envelope(z.array(DriveItem)) });
+  query: z.object({ parentId: Uuid.optional() }), response: envelope(z.object({ items: z.array(DriveItem) })) });
 register({ method: 'get', path: '/drive/search', tags: [TAG], summary: 'Search drive items',
   query: z.object({ q: z.string().min(1) }), response: envelope(z.array(DriveItem)) });
 register({ method: 'get', path: '/drive/trash', tags: [TAG], summary: 'List trashed items',
@@ -62,7 +62,10 @@ register({ method: 'get', path: '/drive/uploads', tags: [TAG], summary: 'List re
 register({ method: 'get', path: '/drive/folders', tags: [TAG], summary: 'List folders (for picker)',
   response: envelope(z.array(DriveItem)) });
 register({ method: 'get', path: '/drive/storage', tags: [TAG], summary: 'Get storage usage',
-  response: envelope(z.object({ used: z.number(), quota: z.number().nullable() })) });
+  response: envelope(z.object({
+    totalBytes: z.string().openapi({ description: 'Bytes used (string to handle BigInt)' }),
+    fileCount: z.string().openapi({ description: 'File count (string from SQL COUNT)' }),
+  })) });
 register({ method: 'get', path: '/drive/by-type', tags: [TAG], summary: 'List items grouped by type',
   query: z.object({ type: z.string().optional() }),
   response: envelope(z.array(DriveItem)) });

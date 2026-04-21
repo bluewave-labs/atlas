@@ -52,7 +52,12 @@ const Template = z.object({
 
 // Widget / settings
 register({ method: 'get', path: '/sign/widget', tags: [TAG], summary: 'Get Sign widget data for home',
-  response: envelope(z.record(z.string(), z.unknown())) });
+  response: envelope(z.object({
+    pending: z.number().int(),
+    signed: z.number().int(),
+    draft: z.number().int(),
+    total: z.number().int(),
+  })) });
 register({ method: 'get', path: '/sign/settings', tags: [TAG], summary: 'Get Sign settings',
   response: envelope(z.record(z.string(), z.unknown())) });
 register({ method: 'patch', path: '/sign/settings', tags: [TAG], summary: 'Update Sign settings',
@@ -61,7 +66,7 @@ register({ method: 'patch', path: '/sign/settings', tags: [TAG], summary: 'Updat
 // Documents
 register({ method: 'get', path: '/sign', tags: [TAG], summary: 'List signature documents',
   query: z.object({ status: SignDocument.shape.status.optional(), archived: z.coerce.boolean().optional() }),
-  response: envelope(z.array(SignDocument)) });
+  response: envelope(z.object({ documents: z.array(SignDocument) })) });
 register({ method: 'post', path: '/sign', tags: [TAG], summary: 'Create a signature document',
   body: z.object({ title: z.string(), documentType: z.string().optional() }),
   response: envelope(SignDocument) });
@@ -96,7 +101,7 @@ register({ method: 'delete', path: '/sign/fields/:fieldId', tags: [TAG], summary
 
 // Templates
 register({ method: 'get', path: '/sign/templates', tags: [TAG], summary: 'List signature templates',
-  response: envelope(z.array(Template)) });
+  response: envelope(z.object({ templates: z.array(Template) })) });
 register({ method: 'post', path: '/sign/templates', tags: [TAG], summary: 'Create a signature template',
   body: z.object({ name: z.string(), description: z.string().optional() }), response: envelope(Template) });
 register({ method: 'post', path: '/sign/templates/:id/use', tags: [TAG], summary: 'Create a new document from a template',

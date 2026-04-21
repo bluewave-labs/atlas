@@ -19,13 +19,13 @@ const VALID_THEMES = new Set([
   'bluePlanet', 'saturn', 'kepler', 'mars', 'deepSpace', 'none',
 ]);
 
-router.get('/docs', (req, res, next) => {
+router.get('/reference', (req, res, next) => {
   const requested = typeof req.query.theme === 'string' ? req.query.theme : '';
   const theme = VALID_THEMES.has(requested) ? requested : 'purple';
   return apiReference({
     url: '/api/v1/openapi.json',
     theme: theme as any,
-    pageTitle: `Atlas API — ${theme}`,
+    pageTitle: 'Atlas API',
   })(req as any, res as any, next);
 });
 

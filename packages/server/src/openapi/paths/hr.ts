@@ -131,7 +131,17 @@ const OnboardingTask = z.object({
 register({ method: 'get', path: '/hr/widget', tags: [TAG], summary: 'Get HR widget data for home',
   response: envelope(z.record(z.string(), z.unknown())) });
 register({ method: 'get', path: '/hr/dashboard', tags: [TAG], summary: 'Get HR dashboard KPIs',
-  response: envelope(z.record(z.string(), z.unknown())) });
+  response: envelope(z.object({
+    totalHeadcount: z.number().int(),
+    statusCounts: z.record(z.string(), z.number().int()),
+    departmentCounts: z.array(z.object({ departmentId: Uuid.nullable(), name: z.string(), count: z.number().int() })),
+    typeCounts: z.record(z.string(), z.number().int()),
+    upcomingBirthdays: z.array(z.record(z.string(), z.unknown())),
+    pendingRequests: z.number().int(),
+    approvedDaysThisMonth: z.number().int(),
+    recentHires: z.array(z.record(z.string(), z.unknown())),
+    tenure: z.record(z.string(), z.unknown()),
+  })) });
 
 // Employees
 register({ method: 'get', path: '/hr/employees', tags: [TAG], summary: 'List employees',
