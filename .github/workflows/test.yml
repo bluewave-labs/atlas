@@ -23,6 +23,9 @@ jobs:
       - name: Build shared package
         run: npm run build --workspace=packages/shared
 
+      - name: Build OpenAPI document
+        run: npm run openapi:build --workspace=packages/server
+
       - name: Run server unit tests
         run: npm test --workspace=packages/server
 

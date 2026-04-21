@@ -62,6 +62,34 @@ export interface RouteDef {
   extraResponses?: Record<number, { description: string; schema?: z.ZodTypeAny }>;
 }
 
+/**
+ * Register a route spec AND return an Express-middleware that validates
+ * params/query/body at runtime. Use for new routes so the OpenAPI doc
+ * and the wire contract can never drift.
+ *
+ *   // in openapi/paths/foo.ts
+ *   export const createFoo = defineRoute({
+ *     method: 'post', path: '/foo', tags: ['Foo'], summary: '...',
+ *     body: z.object({ name: z.string() }),
+ *     response: envelope(Foo),
+ *   });
+ *
+ *   // in apps/foo/routes.ts
+ *   router.post('/', createFoo.validate, controller.createFoo);
+ */
+export function defineRoute(def: RouteDef) {
+  register(def);
+  // Lazy-import to avoid circular dependency at module load.
+  const { validate } = require('./validate') as typeof import('./validate');
+  return {
+    validate: validate({
+      params: def.params,
+      query: def.query,
+      body: def.body,
+    }),
+  };
+}
+
 export function register(def: RouteDef) {
   const responses: Record<number, { description: string; content?: any }> = {};
   const okSchema = def.response ?? OkEnvelope;

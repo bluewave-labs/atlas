@@ -2,27 +2,16 @@ import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { authMiddleware } from '../middleware/auth';
 import { getExchangeRate, getExchangeRates } from '../services/exchange-rate.service';
+import { convertExchangeRate } from '../openapi/paths/misc';
 
 const router = Router();
 router.use(authMiddleware);
 
 // GET /exchange-rates/convert?from=EUR&to=USD&amount=100
-router.get('/convert', async (req: Request, res: Response) => {
-  const from = (req.query.from as string)?.toUpperCase();
-  const to = (req.query.to as string)?.toUpperCase();
-  const amountStr = req.query.amount as string;
-
-  if (!from || !to || from.length !== 3 || to.length !== 3 || !/^[A-Z]{3}$/.test(from) || !/^[A-Z]{3}$/.test(to)) {
-    return res.status(400).json({ success: false, error: 'Invalid currency code' });
-  }
-
-  const amount = amountStr ? parseFloat(amountStr) : 1;
-  if (isNaN(amount)) {
-    return res.status(400).json({
-      success: false,
-      error: 'Invalid amount',
-    });
-  }
+router.get('/convert', convertExchangeRate.validate, async (req: Request, res: Response) => {
+  const from = (req.query.from as string).toUpperCase();
+  const to = (req.query.to as string).toUpperCase();
+  const amount = req.query.amount !== undefined ? Number(req.query.amount) : 1;
 
   const result = await getExchangeRate(from, to);
   if (!result) {

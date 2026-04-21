@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { register, envelope, EnvelopeError, Uuid, IsoDateTime } from '../_helpers';
+import { register, envelope, EnvelopeError, Uuid, IsoDateTime, defineRoute } from '../_helpers';
 
 // ---------- User settings ----------
 const UserSettings = z.object({
@@ -171,14 +171,14 @@ register({
 });
 
 // ---------- Exchange rates ----------
-register({
+export const convertExchangeRate = defineRoute({
   method: 'get',
   path: '/exchange-rates/convert',
   tags: ['Exchange rates'],
   summary: 'Convert an amount between currencies with multi-provider fallback',
   query: z.object({
-    from: z.string().length(3).openapi({ example: 'USD' }),
-    to: z.string().length(3).openapi({ example: 'EUR' }),
+    from: z.string().length(3).regex(/^[A-Za-z]{3}$/).openapi({ example: 'USD' }),
+    to: z.string().length(3).regex(/^[A-Za-z]{3}$/).openapi({ example: 'EUR' }),
     amount: z.coerce.number().optional().openapi({ example: 100 }),
   }),
   response: envelope(

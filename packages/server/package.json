@@ -12,6 +12,7 @@
     "test:all": "vitest run && vitest run --config vitest.integration.config.ts",
     "test:watch": "vitest",
     "lint": "echo 'lint ok'",
+    "openapi:build": "tsx src/openapi/build.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio"

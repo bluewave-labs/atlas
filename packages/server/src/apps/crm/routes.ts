@@ -3,6 +3,7 @@ import * as crmController from './controller';
 import { authMiddleware } from '../../middleware/auth';
 import { requireAppPermission } from '../../middleware/require-app-permission';
 import { withConcurrencyCheck } from '../../middleware/concurrency-check';
+import { createCompany as createCompanySpec } from '../../openapi/paths/crm';
 import { isTenantAdmin } from '@atlas-platform/shared';
 import { db } from '../../config/database';
 import {
@@ -49,7 +50,7 @@ router.get('/dashboard', crmController.getDashboard);
 // Companies (before /:id to avoid route conflicts)
 router.get('/companies/list', crmController.listCompanies);
 router.post('/companies/import', crmController.importCompanies);
-router.post('/companies', crmController.createCompany);
+router.post('/companies', createCompanySpec.validate, crmController.createCompany);
 router.get('/companies/:id', crmController.getCompany);
 router.patch('/companies/:id', withConcurrencyCheck(crmCompanies), crmController.updateCompany);
 router.delete('/companies/:id', crmController.deleteCompany);

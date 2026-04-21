@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { register, envelope, Uuid, IsoDateTime, IsoDate } from '../_helpers';
+import { register, envelope, Uuid, IsoDateTime, IsoDate, defineRoute } from '../_helpers';
 
 const TAG = 'CRM';
 
@@ -285,8 +285,8 @@ register({ method: 'get', path: '/crm/forecast', tags: [TAG], summary: 'Get reve
 // ============================================================
 register({ method: 'get', path: '/crm/companies/list', tags: [TAG], summary: 'List companies',
   response: envelope(z.object({ companies: z.array(Company) })) });
-register({ method: 'post', path: '/crm/companies', tags: [TAG], summary: 'Create a company',
-  body: Company.omit({ id: true, tenantId: true, userId: true, createdAt: true, updatedAt: true, isArchived: true, portalToken: true }).partial().extend({ name: z.string() }),
+export const createCompany = defineRoute({ method: 'post', path: '/crm/companies', tags: [TAG], summary: 'Create a company',
+  body: Company.omit({ id: true, tenantId: true, userId: true, createdAt: true, updatedAt: true, isArchived: true, portalToken: true }).partial().extend({ name: z.string().min(1) }),
   response: envelope(Company) });
 register({ method: 'post', path: '/crm/companies/import', tags: [TAG], summary: 'Bulk import companies from CSV',
   body: z.object({ rows: z.array(z.record(z.string(), z.unknown())) }),
