@@ -277,12 +277,10 @@ export async function updateStep(
   if (patch.actionConfig !== undefined) updates.actionConfig = patch.actionConfig;
   if (patch.condition !== undefined) updates.condition = patch.condition;
 
-  await db.update(crmWorkflowSteps)
+  const [row] = await db.update(crmWorkflowSteps)
     .set(updates)
-    .where(and(eq(crmWorkflowSteps.id, stepId), eq(crmWorkflowSteps.workflowId, workflowId)));
-
-  const [row] = await db.select().from(crmWorkflowSteps)
-    .where(eq(crmWorkflowSteps.id, stepId)).limit(1);
+    .where(and(eq(crmWorkflowSteps.id, stepId), eq(crmWorkflowSteps.workflowId, workflowId)))
+    .returning();
 
   await db.update(crmWorkflows)
     .set({ updatedAt: new Date() })
@@ -350,29 +348,32 @@ export async function reorderSteps(
   for (const id of stepIds) if (!existingSet.has(id)) return { ok: false, error: 'MISMATCH' };
 
   // Two-phase update to avoid colliding with the unique (workflowId, position) index.
-  // Phase 1: push all positions out to a non-conflicting range.
-  await db.execute(sql`
-    UPDATE crm_workflow_steps SET position = position + 1000, updated_at = now()
-    WHERE workflow_id = ${workflowId}
-  `);
-  // Phase 2: assign target positions by id.
-  for (let i = 0; i < stepIds.length; i++) {
-    await db.update(crmWorkflowSteps)
-      .set({ position: i, updatedAt: new Date() })
-      .where(eq(crmWorkflowSteps.id, stepIds[i]));
-  }
-
-  await db.update(crmWorkflows)
-    .set({ updatedAt: new Date() })
-    .where(eq(crmWorkflows.id, workflowId));
+  // Transaction wraps both phases so a failure between them can't leave rows stranded
+  // at the +1000 sentinel positions, which would break executor ordering.
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`
+      UPDATE crm_workflow_steps SET position = position + 1000, updated_at = now()
+      WHERE workflow_id = ${workflowId}
+    `);
+    for (let i = 0; i < stepIds.length; i++) {
+      await tx.update(crmWorkflowSteps)
+        .set({ position: i, updatedAt: new Date() })
+        .where(eq(crmWorkflowSteps.id, stepIds[i]));
+    }
+    await tx.update(crmWorkflows)
+      .set({ updatedAt: new Date() })
+      .where(eq(crmWorkflows.id, workflowId));
+  });
 
   return { ok: true };
 }
 
 // ─── Executor ───────────────────────────────────────────────────────
 
-type RunContext = Record<string, unknown> & {
-  __resolved?: {
+type TriggerContext = Omit<Record<string, unknown>, '__resolved'>;
+
+type RunContext = TriggerContext & {
+  __resolved: {
     deal?: Record<string, unknown> | null;
     contact?: Record<string, unknown> | null;
     company?: Record<string, unknown> | null;
@@ -383,7 +384,7 @@ export async function executeWorkflows(
   tenantId: string,
   userId: string,
   trigger: string,
-  context: Record<string, unknown>,
+  context: TriggerContext,
 ) {
   const workflows = await db
     .select()
@@ -393,6 +394,11 @@ export async function executeWorkflows(
       eq(crmWorkflows.trigger, trigger),
       eq(crmWorkflows.isActive, true),
     ));
+
+  if (workflows.length === 0) return;
+
+  // Resolve the user's language once per run — it doesn't change between steps.
+  const lang = await getUserLanguage(userId);
 
   for (const workflow of workflows) {
     try {
@@ -415,10 +421,9 @@ export async function executeWorkflows(
               continue;
             }
           }
-          await executeAction(userId, tenantId, step.action, step.actionConfig, runCtx);
+          await executeAction(userId, tenantId, step.action, step.actionConfig, runCtx, lang);
         } catch (err) {
           logger.error({ err, workflowId: workflow.id, stepId: step.id }, 'CRM workflow step failed');
-          // Continue to next step — per-step errors are non-fatal.
         }
       }
 
@@ -469,8 +474,7 @@ async function resolveFieldPath(field: string, ctx: RunContext): Promise<unknown
     return undefined;
   }
 
-  const resolved = ctx.__resolved ?? {};
-  ctx.__resolved = resolved;
+  const resolved = ctx.__resolved;
 
   if (scope === 'deal') {
     if (!('deal' in resolved)) {
@@ -511,7 +515,7 @@ async function evaluateCondition(cond: StepCondition, ctx: RunContext): Promise<
   return compare(actual, cond.operator, cond.value);
 }
 
-function compare(actual: unknown, op: StepConditionOperator, expected: unknown): boolean {
+export function compare(actual: unknown, op: StepConditionOperator, expected: unknown): boolean {
   const isEmpty = (v: unknown) =>
     v === null || v === undefined || v === '' || (Array.isArray(v) && v.length === 0);
 
@@ -535,10 +539,6 @@ function compare(actual: unknown, op: StepConditionOperator, expected: unknown):
     case 'not_contains': {
       if (Array.isArray(actual)) return !actual.includes(expected as never);
       if (typeof actual === 'string' && typeof expected === 'string') return !actual.includes(expected);
-      return false;
-    }
-    default: {
-      logger.warn({ op }, 'CRM workflow condition uses unknown operator');
       return false;
     }
   }
@@ -565,8 +565,8 @@ async function executeAction(
   action: string,
   actionConfig: Record<string, unknown>,
   context: Record<string, unknown>,
+  lang: string,
 ) {
-  const lang = await getUserLanguage(userId);
   switch (action) {
     case 'create_task': {
       const rawTitle = (actionConfig.taskTitle as string) || 'Automated task';
@@ -756,10 +756,16 @@ export async function migrateSeedWorkflowsToKeys(tenantId: string): Promise<{ mi
     .from(crmWorkflows)
     .where(eq(crmWorkflows.tenantId, tenantId));
 
+  if (workflowRows.length === 0) return { migrated: 0 };
+
+  const allSteps = await db
+    .select()
+    .from(crmWorkflowSteps)
+    .where(inArray(crmWorkflowSteps.workflowId, workflowRows.map((w) => w.id)));
+
   let migrated = 0;
 
   for (const row of workflowRows) {
-    // Name migration (unchanged logic).
     if (typeof row.name === 'string' && !row.name.startsWith(I18N_KEY_PREFIX)) {
       const replacement = SEED_NAME_MIGRATIONS[row.name];
       if (replacement) {
@@ -769,35 +775,31 @@ export async function migrateSeedWorkflowsToKeys(tenantId: string): Promise<{ mi
         migrated++;
       }
     }
+  }
 
-    // Step actionConfig migration.
-    const steps = await db.select().from(crmWorkflowSteps)
-      .where(eq(crmWorkflowSteps.workflowId, row.id));
+  for (const step of allSteps) {
+    const config = (step.actionConfig ?? {}) as Record<string, unknown>;
+    const nextConfig: Record<string, unknown> = { ...config };
+    let changed = false;
 
-    for (const step of steps) {
-      const config = (step.actionConfig ?? {}) as Record<string, unknown>;
-      const nextConfig: Record<string, unknown> = { ...config };
-      let changed = false;
+    if (typeof config.taskTitle === 'string' && !config.taskTitle.startsWith(I18N_KEY_PREFIX)) {
+      const r = SEED_TASK_TITLE_MIGRATIONS[config.taskTitle];
+      if (r) { nextConfig.taskTitle = r; changed = true; }
+    }
+    if (typeof config.body === 'string' && !config.body.startsWith(I18N_KEY_PREFIX)) {
+      const r = SEED_BODY_MIGRATIONS[config.body];
+      if (r) { nextConfig.body = r; changed = true; }
+    }
+    if (typeof config.tag === 'string' && !config.tag.startsWith(I18N_KEY_PREFIX)) {
+      const r = SEED_TAG_MIGRATIONS[config.tag];
+      if (r) { nextConfig.tag = r; changed = true; }
+    }
 
-      if (typeof config.taskTitle === 'string' && !config.taskTitle.startsWith(I18N_KEY_PREFIX)) {
-        const r = SEED_TASK_TITLE_MIGRATIONS[config.taskTitle];
-        if (r) { nextConfig.taskTitle = r; changed = true; }
-      }
-      if (typeof config.body === 'string' && !config.body.startsWith(I18N_KEY_PREFIX)) {
-        const r = SEED_BODY_MIGRATIONS[config.body];
-        if (r) { nextConfig.body = r; changed = true; }
-      }
-      if (typeof config.tag === 'string' && !config.tag.startsWith(I18N_KEY_PREFIX)) {
-        const r = SEED_TAG_MIGRATIONS[config.tag];
-        if (r) { nextConfig.tag = r; changed = true; }
-      }
-
-      if (changed) {
-        await db.update(crmWorkflowSteps)
-          .set({ actionConfig: nextConfig, updatedAt: new Date() })
-          .where(eq(crmWorkflowSteps.id, step.id));
-        migrated++;
-      }
+    if (changed) {
+      await db.update(crmWorkflowSteps)
+        .set({ actionConfig: nextConfig, updatedAt: new Date() })
+        .where(eq(crmWorkflowSteps.id, step.id));
+      migrated++;
     }
   }
 

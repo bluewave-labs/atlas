@@ -3,9 +3,9 @@ import { z } from 'zod';
 import * as crmService from '../services/workflow.service';
 import { logger } from '../../../utils/logger';
 import { canAccessEntity } from '../../../services/app-permissions.service';
-import type { WorkflowTrigger } from '@atlas-platform/shared';
 import {
   workflowCreateSchema,
+  workflowUpdateSchema,
   stepInputSchema,
   stepPatchSchema,
   reorderSchema,
@@ -73,14 +73,11 @@ export async function updateWorkflow(req: Request, res: Response) {
   try {
     const userId = req.auth!.userId;
     const id = req.params.id as string;
-    const { name, trigger, triggerConfig, isActive } = req.body as Record<string, unknown>;
 
-    const workflow = await crmService.updateWorkflow(userId, id, {
-      name: name as string | undefined,
-      trigger: trigger as WorkflowTrigger | undefined,
-      triggerConfig: triggerConfig as Record<string, unknown> | undefined,
-      isActive: isActive as boolean | undefined,
-    });
+    const parsed = workflowUpdateSchema.safeParse(req.body);
+    if (!parsed.success) return zodError(res, parsed.error);
+
+    const workflow = await crmService.updateWorkflow(userId, id, parsed.data);
     if (!workflow) {
       res.status(404).json({ success: false, error: 'Workflow not found' });
       return;

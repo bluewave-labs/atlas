@@ -82,13 +82,6 @@ export interface CreateCrmActivityTypeInput {
   name: string; icon?: string; color?: string;
 }
 
-// ─── Workflow Automations ──────────────────────────────────────────
-
-// NOTE: CrmWorkflow and CreateCrmWorkflowInput shapes moved to the client hooks
-// after the multi-step migration (steps are now a separate table). The legacy
-// CrmWorkflowTrigger / CrmWorkflowAction aliases are superseded by the new
-// WORKFLOW_TRIGGERS / WORKFLOW_ACTIONS const arrays defined further below.
-
 // ─── CRM Permissions ─────────────────────────────────────────────
 
 export type CrmRole = 'admin' | 'manager' | 'sales' | 'viewer';
@@ -195,11 +188,13 @@ export interface CrmForecast {
 
 // ─── Workflow step conditions ──────────────────────────────────────
 
-export type StepConditionOperator =
-  | 'eq' | 'neq'
-  | 'gt' | 'gte' | 'lt' | 'lte'
-  | 'contains' | 'not_contains'
-  | 'is_empty' | 'is_not_empty';
+export const WORKFLOW_CONDITION_OPERATORS = [
+  'eq', 'neq',
+  'gt', 'gte', 'lt', 'lte',
+  'contains', 'not_contains',
+  'is_empty', 'is_not_empty',
+] as const;
+export type StepConditionOperator = (typeof WORKFLOW_CONDITION_OPERATORS)[number];
 
 export type StepCondition = {
   field: string;

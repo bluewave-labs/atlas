@@ -2,13 +2,11 @@ import { z } from 'zod';
 import {
   WORKFLOW_ACTIONS,
   WORKFLOW_TRIGGERS,
+  WORKFLOW_CONDITION_OPERATORS,
   CONDITION_FIELD_TYPES,
 } from '@atlas-platform/shared';
 
-const operatorSchema = z.enum([
-  'eq', 'neq', 'gt', 'gte', 'lt', 'lte',
-  'contains', 'not_contains', 'is_empty', 'is_not_empty',
-]);
+const operatorSchema = z.enum(WORKFLOW_CONDITION_OPERATORS);
 
 const NUMERIC_OPS = new Set(['gt', 'gte', 'lt', 'lte']);
 
@@ -44,6 +42,13 @@ export const workflowCreateSchema = z.object({
   trigger: z.enum(WORKFLOW_TRIGGERS),
   triggerConfig: z.record(z.unknown()).optional(),
   steps: z.array(stepInputSchema).min(1, 'At least one step is required'),
+});
+
+export const workflowUpdateSchema = z.object({
+  name: z.string().trim().min(1).optional(),
+  trigger: z.enum(WORKFLOW_TRIGGERS).optional(),
+  triggerConfig: z.record(z.unknown()).optional(),
+  isActive: z.boolean().optional(),
 });
 
 export const reorderSchema = z.object({
