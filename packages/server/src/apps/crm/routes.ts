@@ -18,6 +18,7 @@ import {
   crmNotes,
   crmProposals,
   crmWorkflows,
+  crmWorkflowSteps,
 } from '../../db/schema';
 import { eq, inArray } from 'drizzle-orm';
 
@@ -120,7 +121,7 @@ router.post('/workflows/:id/toggle', crmController.toggleWorkflow);
 
 // Workflow steps
 router.post('/workflows/:id/steps', crmController.appendStep);
-router.patch('/workflows/:id/steps/:stepId', crmController.updateStep);
+router.patch('/workflows/:id/steps/:stepId', withConcurrencyCheck(crmWorkflowSteps), crmController.updateStep);
 router.delete('/workflows/:id/steps/:stepId', crmController.deleteStep);
 router.post('/workflows/:id/steps/reorder', crmController.reorderSteps);
 

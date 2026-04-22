@@ -176,7 +176,7 @@ export async function deleteStep(req: Request, res: Response) {
     const result = await crmService.deleteStep(userId, workflowId, stepId);
     if (!result.deleted) {
       if (result.error === 'LAST_STEP') {
-        res.status(400).json({ success: false, error: 'LAST_STEP', message: 'A workflow needs at least one step' });
+        res.status(400).json({ success: false, code: 'LAST_STEP', error: 'A workflow needs at least one step' });
       } else {
         res.status(404).json({ success: false, error: 'Step not found' });
       }
@@ -198,7 +198,7 @@ export async function reorderSteps(req: Request, res: Response) {
     const result = await crmService.reorderSteps(userId, workflowId, parsed.data.stepIds);
     if (!result.ok) {
       if (result.error === 'MISMATCH') {
-        res.status(400).json({ success: false, error: 'MISMATCH', message: 'stepIds must match existing step set exactly' });
+        res.status(400).json({ success: false, code: 'MISMATCH', error: 'stepIds must match existing step set exactly' });
       } else {
         res.status(404).json({ success: false, error: 'Workflow not found' });
       }

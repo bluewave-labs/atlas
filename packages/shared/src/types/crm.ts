@@ -269,3 +269,11 @@ export const TRIGGER_AVAILABLE_FIELDS: Record<WorkflowTrigger, string[]> = {
     'contact.email', 'contact.tags', 'company.tags',
   ],
 };
+
+// Machine-readable error codes returned by workflow step endpoints. Clients can
+// match on these to surface action-specific UX instead of a generic save-failed toast.
+export const WORKFLOW_ERROR_CODES = {
+  LAST_STEP: 'LAST_STEP',
+  MISMATCH: 'MISMATCH',
+} as const;
+export type WorkflowErrorCode = (typeof WORKFLOW_ERROR_CODES)[keyof typeof WORKFLOW_ERROR_CODES];

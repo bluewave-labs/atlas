@@ -62,7 +62,11 @@ export function AutomationEditor({ id, onBack }: AutomationEditorProps) {
       setName(workflow.name);
       setTrigger(workflow.trigger as WorkflowTrigger);
     }
-  }, [workflow?.id, workflow?.name, workflow?.trigger]);
+    // Only re-initialise local edit buffers when switching to a different workflow.
+    // Intentionally ignore name/trigger changes so an in-flight server refetch
+    // can't clobber in-progress user edits mid-type.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workflow?.id]);
 
   useEffect(() => {
     return () => {

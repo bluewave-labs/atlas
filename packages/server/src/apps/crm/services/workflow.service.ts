@@ -184,12 +184,21 @@ export async function updateWorkflow(
   if (input.triggerConfig !== undefined) updates.triggerConfig = input.triggerConfig;
   if (input.isActive !== undefined) updates.isActive = input.isActive;
 
-  await db
+  const [updated] = await db
     .update(crmWorkflows)
     .set(updates)
-    .where(and(eq(crmWorkflows.id, workflowId), eq(crmWorkflows.userId, userId)));
+    .where(and(eq(crmWorkflows.id, workflowId), eq(crmWorkflows.userId, userId)))
+    .returning();
 
-  return getWorkflow(userId, workflowId);
+  if (!updated) return null;
+
+  const steps = await db
+    .select()
+    .from(crmWorkflowSteps)
+    .where(eq(crmWorkflowSteps.workflowId, workflowId))
+    .orderBy(asc(crmWorkflowSteps.position));
+
+  return { ...updated, steps: steps as WorkflowWithSteps['steps'] };
 }
 
 export async function deleteWorkflow(userId: string, workflowId: string): Promise<void> {
@@ -206,13 +215,21 @@ export async function toggleWorkflow(userId: string, workflowId: string): Promis
     .limit(1);
   if (!existing) return null;
 
-  const now = new Date();
-  await db
+  const [updated] = await db
     .update(crmWorkflows)
-    .set({ isActive: !existing.isActive, updatedAt: now })
-    .where(eq(crmWorkflows.id, workflowId));
+    .set({ isActive: !existing.isActive, updatedAt: new Date() })
+    .where(eq(crmWorkflows.id, workflowId))
+    .returning();
 
-  return getWorkflow(userId, workflowId);
+  if (!updated) return null;
+
+  const steps = await db
+    .select()
+    .from(crmWorkflowSteps)
+    .where(eq(crmWorkflowSteps.workflowId, workflowId))
+    .orderBy(asc(crmWorkflowSteps.position));
+
+  return { ...updated, steps: steps as WorkflowWithSteps['steps'] };
 }
 
 // ─── Step CRUD ──────────────────────────────────────────────────────

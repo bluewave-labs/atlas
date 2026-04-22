@@ -763,9 +763,15 @@ export function useUpdateWorkflow() {
       const { data } = await api.put(`/crm/workflows/${id}`, input, ifUnmodifiedSince(updatedAt));
       return data.data as CrmWorkflow;
     },
-    onSuccess: (_data, vars) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.crm.workflows.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.crm.workflow(vars.id) });
+    onSuccess: (data, vars) => {
+      // Seed the detail cache with the fresh server response instead of invalidating —
+      // avoids a refetch round-trip on every debounced autosave keystroke.
+      queryClient.setQueryData(queryKeys.crm.workflow(vars.id), data);
+      // The list view summary depends on name, trigger, isActive, and step count.
+      // Only invalidate the list when those could have changed.
+      if (vars.name !== undefined || vars.trigger !== undefined || vars.isActive !== undefined) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.crm.workflows.all });
+      }
     },
   });
 }
@@ -828,9 +834,13 @@ export function useUpdateStep(workflowId: string) {
       const { data } = await api.patch(`/crm/workflows/${workflowId}/steps/${stepId}`, patch);
       return data.data as CrmWorkflowStep;
     },
-    onSuccess: () => {
+    onSuccess: (_step, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.workflow(workflowId) });
-      qc.invalidateQueries({ queryKey: queryKeys.crm.workflows.all });
+      // Step action changes affect the first-step row summary in the list view.
+      // actionConfig changes do not — skip the list refetch then.
+      if (vars.patch.action !== undefined) {
+        qc.invalidateQueries({ queryKey: queryKeys.crm.workflows.all });
+      }
     },
   });
 }
@@ -847,6 +857,9 @@ export function useDeleteStep(workflowId: string) {
     },
   });
 }
+
+export { WORKFLOW_ERROR_CODES } from '@atlas-platform/shared';
+export type { WorkflowErrorCode } from '@atlas-platform/shared';
 
 export function useReorderSteps(workflowId: string) {
   const qc = useQueryClient();
