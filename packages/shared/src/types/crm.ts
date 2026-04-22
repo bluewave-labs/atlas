@@ -84,32 +84,10 @@ export interface CreateCrmActivityTypeInput {
 
 // ─── Workflow Automations ──────────────────────────────────────────
 
-export type CrmWorkflowTrigger = 'deal_stage_changed' | 'deal_created' | 'deal_won' | 'deal_lost' | 'contact_created' | 'activity_logged';
-export type CrmWorkflowAction = 'create_task' | 'update_field' | 'change_deal_stage' | 'add_tag' | 'assign_user' | 'log_activity' | 'send_notification';
-
-export interface CrmWorkflow {
-  id: string;
-  tenantId: string;
-  userId: string;
-  name: string;
-  trigger: CrmWorkflowTrigger;
-  triggerConfig: Record<string, unknown>;
-  action: CrmWorkflowAction;
-  actionConfig: Record<string, unknown>;
-  isActive: boolean;
-  executionCount: number;
-  lastExecutedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateCrmWorkflowInput {
-  name: string;
-  trigger: CrmWorkflowTrigger;
-  triggerConfig?: Record<string, unknown>;
-  action: CrmWorkflowAction;
-  actionConfig: Record<string, unknown>;
-}
+// NOTE: CrmWorkflow and CreateCrmWorkflowInput shapes moved to the client hooks
+// after the multi-step migration (steps are now a separate table). The legacy
+// CrmWorkflowTrigger / CrmWorkflowAction aliases are superseded by the new
+// WORKFLOW_TRIGGERS / WORKFLOW_ACTIONS const arrays defined further below.
 
 // ─── CRM Permissions ─────────────────────────────────────────────
 
