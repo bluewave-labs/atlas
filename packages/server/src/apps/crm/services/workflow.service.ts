@@ -541,6 +541,8 @@ export function compare(actual: unknown, op: StepConditionOperator, expected: un
       if (typeof actual === 'string' && typeof expected === 'string') return !actual.includes(expected);
       return false;
     }
+    default:
+      return false;
   }
 }
 
