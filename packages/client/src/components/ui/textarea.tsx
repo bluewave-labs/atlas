@@ -36,7 +36,6 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             color: 'var(--color-text-primary)',
             fontSize: 'var(--font-size-md)',
             fontFamily: 'var(--font-family)',
-            outline: 'none',
             transition: 'border-color var(--transition-normal)',
             boxSizing: 'border-box',
             resize: 'vertical',

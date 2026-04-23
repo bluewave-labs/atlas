@@ -135,7 +135,7 @@ function KanbanCard({
           aria-label={t('tasks.complete')}
         >
           {task.status === 'completed' && (
-            <Check size={10} color="var(--color-bg-primary)" strokeWidth={3} className="task-check-icon" />
+            <Check size={10} color="var(--color-text-inverse)" strokeWidth={3} className="task-check-icon" />
           )}
         </button>
         <div className="kanban-card-content">

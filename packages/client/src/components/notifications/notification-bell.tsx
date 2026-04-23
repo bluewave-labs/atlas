@@ -91,7 +91,7 @@ export function NotificationBell() {
                 height: 12,
                 borderRadius: 6,
                 background: 'var(--color-error)',
-                color: 'var(--color-bg-primary)',
+                color: 'var(--color-text-inverse)',
                 fontSize: 9,
                 fontWeight: 700,
                 display: 'flex',

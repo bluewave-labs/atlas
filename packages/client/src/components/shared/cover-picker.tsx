@@ -191,7 +191,7 @@ export function CoverPicker({ onSelect, onClose }: CoverPickerProps) {
                   disabled={!customUrl.trim()}
                   style={{
                     padding: '8px 16px', background: customUrl.trim() ? 'var(--color-accent-primary, #13715B)' : 'var(--color-border-primary)',
-                    color: 'var(--color-bg-primary)', border: 'none', borderRadius: 4, fontSize: 13,
+                    color: 'var(--color-text-inverse)', border: 'none', borderRadius: 4, fontSize: 13,
                     fontFamily: 'var(--font-family)', cursor: customUrl.trim() ? 'pointer' : 'not-allowed',
                     fontWeight: 500, transition: 'background 0.15s ease',
                   }}

@@ -65,7 +65,6 @@ export function Select({
             fontWeight: 'var(--font-weight-normal)' as CSSProperties['fontWeight'],
             fontFamily: 'var(--font-family)',
             cursor: disabled ? 'not-allowed' : 'pointer',
-            outline: 'none',
             boxSizing: 'border-box',
             transition: 'border-color var(--transition-normal)',
             width: width ?? '100%',

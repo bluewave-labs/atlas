@@ -45,17 +45,6 @@
   border-width: 0;
 }
 
-/* Focus visible ring for keyboard navigation */
-:focus-visible {
-  outline: 2px solid var(--color-accent-primary);
-  outline-offset: 2px;
-}
-
-/* Remove focus ring for mouse users */
-:focus:not(:focus-visible) {
-  outline: none;
-}
-
 /* Skip to main content link — visually hidden until focused */
 .skip-link {
   position: fixed;

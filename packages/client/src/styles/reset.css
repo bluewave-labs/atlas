@@ -37,11 +37,6 @@ input, textarea, select {
   font-size: inherit;
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-border-focus);
-  outline-offset: 2px;
-}
-
 ::selection {
   background-color: var(--color-accent-primary);
   color: var(--color-text-inverse);

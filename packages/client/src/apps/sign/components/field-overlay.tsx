@@ -316,7 +316,7 @@ function FieldBox({
             borderRadius: '50%',
             border: 'none',
             background: 'var(--color-error)',
-            color: 'var(--color-bg-primary)',
+            color: 'var(--color-text-inverse)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

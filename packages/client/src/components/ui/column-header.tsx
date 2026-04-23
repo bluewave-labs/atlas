@@ -46,8 +46,8 @@ export function ColumnHeader({
         display: 'inline-flex',
         alignItems: 'center',
         gap: 4,
-        fontSize: '11px',
-        fontWeight: 500,
+        fontSize: 'var(--font-size-xs)',
+        fontWeight: 'var(--font-weight-medium)',
         textTransform: 'uppercase',
         letterSpacing: '0.05em',
         color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
@@ -56,7 +56,6 @@ export function ColumnHeader({
         userSelect: 'none',
         whiteSpace: 'nowrap',
         transition: 'color var(--transition-fast)',
-        outline: 'none',
         ...style,
       }}
       onMouseEnter={(e) => {

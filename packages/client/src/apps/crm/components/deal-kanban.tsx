@@ -272,7 +272,7 @@ export function DealKanban({ deals, stages, onMoveDeal, onDealClick, searchQuery
                         height: 24,
                         borderRadius: '50%',
                         background: 'var(--color-accent-primary)',
-                        color: 'var(--color-bg-primary)',
+                        color: 'var(--color-text-inverse)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',

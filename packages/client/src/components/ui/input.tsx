@@ -62,7 +62,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               color: 'var(--color-text-primary)',
               fontSize,
               fontFamily: 'var(--font-family)',
-              outline: 'none',
               transition: 'border-color var(--transition-normal)',
               boxSizing: 'border-box',
               ...style,

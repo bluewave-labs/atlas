@@ -126,7 +126,7 @@ export function GeneralPanel() {
                 transition: 'opacity var(--transition-normal)',
               }}
             >
-              <Camera size={18} color="var(--color-bg-primary)" />
+              <Camera size={18} color="var(--color-text-inverse)" />
             </div>
             <input
               ref={fileInputRef}

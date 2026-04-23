@@ -61,7 +61,7 @@ function StatusPipeline({ status, onChange, updatedAt }: { status: CrmLeadStatus
                 padding: '8px 24px 8px 16px',
                 paddingLeft: i === 0 ? 16 : 24,
                 background: bg,
-                color: isActive ? 'var(--color-bg-primary)' : 'var(--color-text-secondary)',
+                color: isActive ? 'var(--color-text-inverse)' : 'var(--color-text-secondary)',
                 fontSize: 'var(--font-size-sm)',
                 fontWeight: isCurrent ? 'var(--font-weight-semibold)' : 'var(--font-weight-normal)',
                 fontFamily: 'var(--font-family)',
@@ -492,7 +492,7 @@ function EnrichmentResults({ data, enrichedAt, onRefresh, isRefreshing, leadTags
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               width: 36, height: 36, borderRadius: '50%',
               background: score >= 70 ? 'var(--color-success)' : score >= 40 ? 'var(--color-warning)' : 'var(--color-error)',
-              color: 'var(--color-bg-primary)', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-bold)', fontFamily: 'var(--font-family)',
+              color: 'var(--color-text-inverse)', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-bold)', fontFamily: 'var(--font-family)',
             }}>
               {score}
             </span>
@@ -521,7 +521,7 @@ function EnrichmentResults({ data, enrichedAt, onRefresh, isRefreshing, leadTags
                     padding: '2px 8px', borderRadius: 'var(--radius-sm)',
                     fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-family)',
                     background: alreadyAdded ? 'var(--color-accent-primary)' : 'var(--color-bg-tertiary)',
-                    color: alreadyAdded ? 'var(--color-bg-primary)' : 'var(--color-text-secondary)',
+                    color: alreadyAdded ? 'var(--color-text-inverse)' : 'var(--color-text-secondary)',
                     cursor: alreadyAdded ? 'default' : 'pointer',
                     border: '1px solid transparent',
                     transition: 'background 0.1s',

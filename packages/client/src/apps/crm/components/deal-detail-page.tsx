@@ -60,7 +60,7 @@ function StagePipeline({ stages, currentStageId, isWon, isLost, onChange }: {
               padding: '8px 24px 8px 16px',
               paddingLeft: i === 0 ? 16 : 24,
               background: isActive ? stageColor : 'var(--color-bg-tertiary)',
-              color: isActive ? 'var(--color-bg-primary)' : 'var(--color-text-secondary)',
+              color: isActive ? 'var(--color-text-inverse)' : 'var(--color-text-secondary)',
               fontSize: 'var(--font-size-sm)',
               fontWeight: isCurrent ? 'var(--font-weight-semibold)' : 'var(--font-weight-normal)',
               fontFamily: 'var(--font-family)',

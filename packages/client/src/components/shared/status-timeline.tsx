@@ -34,7 +34,7 @@ export function StatusTimeline({ steps, currentIndex }: StatusTimelineProps) {
                   backgroundColor: isActive
                     ? 'var(--color-accent-primary)'
                     : 'var(--color-bg-tertiary)',
-                  color: isActive ? 'var(--color-bg-primary)' : 'var(--color-text-tertiary)',
+                  color: isActive ? 'var(--color-text-inverse)' : 'var(--color-text-tertiary)',
                   fontSize: 'var(--font-size-xs)',
                   fontWeight: 'var(--font-weight-semibold)' as never,
                   fontFamily: 'var(--font-family)',

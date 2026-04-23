@@ -280,7 +280,7 @@ function LeadDetailPanel({
       <div className="crm-detail-body">
         {/* Name + status */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-xs)' }}>
-          <span style={{ width: 36, height: 36, borderRadius: '50%', background: getAvatarColor(lead.name), color: 'var(--color-bg-primary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>
+          <span style={{ width: 36, height: 36, borderRadius: '50%', background: getAvatarColor(lead.name), color: 'var(--color-text-inverse)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>
             {lead.name.charAt(0).toUpperCase()}
           </span>
           <div>
@@ -455,7 +455,7 @@ export function LeadsView() {
         <InlineInput value={lead.name} onSave={(v) => handleSave(lead.id, 'name', v)} onCancel={() => setEditingCell(null)} />
       ) : (
         <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-primary)', fontSize: 'var(--font-size-sm)', cursor: 'text' }} onClick={(e) => handleCellClick(lead.id, 'name', e)}>
-          <span style={{ width: 24, height: 24, borderRadius: '50%', background: getAvatarColor(lead.name), color: 'var(--color-bg-primary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, flexShrink: 0 }}>
+          <span style={{ width: 24, height: 24, borderRadius: '50%', background: getAvatarColor(lead.name), color: 'var(--color-text-inverse)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, flexShrink: 0 }}>
             {lead.name.charAt(0).toUpperCase()}
           </span>
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lead.name}</span>

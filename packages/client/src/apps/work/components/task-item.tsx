@@ -151,7 +151,7 @@ function TaskItemInner({
         aria-label={task.status === 'completed' ? t('tasks.markIncomplete') : t('tasks.markComplete')}
       >
         {(task.status === 'completed' || completing) && (
-          <Check size={12} color="var(--color-bg-primary)" strokeWidth={3} className="task-check-icon" />
+          <Check size={12} color="var(--color-text-inverse)" strokeWidth={3} className="task-check-icon" />
         )}
       </button>
 

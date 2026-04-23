@@ -246,7 +246,7 @@ export function InvoicesListView({ invoices, searchQuery, onOpenDetail, selected
               fontSize: 'var(--font-size-sm)',
               fontWeight: statusFilter === filter ? 'var(--font-weight-medium)' : 'var(--font-weight-normal)',
               fontFamily: 'var(--font-family)',
-              color: statusFilter === filter ? 'var(--color-bg-primary)' : 'var(--color-text-secondary)',
+              color: statusFilter === filter ? 'var(--color-text-inverse)' : 'var(--color-text-secondary)',
               backgroundColor: statusFilter === filter ? 'var(--color-accent-primary)' : 'var(--color-bg-tertiary)',
               border: 'none',
               borderRadius: '999px',
