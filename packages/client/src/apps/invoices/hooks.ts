@@ -336,6 +336,13 @@ export function useUpdateInvoiceSettings() {
 
 // ─── Next Invoice Number ─────────────────────────────────────────
 
+/**
+ * WARNING: This hook is currently unused. Do NOT add callers without careful
+ * consideration — calling GET /invoices/next-number increments the invoice
+ * counter on every request, permanently burning a sequence number even if the
+ * invoice is never saved. Use the server-side getNextInvoiceNumber() inside a
+ * transaction at invoice-creation time instead.
+ */
 export function useNextInvoiceNumber() {
   return useQuery({
     queryKey: queryKeys.invoices.nextNumber,

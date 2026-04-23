@@ -124,7 +124,7 @@ export async function runInvoiceReminders(): Promise<ReminderRunResult> {
         and(
           eq(invoices.isArchived, false),
           eq(invoices.excludeFromAutoReminders, false),
-          inArray(invoices.status, ['sent', 'viewed']),
+          inArray(invoices.status, ['sent', 'viewed', 'overdue']),
           lt(invoices.dueDate, sql`NOW()`),
           eq(invoiceSettings.reminderEnabled, true),
         ),

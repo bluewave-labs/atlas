@@ -58,7 +58,7 @@ export async function createLineItem(input: CreateLineItemInput) {
       quantity: input.quantity,
       unitPrice: input.unitPrice,
       amount: input.amount,
-      taxRate: input.taxRate ?? 20,
+      taxRate: input.taxRate ?? 0,
       sortOrder: input.sortOrder ?? 0,
       createdAt: now,
     })

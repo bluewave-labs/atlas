@@ -122,7 +122,10 @@ async function updateInvoicePaidStatusInTx(
   // Net paid is below total
   if (invoice.status === 'paid') {
     const dueDate = invoice.dueDate ? new Date(invoice.dueDate) : null;
-    const revertTo = dueDate && dueDate.getTime() < now.getTime() ? 'overdue' : 'sent';
+    const isOverdue = dueDate != null && dueDate.getTime() < now.getTime();
+    const wasViewed = invoice.viewedAt != null;
+    // Preserve 'viewed' when the invoice was previously opened by the recipient.
+    const revertTo = isOverdue ? 'overdue' : (wasViewed ? 'viewed' : 'sent');
     await tx
       .update(invoices)
       .set({ status: revertTo, paidAt: null, updatedAt: now })

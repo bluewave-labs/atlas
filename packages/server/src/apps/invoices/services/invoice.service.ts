@@ -377,19 +377,55 @@ export async function updateInvoice(userId: string, tenantId: string, id: string
     conditions.push(eq(invoices.userId, ownerUserId));
   }
 
-  const [updated] = await db
-    .update(invoices)
-    .set(updates)
-    .where(and(...conditions))
-    .returning();
-
-  if (!updated) return null;
-
-  if (input.lineItems !== undefined) {
-    await replaceLineItems(id, input.lineItems);
+  if (input.lineItems === undefined) {
+    // No line-item change — simple update, no transaction needed.
+    const [updated] = await db
+      .update(invoices)
+      .set(updates)
+      .where(and(...conditions))
+      .returning();
+    return updated ?? null;
   }
 
-  return updated;
+  // Line items are being replaced: run everything in a transaction so the
+  // totals written to the invoice row always match the new line items.
+  return db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(invoices)
+      .set(updates)
+      .where(and(...conditions))
+      .returning();
+
+    if (!updated) return null;
+
+    const newItems = await replaceLineItems(id, input.lineItems!);
+
+    // Recompute totals from the freshly inserted line items, matching the
+    // same formula used by the recurring-invoice generator:
+    //   taxableBase = subtotal - discountAmount
+    //   taxAmount   = taxableBase * taxPct
+    const round2 = (n: number) => Math.round(n * 100) / 100;
+    const subtotal = round2(
+      newItems.reduce(
+        (sum, li) => sum + (Number(li.quantity) || 0) * (Number(li.unitPrice) || 0),
+        0,
+      ),
+    );
+    const discountPct = Number(updated.discountPercent) || 0;
+    const taxPct = Number(updated.taxPercent) || 0;
+    const discountAmount = round2((subtotal * discountPct) / 100);
+    const taxableBase = subtotal - discountAmount;
+    const taxAmount = round2((taxableBase * taxPct) / 100);
+    const total = round2(taxableBase + taxAmount);
+
+    const [final] = await tx
+      .update(invoices)
+      .set({ subtotal, discountAmount, taxAmount, total, updatedAt: now })
+      .where(and(...conditions))
+      .returning();
+
+    return final ?? null;
+  });
 }
 
 export async function deleteInvoice(userId: string, tenantId: string, id: string, ownerUserId?: string) {
