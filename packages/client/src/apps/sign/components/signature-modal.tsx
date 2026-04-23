@@ -236,7 +236,7 @@ export function SignatureModal({ open, onOpenChange, onApply, fieldType }: Signa
                   background: 'var(--color-bg-elevated)',
                   fontFamily: FONTS[selectedFont].family,
                   fontSize: 'var(--font-size-2xl)',
-                  color: '#000',
+                  color: 'var(--color-text-primary)',
                   textAlign: 'center',
                   minHeight: 60,
                   display: 'flex',
