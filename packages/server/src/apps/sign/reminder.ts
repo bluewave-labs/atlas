@@ -5,6 +5,9 @@ import { logger } from '../../utils/logger';
 import { env } from '../../config/env';
 import { sendSigningInviteEmail } from './email';
 import { isSignerTurn } from './service';
+import { getSettings } from './services/settings.service';
+
+const DEFAULT_CADENCE_DAYS = 3;
 
 /**
  * Send automated reminders for pending signing tokens.
@@ -13,8 +16,9 @@ import { isSignerTurn } from './service';
  * - Token status is 'pending'
  * - Token has not expired (expiresAt > NOW())
  * - Either:
- *   - No reminder has been sent AND the token was created more than 3 days ago
- *   - OR the last reminder was sent more than 3 days ago
+ *   - No reminder has been sent AND the token was created more than N days ago
+ *   - OR the last reminder was sent more than N days ago
+ *   where N = tenant's `reminderCadenceDays` setting (default 3)
  * - For sequential signing: only remind the signer if it's their turn
  */
 export async function sendPendingReminders(): Promise<number> {
@@ -22,8 +26,8 @@ export async function sendPendingReminders(): Promise<number> {
   let reminderCount = 0;
 
   try {
-    // Find all tokens eligible for a reminder
-    const eligibleTokens = await db
+    // Fetch all pending, non-expired candidates (interval check applied per-tenant below)
+    const candidates = await db
       .select({
         id: signingTokens.id,
         documentId: signingTokens.documentId,
@@ -34,29 +38,54 @@ export async function sendPendingReminders(): Promise<number> {
         expiresAt: signingTokens.expiresAt,
         lastReminderAt: signingTokens.lastReminderAt,
         createdAt: signingTokens.createdAt,
+        tenantId: signatureDocuments.tenantId,
       })
       .from(signingTokens)
+      .innerJoin(signatureDocuments, eq(signingTokens.documentId, signatureDocuments.id))
       .where(
         and(
           eq(signingTokens.status, 'pending'),
           sql`${signingTokens.expiresAt} > NOW()`,
-          sql`(
-            (${signingTokens.lastReminderAt} IS NULL AND ${signingTokens.createdAt} < NOW() - INTERVAL '3 days')
-            OR
-            (${signingTokens.lastReminderAt} IS NOT NULL AND ${signingTokens.lastReminderAt} < NOW() - INTERVAL '3 days')
-          )`,
         ),
       );
 
-    if (eligibleTokens.length === 0) {
+    if (candidates.length === 0) {
       logger.debug('No pending signing tokens eligible for reminders');
       return 0;
     }
 
-    logger.info({ count: eligibleTokens.length }, 'Found signing tokens eligible for reminders');
+    // Cache settings per tenant to avoid redundant DB hits
+    const settingsCache = new Map<string, number>();
 
-    for (const tokenRow of eligibleTokens) {
+    const getCadence = async (tenantId: string): Promise<number> => {
+      if (settingsCache.has(tenantId)) return settingsCache.get(tenantId)!;
       try {
+        const settings = await getSettings(tenantId);
+        const cadence = settings?.reminderCadenceDays;
+        // Guard: must be a positive integer
+        const valid = typeof cadence === 'number' && Number.isInteger(cadence) && cadence > 0;
+        const resolved = valid ? cadence : DEFAULT_CADENCE_DAYS;
+        settingsCache.set(tenantId, resolved);
+        return resolved;
+      } catch {
+        settingsCache.set(tenantId, DEFAULT_CADENCE_DAYS);
+        return DEFAULT_CADENCE_DAYS;
+      }
+    };
+
+    logger.info({ count: candidates.length }, 'Checking signing tokens against per-tenant reminder cadence');
+
+    for (const tokenRow of candidates) {
+      try {
+        const cadenceDays = await getCadence(tokenRow.tenantId);
+        const cadenceMs = cadenceDays * 24 * 60 * 60 * 1000;
+
+        // Apply per-tenant cadence check
+        const referenceTime = tokenRow.lastReminderAt ?? tokenRow.createdAt;
+        if (now.getTime() - new Date(referenceTime).getTime() < cadenceMs) {
+          continue; // Not yet time to remind for this tenant's cadence
+        }
+
         // For sequential signing, only remind if it's the signer's turn
         if (tokenRow.signingOrder > 0) {
           const isTurn = await isSignerTurn(tokenRow.documentId, tokenRow.signingOrder);
@@ -101,7 +130,7 @@ export async function sendPendingReminders(): Promise<number> {
           .where(eq(signingTokens.id, tokenRow.id));
 
         reminderCount++;
-        logger.info({ tokenId: tokenRow.id, signerEmail: tokenRow.signerEmail }, 'Signing reminder sent');
+        logger.info({ tokenId: tokenRow.id, signerEmail: tokenRow.signerEmail, cadenceDays }, 'Signing reminder sent');
       } catch (err) {
         logger.warn({ err, tokenId: tokenRow.id }, 'Failed to send reminder for signing token');
       }

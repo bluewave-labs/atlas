@@ -923,6 +923,7 @@ export const signingTokens = pgTable('signing_tokens', {
   role: varchar('role', { length: 50 }).notNull().default('signer'),
   signingOrder: integer('signing_order').notNull().default(0),
   lastReminderAt: timestamp('last_reminder_at', { withTimezone: true }),
+  viewedAt: timestamp('viewed_at', { withTimezone: true }),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),

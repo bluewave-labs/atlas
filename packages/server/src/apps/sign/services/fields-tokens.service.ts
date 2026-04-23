@@ -294,7 +294,10 @@ export async function isSignerTurn(documentId: string, signingOrder: number): Pr
   return previousPending.length === 0;
 }
 
-export async function getSigningToken(token: string) {
+export async function getSigningToken(
+  token: string,
+  meta?: { ipAddress?: string; userAgent?: string },
+) {
   const [row] = await db
     .select()
     .from(signingTokens)
@@ -315,12 +318,20 @@ export async function getSigningToken(token: string) {
     waitingForPrevious = !isTurn;
   }
 
-  if (row.status === 'pending') {
+  if (row.status === 'pending' && !row.viewedAt) {
+    const now = new Date();
+    await db
+      .update(signingTokens)
+      .set({ viewedAt: now, updatedAt: now })
+      .where(eq(signingTokens.id, row.id));
+
     logAuditEvent({
       documentId: row.documentId,
       action: 'document.viewed',
       actorEmail: row.signerEmail,
       actorName: row.signerName ?? undefined,
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
       metadata: { tokenId: row.id, waitingForPrevious },
     }).catch(() => {});
   }
@@ -330,7 +341,11 @@ export async function getSigningToken(token: string) {
 
 // ─── Signing Operations ─────────────────────────────────────────────
 
-export async function signField(fieldId: string, signatureData: string) {
+export async function signField(
+  fieldId: string,
+  signatureData: string,
+  meta?: { ipAddress?: string; userAgent?: string },
+) {
   const now = new Date();
   const result = await updateField(fieldId, {
     signatureData,
@@ -342,6 +357,8 @@ export async function signField(fieldId: string, signatureData: string) {
       documentId: result.documentId,
       action: 'document.signed',
       actorEmail: result.signerEmail ?? undefined,
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
       metadata: { fieldId, fieldType: result.type, label: result.label },
     }).catch(() => {});
   }

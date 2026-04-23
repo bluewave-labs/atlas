@@ -42,6 +42,20 @@ export async function createField(req: Request, res: Response) {
     }
 
     const documentId = req.params.id as string;
+    const tenantId = req.auth!.tenantId!;
+    const isAdmin = isAdminCaller(perm);
+    const userId = req.auth!.userId;
+
+    const doc = await signService.getDocument(tenantId, documentId, isAdmin ? undefined : userId);
+    if (!doc) {
+      res.status(404).json({ success: false, error: 'Document not found' });
+      return;
+    }
+    if (doc.status !== 'draft') {
+      res.status(400).json({ success: false, error: 'Fields can only be added to draft documents' });
+      return;
+    }
+
     const { type, pageNumber, x, y, width, height, signerEmail, label, required, options, sortOrder } = req.body;
 
     if (x === undefined || y === undefined || width === undefined || height === undefined) {
@@ -68,6 +82,24 @@ export async function updateField(req: Request, res: Response) {
     }
 
     const fieldId = req.params.fieldId as string;
+    const tenantId = req.auth!.tenantId!;
+
+    const fieldInfo = await signService.getFieldWithOwner(fieldId);
+    if (!fieldInfo) {
+      res.status(404).json({ success: false, error: 'Field not found' });
+      return;
+    }
+
+    const doc = await signService.getDocument(tenantId, fieldInfo.documentId);
+    if (!doc) {
+      res.status(404).json({ success: false, error: 'Document not found' });
+      return;
+    }
+    if (doc.status !== 'draft') {
+      res.status(400).json({ success: false, error: 'Fields can only be modified on draft documents' });
+      return;
+    }
+
     const { type, pageNumber, x, y, width, height, signerEmail, label, required, options, sortOrder } = req.body;
 
     const field = await signService.updateField(fieldId, {
@@ -95,6 +127,7 @@ export async function deleteField(req: Request, res: Response) {
     }
 
     const userId = req.auth!.userId;
+    const tenantId = req.auth!.tenantId!;
     const fieldId = req.params.fieldId as string;
 
     // Fields inherit ownership from their parent document.
@@ -103,6 +136,17 @@ export async function deleteField(req: Request, res: Response) {
       res.status(404).json({ success: false, error: 'Field not found' });
       return;
     }
+
+    const doc = await signService.getDocument(tenantId, field.documentId);
+    if (!doc) {
+      res.status(404).json({ success: false, error: 'Document not found' });
+      return;
+    }
+    if (doc.status !== 'draft') {
+      res.status(400).json({ success: false, error: 'Fields can only be deleted from draft documents' });
+      return;
+    }
+
     if (!assertCanDelete(res, perm.role, field.ownerUserId, userId)) return;
 
     await signService.deleteField(fieldId);
@@ -191,7 +235,8 @@ export async function listSigningTokens(req: Request, res: Response) {
 export async function getByToken(req: Request, res: Response) {
   try {
     const token = req.params.token as string;
-    const result = await signService.getSigningToken(token);
+    const meta = { ipAddress: req.ip, userAgent: req.headers['user-agent'] as string | undefined };
+    const result = await signService.getSigningToken(token, meta);
 
     if (!result || !result.document) {
       res.status(404).json({ success: false, error: 'Invalid or expired token' });
@@ -200,6 +245,11 @@ export async function getByToken(req: Request, res: Response) {
 
     if (new Date(result.token.expiresAt) < new Date()) {
       res.status(410).json({ success: false, error: 'Token has expired' });
+      return;
+    }
+
+    if (result.document.expiresAt && new Date(result.document.expiresAt) < new Date()) {
+      res.status(410).json({ success: false, error: 'Document signing period has expired' });
       return;
     }
 
@@ -237,13 +287,14 @@ export async function signByToken(req: Request, res: Response) {
   try {
     const token = req.params.token as string;
     const { fieldId, signatureData } = req.body;
+    const meta = { ipAddress: req.ip, userAgent: req.headers['user-agent'] as string | undefined };
 
     if (!fieldId || !signatureData) {
       res.status(400).json({ success: false, error: 'fieldId and signatureData are required' });
       return;
     }
 
-    const result = await signService.getSigningToken(token);
+    const result = await signService.getSigningToken(token, meta);
 
     if (!result || !result.document) {
       res.status(404).json({ success: false, error: 'Invalid or expired token' });
@@ -252,6 +303,11 @@ export async function signByToken(req: Request, res: Response) {
 
     if (new Date(result.token.expiresAt) < new Date()) {
       res.status(410).json({ success: false, error: 'Token has expired' });
+      return;
+    }
+
+    if (result.document.expiresAt && new Date(result.document.expiresAt) < new Date()) {
+      res.status(410).json({ success: false, error: 'Document signing period has expired' });
       return;
     }
 
@@ -278,7 +334,7 @@ export async function signByToken(req: Request, res: Response) {
       return;
     }
 
-    const field = await signService.signField(fieldId, signatureData);
+    const field = await signService.signField(fieldId, signatureData, meta);
     await signService.completeSigningToken(result.token.id);
     const isComplete = await signService.checkDocumentComplete(result.document.id);
 

@@ -123,6 +123,9 @@ export async function getDocument(req: Request, res: Response) {
   }
 }
 
+const ALLOWED_STATUSES = new Set(['draft', 'sent', 'pending', 'signed', 'completed', 'voided']);
+const TERMINAL_STATUSES = new Set(['signed', 'completed', 'voided']);
+
 export async function updateDocument(req: Request, res: Response) {
   try {
     const perm = req.signPerm!;
@@ -136,6 +139,25 @@ export async function updateDocument(req: Request, res: Response) {
     const tenantId = req.auth!.tenantId!;
     const documentId = req.params.id as string;
     const { title, status, expiresAt, tags, pageCount, redirectUrl, documentType, counterpartyName } = req.body;
+
+    // Validate status against allowlist if provided
+    if (status !== undefined) {
+      if (!ALLOWED_STATUSES.has(status)) {
+        res.status(400).json({ success: false, error: `Invalid status. Allowed values: ${[...ALLOWED_STATUSES].join(', ')}` });
+        return;
+      }
+
+      // Fetch current document to check terminal state
+      const existing = await signService.getDocument(tenantId, documentId, isAdmin ? undefined : userId);
+      if (!existing) {
+        res.status(404).json({ success: false, error: 'Document not found' });
+        return;
+      }
+      if (TERMINAL_STATUSES.has(existing.status) && existing.status !== status) {
+        res.status(409).json({ success: false, error: `Cannot change status of a ${existing.status} document` });
+        return;
+      }
+    }
 
     const doc = await signService.updateDocument(tenantId, documentId, {
       title, status, expiresAt, tags, pageCount, redirectUrl, documentType, counterpartyName,
