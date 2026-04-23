@@ -3,44 +3,69 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Command } from 'cmdk';
 import {
-  Search, LayoutDashboard, GitBranch, Briefcase, Users, Building2,
-  Activity, Zap, FileText, BarChart3,
-  Plus, Clock, X, Loader2,
+  Search,
+  Home,
+  Users,
+  UserCog,
+  Briefcase,
+  CalendarDays,
+  FileSignature,
+  Receipt,
+  HardDrive,
+  CheckSquare,
+  FileText,
+  PenLine,
+  Settings,
+  Building,
+  Clock,
+  X,
+  Loader2,
 } from 'lucide-react';
 import { useGlobalSearch } from '../../hooks/use-global-search';
 import '../../styles/command-palette.css';
 
-const RECENT_KEY = 'atlas_crm_cmd_recent';
+const RECENT_KEY = 'atlas_cmd_recent';
 const MAX_RECENT = 5;
 const HINTS = [
-  'Search contacts, companies, deals...',
-  'Navigate to pipeline, leads, forecast...',
-  'Create a new contact or deal...',
-  'Find activities and automations...',
+  'Search contacts, deals, documents...',
+  'Jump to any app or record...',
+  'Find employees, invoices, drawings...',
+  'Navigate anywhere with ⌘K',
 ];
 
-const CRM_NAV = [
-  { id: 'dashboard', key: 'crm.sidebar.dashboard', icon: LayoutDashboard, view: 'dashboard' },
-  { id: 'pipeline', key: 'crm.sidebar.pipeline', icon: GitBranch, view: 'pipeline' },
-  { id: 'deals', key: 'crm.sidebar.deals', icon: Briefcase, view: 'deals' },
-  { id: 'contacts', key: 'crm.sidebar.contacts', icon: Users, view: 'contacts' },
-  { id: 'companies', key: 'crm.sidebar.companies', icon: Building2, view: 'companies' },
-  { id: 'leads', key: 'crm.leads.title', icon: FileText, view: 'leads' },
-  { id: 'activities', key: 'crm.sidebar.activities', icon: Activity, view: 'activities' },
-  { id: 'forecast', key: 'crm.forecast.title', icon: BarChart3, view: 'forecast' },
-  { id: 'automations', key: 'crm.sidebar.automations', icon: Zap, view: 'automations' },
-  { id: 'leadForms', key: 'crm.sidebar.leadForms', icon: FileText, view: 'leadForms' },
-];
-
-const CRM_ACTIONS = [
-  { id: 'new-contact', key: 'commandPalette.createContact', icon: Plus, view: 'contacts', kw: ['new', 'add', 'contact'] },
-  { id: 'new-deal', key: 'commandPalette.createDeal', icon: Plus, view: 'pipeline', kw: ['new', 'add', 'deal'] },
-  { id: 'new-company', key: 'commandPalette.createCompany', icon: Plus, view: 'companies', kw: ['new', 'add', 'company'] },
+const PLATFORM_NAV = [
+  { id: 'home', label: 'Home', icon: Home, path: '/' },
+  { id: 'crm', label: 'CRM', icon: Users, path: '/crm' },
+  { id: 'hr', label: 'HR', icon: UserCog, path: '/hr' },
+  { id: 'work', label: 'Work', icon: Briefcase, path: '/work' },
+  { id: 'calendar', label: 'Calendar', icon: CalendarDays, path: '/calendar' },
+  { id: 'sign', label: 'Agreements', icon: FileSignature, path: '/sign-app' },
+  { id: 'invoices', label: 'Invoices', icon: Receipt, path: '/invoices' },
+  { id: 'drive', label: 'Drive', icon: HardDrive, path: '/drive' },
+  { id: 'tasks', label: 'Tasks', icon: CheckSquare, path: '/tasks' },
+  { id: 'docs', label: 'Write', icon: PenLine, path: '/docs' },
+  { id: 'draw', label: 'Draw', icon: FileText, path: '/draw' },
+  { id: 'system', label: 'System', icon: Building, path: '/system' },
+  { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
+  { id: 'org', label: 'Organization', icon: Building, path: '/org' },
 ];
 
 interface Recent { query: string; ts: number }
 function loadRecent(): Recent[] { try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch { return []; } }
 function saveRecent(items: Recent[]) { localStorage.setItem(RECENT_KEY, JSON.stringify(items.slice(0, MAX_RECENT))); }
+
+function resultPath(appId: string, recordId: string): string {
+  switch (appId) {
+    case 'docs': return `/docs/${recordId}`;
+    case 'draw': return `/draw/${recordId}`;
+    case 'invoices': return `/invoices?view=invoice-detail&invoiceId=${recordId}`;
+    case 'hr': return `/hr?view=employee-detail&employee=${recordId}`;
+    case 'crm': return '/crm';
+    case 'work': return '/work';
+    case 'sign': return '/sign-app';
+    default: return '/';
+  }
+}
 
 export function CommandPalette() {
   const { t } = useTranslation();
@@ -50,7 +75,7 @@ export function CommandPalette() {
   const [recents, setRecents] = useState<Recent[]>([]);
   const [hint, setHint] = useState(0);
   const { data: searchResults, isLoading } = useGlobalSearch(query.length >= 2 ? query : '');
-  const crmResults = searchResults?.filter((r) => r.appId === 'crm') ?? [];
+  const allResults = searchResults ?? [];
 
   // Cmd+K
   useEffect(() => {
@@ -75,18 +100,24 @@ export function CommandPalette() {
       saveRecent(items);
     }
     close();
-    const nav = CRM_NAV.find(n => n.id === value);
-    if (nav) { navigate(`/crm?view=${nav.view}`); return; }
-    const act = CRM_ACTIONS.find(a => a.id === value);
-    if (act) { navigate(`/crm?view=${act.view}`); return; }
+    const nav = PLATFORM_NAV.find(n => n.id === value);
+    if (nav) { navigate(nav.path); return; }
     if (value.startsWith('search-') && searchResults) {
       const r = searchResults.find(x => `search-${x.appId}-${x.recordId}` === value);
-      if (r) navigate(`/crm?id=${r.recordId}`);
+      if (r) navigate(resultPath(r.appId, r.recordId));
     }
   }, [navigate, searchResults, query]);
 
+  // Group results by appName
+  const groupedResults = allResults.slice(0, 8).reduce<Map<string, typeof allResults>>((acc, r) => {
+    const group = acc.get(r.appName) ?? [];
+    group.push(r);
+    acc.set(r.appName, group);
+    return acc;
+  }, new Map());
+
   return (
-    <Command.Dialog open={open} onOpenChange={v => { setOpen(v); if (!v) setQuery(''); }} label="CRM" overlayClassName="cmd-overlay" contentClassName="cmd-content">
+    <Command.Dialog open={open} onOpenChange={v => { setOpen(v); if (!v) setQuery(''); }} label="Search" overlayClassName="cmd-overlay" contentClassName="cmd-content">
       <div className="cmd-header">
         {isLoading
           ? <Loader2 size={16} style={{ color: 'var(--color-accent-primary)', flexShrink: 0, animation: 'spin 1s linear infinite' }} />
@@ -97,7 +128,7 @@ export function CommandPalette() {
 
       {query.length >= 2 && !isLoading && (
         <div className="cmd-result-count">
-          {crmResults.length > 0 ? `${crmResults.length} result${crmResults.length !== 1 ? 's' : ''}` : t('common.noResults')}
+          {allResults.length > 0 ? `${allResults.length} result${allResults.length !== 1 ? 's' : ''}` : t('common.noResults')}
         </div>
       )}
 
@@ -116,11 +147,11 @@ export function CommandPalette() {
           </Command.Group>
         )}
 
-        {crmResults.length > 0 && (
-          <Command.Group heading={`${t('common.records')} (${crmResults.length})`}>
-            {crmResults.slice(0, 8).map(r => (
+        {groupedResults.size > 0 && Array.from(groupedResults.entries()).map(([appName, results]) => (
+          <Command.Group key={appName} heading={`${appName} (${results.length})`}>
+            {results.map(r => (
               <Command.Item key={`search-${r.appId}-${r.recordId}`} value={`search-${r.appId}-${r.recordId}`} onSelect={handleSelect} className="cmd-item">
-                <span className="cmd-item-icon"><Briefcase size={14} /></span>
+                <span className="cmd-item-icon"><Search size={14} /></span>
                 <div className="cmd-item-text">
                   <span className="cmd-item-title">{r.title}</span>
                   <span className="cmd-item-desc">{r.appName}</span>
@@ -128,22 +159,13 @@ export function CommandPalette() {
               </Command.Item>
             ))}
           </Command.Group>
-        )}
+        ))}
 
         <Command.Group heading={t('common.navigation')}>
-          {CRM_NAV.map(item => { const I = item.icon; return (
+          {PLATFORM_NAV.map(item => { const I = item.icon; return (
             <Command.Item key={item.id} value={item.id} onSelect={handleSelect} className="cmd-item">
               <span className="cmd-item-icon"><I size={14} /></span>
-              <span className="cmd-item-title">{t(item.key)}</span>
-            </Command.Item>
-          ); })}
-        </Command.Group>
-
-        <Command.Group heading={t('common.actions')}>
-          {CRM_ACTIONS.map(item => { const I = item.icon; return (
-            <Command.Item key={item.id} value={item.id} keywords={item.kw} onSelect={handleSelect} className="cmd-item">
-              <span className="cmd-item-icon"><I size={14} /></span>
-              <span className="cmd-item-title">{t(item.key)}</span>
+              <span className="cmd-item-title">{item.label}</span>
             </Command.Item>
           ); })}
         </Command.Group>
