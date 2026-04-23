@@ -18,6 +18,9 @@ import {
   hrExpensePolicies,
   hrExpenses,
   hrExpenseReports,
+  hrAttendance,
+  timeOffRequests,
+  onboardingTasks,
 } from '../../db/schema';
 import { isTenantAdmin } from '@atlas-platform/shared';
 
@@ -117,7 +120,7 @@ router.post('/attendance', hrController.markAttendance);
 router.post('/attendance/bulk', hrController.bulkMarkAttendance);
 router.get('/attendance/today', hrController.getAttendanceToday);
 router.get('/attendance/report', hrController.getAttendanceReport);
-router.patch('/attendance/:id', hrController.updateAttendanceRecord);
+router.patch('/attendance/:id', withConcurrencyCheck(hrAttendance), hrController.updateAttendanceRecord);
 
 // Lifecycle events (before /:id)
 router.delete('/lifecycle/:id', hrController.deleteLifecycleEvent);
@@ -131,7 +134,7 @@ router.delete('/departments/:id', hrController.deleteDepartment);
 // Time Off (before /:id to avoid route conflicts)
 router.get('/time-off/list', hrController.listTimeOffRequests);
 router.post('/time-off', hrController.createTimeOffRequest);
-router.patch('/time-off/:id', hrController.updateTimeOffRequest);
+router.patch('/time-off/:id', withConcurrencyCheck(timeOffRequests), hrController.updateTimeOffRequest);
 router.delete('/time-off/:id', hrController.deleteTimeOffRequest);
 
 // Leave balances summary (before /:id)
@@ -143,7 +146,7 @@ router.get('/onboarding-templates', hrController.listOnboardingTemplates);
 router.post('/onboarding-templates', hrController.createOnboardingTemplate);
 
 // Onboarding task updates (before /:id)
-router.patch('/onboarding/:taskId', hrController.updateOnboardingTask);
+router.patch('/onboarding/:taskId', withConcurrencyCheck(onboardingTasks), hrController.updateOnboardingTask);
 router.delete('/onboarding/:taskId', hrController.deleteOnboardingTask);
 
 // Employee documents (before /:id)

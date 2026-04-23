@@ -5,6 +5,8 @@ import path from 'path';
 import * as driveController from './controller';
 import { authMiddleware } from '../../middleware/auth';
 import { requireAppPermission } from '../../middleware/require-app-permission';
+import { withConcurrencyCheck } from '../../middleware/concurrency-check';
+import { driveItems } from '../../db/schema';
 import { isTenantAdmin } from '@atlas-platform/shared';
 import googleDriveRoutes from './routes-google';
 
@@ -104,7 +106,7 @@ router.get('/:id/shares', driveController.listShares);
 router.delete('/:id/shares/:userId', driveController.revokeShare);
 router.post('/:id/copy', driveController.copyItem);
 router.post('/:id/duplicate', driveController.duplicateItem);
-router.patch('/:id', driveController.updateItem);
+router.patch('/:id', withConcurrencyCheck(driveItems), driveController.updateItem);
 router.patch('/:id/visibility', driveController.updateDriveItemVisibility);
 router.delete('/:id', driveController.deleteItem);
 router.patch('/:id/restore', driveController.restoreItem);
