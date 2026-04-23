@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Settings, SlidersHorizontal } from 'lucide-react';
-import { useUIStore } from '../../stores/ui-store';
+import { useNavigate } from 'react-router-dom';
 import { SearchBar } from '../search/search-bar';
 import { Chip } from '../ui/chip';
 import type { CSSProperties } from 'react';
@@ -131,7 +131,7 @@ function SearchFilterChips({ query, onChange }: { query: string; onChange: (q: s
 
 export function ContentToolbar() {
   const { t } = useTranslation();
-  const { openSettings } = useUIStore();
+  const navigate = useNavigate();
 
   return (
     <div style={{ flexShrink: 0, background: 'var(--color-bg-primary)' }}>
@@ -157,7 +157,7 @@ export function ContentToolbar() {
           {/* Global app settings */}
           <button
             aria-label="App settings"
-            onClick={() => openSettings()}
+            onClick={() => navigate('/settings')}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -179,7 +179,7 @@ export function ContentToolbar() {
 
           <button
             aria-label="Settings"
-            onClick={() => openSettings()}
+            onClick={() => navigate('/settings')}
             style={{
               display: 'flex',
               alignItems: 'center',

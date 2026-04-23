@@ -20,7 +20,7 @@ import { ExcalidrawCanvas } from './components/excalidraw-canvas';
 import { VisibilityToggle } from '../../components/shared/visibility-toggle';
 import { useAppActions } from '../../hooks/use-app-permissions';
 import { useAuthStore } from '../../stores/auth-store';
-import { useUIStore } from '../../stores/ui-store';
+import { urlForCategory } from '../../config/settings-url';
 import { FeatureEmptyState } from '../../components/ui/feature-empty-state';
 import type { Drawing } from '@atlas-platform/shared';
 
@@ -64,7 +64,6 @@ export function DrawPage() {
   const { canCreate, canEdit } = useAppActions('draw');
   const { account } = useAuthStore();
   const [showTemplates, setShowTemplates] = useState(false);
-  const { openSettings } = useUIStore();
 
   // "Saved" indicator auto-dismiss
   const [showSaved, setShowSaved] = useState(false);
@@ -178,7 +177,7 @@ export function DrawPage() {
         selectedId={selectedId}
         onSelect={handleSelect}
         onNewFromTemplate={() => setShowTemplates(true)}
-        onOpenSettings={() => openSettings('draw')}
+        onOpenSettings={() => navigate(urlForCategory('draw'))}
         isCreating={createDrawing.isPending}
       />
 

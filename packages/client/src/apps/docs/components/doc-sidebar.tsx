@@ -25,7 +25,8 @@ import { useDocSettingsStore } from '../settings-store';
 import { useToastStore } from '../../../stores/toast-store';
 import { useAppActions } from '../../../hooks/use-app-permissions';
 import { useAuthStore } from '../../../stores/auth-store';
-import { useUIStore } from '../../../stores/ui-store';
+import { useNavigate } from 'react-router-dom';
+import { urlForCategory } from '../../../config/settings-url';
 import { AppSidebar, SidebarItem } from '../../../components/layout/app-sidebar';
 import { useDocFavoritesAndRecent } from './sidebar/use-doc-favorites-recent';
 import { QuickLink } from './sidebar/quick-link';
@@ -50,7 +51,7 @@ interface DocSidebarProps {
 export function DocSidebar({ selectedId, onSelect, onNewFromTemplate, onImport }: DocSidebarProps) {
   const { canCreate, canDelete, canDeleteOwn } = useAppActions('docs');
   const currentUserId = useAuthStore((s) => s.account?.userId);
-  const { openSettings } = useUIStore();
+  const navigate = useNavigate();
   const { data, isLoading } = useDocumentList();
   const createDoc = useCreateDocument();
   const deleteDoc = useDeleteDocument();
@@ -240,7 +241,7 @@ export function DocSidebar({ selectedId, onSelect, onNewFromTemplate, onImport }
       <SidebarItem
         label={t('docs.settings', 'Settings')}
         icon={<Settings2 size={14} />}
-        onClick={() => openSettings('docs')}
+        onClick={() => navigate(urlForCategory('docs'))}
       />
       {view === 'tree' && canCreate && (
         <>

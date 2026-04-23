@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useCallback, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { urlForCategory } from '../config/settings-url';
 import {
   ArrowLeft,
   ChevronLeft,
@@ -15,7 +16,6 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from '../hooks/use-media-query';
-import { useUIStore } from '../stores/ui-store';
 import { api } from '../lib/api-client';
 import '../styles/calendar.css';
 import { Button } from '../components/ui/button';
@@ -85,7 +85,6 @@ export function CalendarPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { openSettings } = useUIStore();
   const {
     selectedDate,
     setSelectedDate,
@@ -1062,7 +1061,7 @@ export function CalendarPage() {
         <IconButton
           icon={<Settings size={15} />}
           label="Calendar settings"
-          onClick={() => openSettings('calendar')}
+          onClick={() => navigate(urlForCategory('calendar'))}
         />
 
         {/* New event button */}

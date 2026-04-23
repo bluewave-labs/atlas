@@ -14,7 +14,8 @@ import { Badge } from '../../components/ui/badge';
 import { SettingsSection, SettingsRow, SettingsToggle } from '../../components/settings/settings-primitives';
 import { useSystemMetrics } from './hooks';
 import { useAuthStore } from '../../stores/auth-store';
-import { useUIStore } from '../../stores/ui-store';
+import { useNavigate } from 'react-router-dom';
+import { urlForCategory } from '../../config/settings-url';
 import { PermissionsView } from './components/permissions-view';
 import { TenantsView } from './components/tenants-view';
 import { AllUsersView } from './components/all-users-view';
@@ -178,7 +179,7 @@ export function SystemPage() {
   const tenantRole = useAuthStore((s) => s.tenantRole);
   const isOwner = tenantRole === 'owner';
   const isSuperAdmin = useAuthStore((s) => s.isSuperAdmin);
-  const { openSettings } = useUIStore();
+  const navigate = useNavigate();
 
   return (
     <div style={{ display: 'flex', height: '100vh', marginLeft: 56 }}>
@@ -195,7 +196,7 @@ export function SystemPage() {
           <SidebarItem
             label={t('system.settings', 'Settings')}
             icon={<Settings2 size={14} />}
-            onClick={() => openSettings('system')}
+            onClick={() => navigate(urlForCategory('system'))}
           />
         }
       >

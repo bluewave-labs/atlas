@@ -10,7 +10,8 @@ import { canAccess, type CrmRole } from '../hooks';
 import type { ActiveView } from '../lib/crm-helpers';
 import { usePinnedViews, type SavedView } from './saved-views';
 import { AppSidebar, SidebarSection, SidebarItem } from '../../../components/layout/app-sidebar';
-import { useUIStore } from '../../../stores/ui-store';
+import { useNavigate } from 'react-router-dom';
+import { urlForCategory } from '../../../config/settings-url';
 
 export function CrmSidebar({
   activeView, setActiveView,
@@ -28,7 +29,7 @@ export function CrmSidebar({
   pendingViewRef: React.MutableRefObject<SavedView | null>;
 }) {
   const { t } = useTranslation();
-  const { openSettings } = useUIStore();
+  const navigate = useNavigate();
 
   const pinnedDealViews = usePinnedViews('deals');
   const pinnedContactViews = usePinnedViews('contacts');
@@ -42,7 +43,7 @@ export function CrmSidebar({
         <SidebarItem
           label={t('crm.sidebar.settings')}
           icon={<Settings2 size={14} />}
-          onClick={() => openSettings('crm')}
+          onClick={() => navigate(urlForCategory('crm'))}
         />
       }
     >

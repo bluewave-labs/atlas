@@ -16,7 +16,7 @@ import { useTaskCounts } from '../apps/work/hooks';
 import { ROUTES } from '../config/routes';
 import { APP_VERSION } from '../config/version';
 import { appRegistry } from '../apps';
-import { useUIStore } from '../stores/ui-store';
+import { urlForPanel } from '../config/settings-url';
 import { WidgetGrid } from '../components/home/widgets/widget-grid';
 import { useMyAccessibleApps } from '../hooks/use-app-permissions';
 import { ActivityFeed } from '../components/activity/activity-feed';
@@ -563,7 +563,6 @@ export function HomePage() {
   const now = useCurrentTime();
   const account = useAuthStore((s) => s.account);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const { openSettings } = useUIStore();
   const logout = useAuthStore((s) => s.logout);
   const { data: taskCounts } = useTaskCounts({ enabled: isAuthenticated });
   const parallax = useMouseParallax(15);
@@ -966,7 +965,7 @@ export function HomePage() {
 
         {/* Settings gear */}
         <button
-          onClick={() => openSettings()}
+          onClick={() => navigate('/settings')}
           aria-label="Settings"
           style={{
             display: 'flex',
@@ -1535,7 +1534,7 @@ export function HomePage() {
 
         {/* Bottom-right — Version badge (opens Settings > About) */}
         <button
-          onClick={() => openSettings('global', 'about')}
+          onClick={() => navigate(urlForPanel('global', 'about'))}
           aria-label={t('home.versionAria', 'Open About Atlas')}
           style={{
             position: 'absolute',

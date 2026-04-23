@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { LayoutDashboard, Receipt, Repeat, Settings2 } from 'lucide-react';
 import { AppSidebar, SidebarSection, SidebarItem } from '../../../components/layout/app-sidebar';
-import { useUIStore } from '../../../stores/ui-store';
+import { useNavigate } from 'react-router-dom';
+import { urlForCategory } from '../../../config/settings-url';
 
 interface InvoicesSidebarProps {
   activeView: string;
@@ -10,7 +11,7 @@ interface InvoicesSidebarProps {
 
 export function InvoicesSidebar({ activeView, setActiveView }: InvoicesSidebarProps) {
   const { t } = useTranslation();
-  const { openSettings } = useUIStore();
+  const navigate = useNavigate();
 
   return (
     <AppSidebar
@@ -20,7 +21,7 @@ export function InvoicesSidebar({ activeView, setActiveView }: InvoicesSidebarPr
         <SidebarItem
           label={t('invoices.sidebar.settings')}
           icon={<Settings2 size={14} />}
-          onClick={() => openSettings('invoices')}
+          onClick={() => navigate(urlForCategory('invoices'))}
         />
       }
     >

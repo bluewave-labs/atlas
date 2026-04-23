@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Users, Building2, CalendarDays, Plus, Search, Settings2, X,
@@ -25,7 +25,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { IconButton } from '../../components/ui/icon-button';
 import { ContentArea } from '../../components/ui/content-area';
-import { useUIStore } from '../../stores/ui-store';
+import { urlForCategory } from '../../config/settings-url';
 import { useAuthStore } from '../../stores/auth-store';
 import { useMyAppPermission, useAppActions } from '../../hooks/use-app-permissions';
 import { useHrSettingsStore } from './settings-store';
@@ -59,7 +59,7 @@ const PORTAL_VIEWS = new Set<string>(['my-profile', 'leave', 'expenses']);
 
 export function HrPage() {
   const { t } = useTranslation();
-  const { openSettings } = useUIStore();
+  const navigate = useNavigate();
 
   // Auth
   const authAccount = useAuthStore((s) => s.account);
@@ -257,7 +257,7 @@ export function HrPage() {
             label={t('hr.sidebar.settings')}
             icon={<Settings2 size={14} />}
             iconColor="#6b7280"
-            onClick={() => openSettings('hr')}
+            onClick={() => navigate(urlForCategory('hr'))}
           />
         ) : undefined}
       >

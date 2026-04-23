@@ -18,7 +18,7 @@ import {
 } from './hooks';
 import { DocSettingsModal } from './components/doc-settings-modal';
 import { CommentSidebar } from './components/comment-sidebar';
-import { useUIStore } from '../../stores/ui-store';
+import { urlForCategory } from '../../config/settings-url';
 import { useDocSettingsStore, useDocSettingsSync } from './settings-store';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api-client';
@@ -56,7 +56,6 @@ export function DocsPage() {
   const [showDocSettings, setShowDocSettings] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const importInputRef = useRef<HTMLInputElement>(null);
-  const { openSettings } = useUIStore();
 
   // Auto-select a document when none is selected.
   // If openLastVisited is on, prefer the most recently viewed doc.
@@ -249,7 +248,7 @@ export function DocsPage() {
                 isSaving={isSaving}
                 onNavigate={handleSelect}
                 onShowVersionHistory={() => setShowVersionHistory(true)}
-                onOpenSettings={() => openSettings('documents')}
+                onOpenSettings={() => navigate(urlForCategory('documents'))}
                 showComments={showComments}
                 onToggleComments={() => setShowComments(!showComments)}
                 visibility={(doc.visibility as 'private' | 'team') || 'private'}

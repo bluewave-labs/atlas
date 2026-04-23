@@ -1,5 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { urlForCategory } from '../../config/settings-url';
 import {
   Plus, Search, Upload, FolderPlus, Trash2,
   Star, ChevronRight, LayoutGrid, LayoutList, Clock, Heart,
@@ -34,6 +36,7 @@ import { useBatchTrash, useBatchMoveDriveItems, useRestoreDriveItem, usePermanen
 
 export function DrivePage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const d = useDrivePage();
   const canCreate = d.perm.canCreate;
   const canEdit = d.perm.canEdit;
@@ -150,7 +153,7 @@ export function DrivePage() {
               <SidebarItem
                 label={t('drive.sidebar.settings', 'Settings')}
                 icon={<Settings2 size={14} />}
-                onClick={() => d.openSettings('drive')}
+                onClick={() => navigate(urlForCategory('drive'))}
               />
               {storageWidget}
             </>
@@ -228,7 +231,7 @@ export function DrivePage() {
               <input className="drive-search-input" placeholder={t('drive.toolbar.searchFiles')} value={d.searchQuery} onChange={(e) => d.setSearchQuery(e.target.value)} />
             </div>
             <IconButton icon={d.viewMode === 'list' ? <LayoutGrid size={16} /> : <LayoutList size={16} />} label={d.viewMode === 'list' ? t('drive.toolbar.gridView') : t('drive.toolbar.listView')} size={32} onClick={() => d.setViewMode(d.viewMode === 'list' ? 'grid' : 'list')} style={{ border: '1px solid var(--color-border-primary)' }} />
-            <IconButton icon={<Settings size={16} />} label={t('drive.toolbar.driveSettings')} size={32} onClick={() => d.openSettings('drive')} style={{ border: '1px solid var(--color-border-primary)' }} />
+            <IconButton icon={<Settings size={16} />} label={t('drive.toolbar.driveSettings')} size={32} onClick={() => navigate(urlForCategory('drive'))} style={{ border: '1px solid var(--color-border-primary)' }} />
             </div>
             </div>
           </div>

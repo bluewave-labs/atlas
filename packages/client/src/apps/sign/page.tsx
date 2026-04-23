@@ -24,7 +24,8 @@ import { SignSignersModal } from './components/sign-signers-modal';
 import { useSignPageState } from './lib/use-sign-page-state';
 import { useAppActions } from '../../hooks/use-app-permissions';
 import { useAuthStore } from '../../stores/auth-store';
-import { useUIStore } from '../../stores/ui-store';
+import { useNavigate } from 'react-router-dom';
+import { urlForCategory } from '../../config/settings-url';
 import { Settings2 } from 'lucide-react';
 import '../../styles/sign.css';
 
@@ -33,7 +34,7 @@ export function SignPage() {
   const s = useSignPageState();
   const { canCreate, canDelete, canDeleteOwn } = useAppActions('sign');
   const currentUserId = useAuthStore((st) => st.account?.userId);
-  const { openSettings } = useUIStore();
+  const navigate = useNavigate();
 
   return (
     <div className="sign-page" style={{ marginLeft: 56 }}>
@@ -54,7 +55,7 @@ export function SignPage() {
           <SidebarItem
             label={t('sign.settings', 'Settings')}
             icon={<Settings2 size={14} />}
-            onClick={() => openSettings('sign')}
+            onClick={() => navigate(urlForCategory('sign'))}
           />
         }
       >

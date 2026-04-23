@@ -79,3 +79,50 @@ export const globalSettingsCategory: SettingsCategory = {
 export function getSettingsCategories(appCategories: SettingsCategory[] = []): SettingsCategory[] {
   return [globalSettingsCategory, ...appCategories];
 }
+
+// ---------------------------------------------------------------------------
+// i18n key lookups — used by the Settings sidebar
+// ---------------------------------------------------------------------------
+
+const PANEL_I18N_KEYS: Record<string, string> = {
+  general: 'settingsPanel.panels.general',
+  appearance: 'settingsPanel.panels.appearance',
+  formats: 'settingsPanel.panels.formats',
+  'data-model': 'settingsPanel.panels.dataModel',
+  'home-background': 'settingsPanel.panels.homeBackground',
+  'home-widgets': 'settingsPanel.panels.widgets',
+  about: 'settingsPanel.panels.about',
+  stages: 'settingsPanel.panels.pipelineStages',
+  integrations: 'settingsPanel.panels.integrations',
+  editor: 'settingsPanel.panels.editor',
+  startup: 'settingsPanel.panels.startup',
+  canvas: 'settingsPanel.panels.canvas',
+  export: 'settingsPanel.panels.export',
+  display: 'settingsPanel.panels.display',
+  files: 'settingsPanel.panels.files',
+  regional: 'settingsPanel.panels.regional',
+  behavior: 'settingsPanel.panels.behavior',
+  updates: 'settingsPanel.panels.updates',
+};
+
+const CATEGORY_I18N_KEYS: Record<string, string> = {
+  global: 'settingsPanel.categories.global',
+  crm: 'settingsPanel.categories.crm',
+  hr: 'settingsPanel.categories.hr',
+  documents: 'settingsPanel.categories.documents',
+  draw: 'settingsPanel.categories.draw',
+  drive: 'settingsPanel.categories.drive',
+  tables: 'settingsPanel.categories.tables',
+  tasks: 'settingsPanel.categories.tasks',
+  projects: 'settingsPanel.categories.projects',
+  sign: 'settingsPanel.categories.sign',
+  invoices: 'settingsPanel.categories.invoices',
+};
+
+export function panelI18nKey(panelId: string): string | null {
+  return PANEL_I18N_KEYS[panelId] ?? null;
+}
+
+export function categoryI18nKey(categoryId: string): string | null {
+  return CATEGORY_I18N_KEYS[categoryId] ?? null;
+}

@@ -19,7 +19,6 @@ import { api } from '../../lib/api-client';
 import { useToastStore } from '../../stores/toast-store';
 import { ROUTES } from '../../config/routes';
 import { useDriveSettingsStore, useDriveSettingsSync } from './settings-store';
-import { useUIStore } from '../../stores/ui-store';
 import { useAuthStore } from '../../stores/auth-store';
 import { useAppActions } from '../../hooks/use-app-permissions';
 import { useTenantUsers, useMyTenants } from '../../hooks/use-platform';
@@ -38,7 +37,6 @@ export function useDrivePage() {
   const navigate = useNavigate();
   const { id: folderId } = useParams<{ id: string }>();
   const addToast = useToastStore((s) => s.addToast);
-  const openSettings = useUIStore((s) => s.openSettings);
 
   // Drive settings (persisted to server)
   useDriveSettingsSync();
@@ -523,7 +521,7 @@ export function useDrivePage() {
 
   return {
     // Navigation / routing
-    t, navigate, folderId, addToast, openSettings,
+    t, navigate, folderId, addToast,
     // Settings
     driveSettings,
     // UI state
