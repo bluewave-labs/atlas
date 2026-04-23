@@ -84,7 +84,8 @@
       "page": "sayfa",
       "of": "/",
       "clear": "Temizle"
-    }
+    },
+    "signOut": "Çıkış yap"
   },
   "auth": {
     "appName": "Atlas",
@@ -149,7 +150,8 @@
     "docs": "Yazı",
     "draw": "Çizim",
     "projects": "Projeler",
-    "system": "Sistem"
+    "system": "Sistem",
+    "themeToggle": "Tema: {{mode}}"
   },
   "inbox": {
     "selectConversation": "Bir görüşme seçin",
@@ -4732,5 +4734,9 @@
     "unavailable": "Kur bilgisi yok",
     "unavailableTooltip": "Döviz kuru servisleri geçici olarak kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
     "rateInfo": "Kur: {{rate}} ({{provider}} üzerinden)"
+  },
+  "account": {
+    "signOutConfirmTitle": "Çıkış yapılsın mı?",
+    "signOutConfirmDescription": "Bu hesaptan çıkış yapılacak."
   }
 }

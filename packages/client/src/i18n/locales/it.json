@@ -84,7 +84,8 @@
       "page": "pagina",
       "of": "di",
       "clear": "Cancella"
-    }
+    },
+    "signOut": "Esci"
   },
   "auth": {
     "appName": "Atlas",
@@ -149,7 +150,8 @@
     "docs": "Scrivi",
     "draw": "Disegna",
     "projects": "Progetti",
-    "system": "Sistema"
+    "system": "Sistema",
+    "themeToggle": "Tema: {{mode}}"
   },
   "inbox": {
     "selectConversation": "Seleziona una conversazione",
@@ -4732,5 +4734,9 @@
     "unavailable": "Tasso non disponibile",
     "unavailableTooltip": "I servizi di cambio valuta sono temporaneamente non disponibili. Riprova più tardi.",
     "rateInfo": "Tasso: {{rate}} (tramite {{provider}})"
+  },
+  "account": {
+    "signOutConfirmTitle": "Uscire?",
+    "signOutConfirmDescription": "Verrai disconnesso da questo account."
   }
 }

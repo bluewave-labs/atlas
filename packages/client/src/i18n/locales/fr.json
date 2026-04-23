@@ -84,7 +84,8 @@
       "page": "page",
       "of": "sur",
       "clear": "Effacer"
-    }
+    },
+    "signOut": "Se déconnecter"
   },
   "auth": {
     "appName": "Atlas",
@@ -149,7 +150,8 @@
     "docs": "Écrire",
     "draw": "Dessiner",
     "projects": "Projets",
-    "system": "Système"
+    "system": "Système",
+    "themeToggle": "Thème : {{mode}}"
   },
   "inbox": {
     "selectConversation": "Sélectionnez une conversation",
@@ -4732,5 +4734,9 @@
     "unavailable": "Taux indisponible",
     "unavailableTooltip": "Les services de taux de change sont temporairement indisponibles. Veuillez réessayer plus tard.",
     "rateInfo": "Taux : {{rate}} (via {{provider}})"
+  },
+  "account": {
+    "signOutConfirmTitle": "Se déconnecter ?",
+    "signOutConfirmDescription": "Vous allez être déconnecté de ce compte."
   }
 }

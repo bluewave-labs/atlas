@@ -84,7 +84,8 @@
       "page": "Seite",
       "of": "von",
       "clear": "Zurücksetzen"
-    }
+    },
+    "signOut": "Abmelden"
   },
   "auth": {
     "appName": "Atlas",
@@ -149,7 +150,8 @@
     "docs": "Schreiben",
     "draw": "Zeichnen",
     "projects": "Projekte",
-    "system": "System"
+    "system": "System",
+    "themeToggle": "Design: {{mode}}"
   },
   "inbox": {
     "selectConversation": "Konversation auswählen",
@@ -4732,5 +4734,9 @@
     "unavailable": "Kurs nicht verfügbar",
     "unavailableTooltip": "Wechselkursdienste sind vorübergehend nicht erreichbar. Bitte versuchen Sie es später erneut.",
     "rateInfo": "Kurs: {{rate}} (über {{provider}})"
+  },
+  "account": {
+    "signOutConfirmTitle": "Abmelden?",
+    "signOutConfirmDescription": "Sie werden von diesem Konto abgemeldet."
   }
 }

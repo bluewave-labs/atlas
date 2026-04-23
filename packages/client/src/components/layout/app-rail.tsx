@@ -37,7 +37,6 @@ const RAIL_ICONS: Record<string, LucideIcon> = {
   crm: Users,
   hr: UserCog,
   work: FolderKanban,
-  projects: FolderKanban,
   calendar: CalendarIcon,
   sign: FileSignature,
   invoices: Receipt,
@@ -119,6 +118,7 @@ function RailButton({
 }
 
 function ThemeToggleRail() {
+  const { t } = useTranslation();
   const theme = useSettingsStore((s) => s.theme);
   const setTheme = useSettingsStore((s) => s.setTheme);
   const current: ThemeMode = theme ?? 'system';
@@ -133,7 +133,7 @@ function ThemeToggleRail() {
   return (
     <RailButton
       icon={Icon}
-      label={`Theme: ${current}`}
+      label={t('sidebar.themeToggle', { mode: current, defaultValue: `Theme: ${current}` })}
       isActive={false}
       onClick={handleClick}
     />
@@ -150,7 +150,7 @@ export function AppRail() {
 
   // Filter apps by accessibility (same pattern as sidebar.tsx used)
   const visibleApps = navItems.filter(({ id }) => {
-    if (!myApps) return false;
+    if (!myApps) return true;
     if (myApps.appIds === '__all__') return true;
     return (myApps.appIds as string[]).includes(id);
   });

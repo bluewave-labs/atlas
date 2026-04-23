@@ -84,7 +84,8 @@
       "page": "page",
       "of": "of",
       "clear": "Clear"
-    }
+    },
+    "signOut": "Sign out"
   },
   "auth": {
     "appName": "Atlas",
@@ -149,7 +150,8 @@
     "docs": "Write",
     "draw": "Draw",
     "projects": "Projects",
-    "system": "System"
+    "system": "System",
+    "themeToggle": "Theme: {{mode}}"
   },
   "inbox": {
     "selectConversation": "Select a conversation",
@@ -4732,5 +4734,9 @@
     "unavailable": "Rate unavailable",
     "unavailableTooltip": "Exchange rate services are temporarily unavailable. Please try again later.",
     "rateInfo": "Rate: {{rate}} (via {{provider}})"
+  },
+  "account": {
+    "signOutConfirmTitle": "Sign out?",
+    "signOutConfirmDescription": "You will be signed out of this account."
   }
 }

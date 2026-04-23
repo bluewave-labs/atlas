@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LogOut, Check } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth-store';
 import { Avatar } from '../ui/avatar';
@@ -7,6 +8,7 @@ import { ConfirmDialog } from '../ui/confirm-dialog';
 import type { Account } from '@atlas-platform/shared';
 
 export function AccountSwitcherRail() {
+  const { t } = useTranslation();
   const { account, accounts, switchAccount, removeAccount, logout } = useAuthStore();
   const [open, setOpen] = useState(false);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
@@ -180,7 +182,7 @@ export function AccountSwitcherRail() {
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
           >
             <LogOut size={14} />
-            Sign out
+            {t('common.signOut', 'Sign out')}
           </button>
         </div>
       )}
@@ -189,9 +191,9 @@ export function AccountSwitcherRail() {
         <ConfirmDialog
           open={!!confirmRemoveId}
           onOpenChange={(open) => { if (!open) setConfirmRemoveId(null); }}
-          title="Sign out?"
-          description="You will be signed out of this account."
-          confirmLabel="Sign out"
+          title={t('account.signOutConfirmTitle', 'Sign out?')}
+          description={t('account.signOutConfirmDescription', 'You will be signed out of this account.')}
+          confirmLabel={t('common.signOut', 'Sign out')}
           onConfirm={() => {
             const id = confirmRemoveId;
             setConfirmRemoveId(null);
