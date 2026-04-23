@@ -765,6 +765,8 @@
     "defaultBg": "Varsayılan arka plan",
     "bgWhite": "Beyaz",
     "bgLight": "Açık gri",
+    "bgIce": "Buz mavisi",
+    "bgCream": "Krem",
     "bgDark": "Koyu",
     "exportQuality": "Dışa aktarma kalitesi",
     "qualityStandard": "Standart",
@@ -1933,6 +1935,38 @@
       "snapshotTotal": "Toplam",
       "snapshotItems": "{{count}} satır öğesi",
       "snapshotItems_plural": "{{count}} satır öğesi"
+    },
+    "workflows": {
+      "notificationTitle": "İş akışı bildirimi",
+      "seeds": {
+        "names": {
+          "qualifiedScheduleDemo": "Nitelikli → Demo planla",
+          "proposalPrepareDocument": "Teklif → Belge hazırla",
+          "wonWelcomeTask": "Kazanıldı → Karşılama görevi",
+          "wonSetProbability": "Kazanıldı → Olasılık belirle",
+          "wonTagCustomer": "Kazanıldı → Müşteriyi etiketle",
+          "lostReviewTask": "Kaybedildi → İnceleme görevi",
+          "lostLogActivity": "Kaybedildi → Aktivite kaydet",
+          "newContactIntroEmail": "Yeni kişi → Tanışma e-postası görevi",
+          "callLoggedFollowUp": "Arama kaydedildi → Takip et",
+          "meetingLoggedNotes": "Toplantı kaydedildi → Notlar"
+        },
+        "taskTitles": {
+          "scheduleDiscoveryCall": "İletişim kişisiyle keşif görüşmesi planla",
+          "prepareAndSendProposal": "Teklif hazırla ve gönder",
+          "sendWelcomePackage": "Yeni müşteriye karşılama paketi gönder",
+          "scheduleDealLossReview": "Anlaşma kaybı değerlendirmesi planla",
+          "sendIntroductionEmail": "Tanışma e-postası gönder",
+          "sendFollowUpAfterCall": "Aramadan sonra takip e-postası gönder",
+          "writeMeetingNotes": "Toplantı notlarını yaz ve ekiple paylaş"
+        },
+        "bodies": {
+          "dealWasLost": "Anlaşma kaybedildi. İncele ve takip et."
+        },
+        "tags": {
+          "customer": "müşteri"
+        }
+      }
     }
   },
   "drive": {
@@ -4537,7 +4571,10 @@
       "hoursLabel": "Saat",
       "descriptionLabel": "Açıklama",
       "billableLabel": "Faturalanabilir",
-      "added": "Zaman girişi eklendi"
+      "added": "Zaman girişi eklendi",
+      "saved": "Zaman girişi kaydedildi",
+      "deleted": "Zaman girişi silindi",
+      "noDescription": "Açıklama yok"
     },
     "members": {
       "add": "Üye ekle",

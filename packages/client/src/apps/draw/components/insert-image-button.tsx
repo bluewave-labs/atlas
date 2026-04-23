@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import { ImagePlus } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
+import { useToastStore } from '../../../stores/toast-store';
 
 export function InsertImageButton({
   excalidrawApi,
@@ -11,11 +12,15 @@ export function InsertImageButton({
 }) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const addToast = useToastStore((s) => s.addToast);
 
   const handleInsertImage = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !excalidrawApi) return;
-    if (file.size > 10 * 1024 * 1024) { alert(t('draw.imageTooLarge')); return; }
+    if (file.size > 10 * 1024 * 1024) {
+      addToast({ type: 'error', message: t('draw.imageTooLarge') });
+      return;
+    }
 
     try {
       const dataUrl = await new Promise<string>((resolve, reject) => {

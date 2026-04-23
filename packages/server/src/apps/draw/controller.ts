@@ -95,12 +95,13 @@ export async function updateDrawing(req: Request, res: Response) {
 
     const userId = req.auth!.userId;
     const drawingId = req.params.id as string;
-    const { title, content, isArchived } = req.body;
+    const { title, content, isArchived, thumbnailUrl } = req.body;
 
     const drawing = await drawingService.updateDrawing(userId, drawingId, {
       title,
       content,
       isArchived,
+      thumbnailUrl,
     });
 
     if (!drawing) {

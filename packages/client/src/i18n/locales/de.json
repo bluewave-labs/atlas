@@ -765,6 +765,8 @@
     "defaultBg": "Standardhintergrund",
     "bgWhite": "Weiß",
     "bgLight": "Hellgrau",
+    "bgIce": "Eisblau",
+    "bgCream": "Creme",
     "bgDark": "Dunkel",
     "exportQuality": "Exportqualität",
     "qualityStandard": "Standard",
@@ -1933,6 +1935,38 @@
       "snapshotTotal": "Gesamt",
       "snapshotItems": "{{count}} Position",
       "snapshotItems_plural": "{{count}} Positionen"
+    },
+    "workflows": {
+      "notificationTitle": "Workflow-Benachrichtigung",
+      "seeds": {
+        "names": {
+          "qualifiedScheduleDemo": "Qualifiziert → Demo planen",
+          "proposalPrepareDocument": "Angebot → Dokument vorbereiten",
+          "wonWelcomeTask": "Gewonnen → Begrüßungsaufgabe",
+          "wonSetProbability": "Gewonnen → Wahrscheinlichkeit festlegen",
+          "wonTagCustomer": "Gewonnen → Kunden markieren",
+          "lostReviewTask": "Verloren → Überprüfungsaufgabe",
+          "lostLogActivity": "Verloren → Aktivität protokollieren",
+          "newContactIntroEmail": "Neuer Kontakt → Vorstellungs-E-Mail-Aufgabe",
+          "callLoggedFollowUp": "Anruf protokolliert → Nachfassen",
+          "meetingLoggedNotes": "Meeting protokolliert → Notizen"
+        },
+        "taskTitles": {
+          "scheduleDiscoveryCall": "Discovery-Gespräch mit Kontakt planen",
+          "prepareAndSendProposal": "Angebot vorbereiten und senden",
+          "sendWelcomePackage": "Willkommenspaket an neuen Kunden senden",
+          "scheduleDealLossReview": "Deal-Verlust-Überprüfung planen",
+          "sendIntroductionEmail": "Vorstellungs-E-Mail senden",
+          "sendFollowUpAfterCall": "Follow-up-E-Mail nach Anruf senden",
+          "writeMeetingNotes": "Meeting-Notizen schreiben und mit Team teilen"
+        },
+        "bodies": {
+          "dealWasLost": "Deal wurde verloren. Überprüfen und nachfassen."
+        },
+        "tags": {
+          "customer": "Kunde"
+        }
+      }
     }
   },
   "drive": {
@@ -4537,7 +4571,10 @@
       "hoursLabel": "Stunden",
       "descriptionLabel": "Beschreibung",
       "billableLabel": "Abrechenbar",
-      "added": "Zeiteintrag hinzugefügt"
+      "added": "Zeiteintrag hinzugefügt",
+      "saved": "Zeiteintrag gespeichert",
+      "deleted": "Zeiteintrag gelöscht",
+      "noDescription": "Keine Beschreibung"
     },
     "members": {
       "add": "Mitglied hinzufügen",

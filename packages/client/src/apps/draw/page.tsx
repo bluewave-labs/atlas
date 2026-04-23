@@ -14,7 +14,6 @@ import {
   useUpdateDrawingVisibility,
 } from './hooks';
 import { useDrawSettingsStore, useDrawSettingsSync } from './settings-store';
-import { DrawSettingsModal } from './components/draw-settings-modal';
 import { DrawSidebar } from './components/draw-sidebar';
 import { TemplatePicker } from './components/template-picker';
 import { ExcalidrawCanvas } from './components/excalidraw-canvas';
@@ -58,14 +57,13 @@ export function DrawPage() {
   const { data: drawing, isLoading } = useDrawing(selectedId);
   const { data: listData } = useDrawingList();
   const { autoSaveInterval } = useDrawSettingsStore();
-  const { save, isSaving, isSuccess: isSaveSuccess } = useAutoSaveDrawing(autoSaveInterval);
+  const { save, flush, isSaving, isSuccess: isSaveSuccess } = useAutoSaveDrawing(autoSaveInterval);
   const createDrawing = useCreateDrawing();
   const updateDrawing = useUpdateDrawing();
   const updateVisibility = useUpdateDrawingVisibility();
   const { canCreate, canEdit } = useAppActions('draw');
   const { account } = useAuthStore();
   const [showTemplates, setShowTemplates] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const { openSettings } = useUIStore();
 
   // "Saved" indicator auto-dismiss
@@ -81,6 +79,11 @@ export function DrawPage() {
   useEffect(() => {
     return () => { if (savedTimerRef.current) clearTimeout(savedTimerRef.current); };
   }, []);
+
+  // Flush any pending autosave when the page unmounts so changes are not lost
+  useEffect(() => {
+    return () => { flush(); };
+  }, [flush]);
 
   // Sync selectedId with URL param when it changes (browser back/forward)
   useEffect(() => {
@@ -248,12 +251,6 @@ export function DrawPage() {
         open={showTemplates}
         onClose={() => setShowTemplates(false)}
         onCreate={handleCreateFromTemplate}
-      />
-
-      {/* Settings modal */}
-      <DrawSettingsModal
-        open={showSettings}
-        onClose={() => setShowSettings(false)}
       />
 
       <style>{`

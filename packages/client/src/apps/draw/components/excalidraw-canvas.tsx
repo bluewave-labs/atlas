@@ -331,8 +331,8 @@ export function ExcalidrawCanvas({
   const BG_PRESETS: { color: string; labelKey: string }[] = [
     { color: '#ffffff', labelKey: 'draw.bgWhite' },
     { color: '#f8f9fa', labelKey: 'draw.bgLight' },
-    { color: '#f0f8ff', labelKey: 'draw.bgWhite' },
-    { color: '#fffcf0', labelKey: 'draw.bgWhite' },
+    { color: '#f0f8ff', labelKey: 'draw.bgIce' },
+    { color: '#fffcf0', labelKey: 'draw.bgCream' },
   ];
 
   const handleSelectBg = useCallback(

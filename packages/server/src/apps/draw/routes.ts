@@ -24,7 +24,7 @@ router.post('/', drawingController.createDrawing);
 router.get('/search', drawingController.searchDrawings);
 router.get('/:id', drawingController.getDrawing);
 router.patch('/:id', withConcurrencyCheck(drawings), drawingController.updateDrawing);
-router.patch('/:id/visibility', drawingController.updateDrawingVisibility);
+router.patch('/:id/visibility', withConcurrencyCheck(drawings), drawingController.updateDrawingVisibility);
 router.delete('/:id', drawingController.deleteDrawing);
 router.patch('/:id/restore', drawingController.restoreDrawing);
 

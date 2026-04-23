@@ -765,6 +765,8 @@
     "defaultBg": "Sfondo predefinito",
     "bgWhite": "Bianco",
     "bgLight": "Grigio chiaro",
+    "bgIce": "Blu ghiaccio",
+    "bgCream": "Crema",
     "bgDark": "Scuro",
     "exportQuality": "Qualità di esportazione",
     "qualityStandard": "Standard",
@@ -1933,6 +1935,38 @@
       "snapshotTotal": "Totale",
       "snapshotItems": "{{count}} voce",
       "snapshotItems_plural": "{{count}} voci"
+    },
+    "workflows": {
+      "notificationTitle": "Notifica del flusso di lavoro",
+      "seeds": {
+        "names": {
+          "qualifiedScheduleDemo": "Qualificato → Programma demo",
+          "proposalPrepareDocument": "Proposta → Prepara documento",
+          "wonWelcomeTask": "Vinto → Attività di benvenuto",
+          "wonSetProbability": "Vinto → Imposta probabilità",
+          "wonTagCustomer": "Vinto → Etichetta cliente",
+          "lostReviewTask": "Perso → Attività di revisione",
+          "lostLogActivity": "Perso → Registra attività",
+          "newContactIntroEmail": "Nuovo contatto → Attività email di introduzione",
+          "callLoggedFollowUp": "Chiamata registrata → Follow-up",
+          "meetingLoggedNotes": "Riunione registrata → Note"
+        },
+        "taskTitles": {
+          "scheduleDiscoveryCall": "Programma chiamata di scoperta con il contatto",
+          "prepareAndSendProposal": "Prepara e invia la proposta",
+          "sendWelcomePackage": "Invia pacchetto di benvenuto al nuovo cliente",
+          "scheduleDealLossReview": "Programma revisione perdita deal",
+          "sendIntroductionEmail": "Invia email di introduzione",
+          "sendFollowUpAfterCall": "Invia email di follow-up dopo la chiamata",
+          "writeMeetingNotes": "Scrivi note della riunione e condividile con il team"
+        },
+        "bodies": {
+          "dealWasLost": "Il deal è stato perso. Rivedi e fai follow-up."
+        },
+        "tags": {
+          "customer": "cliente"
+        }
+      }
     }
   },
   "drive": {
@@ -4537,7 +4571,10 @@
       "hoursLabel": "Ore",
       "descriptionLabel": "Descrizione",
       "billableLabel": "Fatturabile",
-      "added": "Voce di tempo aggiunta"
+      "added": "Voce di tempo aggiunta",
+      "saved": "Voce di tempo salvata",
+      "deleted": "Voce di tempo eliminata",
+      "noDescription": "Nessuna descrizione"
     },
     "members": {
       "add": "Aggiungi membro",

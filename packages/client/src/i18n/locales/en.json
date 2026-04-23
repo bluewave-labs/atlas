@@ -792,6 +792,8 @@
     "defaultBg": "Default background",
     "bgWhite": "White",
     "bgLight": "Light gray",
+    "bgIce": "Ice blue",
+    "bgCream": "Cream",
     "bgDark": "Dark",
     "exportQuality": "Export quality",
     "qualityStandard": "Standard",
@@ -4569,7 +4571,10 @@
       "hoursLabel": "Hours",
       "descriptionLabel": "Description",
       "billableLabel": "Billable",
-      "added": "Time entry added"
+      "added": "Time entry added",
+      "saved": "Time entry saved",
+      "deleted": "Time entry deleted",
+      "noDescription": "No description"
     },
     "members": {
       "add": "Add member",

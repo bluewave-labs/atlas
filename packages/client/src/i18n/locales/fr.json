@@ -765,6 +765,8 @@
     "defaultBg": "Arrière-plan par défaut",
     "bgWhite": "Blanc",
     "bgLight": "Gris clair",
+    "bgIce": "Bleu glacier",
+    "bgCream": "Crème",
     "bgDark": "Sombre",
     "exportQuality": "Qualité d'exportation",
     "qualityStandard": "Standard",
@@ -1933,6 +1935,38 @@
       "snapshotTotal": "Total",
       "snapshotItems": "{{count}} ligne",
       "snapshotItems_plural": "{{count}} lignes"
+    },
+    "workflows": {
+      "notificationTitle": "Notification de flux de travail",
+      "seeds": {
+        "names": {
+          "qualifiedScheduleDemo": "Qualifié → Planifier une démo",
+          "proposalPrepareDocument": "Proposition → Préparer un document",
+          "wonWelcomeTask": "Gagné → Tâche d'accueil",
+          "wonSetProbability": "Gagné → Définir la probabilité",
+          "wonTagCustomer": "Gagné → Étiqueter le client",
+          "lostReviewTask": "Perdu → Tâche de révision",
+          "lostLogActivity": "Perdu → Enregistrer l'activité",
+          "newContactIntroEmail": "Nouveau contact → Tâche d'e-mail d'introduction",
+          "callLoggedFollowUp": "Appel enregistré → Suivi",
+          "meetingLoggedNotes": "Réunion enregistrée → Notes"
+        },
+        "taskTitles": {
+          "scheduleDiscoveryCall": "Planifier un appel de découverte avec le contact",
+          "prepareAndSendProposal": "Préparer et envoyer la proposition",
+          "sendWelcomePackage": "Envoyer le kit de bienvenue au nouveau client",
+          "scheduleDealLossReview": "Planifier la révision de perte de deal",
+          "sendIntroductionEmail": "Envoyer l'e-mail d'introduction",
+          "sendFollowUpAfterCall": "Envoyer un e-mail de suivi après l'appel",
+          "writeMeetingNotes": "Rédiger les notes de réunion et les partager avec l'équipe"
+        },
+        "bodies": {
+          "dealWasLost": "Le deal a été perdu. Réviser et assurer le suivi."
+        },
+        "tags": {
+          "customer": "client"
+        }
+      }
     }
   },
   "drive": {
@@ -4537,7 +4571,10 @@
       "hoursLabel": "Heures",
       "descriptionLabel": "Description",
       "billableLabel": "Facturable",
-      "added": "Entrée de temps ajoutée"
+      "added": "Entrée de temps ajoutée",
+      "saved": "Entrée de temps enregistrée",
+      "deleted": "Entrée de temps supprimée",
+      "noDescription": "Sans description"
     },
     "members": {
       "add": "Ajouter un membre",

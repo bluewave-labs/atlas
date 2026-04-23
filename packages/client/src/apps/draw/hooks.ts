@@ -123,33 +123,64 @@ export function useDuplicateDrawing() {
 /**
  * Returns a debounced save function that auto-saves drawing updates.
  * Calls are debounced by `delay` ms (default 2000ms for larger payloads).
+ *
+ * - `save(id, input)`: schedule a debounced PATCH (skipped if content unchanged)
+ * - `flush()`: fire any pending PATCH immediately and clear the timer
+ * - `cancel()`: cancel any pending PATCH without firing it
  */
 export function useAutoSaveDrawing(delay = 2000) {
   const updateMutation = useUpdateDrawing();
   const mutateRef = useRef(updateMutation.mutate);
   mutateRef.current = updateMutation.mutate;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingRef = useRef<{ id: string; input: UpdateDrawingInput } | null>(null);
+  const prevJsonRef = useRef<string | null>(null);
 
   const save = useCallback(
     (id: string, input: UpdateDrawingInput) => {
+      // Dirty check: skip if the serialised content is identical to the last saved value
+      const nextJson = JSON.stringify(input);
+      if (nextJson === prevJsonRef.current) return;
+
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
+      pendingRef.current = { id, input };
       timerRef.current = setTimeout(() => {
-        mutateRef.current({ id, ...input });
+        if (pendingRef.current) {
+          prevJsonRef.current = JSON.stringify(pendingRef.current.input);
+          mutateRef.current({ id: pendingRef.current.id, ...pendingRef.current.input });
+          pendingRef.current = null;
+        }
+        timerRef.current = null;
       }, delay);
     },
     [delay],
   );
 
+  /** Fire the pending PATCH immediately (use on component unmount). */
   const flush = useCallback(() => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
+    if (pendingRef.current) {
+      prevJsonRef.current = JSON.stringify(pendingRef.current.input);
+      mutateRef.current({ id: pendingRef.current.id, ...pendingRef.current.input });
+      pendingRef.current = null;
+    }
   }, []);
 
-  return { save, flush, isSaving: updateMutation.isPending, isSuccess: updateMutation.isSuccess };
+  /** Cancel the pending PATCH without firing it. */
+  const cancel = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    pendingRef.current = null;
+  }, []);
+
+  return { save, flush, cancel, isSaving: updateMutation.isPending, isSuccess: updateMutation.isSuccess };
 }
 
 // ─── Visibility ────────────────────────────────────────────────────
