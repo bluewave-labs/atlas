@@ -10,7 +10,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const variantStyles: Record<NonNullable<ButtonProps['variant']>, CSSProperties> = {
   primary: {
     background: 'var(--color-accent-primary)',
-    color: '#ffffff',
+    color: 'var(--color-text-inverse)',
     border: '1px solid transparent',
     boxShadow: '0 1px 2px color-mix(in srgb, var(--color-accent-primary) 25%, transparent)',
   },

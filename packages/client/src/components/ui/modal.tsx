@@ -106,7 +106,7 @@ function ModalHeader({ title, subtitle, children }: ModalHeaderProps) {
         <h2
           style={{
             margin: 0,
-            fontSize: 'var(--font-size-lg)',
+            fontSize: 'var(--font-size-md)',
             fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'],
             color: 'var(--color-text-primary)',
             fontFamily: 'var(--font-family)',
@@ -176,6 +176,7 @@ function ModalFooter({ children }: ModalFooterProps) {
         gap: 'var(--spacing-sm)',
         padding: 'var(--spacing-lg) var(--spacing-2xl)',
         borderTop: '1px solid var(--color-border-primary)',
+        background: 'var(--color-bg-tertiary)',
         flexShrink: 0,
       }}
     >
