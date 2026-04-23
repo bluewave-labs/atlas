@@ -60,7 +60,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       justifyContent: 'center',
       borderRadius: 'var(--radius-md)',
       fontFamily: 'var(--font-family)',
-      fontWeight: 'var(--font-weight-normal)' as CSSProperties['fontWeight'],
+      fontWeight: 'var(--font-weight-medium)' as CSSProperties['fontWeight'],
       cursor: 'pointer',
       transition: 'background var(--transition-normal), color var(--transition-normal), opacity var(--transition-normal)',
       outline: 'none',
