@@ -12,6 +12,7 @@ const variantStyles: Record<NonNullable<ButtonProps['variant']>, CSSProperties> 
     background: 'var(--color-accent-primary)',
     color: '#ffffff',
     border: '1px solid transparent',
+    boxShadow: '0 1px 2px color-mix(in srgb, var(--color-accent-primary) 25%, transparent)',
   },
   secondary: {
     background: 'var(--color-bg-elevated)',
