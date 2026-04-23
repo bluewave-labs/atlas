@@ -6,6 +6,7 @@ import {
   type HrEmployee, type HrDepartment, type HrTimeOff,
 } from '../hooks';
 import { Input } from '../../../components/ui/input';
+import { Textarea } from '../../../components/ui/textarea';
 import { Select } from '../../../components/ui/select';
 import { IconButton } from '../../../components/ui/icon-button';
 import { Badge } from '../../../components/ui/badge';
@@ -361,6 +362,19 @@ export function EmployeeDetailPanel({
                     />
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div style={{ borderTop: '1px solid var(--color-border-secondary)', paddingTop: 'var(--spacing-md)' }}>
+              <span className="hr-section-title">{t('hr.fields.notes')}</span>
+              <div style={{ marginTop: 'var(--spacing-sm)' }}>
+                <Textarea
+                  value={employee.notes || ''}
+                  onChange={(e) => autoSave({ notes: e.target.value || null })}
+                  placeholder={t('hr.fields.optionalNotes')}
+                  rows={4}
+                />
               </div>
             </div>
 

@@ -17,7 +17,7 @@ import { EditableField } from '../../../components/ui/editable-field';
 import { MarkLostModal } from './mark-lost-modal';
 import { getActivityIcon } from '../utils';
 import { NotesSection } from './notes-section';
-import { EmailTimeline } from './email-timeline';
+import { CalendarEvents } from './calendar-events';
 import { LinkedInvoicesList } from '../../../components/shared/linked-invoices-list';
 import { ProposalEditor } from './proposal-editor';
 import {
@@ -292,9 +292,9 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
             </div>
           )}
 
-          {/* Emails */}
+          {/* Calendar */}
           <div style={{ borderTop: '1px solid var(--color-border-secondary)', paddingTop: 'var(--spacing-lg)' }}>
-            <EmailTimeline dealId={deal.id} />
+            <CalendarEvents dealId={deal.id} defaultAttendee={deal.contactId ? contacts.find(c => c.id === deal.contactId)?.email || undefined : undefined} />
           </div>
 
           {/* Notes */}

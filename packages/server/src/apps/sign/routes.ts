@@ -62,9 +62,6 @@ router.get('/widget', signController.getWidgetData);
 router.get('/settings', signController.getSettings);
 router.patch('/settings', signController.updateSettings);
 
-// ─── Seed ──────────────────────────────────────────────────────────
-router.post('/seed', requireSeedAdmin, signController.seedSampleData);
-
 // ─── Reminders (admin) ──────────────────────────────────────────────
 router.post('/reminders/send', signController.triggerReminders);
 

@@ -10,7 +10,6 @@ export {
   viewPDF,
   downloadPDF,
   voidDocument,
-  seedSampleData,
   getAuditLog,
   triggerReminders,
   sendSingleReminder,

@@ -62,14 +62,7 @@ vi.mock('../src/config/redis', () => ({
   getRedisClient: vi.fn().mockReturnValue(null),
 }));
 
-// Mock workers
-vi.mock('../src/workers', () => ({
-  enqueueSyncJob: vi.fn(),
-  SyncJobType: {},
-}));
-
-// Mock CRM email + calendar services
-vi.mock('../src/apps/crm/email.service', () => ({}));
+// Mock CRM calendar service
 vi.mock('../src/apps/crm/calendar.service', () => ({}));
 
 import * as controller from '../src/apps/crm/controller';

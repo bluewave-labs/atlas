@@ -368,19 +368,6 @@ export function useDeleteStage() {
   });
 }
 
-export function useSeedStages() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async () => {
-      const { data } = await api.post('/crm/stages/seed');
-      return data.data as { stages: CrmDealStage[] };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.crm.all });
-    },
-  });
-}
-
 export function useReorderStages() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -1329,30 +1316,6 @@ export function useStopGoogleSync() {
   });
 }
 
-export function useContactEmails(contactId: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.crm.emails.byContact(contactId ?? ''),
-    queryFn: async () => {
-      const { data } = await api.get(`/crm/contacts/${contactId}/emails`);
-      return data.data.emails as CrmEmail[];
-    },
-    enabled: !!contactId,
-    staleTime: 30_000,
-  });
-}
-
-export function useDealEmails(dealId: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.crm.emails.byDeal(dealId ?? ''),
-    queryFn: async () => {
-      const { data } = await api.get(`/crm/deals/${dealId}/emails`);
-      return data.data.emails as CrmEmail[];
-    },
-    enabled: !!dealId,
-    staleTime: 30_000,
-  });
-}
-
 export function useContactEvents(contactId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.crm.events.byContact(contactId ?? ''),
@@ -1727,6 +1690,32 @@ export function useRestoreProposalRevision() {
       queryClient.invalidateQueries({ queryKey: queryKeys.crm.proposals.detail(vars.proposalId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.crm.proposals.revisions(vars.proposalId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.crm.proposals.all });
+    },
+  });
+}
+
+/** Checks whether a proposal already has a linked invoice (to disable duplicate conversion). */
+export function useProposalInvoices(proposalId: string | undefined) {
+  return useQuery({
+    queryKey: ['invoices', 'by-proposal', proposalId],
+    queryFn: async () => {
+      const { data } = await api.get(`/invoices/list?proposalId=${proposalId}`);
+      return (data.data as { invoices: Array<{ id: string }> }).invoices;
+    },
+    enabled: !!proposalId,
+    staleTime: 15_000,
+  });
+}
+
+export function useConvertProposalToInvoice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (proposalId: string) => {
+      const { data } = await api.post(`/crm/proposals/${proposalId}/convert-to-invoice`);
+      return data.data as { invoiceId: string };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all });
     },
   });
 }

@@ -436,9 +436,3 @@ export async function getWidgetData(userId: string, tenantId: string) {
 
   return { pending, signed, draft, total };
 }
-
-// ─── Seed sample data (called from setup wizard) ────────────────────
-
-export async function seedSampleData(userId: string, tenantId: string) {
-  return { skipped: true };
-}

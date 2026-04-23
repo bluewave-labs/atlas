@@ -1,11 +1,9 @@
 import type { Request, Response } from 'express';
 import * as crmService from '../services/dashboard.service';
 import { createActivity as createActivityService } from '../services/activity.service';
-import * as crmEmailService from '../email.service';
 import * as crmCalendarService from '../calendar.service';
 import { isGoogleConfigured } from '../../../services/google-auth';
 import { getRedisClient } from '../../../config/redis';
-import { enqueueSyncJob, SyncJobType } from '../../../workers';
 import { db } from '../../../config/database';
 import { accounts } from '../../../db/schema';
 import { eq } from 'drizzle-orm';
@@ -104,17 +102,7 @@ export async function getGoogleSyncStatus(req: Request, res: Response) {
 
 export async function startGoogleSync(req: Request, res: Response) {
   try {
-    const tenantId = req.auth!.tenantId;
-
-    if (!getRedisClient()) {
-      res.status(503).json({ success: false, error: 'Redis is not available. Background sync requires Redis.' });
-      return;
-    }
-
-    await enqueueSyncJob(SyncJobType.FULL_EMAIL, tenantId);
-    await enqueueSyncJob(SyncJobType.FULL_CALENDAR, tenantId);
-
-    res.json({ success: true, data: { message: 'Sync jobs enqueued' } });
+    res.json({ success: true, data: { message: 'Calendar sync is handled automatically' } });
   } catch (error) {
     logger.error({ error }, 'Failed to start Google sync');
     res.status(500).json({ success: false, error: 'Failed to start sync' });
@@ -135,79 +123,6 @@ export async function stopGoogleSync(req: Request, res: Response) {
   } catch (error) {
     logger.error({ error }, 'Failed to stop Google sync');
     res.status(500).json({ success: false, error: 'Failed to stop sync' });
-  }
-}
-
-// ─── CRM Emails ────────────────────────────────────────────────────────
-
-export async function getContactEmails(req: Request, res: Response) {
-  try {
-    const tenantId = req.auth!.tenantId;
-    const contactId = req.params.id as string;
-    const limit = parseInt(req.query.limit as string) || 50;
-
-    const emailList = await crmEmailService.getContactEmails(tenantId, req.auth!.userId, contactId, limit);
-    res.json({ success: true, data: { emails: emailList } });
-  } catch (error) {
-    logger.error({ error }, 'Failed to get contact emails');
-    res.status(500).json({ success: false, error: 'Failed to get contact emails' });
-  }
-}
-
-export async function getDealEmails(req: Request, res: Response) {
-  try {
-    const tenantId = req.auth!.tenantId;
-    const dealId = req.params.id as string;
-    const limit = parseInt(req.query.limit as string) || 50;
-
-    const emailList = await crmEmailService.getDealEmails(tenantId, req.auth!.userId, dealId, limit);
-    res.json({ success: true, data: { emails: emailList } });
-  } catch (error) {
-    logger.error({ error }, 'Failed to get deal emails');
-    res.status(500).json({ success: false, error: 'Failed to get deal emails' });
-  }
-}
-
-export async function getCompanyEmails(req: Request, res: Response) {
-  try {
-    const tenantId = req.auth!.tenantId;
-    const companyId = req.params.id as string;
-    const limit = parseInt(req.query.limit as string) || 50;
-
-    const emailList = await crmEmailService.getCompanyEmails(tenantId, req.auth!.userId, companyId, limit);
-    res.json({ success: true, data: { emails: emailList } });
-  } catch (error) {
-    logger.error({ error }, 'Failed to get company emails');
-    res.status(500).json({ success: false, error: 'Failed to get company emails' });
-  }
-}
-
-export async function sendCrmEmail(req: Request, res: Response) {
-  try {
-    const tenantId = req.auth!.tenantId;
-    const userId = req.auth!.userId;
-    const { to, subject, body, threadGmailId, dealId, contactId, companyId } = req.body;
-
-    if (!to || !subject || !body) {
-      res.status(400).json({ success: false, error: 'to, subject, and body are required' });
-      return;
-    }
-
-    const sentMessage = await crmEmailService.sendEmail(tenantId, to, subject, body, threadGmailId);
-
-    // Create a CRM activity for the sent email
-    await createActivityService(userId, tenantId, {
-      type: 'email',
-      body: `Sent email: ${subject}`,
-      dealId: dealId ?? null,
-      contactId: contactId ?? null,
-      companyId: companyId ?? null,
-    });
-
-    res.json({ success: true, data: sentMessage });
-  } catch (error) {
-    logger.error({ error }, 'Failed to send CRM email');
-    res.status(500).json({ success: false, error: 'Failed to send email' });
   }
 }
 

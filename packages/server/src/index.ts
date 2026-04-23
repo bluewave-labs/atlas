@@ -5,7 +5,6 @@ import { purgeOldArchivedDrawings } from './apps/draw/service';
 import { runScheduledBackup } from './services/backup.service';
 import { closeDb } from './config/database';
 import { bootstrapDatabase } from './db/bootstrap';
-import { startSyncWorker, stopSyncWorker } from './workers';
 import { closeRedis } from './config/redis';
 import { startReminderScheduler, stopReminderScheduler } from './apps/sign/reminder';
 import { startTaskReminderScheduler, stopTaskReminderScheduler } from './apps/work/reminder';
@@ -48,9 +47,6 @@ app.listen(env.PORT, async () => {
   setTimeout(() => runScheduledBackup().catch(() => {}), 30000);
   logger.info('Automated daily backups enabled');
 
-  // Start Google sync worker (requires Redis)
-  startSyncWorker().catch((err) => logger.warn({ err }, 'Failed to start sync worker'));
-
   // Sign: automated reminders for pending signing tokens — runs hourly
   startReminderScheduler();
 
@@ -86,9 +82,6 @@ function handleShutdown(signal: string) {
   stopReminderScheduler();
   stopTaskReminderScheduler();
   stopCrmReminderScheduler();
-
-  stopSyncWorker()
-    .catch((err) => logger.warn({ err }, 'Error stopping sync worker'));
 
   closeRedis()
     .catch((err) => logger.warn({ err }, 'Error closing Redis'));

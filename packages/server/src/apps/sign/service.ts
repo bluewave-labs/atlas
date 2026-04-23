@@ -13,7 +13,6 @@ export {
   voidDocument,
   generateSignedPDF,
   getWidgetData,
-  seedSampleData,
 } from './services/documents.service';
 
 export {

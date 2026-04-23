@@ -16,7 +16,7 @@ import { SmartButtonBar } from '../../../../components/shared/SmartButtonBar';
 import { PresenceAvatars } from '../../../../components/shared/presence-avatars';
 import { ConfirmDialog } from '../../../../components/ui/confirm-dialog';
 import { StatusDot } from '../../../../components/ui/status-dot';
-import { EmailTimeline } from '../email-timeline';
+import { CalendarEvents } from '../calendar-events';
 import { NotesSection } from '../notes-section';
 import { CompanyLogo } from '../../lib/crm-helpers';
 
@@ -183,9 +183,9 @@ export function DealDetailPanel({
           <ActivityTimeline activities={activities} />
         </div>
 
-        {/* Emails */}
+        {/* Calendar */}
         <div style={{ marginTop: 'var(--spacing-lg)', borderTop: '1px solid var(--color-border-secondary)', paddingTop: 'var(--spacing-lg)' }}>
-          <EmailTimeline dealId={deal.id} />
+          <CalendarEvents dealId={deal.id} />
         </div>
 
         {/* Notes */}

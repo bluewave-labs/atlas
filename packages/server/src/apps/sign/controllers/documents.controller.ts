@@ -314,24 +314,6 @@ export async function voidDocument(req: Request, res: Response) {
   }
 }
 
-export async function seedSampleData(req: Request, res: Response) {
-  try {
-    if (!canAccess(req.signPerm!.role, 'create')) {
-      res.status(403).json({ success: false, error: 'No permission to create sign documents' });
-      return;
-    }
-
-    const userId = req.auth!.userId;
-    const tenantId = req.auth!.tenantId;
-
-    const result = await signService.seedSampleData(userId, tenantId);
-    res.json({ success: true, data: result });
-  } catch (error) {
-    logger.error({ error }, 'Failed to seed sign sample data');
-    res.status(500).json({ success: false, error: 'Failed to seed sign sample data' });
-  }
-}
-
 export async function getAuditLog(req: Request, res: Response) {
   try {
     const perm = req.signPerm!;

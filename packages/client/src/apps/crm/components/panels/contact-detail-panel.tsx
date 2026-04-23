@@ -14,7 +14,7 @@ import { SmartButtonBar } from '../../../../components/shared/SmartButtonBar';
 import { PresenceAvatars } from '../../../../components/shared/presence-avatars';
 import { CustomFieldsRenderer } from '../../../../components/shared/custom-fields-renderer';
 import { ConfirmDialog } from '../../../../components/ui/confirm-dialog';
-import { EmailTimeline } from '../email-timeline';
+import { CalendarEvents } from '../calendar-events';
 import { NotesSection } from '../notes-section';
 
 export function ContactDetailPanel({
@@ -150,9 +150,9 @@ export function ContactDetailPanel({
           <ActivityTimeline activities={activities} />
         </div>
 
-        {/* Emails */}
+        {/* Calendar */}
         <div style={{ marginTop: 'var(--spacing-lg)', borderTop: '1px solid var(--color-border-secondary)', paddingTop: 'var(--spacing-lg)' }}>
-          <EmailTimeline contactId={contact.id} defaultTo={contact.email || undefined} />
+          <CalendarEvents contactId={contact.id} defaultAttendee={contact.email || undefined} />
         </div>
 
         {/* Notes */}

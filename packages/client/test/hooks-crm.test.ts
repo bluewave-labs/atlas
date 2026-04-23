@@ -17,7 +17,6 @@ import {
   useCreateStage,
   useUpdateStage,
   useDeleteStage,
-  useSeedStages,
   useReorderStages,
   useDeals,
   useDeal,
@@ -65,7 +64,6 @@ describe('CRM hooks', () => {
       expect(typeof useCreateStage).toBe('function');
       expect(typeof useUpdateStage).toBe('function');
       expect(typeof useDeleteStage).toBe('function');
-      expect(typeof useSeedStages).toBe('function');
       expect(typeof useReorderStages).toBe('function');
     });
 

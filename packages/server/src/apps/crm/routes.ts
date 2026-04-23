@@ -179,6 +179,7 @@ router.post('/proposals/:id/send', crmController.sendProposal);
 router.post('/proposals/:id/duplicate', crmController.duplicateProposal);
 router.get('/proposals/:id/revisions', crmController.listProposalRevisions);
 router.post('/proposals/:id/revisions/:revisionId/restore', crmController.restoreProposalRevision);
+router.post('/proposals/:id/convert-to-invoice', crmController.convertProposalToInvoice);
 
 // Read-only helpers for the CRM client. Write/admin endpoints for per-app
 // permissions now live under /system/permissions (owner-only unified grid).
@@ -243,12 +244,6 @@ router.get('/permissions', async (req, res) => {
 router.get('/google/status', crmController.getGoogleSyncStatus);
 router.post('/google/sync/start', crmController.startGoogleSync);
 router.post('/google/sync/stop', crmController.stopGoogleSync);
-
-// CRM emails (linked to contacts/deals/companies)
-router.get('/contacts/:id/emails', crmController.getContactEmails);
-router.get('/deals/:id/emails', crmController.getDealEmails);
-router.get('/companies/:id/emails', crmController.getCompanyEmails);
-router.post('/emails/send', crmController.sendCrmEmail);
 
 // CRM calendar (linked to contacts/deals)
 router.get('/contacts/:id/events', crmController.getContactEvents);
