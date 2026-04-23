@@ -167,7 +167,7 @@ export function DrawPage() {
       style={{
         display: 'flex',
         height: '100vh',
-        width: '100%',
+        width: 'calc(100% - 56px)',
         background: 'var(--color-bg-primary)',
         fontFamily: 'var(--font-family)',
         marginLeft: 56,
