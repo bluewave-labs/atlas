@@ -5,6 +5,9 @@ import { emitAppEvent } from '../../../services/event.service';
 import { canAccess } from '../../../services/app-permissions.service';
 import { assertCanDelete } from '../../../middleware/assert-can-delete';
 import { getLinkedRecordsForDriveItem } from '../services/linked-records.service';
+import { db } from '../../../config/database';
+import { tenants } from '../../../db/schema';
+import { eq } from 'drizzle-orm';
 
 // GET /api/drive/widget
 export async function getWidgetData(req: Request, res: Response) {
@@ -74,6 +77,28 @@ export async function uploadFiles(req: Request, res: Response) {
     if (!files || files.length === 0) {
       res.status(400).json({ success: false, error: 'No files uploaded' });
       return;
+    }
+
+    // Storage quota enforcement (#23): check tenant quota before accepting files
+    if (tenantId) {
+      try {
+        const [tenantRow] = await db
+          .select({ storageQuotaBytes: tenants.storageQuotaBytes })
+          .from(tenants)
+          .where(eq(tenants.id, tenantId))
+          .limit(1);
+
+        if (tenantRow && tenantRow.storageQuotaBytes > 0) {
+          const { totalBytes } = await driveService.getStorageUsage(userId);
+          const incomingBytes = files.reduce((sum, f) => sum + f.size, 0);
+          if (totalBytes + incomingBytes > tenantRow.storageQuotaBytes) {
+            res.status(507).json({ success: false, error: 'Insufficient storage — upload would exceed your storage quota' });
+            return;
+          }
+        }
+      } catch (err) {
+        logger.warn({ err }, 'Drive quota check failed — proceeding without enforcement');
+      }
     }
 
     const created = [];

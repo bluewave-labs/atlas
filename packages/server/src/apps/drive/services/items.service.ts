@@ -235,27 +235,36 @@ export async function updateItem(userId: string, itemId: string, input: UpdateDr
 // ─── Soft delete (move to trash) ─────────────────────────────────────
 
 export async function deleteItem(userId: string, itemId: string) {
-  await updateItem(userId, itemId, { isArchived: true });
-  // Also archive all children (folders cascade to subfolders and files)
-  await db.update(driveItems)
-    .set({ isArchived: true, updatedAt: new Date() })
-    .where(and(eq(driveItems.parentId, itemId), eq(driveItems.userId, userId)));
+  // Recursively archive the item and ALL descendants (not just direct children)
+  // using a CTE that walks the full subtree in one query.
+  await db.execute(sql`
+    WITH RECURSIVE subtree AS (
+      SELECT id FROM drive_items WHERE id = ${itemId} AND user_id = ${userId}
+      UNION ALL
+      SELECT di.id FROM drive_items di
+      INNER JOIN subtree s ON di.parent_id = s.id AND di.user_id = ${userId}
+    )
+    UPDATE drive_items
+    SET is_archived = true, updated_at = NOW()
+    WHERE id IN (SELECT id FROM subtree)
+  `);
 }
 
 // ─── Restore from trash ──────────────────────────────────────────────
 
 export async function restoreItem(userId: string, itemId: string) {
-  const now = new Date();
-
-  await db
-    .update(driveItems)
-    .set({ isArchived: false, updatedAt: now })
-    .where(and(eq(driveItems.id, itemId), eq(driveItems.userId, userId)));
-
-  // Also restore children that were cascade-archived
-  await db.update(driveItems)
-    .set({ isArchived: false, updatedAt: now })
-    .where(and(eq(driveItems.parentId, itemId), eq(driveItems.userId, userId)));
+  // Recursively restore the item and ALL descendants (CTE covers the root + every subtree level)
+  await db.execute(sql`
+    WITH RECURSIVE subtree AS (
+      SELECT id FROM drive_items WHERE id = ${itemId} AND user_id = ${userId}
+      UNION ALL
+      SELECT di.id FROM drive_items di
+      INNER JOIN subtree s ON di.parent_id = s.id AND di.user_id = ${userId}
+    )
+    UPDATE drive_items
+    SET is_archived = false, updated_at = NOW()
+    WHERE id IN (SELECT id FROM subtree)
+  `);
 
   const [restored] = await db
     .select()

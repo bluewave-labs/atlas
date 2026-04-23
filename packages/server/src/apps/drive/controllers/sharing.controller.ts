@@ -6,6 +6,10 @@ import { canAccess } from '../../../services/app-permissions.service';
 import { parseMentionsAndNotify } from '../../../utils/mentions';
 import { existsSync, createReadStream, statSync } from 'node:fs';
 import { safeFilePath } from '../lib/safe-path';
+import { db } from '../../../config/database';
+import { userSettings } from '../../../db/schema';
+import { eq } from 'drizzle-orm';
+import { getAccountIdForUser } from '../../../utils/account-lookup';
 
 // GET /api/drive/:id/versions
 export async function listVersions(req: Request, res: Response) {
@@ -46,8 +50,25 @@ export async function replaceFile(req: Request, res: Response) {
       return;
     }
 
-    // Snapshot current file as a version
-    await driveService.createVersion(userId, tenantId, itemId);
+    // Check driveAutoVersionOnReplace setting before snapshotting
+    const accountId = await getAccountIdForUser(userId);
+    let autoVersion = true;
+    if (accountId) {
+      try {
+        const [settingsRow] = await db
+          .select({ driveAutoVersionOnReplace: userSettings.driveAutoVersionOnReplace })
+          .from(userSettings)
+          .where(eq(userSettings.accountId, accountId))
+          .limit(1);
+        autoVersion = settingsRow?.driveAutoVersionOnReplace ?? true;
+      } catch {
+        // If settings lookup fails, default to creating a version (safe default)
+      }
+    }
+
+    if (autoVersion) {
+      await driveService.createVersion(userId, tenantId, itemId, accountId ?? undefined);
+    }
 
     // Update main record with new file data
     const now = new Date();
@@ -55,10 +76,9 @@ export async function replaceFile(req: Request, res: Response) {
     await driveService.updateItem(userId, itemId, { name: decodedName });
 
     // Also update mimeType, size, storagePath via raw update
-    const { db: database } = await import('../../../config/database');
     const { driveItems: driveItemsTable } = await import('../../../db/schema');
-    const { eq, and } = await import('drizzle-orm');
-    await database
+    const { and } = await import('drizzle-orm');
+    await db
       .update(driveItemsTable)
       .set({
         mimeType: file.mimetype,
