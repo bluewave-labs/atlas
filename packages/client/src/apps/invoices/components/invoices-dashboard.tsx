@@ -45,12 +45,27 @@ export function InvoicesDashboard() {
     );
   }
 
-  const { receivables, monthlyActivity, periodSummary } = data;
+  const { receivables, monthlyActivity, periodSummary, defaultCurrency, excludedCurrencyCount } = data;
 
   return (
     <div style={{ padding: 'var(--spacing-xl)', overflow: 'auto', height: '100%' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xl)', maxWidth: 960 }}>
         <QuickActions actions={quickActions} />
+        {excludedCurrencyCount > 0 && (
+          <div
+            style={{
+              padding: 'var(--spacing-md) var(--spacing-lg)',
+              background: 'color-mix(in srgb, var(--color-warning) 12%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--color-warning) 40%, transparent)',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--color-text-secondary)',
+              fontFamily: 'var(--font-family)',
+            }}
+          >
+            {t('invoices.dashboard.multiCurrencyNotice', { currency: defaultCurrency, count: excludedCurrencyCount })}
+          </div>
+        )}
         <ReceivablesSection receivables={receivables} t={t} />
         <ActivitySection monthlyActivity={monthlyActivity} t={t} />
         <PeriodSummarySection periodSummary={periodSummary} t={t} />

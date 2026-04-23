@@ -40,6 +40,8 @@ export function useInvoicesDashboard() {
           thisQuarter: { invoiced: number; received: number; due: number };
           thisYear: { invoiced: number; received: number; due: number };
         };
+        defaultCurrency: string;
+        excludedCurrencyCount: number;
       };
     },
     staleTime: 30_000,

@@ -1,5 +1,6 @@
 import { db } from '../../../config/database';
 import { sql } from 'drizzle-orm';
+import { getInvoiceSettings } from './settings.service';
 
 interface ReceivablesBuckets {
   total: number;
@@ -31,21 +32,40 @@ interface PeriodSummary {
 }
 
 export async function getInvoicesDashboard(tenantId: string, userIdFilter?: string) {
-  const [receivables, monthlyActivity, periodSummary] = await Promise.all([
-    getReceivables(tenantId, userIdFilter),
-    getMonthlyActivity(tenantId, userIdFilter),
-    getPeriodSummary(tenantId, userIdFilter),
+  const settings = await getInvoiceSettings(tenantId);
+  const defaultCurrency = settings?.defaultCurrency ?? 'USD';
+
+  const [receivables, monthlyActivity, periodSummary, excludedCount] = await Promise.all([
+    getReceivables(tenantId, userIdFilter, defaultCurrency),
+    getMonthlyActivity(tenantId, userIdFilter, defaultCurrency),
+    getPeriodSummary(tenantId, userIdFilter, defaultCurrency),
+    getExcludedCurrencyCount(tenantId, userIdFilter, defaultCurrency),
   ]);
 
-  return { receivables, monthlyActivity, periodSummary };
+  return { receivables, monthlyActivity, periodSummary, defaultCurrency, excludedCurrencyCount: excludedCount };
+}
+
+async function getExcludedCurrencyCount(tenantId: string, userIdFilter?: string, defaultCurrency = 'USD'): Promise<number> {
+  const userClause = userIdFilter ? sql`AND user_id = ${userIdFilter}` : sql``;
+  const result = await db.execute(sql`
+    SELECT COUNT(*)::int AS cnt
+    FROM invoices
+    WHERE tenant_id = ${tenantId}
+      AND currency != ${defaultCurrency}
+      AND is_archived = false
+      ${userClause}
+  `);
+  const row = result.rows[0] as { cnt: number };
+  return Number(row?.cnt) || 0;
 }
 
 // ─── Receivables ────────────────────────────────────────────────────
 
-async function getReceivables(tenantId: string, userIdFilter?: string): Promise<ReceivablesBuckets> {
+async function getReceivables(tenantId: string, userIdFilter?: string, defaultCurrency = 'USD'): Promise<ReceivablesBuckets> {
   // Each bucket sums the outstanding balance (total - net payments) rather
   // than the raw invoice total so partial payments reduce the aging amounts.
   // Invoices with zero balance are excluded from every bucket.
+  // Only invoices in the tenant's default currency are aggregated (audit #82).
   const userClause = userIdFilter ? sql`AND i.user_id = ${userIdFilter}` : sql``;
   const result = await db.execute(sql`
     WITH outstanding AS (
@@ -59,6 +79,7 @@ async function getReceivables(tenantId: string, userIdFilter?: string): Promise<
         ), 0) AS balance_due
       FROM invoices i
       WHERE i.tenant_id = ${tenantId}
+        AND i.currency = ${defaultCurrency}
         AND i.status IN ('sent', 'viewed', 'approved')
         AND i.is_archived = false
         ${userClause}
@@ -86,17 +107,18 @@ async function getReceivables(tenantId: string, userIdFilter?: string): Promise<
 
 // ─── Monthly Activity ───────────────────────────────────────────────
 
-async function getMonthlyActivity(tenantId: string, userIdFilter?: string): Promise<MonthlyActivity[]> {
+async function getMonthlyActivity(tenantId: string, userIdFilter?: string, defaultCurrency = 'USD'): Promise<MonthlyActivity[]> {
   const invoicedUserClause = userIdFilter ? sql`AND user_id = ${userIdFilter}` : sql``;
   const paymentsUserClause = userIdFilter ? sql`AND i.user_id = ${userIdFilter}` : sql``;
 
-  // Get invoiced amounts by month (last 12 months)
+  // Get invoiced amounts by month (last 12 months), default currency only
   const invoicedResult = await db.execute(sql`
     SELECT
       TO_CHAR(DATE_TRUNC('month', issue_date), 'YYYY-MM') AS month,
       COALESCE(SUM(total), 0) AS amount
     FROM invoices
     WHERE tenant_id = ${tenantId}
+      AND currency = ${defaultCurrency}
       AND status != 'draft'
       AND is_archived = false
       AND issue_date >= DATE_TRUNC('month', NOW()) - INTERVAL '11 months'
@@ -114,6 +136,7 @@ async function getMonthlyActivity(tenantId: string, userIdFilter?: string): Prom
     FROM invoice_payments p
     INNER JOIN invoices i ON i.id = p.invoice_id
     WHERE p.tenant_id = ${tenantId}
+      AND i.currency = ${defaultCurrency}
       AND i.is_archived = false
       AND p.payment_date >= DATE_TRUNC('month', NOW()) - INTERVAL '11 months'
       ${paymentsUserClause}
@@ -145,11 +168,11 @@ async function getMonthlyActivity(tenantId: string, userIdFilter?: string): Prom
 
 // ─── Period Summary ─────────────────────────────────────────────────
 
-async function getPeriodSummary(tenantId: string, userIdFilter?: string): Promise<PeriodSummary> {
+async function getPeriodSummary(tenantId: string, userIdFilter?: string, defaultCurrency = 'USD'): Promise<PeriodSummary> {
   const invoicedUserClause = userIdFilter ? sql`AND user_id = ${userIdFilter}` : sql``;
   const paymentsUserClause = userIdFilter ? sql`AND i.user_id = ${userIdFilter}` : sql``;
 
-  // "Invoiced" totals come from the invoices table (by issue_date).
+  // "Invoiced" totals — default currency only (audit #82)
   const invoicedResult = await db.execute(sql`
     SELECT
       COALESCE(SUM(CASE WHEN issue_date::date = CURRENT_DATE AND status != 'draft' THEN total ELSE 0 END), 0) AS today_invoiced,
@@ -159,12 +182,12 @@ async function getPeriodSummary(tenantId: string, userIdFilter?: string): Promis
       COALESCE(SUM(CASE WHEN issue_date >= DATE_TRUNC('year', NOW()) AND status != 'draft' THEN total ELSE 0 END), 0) AS year_invoiced
     FROM invoices
     WHERE tenant_id = ${tenantId}
+      AND currency = ${defaultCurrency}
       AND is_archived = false
       ${invoicedUserClause}
   `);
 
-  // "Received" totals come from invoice_payments (by payment_date). Payments
-  // minus refunds so partial payments and refunds are reflected.
+  // "Received" totals — default currency only (audit #82)
   const receivedResult = await db.execute(sql`
     SELECT
       COALESCE(SUM(CASE WHEN p.payment_date::date = CURRENT_DATE THEN (CASE WHEN p.type = 'payment' THEN p.amount ELSE -p.amount END) ELSE 0 END), 0) AS today_received,
@@ -175,6 +198,7 @@ async function getPeriodSummary(tenantId: string, userIdFilter?: string): Promis
     FROM invoice_payments p
     INNER JOIN invoices i ON i.id = p.invoice_id
     WHERE p.tenant_id = ${tenantId}
+      AND i.currency = ${defaultCurrency}
       AND i.is_archived = false
       ${paymentsUserClause}
   `);
