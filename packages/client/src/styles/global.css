@@ -452,3 +452,10 @@
 [data-theme="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   filter: invert(1);
 }
+
+/* App rail — hide on phone widths. Mobile nav is handled in a later phase. */
+@media (max-width: 767px) {
+  .app-rail {
+    display: none;
+  }
+}
