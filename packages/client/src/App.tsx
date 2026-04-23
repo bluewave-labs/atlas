@@ -5,6 +5,7 @@ import { QueryProvider } from './providers/query-provider';
 import { ShortcutProvider } from './providers/shortcut-provider';
 import { TooltipProvider } from './components/ui/tooltip';
 import { useAuthStore } from './stores/auth-store';
+import { useUIStore } from './stores/ui-store';
 import { ROUTES } from './config/routes';
 import { appRegistry } from './apps';
 import { LoginPage } from './pages/login';
@@ -23,6 +24,9 @@ import { ImpersonationBanner } from './apps/system/components/impersonation-bann
 import { type ReactNode } from 'react';
 import { useMyAccessibleApps } from './hooks/use-app-permissions';
 import { AppRail } from './components/layout/app-rail';
+import { TopBar } from './components/layout/top-bar';
+import { BreadcrumbProvider } from './lib/breadcrumb-context';
+import { KeyboardShortcutsHelp } from './components/shared/keyboard-shortcuts-help';
 import { OrgLayout } from './pages/org/org-layout';
 import { OrgMembersPage } from './pages/org/org-members';
 import { OrgMemberEditPage } from './pages/org/org-member-edit';
@@ -83,6 +87,31 @@ function AppRailWrapper() {
   return <AppRail />;
 }
 
+function TopBarWrapper() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const location = useLocation();
+
+  if (!isAuthenticated) return null;
+
+  const hiddenPaths = ['/', '/login', '/register', '/setup', '/onboarding', '/forgot-password'];
+  const path = location.pathname;
+  if (hiddenPaths.includes(path)) return null;
+  if (path.startsWith('/invitation/')) return null;
+  if (path.startsWith('/reset-password/')) return null;
+  if (path.startsWith('/sign/') || path.startsWith('/proposal/')) return null;
+  if (path.startsWith('/drive/upload/')) return null;
+  if (path.startsWith('/draw')) return null;
+
+  return <TopBar />;
+}
+
+function ShortcutHelpWrapper() {
+  const open = useUIStore((s) => s.shortcutHelpOpen);
+  const toggle = useUIStore((s) => s.toggleShortcutHelp);
+  if (!open) return null;
+  return <KeyboardShortcutsHelp onClose={toggle} />;
+}
+
 function AppGuard({ appId, children }: { appId: string; children: ReactNode }) {
   const { data: myApps, isLoading } = useMyAccessibleApps();
   if (isLoading || !myApps) return null;
@@ -100,6 +129,7 @@ export function App() {
         <TooltipProvider>
           <ShortcutProvider>
             <BrowserRouter>
+            <BreadcrumbProvider>
             <ErrorBoundary>
               <Routes>
                 <Route path={ROUTES.SETUP} element={<SetupPage />} />
@@ -160,10 +190,13 @@ export function App() {
                 <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
               </Routes>
               <AppRailWrapper />
+              <TopBarWrapper />
+              <ShortcutHelpWrapper />
               <CommandPalette />
               <ConflictDialog />
               <ImpersonationBanner />
             </ErrorBoundary>
+            </BreadcrumbProvider>
             </BrowserRouter>
           </ShortcutProvider>
         </TooltipProvider>

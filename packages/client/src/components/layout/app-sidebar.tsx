@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { ResizeHandle } from '../ui/resize-handle';
 import { ROUTES } from '../../config/routes';
-import { NotificationBell } from '../notifications/notification-bell';
-
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -144,7 +142,6 @@ export function AppSidebar({
           >
             <ArrowLeft size={14} />
           </button>
-          <NotificationBell />
           <span
             style={{
               fontSize: 'var(--font-size-sm)',

@@ -1082,11 +1082,12 @@ export function CalendarPage() {
       style={{
         display: 'flex',
         flexDirection: 'row',
-        height: '100vh',
+        height: 'calc(100vh - 48px)',
         background: 'var(--color-bg-primary)',
         fontFamily: 'var(--font-family)',
         overflow: 'hidden',
         marginLeft: 56,
+        marginTop: 48,
       }}
     >
         {/* Left sidebar */}

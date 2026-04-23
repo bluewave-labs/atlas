@@ -54,7 +54,7 @@ const SHORTCUT_SECTIONS = [
 export function KeyboardShortcutsHelp({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-  const modKey = isMac ? '\u2318' : 'Ctrl';
+  const modKey = isMac ? '⌘' : 'Ctrl';
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -66,10 +66,10 @@ export function KeyboardShortcutsHelp({ onClose }: { onClose: () => void }) {
 
   function renderKey(key: string) {
     if (key === 'Mod') return modKey;
-    if (key === 'Shift') return isMac ? '\u21E7' : 'Shift';
-    if (key === 'Alt') return isMac ? '\u2325' : 'Alt';
-    if (key === 'Enter') return '\u21B5';
-    if (key === 'Tab') return '\u21E5';
+    if (key === 'Shift') return isMac ? '⇧' : 'Shift';
+    if (key === 'Alt') return isMac ? '⌥' : 'Alt';
+    if (key === 'Enter') return '↵';
+    if (key === 'Tab') return '⇥';
     return key;
   }
 

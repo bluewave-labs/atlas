@@ -12,6 +12,8 @@ interface ContentAreaProps {
    * Required when `headerSlot` is not provided.
    */
   title?: string;
+  /** Optional subtitle shown on the left of the default header when title is omitted. */
+  subtitle?: string;
   /** Optional breadcrumb trail (replaces title when provided). Ignored when `headerSlot` is set. */
   breadcrumbs?: BreadcrumbItem[];
   /** Right-side header actions (buttons, etc.). Ignored when `headerSlot` is set. */
@@ -26,7 +28,7 @@ interface ContentAreaProps {
   children: ReactNode;
 }
 
-export function ContentArea({ title, breadcrumbs, actions, headerSlot, children }: ContentAreaProps) {
+export function ContentArea({ title, subtitle, breadcrumbs, actions, headerSlot, children }: ContentAreaProps) {
   return (
     <div
       style={{
@@ -106,16 +108,18 @@ export function ContentArea({ title, breadcrumbs, actions, headerSlot, children 
           </>
         ) : (
           <>
-            <span
-              style={{
-                fontSize: 'var(--font-size-sm)',
-                fontWeight: 'var(--font-weight-normal)' as CSSProperties['fontWeight'],
-                color: 'var(--color-text-primary)',
-                fontFamily: 'var(--font-family)',
-              }}
-            >
-              {title ?? ''}
-            </span>
+            {subtitle ? (
+              <span
+                style={{
+                  fontSize: 'var(--font-size-xs)',
+                  fontWeight: 'var(--font-weight-normal)' as CSSProperties['fontWeight'],
+                  color: 'var(--color-text-tertiary)',
+                  fontFamily: 'var(--font-family)',
+                }}
+              >
+                {subtitle}
+              </span>
+            ) : null}
             <div style={{ flex: 1 }} />
             {actions}
           </>

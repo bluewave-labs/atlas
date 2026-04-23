@@ -224,11 +224,12 @@ export function DocsPage() {
     <div
       style={{
         display: 'flex',
-        height: '100vh',
+        height: 'calc(100vh - 48px)',
         width: '100%',
         background: 'var(--color-bg-primary)',
         fontFamily: 'var(--font-family)',
         marginLeft: 56,
+        marginTop: 48,
       }}
     >
       <DocSidebar

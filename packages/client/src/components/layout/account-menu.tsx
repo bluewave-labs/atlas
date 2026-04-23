@@ -7,7 +7,7 @@ import { Tooltip } from '../ui/tooltip';
 import { ConfirmDialog } from '../ui/confirm-dialog';
 import type { Account } from '@atlas-platform/shared';
 
-export function AccountSwitcherRail() {
+export function AccountMenu() {
   const { t } = useTranslation();
   const { account, accounts, switchAccount, removeAccount, logout } = useAuthStore();
   const [open, setOpen] = useState(false);

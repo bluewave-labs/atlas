@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useUIStore } from '../../../stores/ui-store';
 import { useEditor, EditorContent, BubbleMenu, FloatingMenu } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -35,7 +36,6 @@ import { SlashCommandMenu } from './editor/slash-command-menu';
 import { MentionMenu } from './editor/mention-menu';
 import { TableToolbar } from './editor/table-toolbar';
 import { SearchBar } from './editor/search-bar';
-import { KeyboardShortcutsHelp } from './editor/keyboard-shortcuts-help';
 import { DrawingPicker } from './editor/embed-pickers';
 import { useEditorEffects } from './editor/use-editor-effects';
 import { useEditorMenus } from './editor/use-editor-menus';
@@ -67,6 +67,7 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
   const smallText = useDocSettingsStore((s) => s.smallText);
   const fullWidth = useDocSettingsStore((s) => s.fullWidth);
   const spellCheck = useDocSettingsStore((s) => s.spellCheck);
+  const toggleShortcutHelp = useUIStore((s) => s.toggleShortcutHelp);
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<ReturnType<typeof useEditor>>(null);
@@ -79,7 +80,6 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
   const [tableToolbarPos, setTableToolbarPos] = useState<{ top: number; left: number } | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [showReplace, setShowReplace] = useState(false);
-  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
 
   // Single menu hook instance using editorRef — ref is populated after useEditor
   const menus = useEditorMenus({
@@ -333,11 +333,10 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
           <span className="doc-editor-status-bar-dot">·</span>
           <span>{charCount} {charCount === 1 ? 'character' : 'characters'}</span>
           <span style={{ flex: 1 }} />
-          <button className="doc-editor-shortcuts-btn" title="Keyboard shortcuts" onClick={() => setShowShortcutsHelp(true)}><Keyboard size={12} /></button>
+          <button className="doc-editor-shortcuts-btn" title="Keyboard shortcuts" onClick={() => toggleShortcutHelp()}><Keyboard size={12} /></button>
         </div>
       )}
 
-      {showShortcutsHelp && <KeyboardShortcutsHelp onClose={() => setShowShortcutsHelp(false)} />}
     </div>
   );
 }

@@ -26,7 +26,6 @@ import { appRegistry } from '../../apps';
 import { ROUTES } from '../../config/routes';
 import { useMyAccessibleApps } from '../../hooks/use-app-permissions';
 import { useSettingsStore } from '../../stores/settings-store';
-import { AccountSwitcherRail } from './account-switcher-rail';
 import { Tooltip } from '../ui/tooltip';
 import type { ThemeMode } from '@atlas-platform/shared';
 
@@ -235,7 +234,6 @@ export function AppRail() {
           onClick={() => navigate(ROUTES.SETTINGS)}
         />
         <ThemeToggleRail />
-        <AccountSwitcherRail />
       </div>
     </aside>
   );

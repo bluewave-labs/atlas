@@ -59,7 +59,7 @@ export function OrgLayout() {
 
   if (tenantsLoading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'var(--font-family)', color: 'var(--color-text-secondary)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 48px)', marginTop: 48, fontFamily: 'var(--font-family)', color: 'var(--color-text-secondary)' }}>
         {t('org.loading')}
       </div>
     );
@@ -69,7 +69,7 @@ export function OrgLayout() {
     return (
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: '100vh', fontFamily: 'var(--font-family)',
+        height: 'calc(100vh - 48px)', marginTop: 48, fontFamily: 'var(--font-family)',
         color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)',
       }}>
         {t('org.notInOrg')}
@@ -82,10 +82,11 @@ export function OrgLayout() {
   return (
     <div style={{
       display: 'flex',
-      height: '100vh',
+      height: 'calc(100vh - 48px)',
       overflow: 'hidden',
       fontFamily: 'var(--font-family)',
       marginLeft: 56,
+      marginTop: 48,
       background: 'var(--color-bg-primary)',
       color: 'var(--color-text-primary)',
     }}>

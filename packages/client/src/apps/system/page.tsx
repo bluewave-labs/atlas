@@ -182,7 +182,7 @@ export function SystemPage() {
   const navigate = useNavigate();
 
   return (
-    <div style={{ display: 'flex', height: '100vh', marginLeft: 56 }}>
+    <div style={{ display: 'flex', height: 'calc(100vh - 48px)', marginLeft: 56, marginTop: 48 }}>
       <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; }

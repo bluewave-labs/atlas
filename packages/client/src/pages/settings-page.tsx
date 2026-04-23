@@ -89,9 +89,10 @@ function SettingsPanelView({ categories, category, panel }: PanelViewProps) {
 
   const shellStyle: CSSProperties = {
     display: 'flex',
-    height: '100vh',
+    height: 'calc(100vh - 48px)',
     overflow: 'hidden',
     marginLeft: 56,
+    marginTop: 48,
   };
 
   return (

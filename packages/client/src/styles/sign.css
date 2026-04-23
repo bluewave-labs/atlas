@@ -2,7 +2,7 @@
 
 .sign-page {
   display: flex;
-  height: 100vh;
+  height: calc(100vh - 48px);
   font-family: var(--font-family);
   background: var(--color-bg-primary);
 }

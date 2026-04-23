@@ -37,7 +37,7 @@ export function SignPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="sign-page" style={{ marginLeft: 56 }}>
+    <div className="sign-page" style={{ marginLeft: 56, marginTop: 48 }}>
       {/* Hidden file input */}
       <input
         ref={s.fileInputRef}
