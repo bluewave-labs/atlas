@@ -94,19 +94,19 @@ export function DocsPage() {
   const handleContentChange = useCallback(
     (content: Record<string, unknown>) => {
       if (selectedId) {
-        save(selectedId, { content });
+        save(selectedId, { content }, doc?.updatedAt);
       }
     },
-    [selectedId, save],
+    [selectedId, save, doc?.updatedAt],
   );
 
   const handleTitleChange = useCallback(
     (title: string) => {
       if (selectedId) {
-        save(selectedId, { title });
+        save(selectedId, { title }, doc?.updatedAt);
       }
     },
-    [selectedId, save],
+    [selectedId, save, doc?.updatedAt],
   );
 
   const handleIconChange = useCallback(

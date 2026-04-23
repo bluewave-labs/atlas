@@ -217,7 +217,7 @@ export async function searchDocuments(req: Request, res: Response) {
       return;
     }
 
-    const results = await documentService.searchDocuments(userId, query.trim());
+    const results = await documentService.searchDocuments(userId, query.trim(), req.auth!.tenantId ?? null);
     res.json({ success: true, data: results });
   } catch (error) {
     logger.error({ error }, 'Failed to search documents');
@@ -231,7 +231,7 @@ export async function listVersions(req: Request, res: Response) {
     const userId = req.auth!.userId;
     const documentId = req.params.id as string;
 
-    const versions = await documentService.listVersions(userId, documentId);
+    const versions = await documentService.listVersions(userId, documentId, req.auth!.tenantId ?? null);
     res.json({ success: true, data: versions });
   } catch (error) {
     logger.error({ error }, 'Failed to list versions');

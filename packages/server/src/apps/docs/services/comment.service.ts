@@ -48,11 +48,6 @@ export async function deleteCommentById(commentId: string) {
   await db.delete(documentComments).where(eq(documentComments.id, commentId));
 }
 
-export async function deleteComment(userId: string, commentId: string) {
-  await db.delete(documentComments)
-    .where(and(eq(documentComments.id, commentId), eq(documentComments.userId, userId)));
-}
-
 export async function resolveComment(userId: string, commentId: string) {
   return updateComment(userId, commentId, { isResolved: true });
 }

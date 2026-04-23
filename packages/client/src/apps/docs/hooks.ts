@@ -236,20 +236,28 @@ export function useRestoreVersion() {
 /**
  * Returns a debounced save function that auto-saves document updates.
  * Calls are debounced by `delay` ms (default 1000ms).
+ * Pass `updatedAt` from the current document to enable concurrency checks.
  */
 export function useAutoSaveDocument(delay = 1000) {
   const updateMutation = useUpdateDocument();
   const mutateRef = useRef(updateMutation.mutate);
   mutateRef.current = updateMutation.mutate;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingRef = useRef<{ id: string; updatedAt?: string; input: UpdateDocumentInput } | null>(null);
 
   const save = useCallback(
-    (id: string, input: UpdateDocumentInput) => {
+    (id: string, input: UpdateDocumentInput, updatedAt?: string) => {
+      pendingRef.current = { id, updatedAt, input };
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
       timerRef.current = setTimeout(() => {
-        mutateRef.current({ id, ...input });
+        if (pendingRef.current) {
+          const { id: pendingId, updatedAt: pendingUpdatedAt, input: pendingInput } = pendingRef.current;
+          mutateRef.current({ id: pendingId, updatedAt: pendingUpdatedAt, ...pendingInput });
+          pendingRef.current = null;
+        }
+        timerRef.current = null;
       }, delay);
     },
     [delay],
@@ -259,6 +267,11 @@ export function useAutoSaveDocument(delay = 1000) {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
+    }
+    if (pendingRef.current) {
+      const { id, updatedAt, input } = pendingRef.current;
+      mutateRef.current({ id, updatedAt, ...input });
+      pendingRef.current = null;
     }
   }, []);
 

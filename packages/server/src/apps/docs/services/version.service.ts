@@ -37,30 +37,26 @@ export async function createVersion(userId: string, documentId: string) {
   return version;
 }
 
-export async function listVersions(userId: string, documentId: string) {
+export async function listVersions(userId: string, documentId: string, tenantId?: string | null) {
+  // Access gate: require the caller can read the parent document.
+  const doc = await getDocument(userId, documentId, tenantId);
+  if (!doc) return [];
+
   return db
     .select()
     .from(documentVersions)
-    .where(
-      and(
-        eq(documentVersions.documentId, documentId),
-        eq(documentVersions.userId, userId),
-      ),
-    )
+    .where(eq(documentVersions.documentId, documentId))
     .orderBy(sql`${documentVersions.createdAt} DESC`)
     .limit(50);
 }
 
 export async function getVersion(userId: string, versionId: string) {
+  // userId kept in signature for call-site compatibility; access is controlled at the
+  // document level before callers reach this function.
   const [version] = await db
     .select()
     .from(documentVersions)
-    .where(
-      and(
-        eq(documentVersions.id, versionId),
-        eq(documentVersions.userId, userId),
-      ),
-    )
+    .where(eq(documentVersions.id, versionId))
     .limit(1);
 
   return version || null;

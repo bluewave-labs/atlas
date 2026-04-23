@@ -31,8 +31,8 @@ const DocComment = z.object({
   id: Uuid,
   documentId: Uuid,
   userId: Uuid,
-  body: z.string(),
-  resolvedAt: IsoDateTime.nullable(),
+  content: z.string(),
+  isResolved: z.boolean(),
   createdAt: IsoDateTime,
   updatedAt: IsoDateTime,
 });
@@ -72,9 +72,9 @@ register({ method: 'post', path: '/docs/:id/versions/:versionId/restore', tags: 
 register({ method: 'get', path: '/docs/:id/comments', tags: [TAG], summary: 'List document comments',
   params: z.object({ id: Uuid }), response: envelope(z.array(DocComment)) });
 register({ method: 'post', path: '/docs/:id/comments', tags: [TAG], summary: 'Add a document comment',
-  params: z.object({ id: Uuid }), body: z.object({ body: z.string() }), response: envelope(DocComment) });
+  params: z.object({ id: Uuid }), body: z.object({ content: z.string() }), response: envelope(DocComment) });
 register({ method: 'patch', path: '/docs/comments/:commentId', tags: [TAG], summary: 'Edit a comment',
-  params: z.object({ commentId: Uuid }), body: z.object({ body: z.string() }), response: envelope(DocComment) });
+  params: z.object({ commentId: Uuid }), body: z.object({ content: z.string() }), response: envelope(DocComment) });
 register({ method: 'delete', path: '/docs/comments/:commentId', tags: [TAG], summary: 'Delete a comment',
   params: z.object({ commentId: Uuid }) });
 register({ method: 'patch', path: '/docs/comments/:commentId/resolve', tags: [TAG], summary: 'Resolve/unresolve a comment',

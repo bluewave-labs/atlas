@@ -325,8 +325,11 @@ export async function restoreDocument(userId: string, documentId: string) {
 
 // ─── Full-text search across document content ─────────────────────────
 
-export async function searchDocuments(userId: string, query: string) {
+export async function searchDocuments(userId: string, query: string, tenantId?: string | null) {
   const searchTerm = `%${query}%`;
+  const ownerCondition = tenantId
+    ? or(eq(documents.userId, userId), and(eq(documents.visibility, 'team'), eq(documents.tenantId, tenantId)))
+    : eq(documents.userId, userId);
   return db
     .select({
       id: documents.id,
@@ -341,7 +344,7 @@ export async function searchDocuments(userId: string, query: string) {
     .from(documents)
     .where(
       and(
-        eq(documents.userId, userId),
+        ownerCondition!,
         eq(documents.isArchived, false),
         sql`(${documents.title} LIKE ${searchTerm} OR CAST(${documents.content} AS TEXT) LIKE ${searchTerm})`,
       ),

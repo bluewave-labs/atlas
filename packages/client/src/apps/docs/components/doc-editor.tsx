@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useEditor, EditorContent, BubbleMenu, FloatingMenu } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -191,6 +191,15 @@ export function DocEditor({ value, onChange, readOnly = false, documents: docLis
 
   // Populate editorRef after useEditor so the single menus hook can access it
   editorRef.current = editor;
+
+  // Cleanup pending word-count timer on unmount
+  useEffect(() => {
+    return () => {
+      if (countTimerRef.current) {
+        clearTimeout(countTimerRef.current);
+      }
+    };
+  }, []);
 
   // All editor side-effects
   useEditorEffects({
