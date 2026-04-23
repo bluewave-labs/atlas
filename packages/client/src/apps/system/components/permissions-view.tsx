@@ -1,3 +1,6 @@
+// NOTE: This view uses a raw HTML table because each cell is an inline
+// editable Select. DataTable's cell rendering doesn't support that pattern.
+// If DataTable ever gains editable-cell support, consider converting.
 import { type CSSProperties, useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Shield, Check } from 'lucide-react';

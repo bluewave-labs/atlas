@@ -5,6 +5,7 @@ import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { Modal } from '../../../components/ui/modal';
+import { DataTable, type DataTableColumn } from '../../../components/ui/data-table';
 import { formatBytes } from '../../../lib/format';
 import { startImpersonation } from '../impersonation';
 
@@ -65,6 +66,89 @@ export function TenantsView() {
     },
   });
 
+  const columns: DataTableColumn<AdminTenant>[] = [
+    {
+      key: 'name',
+      label: 'Name',
+      minWidth: 160,
+      hideable: false,
+      render: (t) => <strong>{t.name}</strong>,
+      searchValue: (t) => t.name,
+      compare: (a, b) => a.name.localeCompare(b.name),
+    },
+    {
+      key: 'slug',
+      label: 'Slug',
+      minWidth: 120,
+      render: (t) => <span style={{ color: 'var(--color-text-secondary)' }}>{t.slug}</span>,
+      searchValue: (t) => t.slug,
+      compare: (a, b) => a.slug.localeCompare(b.slug),
+    },
+    {
+      key: 'plan',
+      label: 'Plan',
+      width: 100,
+      render: (t) => <Badge variant="default">{t.plan}</Badge>,
+      searchValue: (t) => t.plan,
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      width: 110,
+      render: (t) => (
+        <Badge variant={t.status === 'active' ? 'success' : t.status === 'suspended' ? 'error' : 'warning'}>
+          {t.status}
+        </Badge>
+      ),
+      searchValue: (t) => t.status,
+    },
+    {
+      key: 'memberCount',
+      label: 'Members',
+      width: 90,
+      align: 'right',
+      render: (t) => <span>{t.memberCount}</span>,
+      compare: (a, b) => a.memberCount - b.memberCount,
+    },
+    {
+      key: 'storageQuotaBytes',
+      label: 'Storage quota',
+      width: 130,
+      render: (t) => <span style={{ color: 'var(--color-text-secondary)' }}>{formatBytes(t.storageQuotaBytes)}</span>,
+      compare: (a, b) => a.storageQuotaBytes - b.storageQuotaBytes,
+    },
+    {
+      key: 'createdAt',
+      label: 'Created',
+      width: 120,
+      render: (t) => (
+        <span style={{ color: 'var(--color-text-tertiary)' }}>
+          {new Date(t.createdAt).toLocaleDateString()}
+        </span>
+      ),
+      searchValue: (t) => new Date(t.createdAt).toLocaleDateString(),
+      compare: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    },
+    {
+      key: 'actions',
+      label: '',
+      width: 180,
+      hideable: false,
+      resizable: false,
+      align: 'right',
+      render: (t) => (
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={impersonate.isPending}
+          onClick={(e) => { e.stopPropagation(); impersonate.mutate(t.id); }}
+        >
+          Open as this tenant
+        </Button>
+      ),
+    },
+  ];
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 1100 }}>
       <div>
@@ -80,59 +164,16 @@ export function TenantsView() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[1, 2, 3].map((i) => <Skeleton key={i} style={{ height: 44 }} />)}
         </div>
-      ) : !data || data.length === 0 ? (
-        <div style={{ color: 'var(--color-text-tertiary)', padding: 40, textAlign: 'center' }}>No tenants.</div>
       ) : (
-        <div style={{
-          border: '1px solid var(--color-border-primary)',
-          borderRadius: 'var(--radius-lg)',
-          overflow: 'hidden',
-          background: 'var(--color-bg-primary)',
-        }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-sm)' }}>
-            <thead>
-              <tr style={{ background: 'var(--color-bg-secondary)', textAlign: 'left' }}>
-                <th style={th}>Name</th>
-                <th style={th}>Slug</th>
-                <th style={th}>Plan</th>
-                <th style={th}>Status</th>
-                <th style={th}>Members</th>
-                <th style={th}>Storage quota</th>
-                <th style={th}>Created</th>
-                <th style={th}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((t) => (
-                <tr key={t.id} style={{ borderTop: '1px solid var(--color-border-secondary)', cursor: 'pointer' }} onClick={() => setDetailId(t.id)}>
-                  <td style={td}><strong>{t.name}</strong></td>
-                  <td style={{ ...td, color: 'var(--color-text-secondary)' }}>{t.slug}</td>
-                  <td style={td}><Badge variant="default">{t.plan}</Badge></td>
-                  <td style={td}>
-                    <Badge variant={t.status === 'active' ? 'success' : t.status === 'suspended' ? 'error' : 'warning'}>
-                      {t.status}
-                    </Badge>
-                  </td>
-                  <td style={{ ...td, textAlign: 'right' }}>{t.memberCount}</td>
-                  <td style={{ ...td, color: 'var(--color-text-secondary)' }}>{formatBytes(t.storageQuotaBytes)}</td>
-                  <td style={{ ...td, color: 'var(--color-text-tertiary)' }}>
-                    {new Date(t.createdAt).toLocaleDateString()}
-                  </td>
-                  <td style={td} onClick={(e) => e.stopPropagation()}>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      disabled={impersonate.isPending}
-                      onClick={() => impersonate.mutate(t.id)}
-                    >
-                      Open as this tenant
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          data={data ?? []}
+          columns={columns}
+          storageKey="system_tenants"
+          searchable
+          paginated={false}
+          onRowClick={(t) => setDetailId(t.id)}
+          emptyTitle="No tenants"
+        />
       )}
 
       <Modal open={!!detailId} onOpenChange={(o) => !o && setDetailId(null)} width={720} title="Tenant detail">
@@ -148,6 +189,8 @@ export function TenantsView() {
               <h3 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, margin: '0 0 8px', color: 'var(--color-text-secondary)' }}>
                 Members ({detail.data.members.length})
               </h3>
+              {/* NOTE: This members sub-table inside the tenant detail modal is left as raw HTML
+                  because it is a simple read-only display within a small modal. */}
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-sm)' }}>
                 <thead>
                   <tr style={{ background: 'var(--color-bg-secondary)', textAlign: 'left' }}>

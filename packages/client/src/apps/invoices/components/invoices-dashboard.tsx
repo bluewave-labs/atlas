@@ -7,6 +7,7 @@ import { formatCurrency } from '../../../lib/format';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { QueryErrorState } from '../../../components/ui/query-error-state';
 import { QuickActions } from '../../../components/shared/quick-actions';
+import { DataTable, type DataTableColumn } from '../../../components/ui/data-table';
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
@@ -351,31 +352,69 @@ interface PeriodSummaryProps {
   t: (key: string) => string;
 }
 
+interface PeriodRow {
+  id: string;
+  label: string;
+  invoiced: number;
+  received: number;
+  due: number;
+}
+
 function PeriodSummarySection({ periodSummary, t }: PeriodSummaryProps) {
-  const rows = [
-    { label: t('invoices.dashboard.today'), ...periodSummary.today },
-    { label: t('invoices.dashboard.thisWeek'), ...periodSummary.thisWeek },
-    { label: t('invoices.dashboard.thisMonth'), ...periodSummary.thisMonth },
-    { label: t('invoices.dashboard.thisQuarter'), ...periodSummary.thisQuarter },
-    { label: t('invoices.dashboard.thisYear'), ...periodSummary.thisYear },
+  const rows: PeriodRow[] = [
+    { id: 'today', label: t('invoices.dashboard.today'), ...periodSummary.today },
+    { id: 'thisWeek', label: t('invoices.dashboard.thisWeek'), ...periodSummary.thisWeek },
+    { id: 'thisMonth', label: t('invoices.dashboard.thisMonth'), ...periodSummary.thisMonth },
+    { id: 'thisQuarter', label: t('invoices.dashboard.thisQuarter'), ...periodSummary.thisQuarter },
+    { id: 'thisYear', label: t('invoices.dashboard.thisYear'), ...periodSummary.thisYear },
   ];
 
-  const cellStyle: React.CSSProperties = {
-    padding: 'var(--spacing-sm) var(--spacing-md)',
-    fontSize: 'var(--font-size-sm)',
-    borderBottom: '1px solid var(--color-border-secondary)',
-    textAlign: 'right' as const,
-  };
-
-  const headerStyle: React.CSSProperties = {
-    ...cellStyle,
-    fontWeight: 'var(--font-weight-semibold)' as unknown as number,
-    color: 'var(--color-text-secondary)',
-    fontSize: 'var(--font-size-xs)',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.03em',
-    background: 'var(--color-bg-secondary)',
-  };
+  const columns: DataTableColumn<PeriodRow>[] = [
+    {
+      key: 'label',
+      label: t('invoices.dashboard.period'),
+      hideable: false,
+      minWidth: 120,
+      render: (row) => (
+        <span style={{ fontWeight: 'var(--font-weight-medium)' as never, color: 'var(--color-text-primary)' }}>
+          {row.label}
+        </span>
+      ),
+    },
+    {
+      key: 'invoiced',
+      label: t('invoices.dashboard.invoiced'),
+      width: 130,
+      align: 'right',
+      render: (row) => (
+        <span style={{ color: 'var(--color-text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+          {formatCurrency(row.invoiced)}
+        </span>
+      ),
+    },
+    {
+      key: 'received',
+      label: t('invoices.dashboard.received'),
+      width: 130,
+      align: 'right',
+      render: (row) => (
+        <span style={{ color: 'var(--color-text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+          {formatCurrency(row.received)}
+        </span>
+      ),
+    },
+    {
+      key: 'due',
+      label: t('invoices.dashboard.due'),
+      width: 130,
+      align: 'right',
+      render: (row) => (
+        <span style={{ color: 'var(--color-accent-primary)', fontWeight: 'var(--font-weight-semibold)' as never, fontVariantNumeric: 'tabular-nums' }}>
+          {formatCurrency(row.due)}
+        </span>
+      ),
+    },
+  ];
 
   return (
     <div style={{
@@ -389,35 +428,14 @@ function PeriodSummarySection({ periodSummary, t }: PeriodSummaryProps) {
           {t('invoices.dashboard.salesReceiptsDues')}
         </span>
       </div>
-
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            <th style={{ ...headerStyle, textAlign: 'left' }}>{t('invoices.dashboard.period')}</th>
-            <th style={headerStyle}>{t('invoices.dashboard.invoiced')}</th>
-            <th style={headerStyle}>{t('invoices.dashboard.received')}</th>
-            <th style={headerStyle}>{t('invoices.dashboard.due')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} style={{ cursor: 'default' }}>
-              <td style={{ ...cellStyle, textAlign: 'left', fontWeight: 'var(--font-weight-medium)' as unknown as number, color: 'var(--color-text-primary)' }}>
-                {row.label}
-              </td>
-              <td style={{ ...cellStyle, color: 'var(--color-text-primary)' }}>
-                {formatCurrency(row.invoiced)}
-              </td>
-              <td style={{ ...cellStyle, color: 'var(--color-text-primary)' }}>
-                {formatCurrency(row.received)}
-              </td>
-              <td style={{ ...cellStyle, color: 'var(--color-accent-primary)', fontWeight: 'var(--font-weight-semibold)' as unknown as number }}>
-                {formatCurrency(row.due)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <DataTable
+        data={rows}
+        columns={columns}
+        storageKey="invoices_sales_receipts_dues"
+        paginated={false}
+        searchable={false}
+        hideFooter
+      />
     </div>
   );
 }

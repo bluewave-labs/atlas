@@ -7,12 +7,12 @@ import {
   Briefcase, Building2, Tag, AlertTriangle, RefreshCw,
   Plus, Handshake, UserPlus, FileText,
 } from 'lucide-react';
+import { DataTable, type DataTableColumn } from '../../../components/ui/data-table';
 import { useDashboard, type CrmDashboard, type CrmDeal, type CrmActivity } from '../hooks';
 import { formatCurrencyCompact, formatDate } from '../../../lib/format';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { Chip } from '../../../components/ui/chip';
 import { StatCard } from '../../../components/ui/stat-card';
-import { ColumnHeader } from '../../../components/ui/column-header';
 import { Button } from '../../../components/ui/button';
 import { QuickActions } from '../../../components/shared/quick-actions';
 
@@ -155,63 +155,90 @@ function DealsTable({
   title,
   deals,
   showCloseDate,
+  storageKey,
 }: {
   title: string;
   deals: CrmDeal[];
   showCloseDate?: boolean;
+  storageKey: string;
 }) {
   const { t } = useTranslation();
-  if (deals.length === 0) {
-    return (
-      <div className="crm-dashboard-card">
-        <h3 className="crm-dashboard-card-title">{title}</h3>
-        <div className="crm-dashboard-empty">{t('crm.dashboard.noDealsToShow')}</div>
-      </div>
-    );
-  }
+
+  const columns: DataTableColumn<CrmDeal>[] = [
+    {
+      key: 'title',
+      label: t('crm.deals.deal'),
+      icon: <Briefcase size={12} />,
+      minWidth: 120,
+      hideable: false,
+      render: (deal) => (
+        <span className="crm-dashboard-table-primary">{deal.title}</span>
+      ),
+      searchValue: (deal) => deal.title,
+      compare: (a, b) => a.title.localeCompare(b.title),
+    },
+    {
+      key: 'companyName',
+      label: t('crm.deals.company'),
+      icon: <Building2 size={12} />,
+      minWidth: 100,
+      render: (deal) => <span>{deal.companyName || '--'}</span>,
+      searchValue: (deal) => deal.companyName ?? '',
+      compare: (a, b) => (a.companyName ?? '').localeCompare(b.companyName ?? ''),
+    },
+    {
+      key: 'value',
+      label: t('crm.deals.value'),
+      icon: <DollarSign size={12} />,
+      width: 90,
+      align: 'right',
+      render: (deal) => (
+        <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+          {formatCurrencyCompact(deal.value)}
+        </span>
+      ),
+      compare: (a, b) => a.value - b.value,
+    },
+    ...(showCloseDate ? [{
+      key: 'expectedCloseDate',
+      label: t('crm.deals.closeDate'),
+      icon: <CalendarDays size={12} />,
+      width: 110,
+      render: (deal: CrmDeal) => (
+        <span className="crm-dashboard-close-date">
+          <CalendarDays size={12} />
+          {daysUntil(deal.expectedCloseDate, t)}
+        </span>
+      ),
+      searchValue: (deal: CrmDeal) => deal.expectedCloseDate ?? '',
+      compare: (a: CrmDeal, b: CrmDeal) =>
+        (a.expectedCloseDate ?? '').localeCompare(b.expectedCloseDate ?? ''),
+    } as DataTableColumn<CrmDeal>] : []),
+    {
+      key: 'stageName',
+      label: t('crm.deals.stage'),
+      icon: <Tag size={12} />,
+      width: 110,
+      render: (deal) =>
+        deal.stageName ? (
+          <Chip color={deal.stageColor || undefined}>{deal.stageName}</Chip>
+        ) : null,
+      searchValue: (deal) => deal.stageName ?? '',
+    },
+  ];
 
   return (
     <div className="crm-dashboard-card">
       <h3 className="crm-dashboard-card-title">{title}</h3>
-      <div className="crm-dashboard-table-wrap">
-        <table className="crm-dashboard-table">
-          <thead>
-            <tr>
-              <th><ColumnHeader label={t('crm.deals.deal')} icon={<Briefcase size={12} />} /></th>
-              <th><ColumnHeader label={t('crm.deals.company')} icon={<Building2 size={12} />} /></th>
-              <th style={{ textAlign: 'right' }}><ColumnHeader label={t('crm.deals.value')} icon={<DollarSign size={12} />} /></th>
-              {showCloseDate && <th><ColumnHeader label={t('crm.deals.closeDate')} icon={<CalendarDays size={12} />} /></th>}
-              <th><ColumnHeader label={t('crm.deals.stage')} icon={<Tag size={12} />} /></th>
-            </tr>
-          </thead>
-          <tbody>
-            {deals.map((deal) => (
-              <tr key={deal.id}>
-                <td className="crm-dashboard-table-primary">{deal.title}</td>
-                <td>{deal.companyName || '--'}</td>
-                <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                  {formatCurrencyCompact(deal.value)}
-                </td>
-                {showCloseDate && (
-                  <td>
-                    <span className="crm-dashboard-close-date">
-                      <CalendarDays size={12} />
-                      {daysUntil(deal.expectedCloseDate, t)}
-                    </span>
-                  </td>
-                )}
-                <td>
-                  {deal.stageName && (
-                    <Chip color={deal.stageColor || undefined}>
-                      {deal.stageName}
-                    </Chip>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        data={deals}
+        columns={columns}
+        storageKey={storageKey}
+        paginated={false}
+        searchable={false}
+        emptyTitle={t('crm.dashboard.noDealsToShow')}
+        hideFooter
+      />
     </div>
   );
 }
@@ -317,10 +344,12 @@ export function CrmDashboard() {
           title={t('crm.dashboard.closingSoon')}
           deals={dashboard.dealsClosingSoon}
           showCloseDate
+          storageKey="crm_dashboard_closing"
         />
         <DealsTable
           title={t('crm.dashboard.topDeals')}
           deals={dashboard.topDeals}
+          storageKey="crm_dashboard_top"
         />
       </div>
     </div>

@@ -6,6 +6,7 @@ import {
   RotateCcw, Upload, FolderPlus, Pencil, Trash2, Share2, Link2,
   Activity, MessageSquare, Send, Inbox,
 } from 'lucide-react';
+import { DataTable, type DataTableColumn } from '../../../components/ui/data-table';
 import { IconButton } from '../../../components/ui/icon-button';
 import { Button } from '../../../components/ui/button';
 import { Chip } from '../../../components/ui/chip';
@@ -173,19 +174,29 @@ export function DrivePreviewPanel({
                 const rows = parseCsvToRows(filePreviewData.content);
                 if (rows.length === 0) return <pre className="drive-preview-pre">{t('drive.preview.emptyContent')}</pre>;
                 const header = rows[0];
-                const body = rows.slice(1);
+                const body = rows.slice(1, 11); // first 10 rows
+                const previewCols = header.slice(0, 6);
+                type CsvRow = { id: string } & Record<string, string>;
+                const tableRows: CsvRow[] = body.map((row, ri) => {
+                  const obj: CsvRow = { id: String(ri) };
+                  previewCols.forEach((h, ci) => { obj[h] = row[ci] ?? ''; });
+                  return obj;
+                });
+                const columns: DataTableColumn<CsvRow>[] = previewCols.map((h) => ({
+                  key: h,
+                  label: h,
+                  render: (row) => <span>{row[h]}</span>,
+                }));
                 return (
                   <div className="drive-preview-table-wrap">
-                    <table className="drive-preview-table">
-                      <thead>
-                        <tr>{header.map((h, i) => <th key={i}>{h}</th>)}</tr>
-                      </thead>
-                      <tbody>
-                        {body.map((row, ri) => (
-                          <tr key={ri}>{row.map((cell, ci) => <td key={ci}>{cell}</td>)}</tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    <DataTable
+                      data={tableRows}
+                      columns={columns}
+                      storageKey="drive_preview_csv"
+                      paginated={false}
+                      searchable={false}
+                      hideFooter
+                    />
                     {filePreviewData.truncated && (
                       <div className="drive-preview-truncated">{t('drive.preview.fileTruncated')}</div>
                     )}
@@ -267,40 +278,51 @@ export function DrivePreviewPanel({
           <div className="drive-preview-text-content">
             {(() => {
               const cols = linkedTableData.columns || [];
-              const rows = linkedTableData.rows || [];
+              const allRows = linkedTableData.rows || [];
               if (cols.length === 0) return (
                 <div className="drive-preview-icon" style={{ gap: 8, padding: 24 }}>
                   <span style={{ fontSize: 13, color: 'var(--color-text-tertiary)' }}>{t('drive.preview.emptySpreadsheet')}</span>
                 </div>
               );
-              const previewRows = rows.slice(0, 10);
+              const previewRows = allRows.slice(0, 10);
               const previewCols = cols.slice(0, 6);
+              const extraCols = cols.length > 6;
+              type SheetRow = { id: string } & Record<string, string>;
+              const tableRows: SheetRow[] = previewRows.map((row, ri) => {
+                const obj: SheetRow = { id: String(ri) };
+                previewCols.forEach((col) => { obj[col.id] = row[col.id] != null ? String(row[col.id]) : ''; });
+                if (extraCols) obj['__extra__'] = '…';
+                return obj;
+              });
+              const sheetColumns: DataTableColumn<SheetRow>[] = [
+                ...previewCols.map((col) => ({
+                  key: col.id,
+                  label: col.name,
+                  render: (row: SheetRow) => <span>{row[col.id]}</span>,
+                } as DataTableColumn<SheetRow>)),
+                ...(extraCols ? [{
+                  key: '__extra__',
+                  label: `+${cols.length - 6}`,
+                  width: 50,
+                  render: (row: SheetRow) => <span style={{ color: 'var(--color-text-tertiary)' }}>{row['__extra__']}</span>,
+                } as DataTableColumn<SheetRow>] : []),
+              ];
               return (
                 <div style={{ padding: 16 }}>
                   <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginBottom: 8 }}>
-                    {t('drive.preview.columnsSummary', { columns: cols.length, rows: rows.length })}
+                    {t('drive.preview.columnsSummary', { columns: cols.length, rows: allRows.length })}
                   </div>
                   <div className="drive-preview-table-wrap">
-                    <table className="drive-preview-table">
-                      <thead>
-                        <tr>
-                          {previewCols.map((col) => <th key={col.id}>{col.name}</th>)}
-                          {cols.length > 6 && <th style={{ color: 'var(--color-text-tertiary)' }}>+{cols.length - 6}</th>}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {previewRows.map((row, ri) => (
-                          <tr key={ri}>
-                            {previewCols.map((col) => (
-                              <td key={col.id}>{row[col.id] != null ? String(row[col.id]) : ''}</td>
-                            ))}
-                            {cols.length > 6 && <td>…</td>}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {rows.length > 10 && (
-                      <div className="drive-preview-truncated">{t('drive.preview.showingRows', { shown: 10, total: rows.length })}</div>
+                    <DataTable
+                      data={tableRows}
+                      columns={sheetColumns}
+                      storageKey="drive_preview_sheet"
+                      paginated={false}
+                      searchable={false}
+                      hideFooter
+                    />
+                    {allRows.length > 10 && (
+                      <div className="drive-preview-truncated">{t('drive.preview.showingRows', { shown: 10, total: allRows.length })}</div>
                     )}
                   </div>
                 </div>

@@ -4,6 +4,7 @@ import { Button } from '../../../components/ui/button';
 import { Select } from '../../../components/ui/select';
 import { Modal } from '../../../components/ui/modal';
 import { Badge } from '../../../components/ui/badge';
+import { DataTable, type DataTableColumn } from '../../../components/ui/data-table';
 import { api } from '../../../lib/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../../config/query-keys';
@@ -439,45 +440,40 @@ export function CsvImportModal({ open, onClose, entityType, fields }: CsvImportM
                 }}>
                   Preview (first {previewRows.length} rows)
                 </div>
-                <div className="crm-import-preview">
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr>
-                        {mappedFields.map((f) => (
-                          <th key={f.key} style={{
-                            textAlign: 'left', padding: '6px 8px',
-                            fontSize: 'var(--font-size-xs)', fontWeight: 'var(--font-weight-semibold)',
-                            color: 'var(--color-text-tertiary)', borderBottom: '1px solid var(--color-border-secondary)',
-                            fontFamily: 'var(--font-family)',
-                          }}>
-                            {f.label}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {previewRows.map((row, i) => (
-                        <tr key={i}>
-                          {mappedFields.map((f) => {
-                            const csvHeader = columnMapping[f.key];
-                            const idx = csvHeaders.indexOf(csvHeader);
-                            return (
-                              <td key={f.key} style={{
-                                padding: '4px 8px', fontSize: 'var(--font-size-sm)',
-                                color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)',
-                                borderBottom: '1px solid var(--color-border-secondary)',
-                                maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}>
-                                {idx >= 0 ? row[idx] || '' : ''}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                {(() => {
+                  // Build typed rows with an id for DataTable
+                  type PreviewRow = { id: string } & Record<string, string>;
+                  const tableRows: PreviewRow[] = previewRows.map((row, i) => {
+                    const obj: PreviewRow = { id: String(i) };
+                    for (const f of mappedFields) {
+                      const idx = csvHeaders.indexOf(columnMapping[f.key]);
+                      obj[f.key] = idx >= 0 ? (row[idx] || '') : '';
+                    }
+                    return obj;
+                  });
+                  const columns: DataTableColumn<PreviewRow>[] = mappedFields.map((f) => ({
+                    key: f.key,
+                    label: f.label,
+                    render: (row) => (
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', maxWidth: 150 }}>
+                        {row[f.key]}
+                      </span>
+                    ),
+                    searchValue: (row) => row[f.key],
+                  }));
+                  return (
+                    <div className="crm-import-preview">
+                      <DataTable
+                        data={tableRows}
+                        columns={columns}
+                        storageKey="crm_csv_preview"
+                        paginated={false}
+                        searchable={false}
+                        hideFooter
+                      />
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>

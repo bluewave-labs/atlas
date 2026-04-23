@@ -1,10 +1,9 @@
-import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../lib/api-client';
 import { Badge } from '../../../components/ui/badge';
 import { Skeleton } from '../../../components/ui/skeleton';
-import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
+import { DataTable, type DataTableColumn } from '../../../components/ui/data-table';
 import { useAuthStore } from '../../../stores/auth-store';
 
 interface AdminUser {
@@ -40,17 +39,104 @@ export function AllUsersView() {
     },
   });
 
-  const [filter, setFilter] = useState('');
-  const filtered = useMemo(() => {
-    if (!data) return [];
-    const q = filter.trim().toLowerCase();
-    if (!q) return data;
-    return data.filter((u) =>
-      (u.name ?? '').toLowerCase().includes(q) ||
-      (u.email ?? '').toLowerCase().includes(q) ||
-      u.tenants.some((t) => (t.name ?? '').toLowerCase().includes(q) || (t.slug ?? '').toLowerCase().includes(q)),
-    );
-  }, [data, filter]);
+  const columns: DataTableColumn<AdminUser>[] = [
+    {
+      key: 'name',
+      label: 'Name',
+      minWidth: 160,
+      hideable: false,
+      render: (u) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <strong>{u.name ?? '—'}</strong>
+          {u.isSuperAdmin && <Badge variant="primary">super-admin</Badge>}
+        </div>
+      ),
+      searchValue: (u) => u.name ?? '',
+      compare: (a, b) => (a.name ?? '').localeCompare(b.name ?? ''),
+    },
+    {
+      key: 'email',
+      label: 'Email',
+      minWidth: 200,
+      render: (u) => (
+        <span style={{ color: 'var(--color-text-secondary)' }}>{u.email ?? '—'}</span>
+      ),
+      searchValue: (u) => u.email ?? '',
+      compare: (a, b) => (a.email ?? '').localeCompare(b.email ?? ''),
+    },
+    {
+      key: 'provider',
+      label: 'Provider',
+      width: 100,
+      render: (u) => (
+        <span style={{ color: 'var(--color-text-tertiary)' }}>{u.provider ?? '—'}</span>
+      ),
+      searchValue: (u) => u.provider ?? '',
+    },
+    {
+      key: 'tenants',
+      label: 'Tenants',
+      minWidth: 160,
+      render: (u) =>
+        u.tenants.length === 0 ? (
+          <span style={{ color: 'var(--color-text-tertiary)' }}>—</span>
+        ) : (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            {u.tenants.map((t) => (
+              <Badge key={t.id} variant="default">{t.name ?? t.slug}</Badge>
+            ))}
+          </div>
+        ),
+      searchValue: (u) => u.tenants.map((t) => t.name ?? t.slug ?? '').join(' '),
+    },
+    {
+      key: 'role',
+      label: 'Role',
+      width: 140,
+      render: (u) =>
+        u.tenants.length === 0 ? (
+          <span style={{ color: 'var(--color-text-tertiary)' }}>—</span>
+        ) : u.tenants.length === 1 ? (
+          <Badge variant={u.tenants[0].role === 'owner' ? 'success' : 'default'}>{u.tenants[0].role}</Badge>
+        ) : (
+          <span style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}>
+            {u.tenants.length} memberships
+          </span>
+        ),
+      searchValue: (u) => u.tenants.map((t) => t.role).join(' '),
+    },
+    {
+      key: 'createdAt',
+      label: 'Created',
+      width: 120,
+      render: (u) => (
+        <span style={{ color: 'var(--color-text-tertiary)' }}>
+          {new Date(u.createdAt).toLocaleDateString()}
+        </span>
+      ),
+      searchValue: (u) => new Date(u.createdAt).toLocaleDateString(),
+      compare: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    },
+    {
+      key: 'actions',
+      label: '',
+      width: 180,
+      hideable: false,
+      resizable: false,
+      align: 'right',
+      render: (u) => (
+        <Button
+          variant={u.isSuperAdmin ? 'danger' : 'secondary'}
+          size="sm"
+          disabled={u.id === currentUserId || toggleSuperAdmin.isPending}
+          onClick={() => toggleSuperAdmin.mutate({ userId: u.id, isSuperAdmin: !u.isSuperAdmin })}
+          title={u.id === currentUserId ? 'You cannot change your own super-admin status' : undefined}
+        >
+          {u.isSuperAdmin ? 'Revoke super-admin' : 'Grant super-admin'}
+        </Button>
+      ),
+    },
+  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 1100 }}>
@@ -63,93 +149,22 @@ export function AllUsersView() {
         </p>
       </div>
 
-      <Input
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-        placeholder="Filter by name, email, or tenant…"
-        size="sm"
-        style={{ maxWidth: 320 }}
-      />
-
       {isLoading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[1, 2, 3, 4].map((i) => <Skeleton key={i} style={{ height: 48 }} />)}
         </div>
-      ) : filtered.length === 0 ? (
-        <div style={{ color: 'var(--color-text-tertiary)', padding: 40, textAlign: 'center' }}>
-          {filter ? 'No users match that filter.' : 'No users.'}
-        </div>
       ) : (
-        <div style={{
-          border: '1px solid var(--color-border-primary)',
-          borderRadius: 'var(--radius-lg)',
-          overflow: 'hidden',
-          background: 'var(--color-bg-primary)',
-        }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-sm)' }}>
-            <thead>
-              <tr style={{ background: 'var(--color-bg-secondary)', textAlign: 'left' }}>
-                <th style={th}>Name</th>
-                <th style={th}>Email</th>
-                <th style={th}>Provider</th>
-                <th style={th}>Tenants</th>
-                <th style={th}>Role</th>
-                <th style={th}>Created</th>
-                <th style={th}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((u) => (
-                <tr key={u.id} style={{ borderTop: '1px solid var(--color-border-secondary)' }}>
-                  <td style={td}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <strong>{u.name ?? '—'}</strong>
-                      {u.isSuperAdmin && <Badge variant="primary">super-admin</Badge>}
-                    </div>
-                  </td>
-                  <td style={{ ...td, color: 'var(--color-text-secondary)' }}>{u.email ?? '—'}</td>
-                  <td style={{ ...td, color: 'var(--color-text-tertiary)' }}>{u.provider ?? '—'}</td>
-                  <td style={td}>
-                    {u.tenants.length === 0
-                      ? <span style={{ color: 'var(--color-text-tertiary)' }}>—</span>
-                      : <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                          {u.tenants.map((t) => (
-                            <Badge key={t.id} variant="default">{t.name ?? t.slug}</Badge>
-                          ))}
-                        </div>
-                    }
-                  </td>
-                  <td style={td}>
-                    {u.tenants.length === 0
-                      ? <span style={{ color: 'var(--color-text-tertiary)' }}>—</span>
-                      : u.tenants.length === 1
-                        ? <Badge variant={u.tenants[0].role === 'owner' ? 'success' : 'default'}>{u.tenants[0].role}</Badge>
-                        : <span style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}>{u.tenants.length} memberships</span>
-                    }
-                  </td>
-                  <td style={{ ...td, color: 'var(--color-text-tertiary)' }}>
-                    {new Date(u.createdAt).toLocaleDateString()}
-                  </td>
-                  <td style={td}>
-                    <Button
-                      variant={u.isSuperAdmin ? 'danger' : 'secondary'}
-                      size="sm"
-                      disabled={u.id === currentUserId || toggleSuperAdmin.isPending}
-                      onClick={() => toggleSuperAdmin.mutate({ userId: u.id, isSuperAdmin: !u.isSuperAdmin })}
-                      title={u.id === currentUserId ? 'You cannot change your own super-admin status' : undefined}
-                    >
-                      {u.isSuperAdmin ? 'Revoke super-admin' : 'Grant super-admin'}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          data={data ?? []}
+          columns={columns}
+          storageKey="system_all_users"
+          searchable
+          searchPlaceholder="Filter by name, email, or tenant…"
+          paginated={false}
+          emptyTitle="No users"
+          emptyDescription="No users match that filter."
+        />
       )}
     </div>
   );
 }
-
-const th = { padding: '10px 14px', fontWeight: 600, color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase' as const, letterSpacing: 0.3 };
-const td = { padding: '10px 14px', color: 'var(--color-text-primary)', verticalAlign: 'top' as const };

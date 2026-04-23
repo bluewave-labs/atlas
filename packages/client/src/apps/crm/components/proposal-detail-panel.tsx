@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Send, Copy, Trash2, Edit3, Link2, ArrowLeft, ChevronDown, ChevronRight, History, FileText,
 } from 'lucide-react';
+import { DataTable, type DataTableColumn } from '../../../components/ui/data-table';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { IconButton } from '../../../components/ui/icon-button';
@@ -482,30 +483,57 @@ function RevisionRow({ revision, isExpanded, onToggle, canRestore, onRestore }: 
           </div>
 
           {/* Line items */}
-          {snap.lineItems && snap.lineItems.length > 0 && (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-family)' }}>
-                <thead>
-                  <tr style={{ color: 'var(--color-text-tertiary)' }}>
-                    <th style={{ textAlign: 'left', padding: '2px 4px' }}>{t('crm.proposals.titleLabel')}</th>
-                    <th style={{ textAlign: 'right', padding: '2px 4px' }}>Qty</th>
-                    <th style={{ textAlign: 'right', padding: '2px 4px' }}>Unit</th>
-                    <th style={{ textAlign: 'right', padding: '2px 4px' }}>Amt</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {snap.lineItems.map((li, i) => (
-                    <tr key={i} style={{ color: 'var(--color-text-primary)' }}>
-                      <td style={{ padding: '2px 4px' }}>{li.description}</td>
-                      <td style={{ textAlign: 'right', padding: '2px 4px' }}>{li.quantity}</td>
-                      <td style={{ textAlign: 'right', padding: '2px 4px' }}>{li.unitPrice.toFixed(2)}</td>
-                      <td style={{ textAlign: 'right', padding: '2px 4px' }}>{(li.quantity * li.unitPrice).toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          {snap.lineItems && snap.lineItems.length > 0 && (() => {
+            type LineItemRow = { id: string; description: string; quantity: number; unitPrice: number; amount: number };
+            const liRows: LineItemRow[] = snap.lineItems.map((li, i) => ({
+              id: String(i),
+              description: li.description,
+              quantity: li.quantity,
+              unitPrice: li.unitPrice,
+              amount: li.quantity * li.unitPrice,
+            }));
+            const liColumns: DataTableColumn<LineItemRow>[] = [
+              {
+                key: 'description',
+                label: t('crm.proposals.titleLabel'),
+                hideable: false,
+                minWidth: 80,
+                render: (row) => <span>{row.description}</span>,
+                searchValue: (row) => row.description,
+              },
+              {
+                key: 'quantity',
+                label: 'Qty',
+                width: 60,
+                align: 'right',
+                render: (row) => <span>{row.quantity}</span>,
+              },
+              {
+                key: 'unitPrice',
+                label: 'Unit',
+                width: 70,
+                align: 'right',
+                render: (row) => <span>{row.unitPrice.toFixed(2)}</span>,
+              },
+              {
+                key: 'amount',
+                label: 'Amt',
+                width: 70,
+                align: 'right',
+                render: (row) => <span>{row.amount.toFixed(2)}</span>,
+              },
+            ];
+            return (
+              <DataTable
+                data={liRows}
+                columns={liColumns}
+                storageKey="crm_proposal_line_items"
+                paginated={false}
+                searchable={false}
+                hideFooter
+              />
+            );
+          })()}
 
           {snap.notes && (
             <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-secondary)', whiteSpace: 'pre-wrap' }}>

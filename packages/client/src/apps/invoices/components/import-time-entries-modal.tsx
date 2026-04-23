@@ -5,6 +5,7 @@ import { Modal } from '../../../components/ui/modal';
 import { Input } from '../../../components/ui/input';
 import { Select } from '../../../components/ui/select';
 import { Button } from '../../../components/ui/button';
+import { DataTable, type DataTableColumn } from '../../../components/ui/data-table';
 import { useToastStore } from '../../../stores/toast-store';
 import {
   usePreviewTimeEntries,
@@ -30,30 +31,6 @@ function defaultRange(): { from: string; to: string } {
   past.setDate(today.getDate() - 90);
   return { from: isoDate(past), to: isoDate(today) };
 }
-
-const thStyle: CSSProperties = {
-  textAlign: 'left',
-  padding: 'var(--spacing-xs) var(--spacing-sm)',
-  fontSize: 'var(--font-size-xs)',
-  fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'],
-  color: 'var(--color-text-tertiary)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.04em',
-  fontFamily: 'var(--font-family)',
-  borderBottom: '1px solid var(--color-border-secondary)',
-  background: 'var(--color-bg-secondary)',
-  position: 'sticky',
-  top: 0,
-};
-
-const tdStyle: CSSProperties = {
-  padding: 'var(--spacing-xs) var(--spacing-sm)',
-  fontSize: 'var(--font-size-sm)',
-  color: 'var(--color-text-primary)',
-  fontFamily: 'var(--font-family)',
-  borderBottom: '1px solid var(--color-border-secondary)',
-  verticalAlign: 'middle',
-};
 
 export function ImportTimeEntriesModal({
   open,
@@ -113,28 +90,6 @@ export function ImportTimeEntriesModal({
     ];
   }, [rows, t]);
 
-  const toggle = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const toggleAllVisible = () => {
-    const allSelected = filteredRows.every((r) => selected.has(r.id));
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (allSelected) {
-        for (const r of filteredRows) next.delete(r.id);
-      } else {
-        for (const r of filteredRows) next.add(r.id);
-      }
-      return next;
-    });
-  };
-
   const selectedRows = filteredRows.filter((r) => selected.has(r.id));
   const totalAmount = selectedRows.reduce((sum, r) => sum + r.quantity * r.unitPrice, 0);
   const currencyLabel = currency || '';
@@ -172,8 +127,64 @@ export function ImportTimeEntriesModal({
 
   const isLoading = preview.isPending;
   const isSubmitting = populate.isPending;
-  const allVisibleSelected =
-    filteredRows.length > 0 && filteredRows.every((r) => selected.has(r.id));
+
+  const columns: DataTableColumn<TimeEntryLineItemPreview>[] = [
+    {
+      key: 'projectName',
+      label: t('invoices.importTime.tableHeaderProject'),
+      minWidth: 100,
+      render: (row) => <span>{row.projectName}</span>,
+      searchValue: (row) => row.projectName,
+      compare: (a, b) => a.projectName.localeCompare(b.projectName),
+    },
+    {
+      key: 'workDate',
+      label: t('invoices.importTime.tableHeaderDate'),
+      width: 100,
+      render: (row) => <span>{row.workDate}</span>,
+      searchValue: (row) => row.workDate,
+      compare: (a, b) => a.workDate.localeCompare(b.workDate),
+    },
+    {
+      key: 'description',
+      label: t('invoices.importTime.tableHeaderDescription'),
+      minWidth: 120,
+      render: (row) => <span>{row.description}</span>,
+      searchValue: (row) => row.description,
+    },
+    {
+      key: 'quantity',
+      label: t('invoices.importTime.tableHeaderHours'),
+      width: 80,
+      align: 'right',
+      render: (row) => (
+        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{row.quantity.toFixed(2)}</span>
+      ),
+      compare: (a, b) => a.quantity - b.quantity,
+    },
+    {
+      key: 'unitPrice',
+      label: t('invoices.importTime.tableHeaderRate'),
+      width: 80,
+      align: 'right',
+      render: (row) => (
+        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{row.unitPrice.toFixed(2)}</span>
+      ),
+      compare: (a, b) => a.unitPrice - b.unitPrice,
+    },
+    {
+      key: 'amount',
+      label: t('invoices.importTime.tableHeaderAmount'),
+      width: 90,
+      align: 'right',
+      render: (row) => (
+        <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'] }}>
+          {(row.quantity * row.unitPrice).toFixed(2)}
+        </span>
+      ),
+      compare: (a, b) => (a.quantity * a.unitPrice) - (b.quantity * b.unitPrice),
+    },
+  ];
 
   return (
     <Modal
@@ -266,87 +277,18 @@ export function ImportTimeEntriesModal({
               maxHeight: 360,
             }}
           >
-            {filteredRows.length === 0 && !isLoading ? (
-              <div
-                style={{
-                  padding: 'var(--spacing-lg)',
-                  textAlign: 'center',
-                  fontSize: 'var(--font-size-sm)',
-                  color: 'var(--color-text-tertiary)',
-                  fontFamily: 'var(--font-family)',
-                }}
-              >
-                {t('invoices.importTime.noUnbilledEntries')}
-              </div>
-            ) : (
-              <table
-                style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontFamily: 'var(--font-family)',
-                }}
-              >
-                <thead>
-                  <tr>
-                    <th style={{ ...thStyle, width: 32 }}>
-                      <input
-                        type="checkbox"
-                        checked={allVisibleSelected}
-                        onChange={toggleAllVisible}
-                        aria-label="toggle-all"
-                      />
-                    </th>
-                    <th style={thStyle}>{t('invoices.importTime.tableHeaderProject')}</th>
-                    <th style={thStyle}>{t('invoices.importTime.tableHeaderDate')}</th>
-                    <th style={thStyle}>{t('invoices.importTime.tableHeaderDescription')}</th>
-                    <th style={{ ...thStyle, textAlign: 'right' }}>
-                      {t('invoices.importTime.tableHeaderHours')}
-                    </th>
-                    <th style={{ ...thStyle, textAlign: 'right' }}>
-                      {t('invoices.importTime.tableHeaderRate')}
-                    </th>
-                    <th style={{ ...thStyle, textAlign: 'right' }}>
-                      {t('invoices.importTime.tableHeaderAmount')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRows.map((row) => {
-                    const amount = row.quantity * row.unitPrice;
-                    return (
-                      <tr key={row.id}>
-                        <td style={tdStyle}>
-                          <input
-                            type="checkbox"
-                            checked={selected.has(row.id)}
-                            onChange={() => toggle(row.id)}
-                          />
-                        </td>
-                        <td style={tdStyle}>{row.projectName}</td>
-                        <td style={tdStyle}>{row.workDate}</td>
-                        <td style={tdStyle}>{row.description}</td>
-                        <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                          {row.quantity.toFixed(2)}
-                        </td>
-                        <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                          {row.unitPrice.toFixed(2)}
-                        </td>
-                        <td
-                          style={{
-                            ...tdStyle,
-                            textAlign: 'right',
-                            fontVariantNumeric: 'tabular-nums',
-                            fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'],
-                          }}
-                        >
-                          {amount.toFixed(2)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
+            <DataTable
+              data={filteredRows}
+              columns={columns}
+              storageKey="invoices_time_entries_import"
+              paginated={false}
+              searchable={false}
+              selectable
+              selectedIds={selected}
+              onSelectionChange={setSelected}
+              emptyTitle={t('invoices.importTime.noUnbilledEntries')}
+              hideFooter
+            />
           </div>
 
           <div
