@@ -82,8 +82,8 @@ export function AccountMenu() {
           aria-label="Account switcher"
           style={{
             position: 'absolute',
-            bottom: 0,
-            left: 'calc(100% + 10px)',
+            top: 'calc(100% + 6px)',
+            right: 0,
             width: 240,
             background: 'var(--color-bg-elevated)',
             border: '1px solid var(--color-border-primary)',
