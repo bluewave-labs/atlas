@@ -283,10 +283,35 @@ async function migrateLegacyData() {
     logger.error({ err: e }, 'work-merge migration failed');
   }
 
+  // employees.notes — backfill drift column.
+  await addColumnIfMissing('employees', 'notes', 'text');
+
   // CRM workflow multi-step migration — idempotent.
   try {
     await migrateCrmWorkflowSteps();
   } catch (err) {
     logger.error({ err }, 'crm_workflow_steps migration failed');
+  }
+
+  // Drop the 5 dead user_settings.tables_* columns left over from the
+  // deprecated Tables app (removed in v1.10.0). Idempotent: IF EXISTS
+  // means re-running this block is a no-op once the columns are gone.
+  try {
+    const c = await pool.connect();
+    try {
+      for (const col of [
+        'tables_show_field_type_icons',
+        'tables_default_row_count',
+        'tables_include_row_ids_in_export',
+        'tables_default_view',
+        'tables_default_sort',
+      ]) {
+        await c.query(`ALTER TABLE user_settings DROP COLUMN IF EXISTS ${col}`);
+      }
+    } finally {
+      c.release();
+    }
+  } catch (err) {
+    logger.error({ err }, 'Failed to drop dead user_settings.tables_* columns');
   }
 }

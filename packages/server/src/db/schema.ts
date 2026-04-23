@@ -1021,6 +1021,11 @@ export const employees = pgTable('employees', {
   salary: integer('salary'),
   salaryCurrency: varchar('salary_currency', { length: 10 }).notNull().default('USD'),
   salaryPeriod: varchar('salary_period', { length: 20 }).notNull().default('yearly'),
+  // Holiday calendar that drives leave-day calculations for this employee.
+  // null = use the tenant's default calendar (or no holiday exclusions).
+  holidayCalendarId: uuid('holiday_calendar_id'),
+  // Free-form notes — exposed in client HrEmployee interface.
+  notes: text('notes'),
   sortOrder: integer('sort_order').notNull().default(0),
   isArchived: boolean('is_archived').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -1048,6 +1053,10 @@ export const leaveBalances = pgTable('leave_balances', {
 }, (table) => ({
   employeeYearIdx: index('idx_leave_balances_employee_year').on(table.employeeId, table.year),
   tenantIdx: index('idx_leave_balances_tenant').on(table.tenantId),
+  // Prevent duplicate balance rows under concurrent allocation. Without this
+  // unique constraint, two simultaneous policy assignments could each pass an
+  // existence check and insert a second balance row for the same combination.
+  uniqueBalance: uniqueIndex('idx_leave_balances_unique').on(table.employeeId, table.leaveType, table.year),
 }));
 
 // ─── HR: Onboarding Tasks ───────────────────────────────────────
@@ -1767,6 +1776,8 @@ export const projectMembers = pgTable('project_members', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull(),
   projectId: uuid('project_id').notNull().references(() => projectProjects.id, { onDelete: 'cascade' }),
+  // 'member' | 'manager' — who can edit project settings + see all time entries.
+  role: varchar('role', { length: 50 }).notNull().default('member'),
   hourlyRate: real('hourly_rate'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
