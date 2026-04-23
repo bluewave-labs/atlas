@@ -1334,7 +1334,7 @@ export function useContactEmails(contactId: string | undefined) {
     queryKey: queryKeys.crm.emails.byContact(contactId ?? ''),
     queryFn: async () => {
       const { data } = await api.get(`/crm/contacts/${contactId}/emails`);
-      return data.data as CrmEmail[];
+      return data.data.emails as CrmEmail[];
     },
     enabled: !!contactId,
     staleTime: 30_000,
@@ -1346,7 +1346,7 @@ export function useDealEmails(dealId: string | undefined) {
     queryKey: queryKeys.crm.emails.byDeal(dealId ?? ''),
     queryFn: async () => {
       const { data } = await api.get(`/crm/deals/${dealId}/emails`);
-      return data.data as CrmEmail[];
+      return data.data.emails as CrmEmail[];
     },
     enabled: !!dealId,
     staleTime: 30_000,
@@ -1358,7 +1358,7 @@ export function useContactEvents(contactId: string | undefined) {
     queryKey: queryKeys.crm.events.byContact(contactId ?? ''),
     queryFn: async () => {
       const { data } = await api.get(`/crm/contacts/${contactId}/events`);
-      return data.data as CrmCalendarEvent[];
+      return data.data.events as CrmCalendarEvent[];
     },
     enabled: !!contactId,
     staleTime: 30_000,
@@ -1370,7 +1370,7 @@ export function useDealEvents(dealId: string | undefined) {
     queryKey: queryKeys.crm.events.byDeal(dealId ?? ''),
     queryFn: async () => {
       const { data } = await api.get(`/crm/deals/${dealId}/events`);
-      return data.data as CrmCalendarEvent[];
+      return data.data.events as CrmCalendarEvent[];
     },
     enabled: !!dealId,
     staleTime: 30_000,

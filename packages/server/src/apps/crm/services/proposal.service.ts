@@ -4,7 +4,7 @@ import {
   crmProposalRevisions,
   invoices, invoiceLineItems,
 } from '../../../db/schema';
-import { eq, and, desc, sql, ilike, max } from 'drizzle-orm';
+import { eq, and, desc, sql, ilike } from 'drizzle-orm';
 import type { CrmRecordAccess } from '@atlas-platform/shared';
 import { logger } from '../../../utils/logger';
 import { getNextInvoiceNumber } from '../../invoices/services/invoice.service';

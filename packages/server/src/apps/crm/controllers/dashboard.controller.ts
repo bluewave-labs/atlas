@@ -74,7 +74,7 @@ export async function seedSampleData(req: Request, res: Response) {
 
 export async function getGoogleSyncStatus(req: Request, res: Response) {
   try {
-    const tenantId = req.auth!.tenantId;
+    const userId = req.auth!.userId;
 
     const [account] = await db.select({
       provider: accounts.provider,
@@ -82,7 +82,7 @@ export async function getGoogleSyncStatus(req: Request, res: Response) {
       syncError: accounts.syncError,
       lastSync: accounts.lastSync,
       lastFullSync: accounts.lastFullSync,
-    }).from(accounts).where(eq(accounts.id, tenantId)).limit(1);
+    }).from(accounts).where(eq(accounts.userId, userId)).limit(1);
 
     res.json({
       success: true,
@@ -123,13 +123,13 @@ export async function startGoogleSync(req: Request, res: Response) {
 
 export async function stopGoogleSync(req: Request, res: Response) {
   try {
-    const tenantId = req.auth!.tenantId;
+    const userId = req.auth!.userId;
 
     await db.update(accounts).set({
       syncStatus: 'idle',
       syncError: null,
       updatedAt: new Date(),
-    }).where(eq(accounts.id, tenantId));
+    }).where(eq(accounts.userId, userId));
 
     res.json({ success: true, data: null });
   } catch (error) {

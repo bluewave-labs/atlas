@@ -120,6 +120,9 @@ router.delete('/workflows/:id', crmController.deleteWorkflow);
 router.post('/workflows/:id/toggle', crmController.toggleWorkflow);
 
 // Workflow steps
+// Note: crmWorkflowSteps has no tenantId column; the concurrency middleware silently
+// skips the tenant filter. Ownership is enforced in updateStep() via a parent-workflow
+// userId check before any mutation occurs.
 router.post('/workflows/:id/steps', crmController.appendStep);
 router.patch('/workflows/:id/steps/:stepId', withConcurrencyCheck(crmWorkflowSteps), crmController.updateStep);
 router.delete('/workflows/:id/steps/:stepId', crmController.deleteStep);

@@ -173,17 +173,22 @@ export async function enrichLead(userId: string, tenantId: string, leadId: strin
   await db.update(crmLeads).set({ enrichedData: enriched, enrichedAt: now, updatedAt: now })
     .where(and(eq(crmLeads.id, leadId), eq(crmLeads.tenantId, tenantId)));
 
-  // Log enrichment as an activity
+  // Log enrichment as an activity. crmActivities has no leadId FK, so we attach
+  // to the converted contact when available; skip activity creation otherwise to
+  // avoid creating a floating (unlinked) activity record.
   const summaryParts = [];
   if (enriched.companyIndustry) summaryParts.push(`Industry: ${enriched.companyIndustry}`);
   if (enriched.companySize) summaryParts.push(`Size: ${enriched.companySize}`);
   if (enriched.leadScore) summaryParts.push(`Score: ${enriched.leadScore}/100`);
   if (enriched.companyDescription) summaryParts.push(enriched.companyDescription);
 
-  await createActivity(userId, tenantId, {
-    type: 'note',
-    body: `Lead enriched via AI\n${summaryParts.join('\n')}`,
-  });
+  if (lead.convertedContactId) {
+    await createActivity(userId, tenantId, {
+      type: 'note',
+      body: `Lead enriched via AI\n${summaryParts.join('\n')}`,
+      contactId: lead.convertedContactId,
+    });
+  }
 
   logger.info({ userId, leadId }, 'CRM lead enriched via AI');
   return enriched;
