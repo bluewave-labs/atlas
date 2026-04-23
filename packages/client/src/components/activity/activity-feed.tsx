@@ -5,7 +5,7 @@ import { Avatar } from '../ui/avatar';
 import { Chip } from '../ui/chip';
 import { Button } from '../ui/button';
 import { formatRelativeDate } from '../../lib/format';
-import { getAppColor, getAppLabel } from '../../lib/app-colors';
+import { getAppLabel } from '../../lib/app-colors';
 
 // ---------------------------------------------------------------------------
 // Date grouping
@@ -119,7 +119,6 @@ export function ActivityFeed({ limit = 20, compact = false }: ActivityFeedProps)
             <Chip
               key={f}
               active={filter === f}
-              color={f !== 'all' ? getAppColor(f) : undefined}
               onClick={() => setFilter(f)}
             >
               {f === 'all' ? t('activity.filterAll') : getAppLabel(f)}
@@ -201,7 +200,7 @@ function ActivityItemRow({
   item: ActivityItem;
   compact: boolean;
 }) {
-  const appColor = getAppColor(item.appId);
+  const appColor = 'var(--color-text-tertiary)';
   const appLabel = getAppLabel(item.appId);
 
   return (

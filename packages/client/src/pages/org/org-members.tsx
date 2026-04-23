@@ -230,8 +230,8 @@ export function OrgMembersPage() {
                     style={{
                       fontSize: 10, fontWeight: 500, fontFamily: 'var(--font-family)',
                       padding: '1px 5px', borderRadius: 'var(--radius-sm)',
-                      background: `color-mix(in srgb, ${app.color} 12%, transparent)`,
-                      color: app.color, whiteSpace: 'nowrap',
+                      background: 'var(--color-bg-tertiary)',
+                      color: 'var(--color-text-secondary)', whiteSpace: 'nowrap',
                     }}
                   >
                     {app.name}

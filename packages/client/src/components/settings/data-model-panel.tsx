@@ -388,7 +388,7 @@ function DataModelDiagram({
                 rx={8}
                 ry={8}
                 fill="var(--color-bg-primary)"
-                stroke={isHovered ? pos.obj.appColor : 'var(--color-border-secondary)'}
+                stroke="var(--color-border-secondary)"
                 strokeWidth={isHovered ? 2 : 1}
                 style={{ transition: 'all var(--transition-fast)' }}
               />
@@ -399,7 +399,7 @@ function DataModelDiagram({
                 width={DIAGRAM_BOX_W}
                 height={4}
                 rx={2}
-                fill={pos.obj.appColor}
+                fill="var(--color-accent-primary)"
                 opacity={0.6}
                 clipPath={`inset(0 0 0 0 round 8px 8px 0 0)`}
               />
@@ -428,7 +428,7 @@ function DataModelDiagram({
                 x={pos.x + DIAGRAM_BOX_W - 12}
                 y={pos.y + 48}
                 fontSize={10}
-                fill={pos.obj.appColor}
+                fill="var(--color-text-secondary)"
                 fontFamily="var(--font-family)"
                 textAnchor="end"
                 fontWeight={500}
@@ -615,8 +615,8 @@ function ObjectListView({ onSelect }: { onSelect: (appId: string, objectId: stri
                       width: 28,
                       height: 28,
                       borderRadius: 'var(--radius-md)',
-                      background: `color-mix(in srgb, ${obj.appColor} 12%, transparent)`,
-                      color: obj.appColor,
+                      background: 'var(--color-bg-tertiary)',
+                      color: 'var(--color-text-secondary)',
                       flexShrink: 0,
                     }}
                   >
@@ -656,7 +656,7 @@ function ObjectListView({ onSelect }: { onSelect: (appId: string, objectId: stri
 
                 {/* App badge */}
                 <div style={{ display: 'flex', justifyContent: 'center' }}>
-                  <Chip color={obj.appColor} height={20}>
+                  <Chip height={20}>
                     {obj.appName}
                   </Chip>
                 </div>

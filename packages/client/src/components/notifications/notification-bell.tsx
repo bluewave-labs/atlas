@@ -12,7 +12,6 @@ import {
   useDismissNotification,
 } from '../../hooks/use-notifications';
 import { formatRelativeDate } from '../../lib/format';
-import { getAppColor } from '../../lib/app-colors';
 import { appRegistry } from '../../config/app-registry';
 
 function getRouteForSource(sourceType: string | null): string | null {
@@ -170,7 +169,7 @@ export function NotificationBell() {
             <div style={{ padding: '4px 0' }}>
               {notifications.map((n) => {
                 const isHovered = hoveredId === n.id;
-                const appColor = n.sourceType ? getAppColor(n.sourceType) : 'var(--color-text-tertiary)';
+                const appColor = 'var(--color-accent-primary)';
 
                 return (
                   <div

@@ -446,13 +446,13 @@ export function OrgMemberEditPage() {
                       alignItems: 'start',
                       padding: 'var(--spacing-sm) var(--spacing-md)',
                       borderBottom: isLast ? 'none' : '1px solid var(--color-border-secondary)',
-                      background: hasAccess ? `color-mix(in srgb, ${app.color} 4%, transparent)` : 'transparent',
+                      background: hasAccess ? 'var(--color-accent-subtle)' : 'transparent',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
                       <div style={{
                         width: 22, height: 22, borderRadius: 'var(--radius-sm)',
-                        background: hasAccess ? app.color : 'var(--color-bg-tertiary)',
+                        background: hasAccess ? 'var(--color-accent-primary)' : 'var(--color-bg-tertiary)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                         transition: 'background 0.15s',
                       }}>

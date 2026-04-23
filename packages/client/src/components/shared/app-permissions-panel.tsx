@@ -233,7 +233,7 @@ export function AppPermissionsPanel({ appId, appName, appColor }: AppPermissions
         gap: 'var(--spacing-sm)',
         marginBottom: 'var(--spacing-sm)',
       }}>
-        <Shield size={18} style={{ color: appColor }} />
+        <Shield size={18} style={{ color: 'var(--color-text-tertiary)' }} />
         <span style={{
           fontSize: 'var(--font-size-lg)',
           fontWeight: 'var(--font-weight-semibold)' as CSSProperties['fontWeight'],

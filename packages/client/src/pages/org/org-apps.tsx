@@ -180,7 +180,7 @@ function AppCard({
         gap: 'var(--spacing-md)',
         padding: 'var(--spacing-lg)',
         background: hovered ? 'var(--color-surface-hover)' : 'var(--color-bg-primary)',
-        border: `1px solid ${isEnabled ? app.color + '44' : 'var(--color-border-primary)'}`,
+        border: `1px solid ${isEnabled ? 'var(--color-accent-primary)' : 'var(--color-border-primary)'}`,
         borderRadius: 'var(--radius-lg)',
         transition: 'background 0.15s, border-color 0.15s',
       }}
@@ -217,10 +217,10 @@ function AppCard({
             return (
               <div style={{
                 width: 36, height: 36, borderRadius: 'var(--radius-md)',
-                background: app.color, display: 'flex', alignItems: 'center',
+                background: 'var(--color-bg-tertiary)', display: 'flex', alignItems: 'center',
                 justifyContent: 'center', flexShrink: 0,
               }}>
-                <Icon size={18} color="#fff" />
+                <Icon size={18} color="var(--color-text-secondary)" />
               </div>
             );
           })()}
