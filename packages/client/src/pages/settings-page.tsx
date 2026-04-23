@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import { useNavigate, useParams, Navigate } from 'react-router-dom';
-import { getSettingsCategories } from '../config/settings-registry';
+import { getSettingsCategories, type SettingsCategory, type SettingsPanel } from '../config/settings-registry';
 import { appRegistry } from '../apps';
 import { SettingsSidebar } from '../components/settings/settings-sidebar';
 import {
@@ -33,48 +33,15 @@ function useVisibleCategories() {
   }, [isAdmin, isOwner]);
 }
 
-export function SettingsPage() {
+interface PanelViewProps {
+  categories: SettingsCategory[];
+  category: SettingsCategory;
+  panel: SettingsPanel;
+}
+
+function SettingsPanelView({ categories, category, panel }: PanelViewProps) {
   const navigate = useNavigate();
-  const params = useParams();
-  const splat = params['*'] ?? '';
-  const segs = splat.split('/').filter(Boolean);
-  const categories = useVisibleCategories();
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Bare /settings → last visited or platform/general
-  if (segs.length === 0) {
-    const last = readLastVisited();
-    if (last && last.startsWith('/settings/')) {
-      return <Navigate to={last} replace />;
-    }
-    const first = categories.find((c) => c.id === 'global')?.panels[0];
-    if (first) {
-      return <Navigate to={urlForPanel('global', first.id)} replace />;
-    }
-    return null;
-  }
-
-  // /settings/platform or /settings/apps/:appId — redirect to first panel in scope
-  if (segs.length === 1 || (segs[0] === 'apps' && segs.length === 2)) {
-    const first = firstPanelOfUrlScope(segs, categories);
-    if (first) {
-      return <Navigate to={urlForPanel(first.categoryId, first.panelId)} replace />;
-    }
-    return <Navigate to="/settings" replace />;
-  }
-
-  const resolved = fromUrlSegments(segs);
-  if (!resolved) {
-    return <Navigate to="/settings" replace />;
-  }
-
-  const category = categories.find((c) => c.id === resolved.categoryId);
-  const panel = category?.panels.find((p) => p.id === resolved.panelId);
-
-  if (!category || !panel) {
-    return <Navigate to="/settings" replace />;
-  }
-
   const currentPath = urlForPanel(category.id, panel.id);
 
   useEffect(() => {
@@ -147,4 +114,47 @@ export function SettingsPage() {
       </main>
     </div>
   );
+}
+
+export function SettingsPage() {
+  const params = useParams();
+  const splat = params['*'] ?? '';
+  const segs = splat.split('/').filter(Boolean);
+  const categories = useVisibleCategories();
+
+  // Bare /settings → last visited or platform/general
+  if (segs.length === 0) {
+    const last = readLastVisited();
+    if (last && last.startsWith('/settings/')) {
+      return <Navigate to={last} replace />;
+    }
+    const first = categories.find((c) => c.id === 'global')?.panels[0];
+    if (first) {
+      return <Navigate to={urlForPanel('global', first.id)} replace />;
+    }
+    return null;
+  }
+
+  // /settings/platform or /settings/apps/:appId — redirect to first panel in scope
+  if (segs.length === 1 || (segs[0] === 'apps' && segs.length === 2)) {
+    const first = firstPanelOfUrlScope(segs, categories);
+    if (first) {
+      return <Navigate to={urlForPanel(first.categoryId, first.panelId)} replace />;
+    }
+    return <Navigate to="/settings" replace />;
+  }
+
+  const resolved = fromUrlSegments(segs);
+  if (!resolved) {
+    return <Navigate to="/settings" replace />;
+  }
+
+  const category = categories.find((c) => c.id === resolved.categoryId);
+  const panel = category?.panels.find((p) => p.id === resolved.panelId);
+
+  if (!category || !panel) {
+    return <Navigate to="/settings" replace />;
+  }
+
+  return <SettingsPanelView categories={categories} category={category} panel={panel} />;
 }
