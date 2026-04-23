@@ -22,6 +22,7 @@ import { AllUsersView } from './components/all-users-view';
 import { formatBytes } from '../../lib/format';
 import { api } from '../../lib/api-client';
 import { queryKeys } from '../../config/query-keys';
+import { TopBar } from '../../components/layout/top-bar';
 
 // ─── Gauge Color Logic ─────────────────────────────────────────────
 
@@ -182,7 +183,7 @@ export function SystemPage() {
   const navigate = useNavigate();
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 48px)', marginLeft: 56, marginTop: 48 }}>
+    <div style={{ display: 'flex', height: '100vh', marginLeft: 56 }}>
       <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; }
@@ -245,6 +246,8 @@ export function SystemPage() {
         )}
       </AppSidebar>
 
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+      <TopBar />
       <ContentArea title={t('system.title')}>
         <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
         {activeView === 'overview' && (
@@ -274,6 +277,7 @@ export function SystemPage() {
         {activeView === 'users' && isSuperAdmin && <AllUsersView />}
         </div>
       </ContentArea>
+      </div>
     </div>
   );
 }

@@ -28,6 +28,7 @@ import { SmartButtonBar } from '../../components/shared/SmartButtonBar';
 import { useAuthStore } from '../../stores/auth-store';
 import { FeatureEmptyState } from '../../components/ui/feature-empty-state';
 import { ContentArea } from '../../components/ui/content-area';
+import { TopBar as GlobalTopBar } from '../../components/layout/top-bar';
 import { TopBar } from './components/top-bar';
 import { DocumentView } from './components/document-view';
 import { TemplateGallery } from './components/template-gallery';
@@ -224,12 +225,11 @@ export function DocsPage() {
     <div
       style={{
         display: 'flex',
-        height: 'calc(100vh - 48px)',
+        height: '100vh',
         width: '100%',
         background: 'var(--color-bg-primary)',
         fontFamily: 'var(--font-family)',
         marginLeft: 56,
-        marginTop: 48,
       }}
     >
       <DocSidebar
@@ -239,6 +239,8 @@ export function DocsPage() {
         onImport={() => importInputRef.current?.click()}
       />
 
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+      <GlobalTopBar />
       <ContentArea
         headerSlot={
           doc && !showTemplates ? (
@@ -297,6 +299,7 @@ export function DocsPage() {
           )}
         </div>
       </ContentArea>
+      </div>
 
       {/* Version history panel */}
       {showVersionHistory && selectedId && (

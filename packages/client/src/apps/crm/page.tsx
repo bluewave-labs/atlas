@@ -40,6 +40,7 @@ import { Select } from '../../components/ui/select';
 import { IconButton } from '../../components/ui/icon-button';
 import { ConfirmDialog } from '../../components/ui/confirm-dialog';
 import { ContentArea } from '../../components/ui/content-area';
+import { TopBar } from '../../components/layout/top-bar';
 import '../../styles/crm.css';
 
 // ─── Main CRM Page ─────────────────────────────────────────────────
@@ -279,7 +280,7 @@ export function CrmPage() {
   );
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 48px)', overflow: 'hidden', marginLeft: 56, marginTop: 48 }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', marginLeft: 56 }}>
       <CrmSidebar
         activeView={activeView}
         setActiveView={setActiveView}
@@ -291,6 +292,8 @@ export function CrmPage() {
         pendingViewRef={pendingViewRef}
       />
 
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+      <TopBar />
       <ContentArea
         title={sectionTitle ?? ''}
         actions={
@@ -361,6 +364,7 @@ export function CrmPage() {
           canEditCompanies={canAccess(myRole, 'companies', 'update')}
         />
       </ContentArea>
+      </div>
 
       {/* Floating bulk action bar */}
       {selectedIds.size > 0 && (activeView === 'deals' || activeView === 'contacts' || activeView === 'companies') && (

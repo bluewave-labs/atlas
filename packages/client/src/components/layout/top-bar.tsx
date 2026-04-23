@@ -9,7 +9,6 @@ import { useBreadcrumbValue, type BreadcrumbItem } from '../../lib/breadcrumb-co
 import { NotificationBell } from '../notifications/notification-bell';
 import { AccountMenu } from './account-menu';
 
-const RAIL_WIDTH = 56;
 const TOP_BAR_HEIGHT = 48;
 
 function formatViewId(viewId: string): string {
@@ -60,11 +59,8 @@ export function TopBar() {
     <header
       aria-label="Top bar"
       style={{
-        position: 'fixed',
-        top: 0,
-        left: RAIL_WIDTH,
-        right: 0,
         height: TOP_BAR_HEIGHT,
+        flexShrink: 0,
         background: 'var(--color-bg-elevated)',
         borderBottom: '1px solid var(--color-border-primary)',
         display: 'flex',

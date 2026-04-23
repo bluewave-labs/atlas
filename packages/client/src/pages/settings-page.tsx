@@ -12,6 +12,7 @@ import {
 } from '../config/settings-url';
 import { useAuthStore } from '../stores/auth-store';
 import { isTenantAdmin, isTenantOwner } from '@atlas-platform/shared';
+import { TopBar } from '../components/layout/top-bar';
 
 function useVisibleCategories() {
   const tenantRole = useAuthStore((s) => s.tenantRole);
@@ -89,10 +90,9 @@ function SettingsPanelView({ categories, category, panel }: PanelViewProps) {
 
   const shellStyle: CSSProperties = {
     display: 'flex',
-    height: 'calc(100vh - 48px)',
+    height: '100vh',
     overflow: 'hidden',
     marginLeft: 56,
-    marginTop: 48,
   };
 
   return (
@@ -102,17 +102,20 @@ function SettingsPanelView({ categories, category, panel }: PanelViewProps) {
         activeCategoryId={category.id}
         activePanelId={panel.id}
       />
-      <main
-        ref={scrollRef}
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: 'var(--spacing-2xl)',
-          background: 'var(--color-bg-primary)',
-        }}
-      >
-        <PanelComponent />
-      </main>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+        <TopBar />
+        <main
+          ref={scrollRef}
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: 'var(--spacing-2xl)',
+            background: 'var(--color-bg-primary)',
+          }}
+        >
+          <PanelComponent />
+        </main>
+      </div>
     </div>
   );
 }

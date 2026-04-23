@@ -33,6 +33,7 @@ import { NewFolderModal, MoveModal, TagModal, ShareModal, GoogleDriveModal } fro
 import { getSortOptions, getTypeFilterOptions, getModifiedFilterOptions, parseTag } from './lib/helpers';
 import { useDrivePage } from './use-drive-page';
 import { useBatchTrash, useBatchMoveDriveItems, useRestoreDriveItem, usePermanentDeleteDriveItem } from './hooks';
+import { TopBar } from '../../components/layout/top-bar';
 
 export function DrivePage() {
   const { t } = useTranslation();
@@ -105,7 +106,7 @@ export function DrivePage() {
   };
 
   return (
-    <div className="drive-page" style={{ marginLeft: 56, marginTop: 48 }}>
+    <div className="drive-page" style={{ marginLeft: 56 }}>
       <input ref={d.fileInputRef} type="file" multiple style={{ display: 'none' }} onChange={d.handleFileInputChange} />
 
       {/* Sidebar */}
@@ -180,7 +181,9 @@ export function DrivePage() {
         </SidebarSection>
       </AppSidebar>
 
-      {/* Main content */}
+      {/* Main content column */}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+      <TopBar />
       <ContentArea
         headerSlot={
           <div className="drive-main-header">
@@ -257,6 +260,7 @@ export function DrivePage() {
           )}
         </div>
       </ContentArea>
+      </div>
 
       {/* Preview panel */}
       {d.previewItem && (

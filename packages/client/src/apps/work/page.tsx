@@ -1,4 +1,5 @@
 import { useSearchParams } from 'react-router-dom';
+import { TopBar } from '../../components/layout/top-bar';
 import { WorkSidebar } from './components/work-sidebar';
 import { MyTasksView } from './components/task-views/my-tasks-view';
 import { ProjectDetailPage } from './components/project-detail-page';
@@ -20,19 +21,22 @@ export function WorkPage() {
   const view = parseView(sp.get('view'));
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 48px)', overflow: 'hidden', marginLeft: 56, marginTop: 48 }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', marginLeft: 56 }}>
       <WorkSidebar />
-      {projectId ? (
-        <ProjectDetailPage projectId={projectId} />
-      ) : view === 'board' ? (
-        <ProjectsBoardView />
-      ) : view === 'projects' ? (
-        <ProjectsListView />
-      ) : view === 'my-tasks' ? (
-        <MyTasksView />
-      ) : (
-        <WorkDashboard />
-      )}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+        <TopBar />
+        {projectId ? (
+          <ProjectDetailPage projectId={projectId} />
+        ) : view === 'board' ? (
+          <ProjectsBoardView />
+        ) : view === 'projects' ? (
+          <ProjectsListView />
+        ) : view === 'my-tasks' ? (
+          <MyTasksView />
+        ) : (
+          <WorkDashboard />
+        )}
+      </div>
     </div>
   );
 }

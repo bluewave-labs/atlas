@@ -11,6 +11,7 @@ import { useMyTenants } from '../../hooks/use-platform';
 import { ROUTES } from '../../config/routes';
 import { AppSidebar, SidebarSection, SidebarItem } from '../../components/layout/app-sidebar';
 import { ContentArea } from '../../components/ui/content-area';
+import { TopBar } from '../../components/layout/top-bar';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -59,7 +60,7 @@ export function OrgLayout() {
 
   if (tenantsLoading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 48px)', marginTop: 48, fontFamily: 'var(--font-family)', color: 'var(--color-text-secondary)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', marginLeft: 56, fontFamily: 'var(--font-family)', color: 'var(--color-text-secondary)' }}>
         {t('org.loading')}
       </div>
     );
@@ -69,7 +70,7 @@ export function OrgLayout() {
     return (
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: 'calc(100vh - 48px)', marginTop: 48, fontFamily: 'var(--font-family)',
+        height: '100vh', marginLeft: 56, fontFamily: 'var(--font-family)',
         color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)',
       }}>
         {t('org.notInOrg')}
@@ -82,11 +83,10 @@ export function OrgLayout() {
   return (
     <div style={{
       display: 'flex',
-      height: 'calc(100vh - 48px)',
+      height: '100vh',
       overflow: 'hidden',
       fontFamily: 'var(--font-family)',
       marginLeft: 56,
-      marginTop: 48,
       background: 'var(--color-bg-primary)',
       color: 'var(--color-text-primary)',
     }}>
@@ -115,17 +115,20 @@ export function OrgLayout() {
         </SidebarSection>
       </AppSidebar>
 
-      {/* Content area */}
-      <ContentArea
-        breadcrumbs={[
-          { label: t('org.nav.organization') },
-          { label: pageTitle },
-        ]}
-      >
-        <main style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-xl)' }}>
-          <Outlet />
-        </main>
-      </ContentArea>
+      {/* Content column */}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+        <TopBar />
+        <ContentArea
+          breadcrumbs={[
+            { label: t('org.nav.organization') },
+            { label: pageTitle },
+          ]}
+        >
+          <main style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-xl)' }}>
+            <Outlet />
+          </main>
+        </ContentArea>
+      </div>
     </div>
   );
 }

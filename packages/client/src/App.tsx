@@ -87,24 +87,6 @@ function AppRailWrapper() {
   return <AppRail />;
 }
 
-function TopBarWrapper() {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const location = useLocation();
-
-  if (!isAuthenticated) return null;
-
-  const hiddenPaths = ['/', '/login', '/register', '/setup', '/onboarding', '/forgot-password'];
-  const path = location.pathname;
-  if (hiddenPaths.includes(path)) return null;
-  if (path.startsWith('/invitation/')) return null;
-  if (path.startsWith('/reset-password/')) return null;
-  if (path.startsWith('/sign/') || path.startsWith('/proposal/')) return null;
-  if (path.startsWith('/drive/upload/')) return null;
-  if (path.startsWith('/draw')) return null;
-
-  return <TopBar />;
-}
-
 function ShortcutHelpWrapper() {
   const open = useUIStore((s) => s.shortcutHelpOpen);
   const toggle = useUIStore((s) => s.toggleShortcutHelp);
@@ -190,7 +172,6 @@ export function App() {
                 <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
               </Routes>
               <AppRailWrapper />
-              <TopBarWrapper />
               <ShortcutHelpWrapper />
               <CommandPalette />
               <ConflictDialog />

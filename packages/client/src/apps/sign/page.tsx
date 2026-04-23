@@ -27,6 +27,7 @@ import { useAuthStore } from '../../stores/auth-store';
 import { useNavigate } from 'react-router-dom';
 import { urlForCategory } from '../../config/settings-url';
 import { Settings2 } from 'lucide-react';
+import { TopBar } from '../../components/layout/top-bar';
 import '../../styles/sign.css';
 
 export function SignPage() {
@@ -37,7 +38,7 @@ export function SignPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="sign-page" style={{ marginLeft: 56, marginTop: 48 }}>
+    <div className="sign-page" style={{ marginLeft: 56 }}>
       {/* Hidden file input */}
       <input
         ref={s.fileInputRef}
@@ -121,7 +122,9 @@ export function SignPage() {
         </SidebarSection>
       </AppSidebar>
 
-      {/* Main content */}
+      {/* Main content column */}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+      <TopBar />
       <ContentArea
         title={
           s.view === 'templates' ? t('sign.templates.title')
@@ -235,6 +238,7 @@ export function SignPage() {
           />
         )}
       </ContentArea>
+      </div>
 
       {/* Signature modal */}
       <SignatureModal

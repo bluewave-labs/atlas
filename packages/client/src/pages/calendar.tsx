@@ -23,6 +23,7 @@ import { IconButton } from '../components/ui/icon-button';
 import { Input } from '../components/ui/input';
 import { Select } from '../components/ui/select';
 import { ContentArea } from '../components/ui/content-area';
+import { TopBar } from '../components/layout/top-bar';
 import { useCalendars, useCalendarEvents, useAggregatedEvents, useSyncCalendar, useToggleCalendar, useCreateCalendar, useUpdateCalendarEvent, useCreateCalendarEvent, useDeleteCalendarEvent, useSearchCalendarEvents } from '../hooks/use-calendar';
 import type { AggregatedEvent } from '../hooks/use-calendar';
 import type { CalendarEvent } from '@atlas-platform/shared';
@@ -1081,15 +1082,23 @@ export function CalendarPage() {
     <div
       style={{
         display: 'flex',
-        flexDirection: 'row',
-        height: 'calc(100vh - 48px)',
+        flexDirection: 'column',
+        height: '100vh',
         background: 'var(--color-bg-primary)',
         fontFamily: 'var(--font-family)',
         overflow: 'hidden',
         marginLeft: 56,
-        marginTop: 48,
       }}
     >
+      <TopBar />
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          flex: 1,
+          overflow: 'hidden',
+        }}
+      >
         {/* Left sidebar */}
         {showSidebar && (
         <div
@@ -1474,6 +1483,7 @@ export function CalendarPage() {
           to { transform: rotate(360deg); }
         }
       `}</style>
+      </div>
     </div>
   );
 }

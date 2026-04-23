@@ -25,6 +25,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { IconButton } from '../../components/ui/icon-button';
 import { ContentArea } from '../../components/ui/content-area';
+import { TopBar } from '../../components/layout/top-bar';
 import { urlForCategory } from '../../config/settings-url';
 import { useAuthStore } from '../../stores/auth-store';
 import { useMyAppPermission, useAppActions } from '../../hooks/use-app-permissions';
@@ -247,7 +248,7 @@ export function HrPage() {
       : undefined;
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 48px)', overflow: 'hidden', marginLeft: 56, marginTop: 48 }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', marginLeft: 56 }}>
       {/* Sidebar */}
       <AppSidebar
         storageKey="atlas_hr_sidebar"
@@ -361,7 +362,9 @@ export function HrPage() {
         )}
       </AppSidebar>
 
-      {/* Main content */}
+      {/* Main content column */}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+      <TopBar />
       {activeNav !== 'employee-detail' && activeNav !== 'my-profile' && <ContentArea
         title={sectionTitle}
         actions={
@@ -475,6 +478,7 @@ export function HrPage() {
           {t('hr.sidebar.noProfile')}
         </div>
       )}
+      </div>
 
       {/* Modals */}
       <CreateEmployeeModal open={showCreateEmployee} onClose={() => setShowCreateEmployee(false)} departments={departments} />

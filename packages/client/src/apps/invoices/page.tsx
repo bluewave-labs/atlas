@@ -12,6 +12,7 @@ import { RecurringInvoicesList } from './components/recurring-invoices-list';
 import { InvoiceBuilderModal } from '../../components/shared/invoice-builder-modal';
 import { PdfImportModal } from '../../components/shared/pdf-import-modal';
 import { ContentArea } from '../../components/ui/content-area';
+import { TopBar } from '../../components/layout/top-bar';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { IconButton } from '../../components/ui/icon-button';
@@ -93,9 +94,11 @@ export function InvoicesPage() {
         : t('invoices.sidebar.invoices');
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 48px)', overflow: 'hidden', marginLeft: 56, marginTop: 48 }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', marginLeft: 56 }}>
       <InvoicesSidebar activeView={activeView} setActiveView={setActiveView} />
 
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+      <TopBar />
       <ContentArea
         title={sectionTitle}
         actions={
@@ -176,6 +179,7 @@ export function InvoicesPage() {
           </>
         )}
       </ContentArea>
+      </div>
 
       {/* Builder modal */}
       <InvoiceBuilderModal
