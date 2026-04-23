@@ -142,6 +142,25 @@ export async function createSigningToken(
   customSubject?: string,
   customMessage?: string,
 ) {
+  // Reject duplicate signingOrder > 0 — parallel wave (order=0) is still allowed for multiple signers
+  if (signingOrder > 0) {
+    const [existing] = await db
+      .select({ id: signingTokens.id })
+      .from(signingTokens)
+      .where(
+        and(
+          eq(signingTokens.documentId, documentId),
+          sql`${signingTokens.signingOrder} = ${signingOrder}`,
+          sql`${signingTokens.role} != 'cc'`,
+        ),
+      )
+      .limit(1);
+
+    if (existing) {
+      throw new Error('Signing order must be unique per document when > 0');
+    }
+  }
+
   const now = new Date();
   const expiresAt = new Date(now.getTime() + expiresInDays * 24 * 60 * 60 * 1000);
   const token = crypto.randomUUID();

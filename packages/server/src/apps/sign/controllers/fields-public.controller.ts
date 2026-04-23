@@ -203,6 +203,11 @@ export async function createSigningToken(req: Request, res: Response) {
 
     res.json({ success: true, data: token });
   } catch (error) {
+    const msg = error instanceof Error ? error.message : '';
+    if (msg.includes('Signing order must be unique')) {
+      res.status(400).json({ success: false, error: msg });
+      return;
+    }
     logger.error({ error }, 'Failed to create signing token');
     res.status(500).json({ success: false, error: 'Failed to create signing token' });
   }
