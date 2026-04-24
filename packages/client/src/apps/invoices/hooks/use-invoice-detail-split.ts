@@ -2,8 +2,8 @@ import { useCallback, useRef, useState } from 'react';
 
 const STORAGE_KEY = 'atlas_invoice_detail_split';
 const DEFAULT_PDF_PERCENT = 60;
-const MIN_PDF_PERCENT = 50;
-const MAX_PDF_PERCENT = 70;
+const MIN_PDF_PERCENT = 30;
+const MAX_PDF_PERCENT = 80;
 
 function clamp(value: number): number {
   return Math.min(MAX_PDF_PERCENT, Math.max(MIN_PDF_PERCENT, value));
@@ -22,7 +22,7 @@ function read(): number {
 }
 
 /**
- * Returns the PDF pane's percentage of the horizontal split (50-70).
+ * Returns the PDF pane's percentage of the horizontal split (30-80).
  * `setPdfPercent` is cheap (state only) — safe to call on every mousemove.
  * `persistPdfPercent` writes to localStorage; call it on mouseup / key commit.
  */

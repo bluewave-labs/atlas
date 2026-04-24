@@ -176,22 +176,32 @@ export function AllUsersView() {
       hideable: false,
       resizable: false,
       align: 'right',
-      render: (u) => (
-        <div style={{ whiteSpace: 'nowrap' }}>
-          <Button
-            variant={u.isSuperAdmin ? 'danger' : 'secondary'}
-            size="sm"
-            disabled={u.id === currentUserId || toggleSuperAdmin.isPending}
-            onClick={() => toggleSuperAdmin.mutate({ userId: u.id, isSuperAdmin: !u.isSuperAdmin })}
-            title={u.id === currentUserId ? 'You cannot change your own super-admin status' : undefined}
-          >
-            {u.isSuperAdmin
-              ? <ShieldMinus size={14} style={{ marginRight: 6 }} />
-              : <ShieldPlus size={14} style={{ marginRight: 6 }} />}
-            {u.isSuperAdmin ? 'Revoke super-admin' : 'Grant super-admin'}
-          </Button>
-        </div>
-      ),
+      render: (u) => {
+        // Don't render any button for the current user — preventing
+        // self-revocation (they'd lock themselves out of /system).
+        if (u.id === currentUserId) {
+          return (
+            <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
+              You
+            </span>
+          );
+        }
+        return (
+          <div style={{ whiteSpace: 'nowrap' }}>
+            <Button
+              variant={u.isSuperAdmin ? 'danger' : 'primary'}
+              size="sm"
+              disabled={toggleSuperAdmin.isPending}
+              onClick={() => toggleSuperAdmin.mutate({ userId: u.id, isSuperAdmin: !u.isSuperAdmin })}
+            >
+              {u.isSuperAdmin
+                ? <ShieldMinus size={14} style={{ marginRight: 6 }} />
+                : <ShieldPlus size={14} style={{ marginRight: 6 }} />}
+              {u.isSuperAdmin ? 'Revoke super-admin' : 'Grant super-admin'}
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 

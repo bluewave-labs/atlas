@@ -182,7 +182,7 @@ function QuickTimeLog({ projects }: { projects: WorkProject[] }) {
             ...projects.map(p => ({ value: p.id, label: p.name })),
           ]}
           size="sm"
-          width={200}
+          width={260}
         />
         <Input
           type="number"
@@ -191,7 +191,7 @@ function QuickTimeLog({ projects }: { projects: WorkProject[] }) {
           onChange={(e) => setHours(e.target.value)}
           placeholder="0"
           size="sm"
-          style={{ width: 100 }}
+          style={{ width: 80, textAlign: 'right' }}
           aria-label={t('projects.timeTracking.hours')}
         />
         <Input
@@ -199,7 +199,7 @@ function QuickTimeLog({ projects }: { projects: WorkProject[] }) {
           onChange={(e) => setDescription(e.target.value)}
           placeholder={t('projects.dashboard.whatDidYouWorkOn')}
           size="sm"
-          style={{ flex: 1 }}
+          style={{ flex: 1, textAlign: 'left' }}
           aria-label={t('projects.dashboard.whatDidYouWorkOn')}
         />
         <Button

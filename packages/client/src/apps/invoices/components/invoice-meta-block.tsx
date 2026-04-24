@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Invoice } from '@atlas-platform/shared';
+import { type Invoice, CURRENCY_CODE_OPTIONS } from '@atlas-platform/shared';
 import { Input } from '../../../components/ui/input';
 import { Select } from '../../../components/ui/select';
 import { useCompanies } from '../../crm/hooks';
@@ -83,10 +83,7 @@ export function InvoiceMetaBlock({ invoice, onPatch }: Props) {
         size="sm"
         value={invoice.currency}
         onChange={(v) => { if (v && v !== invoice.currency) onPatch({ currency: v }); }}
-        options={[
-          { value: 'USD', label: 'USD' }, { value: 'EUR', label: 'EUR' },
-          { value: 'GBP', label: 'GBP' }, { value: 'TRY', label: 'TRY' },
-        ]}
+        options={[...CURRENCY_CODE_OPTIONS]}
       />
 
       <Label>{t('invoices.detail.metaProject')}</Label>

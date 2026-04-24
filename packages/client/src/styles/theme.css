@@ -17,9 +17,9 @@
   --color-border-primary: #e6e7ea;
   --color-border-secondary: #ebedf1;
   --color-border-focus: #5e6ad2;
-  --color-accent-primary: #5e6ad2;
-  --color-accent-primary-hover: #4a55b8;
-  --color-accent-primary-active: #3f48a3;
+  --color-accent-primary: #2f6feb;
+  --color-accent-primary-hover: #2258cc;
+  --color-accent-primary-active: #1a4bb0;
   --color-accent-subtle: color-mix(in srgb, #5e6ad2 10%, transparent);
   --color-accent-subtle-hover: color-mix(in srgb, #5e6ad2 16%, transparent);
   --color-success: #10b981;

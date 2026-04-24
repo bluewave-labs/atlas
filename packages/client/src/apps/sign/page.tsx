@@ -54,7 +54,7 @@ export function SignPage() {
         title={t('sign.title')}
         footer={
           <SidebarItem
-            label={t('sign.settings', 'Settings')}
+            label={t('sign.sidebar.settings', 'Settings')}
             icon={<Settings2 size={14} />}
             onClick={() => navigate(urlForCategory('sign'))}
           />

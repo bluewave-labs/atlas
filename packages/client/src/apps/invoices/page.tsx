@@ -43,7 +43,10 @@ export function InvoicesPage() {
   // Permissions
   const { canCreate } = useAppActions('invoices');
 
-  // Auto-open create modal from quick action URL param
+  // Auto-open create modal from quick action URL param. Runs on every
+  // searchParams change because the user can click "New invoice" from
+  // the dashboard sub-view which only changes the query string, not
+  // the route, so the page doesn't remount.
   useEffect(() => {
     if (searchParams.get('action') === 'create') {
       setShowBuilder(true);
@@ -51,7 +54,7 @@ export function InvoicesPage() {
       next.delete('action');
       setSearchParams(next, { replace: true });
     }
-  }, []);
+  }, [searchParams, setSearchParams]);
 
   const sectionTitle = activeView === 'dashboard'
     ? t('invoices.sidebar.dashboard')

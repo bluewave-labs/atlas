@@ -90,10 +90,38 @@
   outline: none;
 }
 
-/* The autofocused search input inside SettingsSelect sits borderless
-   inside a rounded panel — the 3px accent ring from the global rule
-   above reads as a misplaced dark rectangle around it. Suppress it. */
-.settings-select-search-input:focus-visible {
+/* Autofocused borderless search inputs inside modals / popovers —
+   the 3px accent ring from the global rule reads as a misplaced dark
+   rectangle around the field. Suppress it; the parent container has
+   its own border. */
+.settings-select-search-input:focus-visible,
+.bare-search-input:focus-visible {
   box-shadow: none;
   border-color: transparent;
+}
+
+/* Slim, neat scrollbars across the app. WebKit-only; Firefox uses
+   scrollbar-width: thin which we set on the same selectors. The default
+   macOS overlay scrollbar is fine, but on Windows / Linux it's wide and
+   chunky against our thin sidebars. */
+:where(*) {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-text-tertiary) 35%, transparent) transparent;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-text-tertiary) 30%, transparent);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-text-tertiary) 55%, transparent);
+  background-clip: padding-box;
 }

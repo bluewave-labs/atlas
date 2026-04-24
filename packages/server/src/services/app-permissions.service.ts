@@ -1,5 +1,5 @@
 import { db } from '../config/database';
-import { appPermissions, appPermissionAudit, tenantMembers, accounts } from '../db/schema';
+import { appPermissions, appPermissionAudit, tenantMembers, accounts, users } from '../db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 import { canAccess, type AppRole, type AppOperation, type AppRecordAccess } from '@atlas-platform/shared';
@@ -19,6 +19,17 @@ export async function getAppPermission(
   userId: string,
   appId: string,
 ): Promise<ResolvedAppPermission> {
+  // 0. Instance-level super-admin bypass. Super-admins can act on any tenant
+  // with full admin privileges even if their own tenant_members row says
+  // otherwise; this keeps the `/system` operator flow unblocked.
+  const [userRow] = await db.select({ isSuperAdmin: users.isSuperAdmin })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (userRow?.isSuperAdmin) {
+    return { role: 'admin', recordAccess: 'all' };
+  }
+
   // 1. Check explicit permission
   if (tenantId) {
     const [perm] = await db.select().from(appPermissions)

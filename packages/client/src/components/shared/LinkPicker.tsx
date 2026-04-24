@@ -54,6 +54,7 @@ export function LinkPicker({ open, onOpenChange, sourceAppId, sourceRecordId }: 
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search docs, tasks, drawings, tables..."
               autoFocus
+              className="bare-search-input"
               style={{
                 flex: 1,
                 border: 'none',

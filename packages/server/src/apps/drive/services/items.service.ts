@@ -400,7 +400,14 @@ export async function getStorageUsage(userId: string) {
     .from(driveItems)
     .where(and(eq(driveItems.userId, userId), eq(driveItems.type, 'file'), eq(driveItems.isArchived, false)));
 
-  return { totalBytes: result?.total ?? 0, fileCount: result?.fileCount ?? 0 };
+  // Postgres returns SUM(integer) as a string (numeric type). If we leave it
+  // as-is, `totalBytes + incomingBytes` becomes a string concatenation in
+  // the quota check ("151000" + 56000000 = "15100056000000") and trips the
+  // check for any tiny upload. Coerce to number explicitly.
+  return {
+    totalBytes: Number(result?.total ?? 0),
+    fileCount: Number(result?.fileCount ?? 0),
+  };
 }
 
 // ─── Widget summary (lightweight) ──────────────────────────────────
