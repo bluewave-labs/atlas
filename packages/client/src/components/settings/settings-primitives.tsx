@@ -314,7 +314,7 @@ export function SettingsSelect<T extends string | number>({
   const current = options.find((o) => o.value === value);
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', display: 'inline-block' }}>
       <Button
         variant="secondary"
         size="sm"
@@ -324,6 +324,7 @@ export function SettingsSelect<T extends string | number>({
         }}
         style={{
           minWidth: 140,
+          width: 'auto',
           justifyContent: 'space-between',
           padding: '0 var(--spacing-sm) 0 var(--spacing-md)',
           background: 'var(--color-bg-tertiary)',
