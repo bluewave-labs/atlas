@@ -14,7 +14,7 @@ import { Badge } from '../../components/ui/badge';
 import { SettingsSection, SettingsRow, SettingsToggle } from '../../components/settings/settings-primitives';
 import { useSystemMetrics } from './hooks';
 import { useAuthStore } from '../../stores/auth-store';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { urlForCategory } from '../../config/settings-url';
 import { PermissionsView } from './components/permissions-view';
 import { TenantsView } from './components/tenants-view';
@@ -171,12 +171,20 @@ function RefreshDot() {
 
 // ─── Main Page ─────────────────────────────────────────────────────
 
-type SystemView = 'overview' | 'email' | 'permissions' | 'tenants' | 'users';
+const SYSTEM_VIEWS = ['overview', 'email', 'permissions', 'tenants', 'users'] as const;
+type SystemView = typeof SYSTEM_VIEWS[number];
 
 export function SystemPage() {
   const { t } = useTranslation();
   const { data: metrics, isLoading } = useSystemMetrics();
-  const [activeView, setActiveView] = useState<SystemView>('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlView = searchParams.get('view') as SystemView | null;
+  const activeView: SystemView = urlView && SYSTEM_VIEWS.includes(urlView) ? urlView : 'overview';
+  const setActiveView = useCallback((view: SystemView) => {
+    const next = new URLSearchParams(searchParams);
+    next.set('view', view);
+    setSearchParams(next, { replace: false });
+  }, [searchParams, setSearchParams]);
   const tenantRole = useAuthStore((s) => s.tenantRole);
   const isOwner = tenantRole === 'owner';
   const isSuperAdmin = useAuthStore((s) => s.isSuperAdmin);

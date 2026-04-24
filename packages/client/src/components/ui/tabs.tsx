@@ -38,6 +38,12 @@ export interface TabsProps {
 
 export function Tabs({ tabs, activeTab, onChange, paddingX = 'var(--spacing-xl)', style }: TabsProps) {
   const visible = tabs.filter(t => !t.hidden);
+  // If the URL / parent state points at a tab that's been filtered out
+  // (e.g. permissions revoked, feature flag flipped), fall back to the
+  // first visible tab so the user always sees *something* highlighted.
+  const effectiveActive = visible.some(t => t.id === activeTab)
+    ? activeTab
+    : visible[0]?.id ?? activeTab;
   return (
     <div
       role="tablist"
@@ -50,7 +56,7 @@ export function Tabs({ tabs, activeTab, onChange, paddingX = 'var(--spacing-xl)'
       }}
     >
       {visible.map(tab => {
-        const isActive = activeTab === tab.id;
+        const isActive = effectiveActive === tab.id;
         return (
           <button
             key={tab.id}
