@@ -72,6 +72,11 @@
   background: var(--color-surface-hover);
 }
 
+.dt-row:hover .copyable-email button,
+.copyable-email button:focus-visible {
+  opacity: 1 !important;
+}
+
 .dt-row.selected {
   background: var(--color-surface-selected);
 }

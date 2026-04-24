@@ -1,10 +1,64 @@
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ShieldPlus, ShieldMinus, Copy, Check } from 'lucide-react';
 import { api } from '../../../lib/api-client';
 import { Badge } from '../../../components/ui/badge';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { Button } from '../../../components/ui/button';
 import { DataTable, type DataTableColumn } from '../../../components/ui/data-table';
 import { useAuthStore } from '../../../stores/auth-store';
+import { useToastStore } from '../../../stores/toast-store';
+
+function CopyableEmail({ email }: { email: string | null }) {
+  const [copied, setCopied] = useState(false);
+  const addToast = useToastStore((s) => s.addToast);
+  if (!email) return <span style={{ color: 'var(--color-text-secondary)' }}>—</span>;
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(email);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = email;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    addToast({ message: 'Email copied', type: 'success', duration: 1500 });
+    setTimeout(() => setCopied(false), 1200);
+  };
+
+  return (
+    <span
+      className="copyable-email"
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--color-text-secondary)' }}
+    >
+      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{email}</span>
+      <button
+        type="button"
+        onClick={handleCopy}
+        title={copied ? 'Copied' : 'Copy email'}
+        aria-label={copied ? 'Email copied' : 'Copy email'}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          padding: 2,
+          cursor: 'pointer',
+          color: copied ? 'var(--color-success)' : 'var(--color-text-tertiary)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          opacity: copied ? 1 : 0,
+          transition: 'opacity 120ms ease',
+        }}
+      >
+        {copied ? <Check size={13} /> : <Copy size={13} />}
+      </button>
+    </span>
+  );
+}
 
 interface AdminUser {
   id: string;
@@ -58,9 +112,7 @@ export function AllUsersView() {
       key: 'email',
       label: 'Email',
       minWidth: 200,
-      render: (u) => (
-        <span style={{ color: 'var(--color-text-secondary)' }}>{u.email ?? '—'}</span>
-      ),
+      render: (u) => <CopyableEmail email={u.email} />,
       searchValue: (u) => u.email ?? '',
       compare: (a, b) => (a.email ?? '').localeCompare(b.email ?? ''),
     },
@@ -120,20 +172,25 @@ export function AllUsersView() {
     {
       key: 'actions',
       label: '',
-      width: 180,
+      width: 200,
       hideable: false,
       resizable: false,
       align: 'right',
       render: (u) => (
-        <Button
-          variant={u.isSuperAdmin ? 'danger' : 'secondary'}
-          size="sm"
-          disabled={u.id === currentUserId || toggleSuperAdmin.isPending}
-          onClick={() => toggleSuperAdmin.mutate({ userId: u.id, isSuperAdmin: !u.isSuperAdmin })}
-          title={u.id === currentUserId ? 'You cannot change your own super-admin status' : undefined}
-        >
-          {u.isSuperAdmin ? 'Revoke super-admin' : 'Grant super-admin'}
-        </Button>
+        <div style={{ whiteSpace: 'nowrap' }}>
+          <Button
+            variant={u.isSuperAdmin ? 'danger' : 'secondary'}
+            size="sm"
+            disabled={u.id === currentUserId || toggleSuperAdmin.isPending}
+            onClick={() => toggleSuperAdmin.mutate({ userId: u.id, isSuperAdmin: !u.isSuperAdmin })}
+            title={u.id === currentUserId ? 'You cannot change your own super-admin status' : undefined}
+          >
+            {u.isSuperAdmin
+              ? <ShieldMinus size={14} style={{ marginRight: 6 }} />
+              : <ShieldPlus size={14} style={{ marginRight: 6 }} />}
+            {u.isSuperAdmin ? 'Revoke super-admin' : 'Grant super-admin'}
+          </Button>
+        </div>
       ),
     },
   ];
