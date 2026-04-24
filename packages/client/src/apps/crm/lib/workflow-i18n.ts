@@ -18,10 +18,19 @@ export const I18N_KEY_PREFIX = '__i18n:';
 export function resolveMaybeKey(str: string | null | undefined, t: any): string {
   if (!str) return '';
   if (!str.startsWith(I18N_KEY_PREFIX)) return str;
-  const key = str.slice(I18N_KEY_PREFIX.length);
+  const rest = str.slice(I18N_KEY_PREFIX.length);
+  // Split off optional query string for interpolation params:
+  //   __i18n:crm.activities.bodies.stageChange?from=New&to=Won
+  const qIdx = rest.indexOf('?');
+  const key = qIdx === -1 ? rest : rest.slice(0, qIdx);
+  const params: Record<string, string> = {};
+  if (qIdx !== -1) {
+    const search = new URLSearchParams(rest.slice(qIdx + 1));
+    search.forEach((value, name) => { params[name] = value; });
+  }
   // Fall back to the raw key if the translation is missing, so missing keys
   // are visible during development instead of rendering as empty text.
-  const translated = t(key, { defaultValue: str });
+  const translated = t(key, { defaultValue: str, ...params });
   return typeof translated === 'string' ? translated : str;
 }
 
@@ -30,3 +39,4 @@ export const translateWorkflowName = resolveMaybeKey;
 export const translateWorkflowTaskTitle = resolveMaybeKey;
 export const translateWorkflowBody = resolveMaybeKey;
 export const translateWorkflowTag = resolveMaybeKey;
+export const translateActivityBody = resolveMaybeKey;

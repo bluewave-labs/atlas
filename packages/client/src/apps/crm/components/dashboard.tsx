@@ -8,6 +8,7 @@ import {
   Plus, Handshake, UserPlus, FileText,
 } from 'lucide-react';
 import { DataTable, type DataTableColumn } from '../../../components/ui/data-table';
+import { translateActivityBody } from '../lib/workflow-i18n';
 import { useDashboard, type CrmDashboard, type CrmDeal, type CrmActivity } from '../hooks';
 import { formatCurrencyCompact, formatDate } from '../../../lib/format';
 import { Skeleton } from '../../../components/ui/skeleton';
@@ -137,7 +138,7 @@ function RecentActivities({ activities }: { activities: CrmActivity[] }) {
               {getActivityIcon(activity.type)}
             </div>
             <div className="crm-activity-body">
-              <div className="crm-activity-text">{activity.body}</div>
+              <div className="crm-activity-text">{translateActivityBody(activity.body, t)}</div>
               <div className="crm-activity-meta">
                 {getActivityLabelDash(activity.type, t)} &middot; {timeAgo(activity.createdAt, t)}
               </div>

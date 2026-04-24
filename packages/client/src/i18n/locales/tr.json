@@ -151,7 +151,10 @@
     "draw": "Çizim",
     "projects": "Projeler",
     "system": "Sistem",
-    "themeToggle": "Tema: {{mode}}"
+    "themeToggle": "Tema: {{mode}}",
+    "home": "Ana sayfa",
+    "work": "İş",
+    "organization": "Organizasyon"
   },
   "inbox": {
     "selectConversation": "Bir görüşme seçin",
@@ -496,7 +499,17 @@
     "goToNewsletters": "Bültenlere git",
     "goToNotifications": "Bildirimlere git",
     "composeNewEmail": "Yeni e-posta yaz",
-    "newDrawing": "Yeni çizim"
+    "newDrawing": "Yeni çizim",
+    "search": "Ara veya atla…",
+    "recentSearches": "Son aramalar",
+    "resultCount_one": "{{count}} sonuç",
+    "resultCount_other": "{{count}} sonuç",
+    "hints": {
+      "searchRecords": "Kişilerde, fırsatlarda, belgelerde ara…",
+      "jumpTo": "Herhangi bir uygulamaya veya kayda atla…",
+      "findAcrossApps": "Çalışanlar, faturalar, çizimler bul…",
+      "navigateWithK": "⌘K ile her yere git"
+    }
   },
   "toast": {
     "messageSent": "İleti gönderildi",
@@ -1480,7 +1493,15 @@
       "description": "Açıklama",
       "date": "Tarih",
       "status": "Durum",
-      "open": "Açık"
+      "open": "Açık",
+      "bodies": {
+        "stageChange": "Aşama {{from}} değerinden {{to}} değerine değiştirildi",
+        "dealWon": "Fırsat kazanıldı olarak işaretlendi",
+        "dealLost": "Fırsat kaybedildi olarak işaretlendi",
+        "dealLostWithReason": "Fırsat kaybedildi: {{reason}}",
+        "meetingScheduled": "Toplantı planlandı: {{summary}}",
+        "leadEnriched": "Aday yapay zeka ile zenginleştirildi\n{{summary}}"
+      }
     },
     "automations": {
       "title": "Otomasyonlar",
@@ -4077,7 +4098,10 @@
       "files": "Dosyalar",
       "regional": "Bölgesel",
       "behavior": "Davranış",
-      "updates": "Güncellemeler"
+      "updates": "Güncellemeler",
+      "activityTypes": "Aktivite türleri",
+      "invoiceTemplates": "Fatura şablonları",
+      "ai": "Yapay zeka"
     },
     "dataModel": {
       "searchObjects": "Nesneleri ara...",

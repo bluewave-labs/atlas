@@ -185,7 +185,7 @@ export async function enrichLead(userId: string, tenantId: string, leadId: strin
   if (lead.convertedContactId) {
     await createActivity(userId, tenantId, {
       type: 'note',
-      body: `Lead enriched via AI\n${summaryParts.join('\n')}`,
+      body: `__i18n:crm.activities.bodies.leadEnriched?summary=${encodeURIComponent(summaryParts.join('\n'))}`,
       contactId: lead.convertedContactId,
     });
   }

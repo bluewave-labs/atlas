@@ -17,6 +17,7 @@ import { ConfirmDialog } from '../../../components/ui/confirm-dialog';
 import { EditableField } from '../../../components/ui/editable-field';
 import { MarkLostModal } from './mark-lost-modal';
 import { getActivityIcon } from '../utils';
+import { translateActivityBody } from '../lib/workflow-i18n';
 import { NotesSection } from './notes-section';
 import { CalendarEvents } from './calendar-events';
 import { LinkedInvoicesList } from '../../../components/shared/linked-invoices-list';
@@ -436,7 +437,7 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
-                      {activity.body}
+                      {translateActivityBody(activity.body, t)}
                     </div>
                     <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', marginTop: 2 }}>
                       {activity.type} &middot; {formatDate(activity.createdAt)}

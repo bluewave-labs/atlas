@@ -13,6 +13,7 @@ import { Select } from '../../../components/ui/select';
 import { Chip } from '../../../components/ui/chip';
 import { EditableField } from '../../../components/ui/editable-field';
 import { getActivityIcon, timeAgo } from '../utils';
+import { translateActivityBody } from '../lib/workflow-i18n';
 import { IconButton } from '../../../components/ui/icon-button';
 import { Textarea } from '../../../components/ui/textarea';
 import { Popover, PopoverTrigger, PopoverContent } from '../../../components/ui/popover';
@@ -398,7 +399,7 @@ export function LeadDetailPage({ leadId, onBack, onNavigate }: LeadDetailPagePro
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
-                      {activity.body}
+                      {translateActivityBody(activity.body, t)}
                     </div>
                     <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', marginTop: 2 }}>
                       {activity.type} &middot; {formatDate(activity.createdAt)}

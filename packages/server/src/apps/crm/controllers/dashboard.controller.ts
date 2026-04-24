@@ -180,7 +180,7 @@ export async function createCrmEvent(req: Request, res: Response) {
     // Create a CRM activity for the meeting
     await createActivityService(userId, tenantId, {
       type: 'meeting',
-      body: `Scheduled meeting: ${summary}`,
+      body: `__i18n:crm.activities.bodies.meetingScheduled?summary=${encodeURIComponent(summary)}`,
       dealId: dealId ?? null,
       contactId: contactId ?? null,
       companyId: companyId ?? null,

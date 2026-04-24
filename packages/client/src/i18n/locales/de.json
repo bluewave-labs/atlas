@@ -151,7 +151,10 @@
     "draw": "Zeichnen",
     "projects": "Projekte",
     "system": "System",
-    "themeToggle": "Design: {{mode}}"
+    "themeToggle": "Design: {{mode}}",
+    "home": "Start",
+    "work": "Arbeit",
+    "organization": "Organisation"
   },
   "inbox": {
     "selectConversation": "Konversation auswählen",
@@ -496,7 +499,17 @@
     "goToNewsletters": "Zu Newsletter wechseln",
     "goToNotifications": "Zu Benachrichtigungen wechseln",
     "composeNewEmail": "Neue E-Mail verfassen",
-    "newDrawing": "Neue Zeichnung"
+    "newDrawing": "Neue Zeichnung",
+    "search": "Suchen oder springen zu…",
+    "recentSearches": "Letzte Suchen",
+    "resultCount_one": "{{count}} Ergebnis",
+    "resultCount_other": "{{count}} Ergebnisse",
+    "hints": {
+      "searchRecords": "Kontakte, Deals, Dokumente durchsuchen…",
+      "jumpTo": "Zu beliebiger App oder Datensatz springen…",
+      "findAcrossApps": "Mitarbeitende, Rechnungen, Zeichnungen finden…",
+      "navigateWithK": "Mit ⌘K überall hin navigieren"
+    }
   },
   "toast": {
     "messageSent": "Nachricht gesendet",
@@ -1480,7 +1493,15 @@
       "description": "Beschreibung",
       "date": "Datum",
       "status": "Status",
-      "open": "Offen"
+      "open": "Offen",
+      "bodies": {
+        "stageChange": "Phase von {{from}} zu {{to}} geändert",
+        "dealWon": "Deal als gewonnen markiert",
+        "dealLost": "Deal als verloren markiert",
+        "dealLostWithReason": "Deal verloren: {{reason}}",
+        "meetingScheduled": "Meeting geplant: {{summary}}",
+        "leadEnriched": "Lead per KI angereichert\n{{summary}}"
+      }
     },
     "automations": {
       "title": "Automatisierungen",
@@ -4077,7 +4098,10 @@
       "files": "Dateien",
       "regional": "Regional",
       "behavior": "Verhalten",
-      "updates": "Aktualisierungen"
+      "updates": "Aktualisierungen",
+      "activityTypes": "Aktivitätstypen",
+      "invoiceTemplates": "Rechnungsvorlagen",
+      "ai": "KI"
     },
     "dataModel": {
       "searchObjects": "Objekte suchen...",

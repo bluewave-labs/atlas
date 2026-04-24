@@ -93,6 +93,8 @@ const PANEL_I18N_KEYS: Record<string, string> = {
   'home-widgets': 'settingsPanel.panels.widgets',
   about: 'settingsPanel.panels.about',
   stages: 'settingsPanel.panels.pipelineStages',
+  'activity-types': 'settingsPanel.panels.activityTypes',
+  templates: 'settingsPanel.panels.invoiceTemplates',
   integrations: 'settingsPanel.panels.integrations',
   editor: 'settingsPanel.panels.editor',
   startup: 'settingsPanel.panels.startup',
@@ -103,6 +105,7 @@ const PANEL_I18N_KEYS: Record<string, string> = {
   regional: 'settingsPanel.panels.regional',
   behavior: 'settingsPanel.panels.behavior',
   updates: 'settingsPanel.panels.updates',
+  ai: 'settingsPanel.panels.ai',
 };
 
 const CATEGORY_I18N_KEYS: Record<string, string> = {

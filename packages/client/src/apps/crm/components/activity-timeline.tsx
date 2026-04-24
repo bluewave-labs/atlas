@@ -16,6 +16,7 @@ import { Input } from '../../../components/ui/input';
 import { Select } from '../../../components/ui/select';
 import { IconButton } from '../../../components/ui/icon-button';
 import { Popover, PopoverTrigger, PopoverContent } from '../../../components/ui/popover';
+import { translateActivityBody } from '../lib/workflow-i18n';
 
 export function ActivityTimeline({ activities }: { activities: CrmActivity[] }) {
   const { t } = useTranslation();
@@ -33,7 +34,7 @@ export function ActivityTimeline({ activities }: { activities: CrmActivity[] }) 
   const startEdit = (activity: CrmActivity) => {
     setEditingId(activity.id);
     setEditType(activity.type);
-    setEditBody(activity.body);
+    setEditBody(translateActivityBody(activity.body, t));
   };
 
   const cancelEdit = () => {
@@ -111,7 +112,7 @@ export function ActivityTimeline({ activities }: { activities: CrmActivity[] }) 
             </div>
           ) : (
             <div className="crm-activity-body" style={{ flex: 1 }}>
-              <div className="crm-activity-text" style={activity.completedAt ? { textDecoration: 'line-through', opacity: 0.6 } : undefined}>{activity.body}</div>
+              <div className="crm-activity-text" style={activity.completedAt ? { textDecoration: 'line-through', opacity: 0.6 } : undefined}>{translateActivityBody(activity.body, t)}</div>
               <div className="crm-activity-meta" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', flexWrap: 'wrap' }}>
                 <span>{getActivityLabel(activity.type, t)} &middot; {formatDate(activity.createdAt)}{activity.assignedUserName ? ` · ${activity.assignedUserName}` : ''}</span>
                 {(() => {

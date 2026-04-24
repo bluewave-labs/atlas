@@ -151,7 +151,10 @@
     "draw": "Disegna",
     "projects": "Progetti",
     "system": "Sistema",
-    "themeToggle": "Tema: {{mode}}"
+    "themeToggle": "Tema: {{mode}}",
+    "home": "Home",
+    "work": "Lavoro",
+    "organization": "Organizzazione"
   },
   "inbox": {
     "selectConversation": "Seleziona una conversazione",
@@ -496,7 +499,17 @@
     "goToNewsletters": "Vai a newsletter",
     "goToNotifications": "Vai a notifiche",
     "composeNewEmail": "Scrivi nuova email",
-    "newDrawing": "Nuovo disegno"
+    "newDrawing": "Nuovo disegno",
+    "search": "Cerca o vai a…",
+    "recentSearches": "Ricerche recenti",
+    "resultCount_one": "{{count}} risultato",
+    "resultCount_other": "{{count}} risultati",
+    "hints": {
+      "searchRecords": "Cerca contatti, trattative, documenti…",
+      "jumpTo": "Salta a qualsiasi app o record…",
+      "findAcrossApps": "Trova dipendenti, fatture, disegni…",
+      "navigateWithK": "Naviga ovunque con ⌘K"
+    }
   },
   "toast": {
     "messageSent": "Messaggio inviato",
@@ -1480,7 +1493,15 @@
       "description": "Descrizione",
       "date": "Data",
       "status": "Stato",
-      "open": "Aperto"
+      "open": "Aperto",
+      "bodies": {
+        "stageChange": "Fase cambiata da {{from}} a {{to}}",
+        "dealWon": "Trattativa contrassegnata come vinta",
+        "dealLost": "Trattativa contrassegnata come persa",
+        "dealLostWithReason": "Trattativa persa: {{reason}}",
+        "meetingScheduled": "Riunione pianificata: {{summary}}",
+        "leadEnriched": "Lead arricchito tramite IA\n{{summary}}"
+      }
     },
     "automations": {
       "title": "Automazioni",
@@ -4077,7 +4098,10 @@
       "files": "File",
       "regional": "Regionale",
       "behavior": "Comportamento",
-      "updates": "Aggiornamenti"
+      "updates": "Aggiornamenti",
+      "activityTypes": "Tipi di attività",
+      "invoiceTemplates": "Modelli di fattura",
+      "ai": "IA"
     },
     "dataModel": {
       "searchObjects": "Cerca oggetti...",

@@ -362,7 +362,7 @@ export async function updateDeal(userId: string, tenantId: string, id: string, i
     const toName = newStage[0]?.name ?? 'Unknown';
     createActivity(userId, tenantId, {
       type: 'stage_change',
-      body: `Stage changed from ${fromName} to ${toName}`,
+      body: `__i18n:crm.activities.bodies.stageChange?from=${encodeURIComponent(fromName)}&to=${encodeURIComponent(toName)}`,
       dealId: id,
     }).catch(() => {});
   }
@@ -391,7 +391,7 @@ export async function markDealWon(userId: string, tenantId: string, id: string, 
   // Fire workflow trigger + log activity
   executeWorkflows(tenantId, userId, 'deal_won', { dealId: id })
     .catch((err) => logger.warn({ err, trigger: 'deal_won' }, 'Workflow dispatch failed'));
-  createActivity(userId, tenantId, { type: 'deal_won', body: 'Deal marked as won', dealId: id }).catch(() => {});
+  createActivity(userId, tenantId, { type: 'deal_won', body: '__i18n:crm.activities.bodies.dealWon', dealId: id }).catch(() => {});
 
   return getDeal(userId, tenantId, id, recordAccess);
 }
@@ -413,7 +413,13 @@ export async function markDealLost(userId: string, tenantId: string, id: string,
   // Fire workflow trigger + log activity
   executeWorkflows(tenantId, userId, 'deal_lost', { dealId: id })
     .catch((err) => logger.warn({ err, trigger: 'deal_lost' }, 'Workflow dispatch failed'));
-  createActivity(userId, tenantId, { type: 'deal_lost', body: reason ? `Deal lost: ${reason}` : 'Deal marked as lost', dealId: id }).catch(() => {});
+  createActivity(userId, tenantId, {
+    type: 'deal_lost',
+    body: reason
+      ? `__i18n:crm.activities.bodies.dealLostWithReason?reason=${encodeURIComponent(reason)}`
+      : '__i18n:crm.activities.bodies.dealLost',
+    dealId: id,
+  }).catch(() => {});
 
   return getDeal(userId, tenantId, id, recordAccess);
 }

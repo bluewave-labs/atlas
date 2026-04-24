@@ -17,6 +17,7 @@ import { CustomFieldsRenderer } from '../../../components/shared/custom-fields-r
 import { CalendarEvents } from './calendar-events';
 import { NotesSection } from './notes-section';
 import { getActivityIcon } from '../utils';
+import { translateActivityBody } from '../lib/workflow-i18n';
 import { formatDate, formatCurrency } from '../../../lib/format';
 import {
   useContacts, useUpdateContact, useDeleteContact,
@@ -274,7 +275,7 @@ export function ContactDetailPage({ contactId, onBack, onNavigate, onCompanyClic
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
-                      {activity.body}
+                      {translateActivityBody(activity.body, t)}
                     </div>
                     <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)', marginTop: 2 }}>
                       {activity.type} &middot; {formatDate(activity.createdAt)}

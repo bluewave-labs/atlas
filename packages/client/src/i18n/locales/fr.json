@@ -151,7 +151,10 @@
     "draw": "Dessiner",
     "projects": "Projets",
     "system": "Système",
-    "themeToggle": "Thème : {{mode}}"
+    "themeToggle": "Thème : {{mode}}",
+    "home": "Accueil",
+    "work": "Travail",
+    "organization": "Organisation"
   },
   "inbox": {
     "selectConversation": "Sélectionnez une conversation",
@@ -496,7 +499,17 @@
     "goToNewsletters": "Aller aux newsletters",
     "goToNotifications": "Aller aux notifications",
     "composeNewEmail": "Rédiger un nouvel e-mail",
-    "newDrawing": "Nouveau dessin"
+    "newDrawing": "Nouveau dessin",
+    "search": "Rechercher ou aller à…",
+    "recentSearches": "Recherches récentes",
+    "resultCount_one": "{{count}} résultat",
+    "resultCount_other": "{{count}} résultats",
+    "hints": {
+      "searchRecords": "Rechercher contacts, affaires, documents…",
+      "jumpTo": "Aller à n’importe quelle app ou fiche…",
+      "findAcrossApps": "Trouver employés, factures, dessins…",
+      "navigateWithK": "Naviguer partout avec ⌘K"
+    }
   },
   "toast": {
     "messageSent": "Message envoyé",
@@ -1480,7 +1493,15 @@
       "description": "Description",
       "date": "Date",
       "status": "Statut",
-      "open": "Ouvert"
+      "open": "Ouvert",
+      "bodies": {
+        "stageChange": "Étape changée de {{from}} à {{to}}",
+        "dealWon": "Affaire marquée comme gagnée",
+        "dealLost": "Affaire marquée comme perdue",
+        "dealLostWithReason": "Affaire perdue : {{reason}}",
+        "meetingScheduled": "Réunion planifiée : {{summary}}",
+        "leadEnriched": "Prospect enrichi par IA\n{{summary}}"
+      }
     },
     "automations": {
       "title": "Automatisations",
@@ -4077,7 +4098,10 @@
       "files": "Fichiers",
       "regional": "Régional",
       "behavior": "Comportement",
-      "updates": "Mises à jour"
+      "updates": "Mises à jour",
+      "activityTypes": "Types d’activité",
+      "invoiceTemplates": "Modèles de facture",
+      "ai": "IA"
     },
     "dataModel": {
       "searchObjects": "Rechercher des objets...",
