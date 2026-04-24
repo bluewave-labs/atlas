@@ -60,12 +60,8 @@ export function CommandPalette() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const open = useUIStore((s) => s.commandPaletteOpen);
+  const setOpen = useUIStore((s) => s.setCommandPaletteOpen);
   const toggleCommandPalette = useUIStore((s) => s.toggleCommandPalette);
-  const setOpen = useCallback((next: boolean) => {
-    // Toggle the shared store flag — the store has no explicit setter, so we
-    // only call toggle when the target value differs from the current one.
-    if (next !== useUIStore.getState().commandPaletteOpen) toggleCommandPalette();
-  }, [toggleCommandPalette]);
   const [query, setQuery] = useState('');
   const [recents, setRecents] = useState<Recent[]>([]);
   const [hint, setHint] = useState(0);
@@ -81,14 +77,20 @@ export function CommandPalette() {
     return () => window.removeEventListener('keydown', fn);
   }, [toggleCommandPalette]);
 
-  // Scroll lock + load recents
+  // Scroll lock + load recents + clear query when the palette closes.
   useEffect(() => {
-    if (open) { document.body.style.overflow = 'hidden'; setRecents(loadRecent()); setHint(p => (p + 1) % HINT_KEYS.length); }
-    else { document.body.style.overflow = ''; }
+    if (open) {
+      document.body.style.overflow = 'hidden';
+      setRecents(loadRecent());
+      setHint((p) => (p + 1) % HINT_KEYS.length);
+    } else {
+      document.body.style.overflow = '';
+      setQuery('');
+    }
     return () => { document.body.style.overflow = ''; };
   }, [open]);
 
-  const close = () => { setOpen(false); setQuery(''); };
+  const close = () => { setOpen(false); };
 
   const handleSelect = useCallback((value: string) => {
     if (query.trim().length >= 2) {
@@ -118,7 +120,7 @@ export function CommandPalette() {
   );
 
   return (
-    <Command.Dialog open={open} onOpenChange={v => { setOpen(v); if (!v) setQuery(''); }} label={t('commandPalette.search', 'Search')} overlayClassName="cmd-overlay" contentClassName="cmd-content">
+    <Command.Dialog open={open} onOpenChange={setOpen} label={t('commandPalette.search', 'Search')} overlayClassName="cmd-overlay" contentClassName="cmd-content">
       <div className="cmd-header">
         {isLoading
           ? <Loader2 size={16} style={{ color: 'var(--color-accent-primary)', flexShrink: 0, animation: 'spin 1s linear infinite' }} />
