@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 export interface BreadcrumbItem {
   label: string;
@@ -17,11 +17,8 @@ const BreadcrumbContext = createContext<BreadcrumbContextValue>({
 
 export function BreadcrumbProvider({ children }: { children: ReactNode }) {
   const [crumbs, setCrumbs] = useState<BreadcrumbItem[] | null>(null);
-  return (
-    <BreadcrumbContext.Provider value={{ crumbs, setCrumbs }}>
-      {children}
-    </BreadcrumbContext.Provider>
-  );
+  const value = useMemo(() => ({ crumbs, setCrumbs }), [crumbs]);
+  return <BreadcrumbContext.Provider value={value}>{children}</BreadcrumbContext.Provider>;
 }
 
 export function useBreadcrumb(crumbs: BreadcrumbItem[] | null) {

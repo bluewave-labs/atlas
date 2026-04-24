@@ -5,19 +5,8 @@ import { useLinkCounts, useLinkedRecords, useDeleteLink } from '../../hooks/use-
 import { appRegistry } from '../../apps';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 import { LinkPicker } from './LinkPicker';
+import { appRecordPath } from '../../lib/app-routes';
 import type { LinkedRecord } from '@atlas-platform/shared';
-
-function getRecordUrl(appId: string, recordId: string): string {
-  switch (appId) {
-    case 'docs': return `/docs/${recordId}`;
-    case 'draw': return `/draw/${recordId}`;
-    case 'tables': return `/tables/${recordId}`;
-    case 'tasks': return `/work`;
-    case 'drive': return `/drive`;
-    case 'sign': return `/sign-app/${recordId}`;
-    default: return `/${appId}`;
-  }
-}
 
 export function SmartButtonBar({ appId, recordId }: { appId: string; recordId: string }) {
   const { data: counts } = useLinkCounts(appId, recordId);
@@ -185,12 +174,12 @@ function LinkedRecordsList({
         >
           <span
             style={{ flex: 1, fontSize: 13, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-            onClick={() => navigate(getRecordUrl(link.appId, link.recordId))}
+            onClick={() => navigate(appRecordPath(link.appId, link.recordId))}
           >
             {link.title}
           </span>
           <button
-            onClick={() => navigate(getRecordUrl(link.appId, link.recordId))}
+            onClick={() => navigate(appRecordPath(link.appId, link.recordId))}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)', padding: 2, display: 'flex' }}
             title="Open"
           >

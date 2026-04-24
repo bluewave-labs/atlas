@@ -50,10 +50,11 @@ export function TopBar() {
   const toggleCommandPalette = useUIStore((s) => s.toggleCommandPalette);
   const toggleShortcutHelp = useUIStore((s) => s.toggleShortcutHelp);
 
+  const viewParam = searchParams.get('view');
   const crumbs = useMemo(() => {
     if (overrideCrumbs) return overrideCrumbs;
-    return deriveCrumbsFromRoute(location.pathname, searchParams.get('view'), t);
-  }, [overrideCrumbs, location.pathname, searchParams, t]);
+    return deriveCrumbsFromRoute(location.pathname, viewParam, t);
+  }, [overrideCrumbs, location.pathname, viewParam, t]);
 
   return (
     <header

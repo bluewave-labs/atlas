@@ -24,7 +24,6 @@ import { ImpersonationBanner } from './apps/system/components/impersonation-bann
 import { type ReactNode } from 'react';
 import { useMyAccessibleApps } from './hooks/use-app-permissions';
 import { AppRail } from './components/layout/app-rail';
-import { TopBar } from './components/layout/top-bar';
 import { BreadcrumbProvider } from './lib/breadcrumb-context';
 import { KeyboardShortcutsHelp } from './components/shared/keyboard-shortcuts-help';
 import { OrgLayout } from './pages/org/org-layout';

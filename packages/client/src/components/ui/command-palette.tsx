@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Command } from 'cmdk';
@@ -22,6 +22,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useGlobalSearch } from '../../hooks/use-global-search';
+import { appRecordPath } from '../../lib/app-routes';
 import '../../styles/command-palette.css';
 
 const RECENT_KEY = 'atlas_cmd_recent';
@@ -53,19 +54,6 @@ const PLATFORM_NAV = [
 interface Recent { query: string; ts: number }
 function loadRecent(): Recent[] { try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch { return []; } }
 function saveRecent(items: Recent[]) { localStorage.setItem(RECENT_KEY, JSON.stringify(items.slice(0, MAX_RECENT))); }
-
-function resultPath(appId: string, recordId: string): string {
-  switch (appId) {
-    case 'docs': return `/docs/${recordId}`;
-    case 'draw': return `/draw/${recordId}`;
-    case 'invoices': return `/invoices?view=invoice-detail&invoiceId=${recordId}`;
-    case 'hr': return `/hr?view=employee-detail&employee=${recordId}`;
-    case 'crm': return '/crm';
-    case 'work': return '/work';
-    case 'sign': return '/sign-app';
-    default: return '/';
-  }
-}
 
 export function CommandPalette() {
   const { t } = useTranslation();
@@ -104,17 +92,21 @@ export function CommandPalette() {
     if (nav) { navigate(nav.path); return; }
     if (value.startsWith('search-') && searchResults) {
       const r = searchResults.find(x => `search-${x.appId}-${x.recordId}` === value);
-      if (r) navigate(resultPath(r.appId, r.recordId));
+      if (r) navigate(appRecordPath(r.appId, r.recordId));
     }
   }, [navigate, searchResults, query]);
 
   // Group results by appName
-  const groupedResults = allResults.slice(0, 8).reduce<Map<string, typeof allResults>>((acc, r) => {
-    const group = acc.get(r.appName) ?? [];
-    group.push(r);
-    acc.set(r.appName, group);
-    return acc;
-  }, new Map());
+  const groupedResults = useMemo(
+    () =>
+      allResults.slice(0, 8).reduce<Map<string, typeof allResults>>((acc, r) => {
+        const group = acc.get(r.appName) ?? [];
+        group.push(r);
+        acc.set(r.appName, group);
+        return acc;
+      }, new Map()),
+    [allResults],
+  );
 
   return (
     <Command.Dialog open={open} onOpenChange={v => { setOpen(v); if (!v) setQuery(''); }} label="Search" overlayClassName="cmd-overlay" contentClassName="cmd-content">
