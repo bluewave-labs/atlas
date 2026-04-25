@@ -1,6 +1,6 @@
 import { db } from '../../config/database';
-import { systemSettings } from '../../db/schema';
-import { eq } from 'drizzle-orm';
+import { systemSettings, tenantMembers } from '../../db/schema';
+import { and, eq, sql } from 'drizzle-orm';
 import { logger } from '../../utils/logger';
 
 // ─── Email Settings ────────────────────────────────────────────────
@@ -108,4 +108,53 @@ export async function testEmailConnection(to: string): Promise<{ success: boolea
     logger.error({ error: err }, 'SMTP test failed');
     return { success: false, error: err.message || 'Connection failed' };
   }
+}
+
+// ─── Product tour ────────────────────────────────────────────────
+
+export interface TourStatus {
+  tourCompletedAt: string | null;
+}
+
+export async function getTourStatus(
+  userId: string,
+  tenantId: string,
+): Promise<TourStatus> {
+  const [row] = await db
+    .select({ tourCompletedAt: tenantMembers.tourCompletedAt })
+    .from(tenantMembers)
+    .where(and(eq(tenantMembers.userId, userId), eq(tenantMembers.tenantId, tenantId)))
+    .limit(1);
+
+  if (!row) {
+    throw new Error('TENANT_MEMBERSHIP_NOT_FOUND');
+  }
+
+  return {
+    tourCompletedAt: row.tourCompletedAt
+      ? row.tourCompletedAt.toISOString()
+      : null,
+  };
+}
+
+export async function markTourComplete(
+  userId: string,
+  tenantId: string,
+): Promise<TourStatus> {
+  // COALESCE makes this idempotent — a re-call doesn't bump the timestamp.
+  const [row] = await db
+    .update(tenantMembers)
+    .set({ tourCompletedAt: sql`COALESCE(${tenantMembers.tourCompletedAt}, now())` })
+    .where(and(eq(tenantMembers.userId, userId), eq(tenantMembers.tenantId, tenantId)))
+    .returning({ tourCompletedAt: tenantMembers.tourCompletedAt });
+
+  if (!row) {
+    throw new Error('TENANT_MEMBERSHIP_NOT_FOUND');
+  }
+
+  return {
+    tourCompletedAt: row.tourCompletedAt
+      ? row.tourCompletedAt.toISOString()
+      : null,
+  };
 }
