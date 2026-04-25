@@ -2694,7 +2694,9 @@
       "submit": "Soumettre",
       "cancel": "Annuler le conge",
       "emptyDesc": "Soumettez une demande de congé pour commencer. Votre responsable sera notifié pour approbation.",
-      "request": "Demander un congé"
+      "request": "Demander un congé",
+      "submitFailed": "Échec de l'envoi de la demande de congé. Veuillez vérifier votre solde de congés et votre politique.",
+      "retrySubmit": "Soumettre la demande"
     },
     "teamCalendar": {
       "noLeaves": "Aucun conge approuve pour ce mois."

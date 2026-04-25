@@ -2694,7 +2694,9 @@
       "submit": "Invia richiesta",
       "cancel": "Annulla permesso",
       "emptyDesc": "Invia una richiesta di congedo per iniziare. Il tuo responsabile sarà notificato per l'approvazione.",
-      "request": "Richiedi congedo"
+      "request": "Richiedi congedo",
+      "submitFailed": "Impossibile inviare la richiesta di ferie. Verificare il saldo ferie e la politica.",
+      "retrySubmit": "Invia richiesta"
     },
     "teamCalendar": {
       "noLeaves": "Nessun permesso approvato per questo mese."

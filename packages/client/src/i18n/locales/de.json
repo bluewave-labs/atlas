@@ -2694,7 +2694,9 @@
       "submit": "Antrag einreichen",
       "cancel": "Urlaub stornieren",
       "emptyDesc": "Reichen Sie einen Urlaubsantrag ein, um zu beginnen. Ihr Vorgesetzter wird zur Genehmigung benachrichtigt.",
-      "request": "Urlaub beantragen"
+      "request": "Urlaub beantragen",
+      "submitFailed": "Urlaubsantrag konnte nicht eingereicht werden. Bitte überprüfen Sie Ihr Urlaubsguthaben und Ihre Richtlinie.",
+      "retrySubmit": "Antrag einreichen"
     },
     "teamCalendar": {
       "noLeaves": "Keine genehmigten Abwesenheiten fuer diesen Monat."
