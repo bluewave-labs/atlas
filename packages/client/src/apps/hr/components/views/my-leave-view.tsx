@@ -148,7 +148,7 @@ export function MyLeaveView({ employees }: { employees: HrEmployee[] }) {
               {app.status === 'draft' && app.employeeId === myEmployee?.id && (
                 <IconButton icon={<Send size={14} />} label={t('hr.myLeave.retrySubmit')} size={26} onClick={() => submitWithErrorToast(app.id)} />
               )}
-              {app.status === 'approved' && app.employeeId === myEmployee?.id && (
+              {(app.status === 'approved' || app.status === 'pending') && app.employeeId === myEmployee?.id && (
                 <IconButton icon={<X size={14} />} label={t('hr.myLeave.cancel')} size={26} destructive onClick={() => cancelApp.mutate(app.id)} />
               )}
             </div>
