@@ -126,7 +126,7 @@ packages/server/src/db/schema.ts                                    — add tour
 packages/server/src/apps/system/controller.ts                       — add completeTour handler
 packages/server/src/apps/system/routes.ts                           — wire PATCH /tour/complete
 packages/server/src/apps/system/service.ts                          — add markTourComplete service function
-packages/server/src/apps/auth/service.ts (or similar /me handler)   — include membership.tourCompletedAt in /me response
+(no /me extension needed — replaced with dedicated GET /system/tour endpoint)
 packages/server/src/openapi/paths/system.ts                         — register the new path
 ```
 
@@ -257,7 +257,21 @@ interface TourState {
 
 Apply via `cd packages/server && npm run db:push`. No migration file (per project conventions).
 
-### Endpoint
+### Endpoints
+
+Two dedicated endpoints in the system app — chosen over piggy-backing on `/auth/me` because that endpoint returns account-level data only (no tenant-membership context).
+
+```
+GET /api/v1/system/tour
+  Auth:    authMiddleware (req.auth!.userId, req.auth!.tenantId)
+  Returns: { success: true, data: { tourCompletedAt: string | null } }
+
+  Implementation:
+    SELECT tour_completed_at FROM tenant_members
+     WHERE user_id = $userId AND tenant_id = $tenantId
+    LIMIT 1;
+    If no row → 404
+```
 
 ```
 PATCH /api/v1/system/tour/complete
@@ -270,28 +284,12 @@ PATCH /api/v1/system/tour/complete
        SET tour_completed_at = COALESCE(tour_completed_at, now())
      WHERE user_id = $userId AND tenant_id = $tenantId
     RETURNING tour_completed_at;
-
     If no row updated → 404
 ```
 
-The `COALESCE` makes the call idempotent: re-calling does not bump the timestamp.
+The `COALESCE` makes the PATCH idempotent: re-calling does not bump the timestamp.
 
-### `/me` extension
-
-```typescript
-{
-  user: { ... },
-  tenant: {
-    // ... existing fields
-    membership: {
-      role: 'owner' | 'admin' | 'member',
-      tourCompletedAt: string | null,    // NEW
-    }
-  }
-}
-```
-
-The home page already awaits `/me`, so this is free.
+The home page calls the GET via TanStack Query (key: `queryKeys.tour.status`). Cache is set on `onSettled` of the PATCH so reload doesn't re-fire the tour even if the server call failed.
 
 ---
 
@@ -301,8 +299,8 @@ The home page already awaits `/me`, so this is free.
 
 ```
 home.tsx mounts
-  └─ useTourBootstrap() runs after first paint (microtask delay)
-       └─ reads /me from React Query cache               → membership.tourCompletedAt
+  └─ useTourBootstrap() runs after first paint (~150ms timeout)
+       └─ TanStack Query fetches GET /api/v1/system/tour → { tourCompletedAt }
        └─ if tourCompletedAt !== null                    → exit
        └─ reads useMyAccessibleApps()                    → ['crm', 'hr', 'tasks', ...]
        └─ reads appRegistry.getAll()                     → all manifests
