@@ -186,3 +186,44 @@ export async function testEmail(req: Request, res: Response) {
     res.status(500).json({ success: false, error: 'Failed to test email' });
   }
 }
+
+// ─── Product tour ────────────────────────────────────────────────
+
+export async function getTour(req: Request, res: Response) {
+  try {
+    const tenantId = req.auth?.tenantId;
+    if (!tenantId) {
+      res.status(400).json({ success: false, error: 'No active tenant' });
+      return;
+    }
+    const data = await systemService.getTourStatus(req.auth!.userId, tenantId);
+    res.json({ success: true, data });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'TENANT_MEMBERSHIP_NOT_FOUND') {
+      res.status(404).json({ success: false, error: 'Tenant membership not found' });
+      return;
+    }
+    logger.error({ error }, 'Failed to fetch tour status');
+    res.status(500).json({ success: false, error: 'Failed to fetch tour status' });
+  }
+}
+
+export async function completeTour(req: Request, res: Response) {
+  try {
+    const tenantId = req.auth?.tenantId;
+    if (!tenantId) {
+      res.status(400).json({ success: false, error: 'No active tenant' });
+      return;
+    }
+    // body.skipped is accepted but not stored — reserved for future analytics.
+    const data = await systemService.markTourComplete(req.auth!.userId, tenantId);
+    res.json({ success: true, data });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'TENANT_MEMBERSHIP_NOT_FOUND') {
+      res.status(404).json({ success: false, error: 'Tenant membership not found' });
+      return;
+    }
+    logger.error({ error }, 'Failed to mark tour complete');
+    res.status(500).json({ success: false, error: 'Failed to mark tour complete' });
+  }
+}
