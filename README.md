@@ -7,7 +7,10 @@ A self-hosted business platform that brings CRM, HRM, invoicing, agreements, doc
 
 **Live demo:** [app.dodoapps.net](https://app.dodoapps.net) · **Docker image:** [`ghcr.io/gorkem-bwl/atlas`](https://github.com/gorkem-bwl/atlas/pkgs/container/atlas) (multi-arch amd64 + arm64) · **Releases:** [github.com/gorkem-bwl/atlas/releases](https://github.com/gorkem-bwl/atlas/releases)
 
-https://github.com/user-attachments/assets/15ec33e3-0308-4a95-b58f-5b8b2d83a7d9
+
+
+https://github.com/user-attachments/assets/8baaa7d3-4d8e-45ba-b769-73b3feabd58a
+
 
 
 
