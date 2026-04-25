@@ -384,6 +384,8 @@ async function migrateLegacyData() {
     "jsonb NOT NULL DEFAULT '[]'::jsonb");
   await addColumnIfMissing('signing_tokens', 'viewed_at',
     'timestamp with time zone');
+  await addColumnIfMissing('tenant_members', 'tour_completed_at',
+    'timestamp with time zone');
 
   // Missing tables — create if absent.
   try {

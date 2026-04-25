@@ -719,6 +719,7 @@ export const tenantMembers = pgTable('tenant_members', {
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
   userId: uuid('user_id').notNull(),
   role: varchar('role', { length: 50 }).notNull().default('member'),
+  tourCompletedAt: timestamp('tour_completed_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   uniqueMember: uniqueIndex('idx_tenant_members_unique').on(table.tenantId, table.userId),
