@@ -1,6 +1,6 @@
 import {
   pgTable, text, uuid, varchar, integer, bigint, boolean, jsonb,
-  timestamp, index, uniqueIndex, real, type AnyPgColumn,
+  timestamp, date, index, uniqueIndex, primaryKey, real, type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { customType } from 'drizzle-orm/pg-core';
 import type { StepCondition } from '@atlas-platform/shared';
@@ -649,6 +649,21 @@ export const tenants = pgTable('tenants', {
 }, (table) => ({
   slugIdx: uniqueIndex('idx_tenants_slug').on(table.slug),
   ownerIdx: index('idx_tenants_owner').on(table.ownerId),
+}));
+
+// ─── Platform: Scheduler idempotency log ──────────────────────────
+// One row per (tenantId, jobName, sendDate). Schedulers do
+// `INSERT ... ON CONFLICT DO NOTHING` before sending, so a second
+// run on the same day (e.g. process restart) is a no-op. Also
+// makes accidental dual-replica safe.
+
+export const schedulerSendLog = pgTable('scheduler_send_log', {
+  tenantId: uuid('tenant_id').notNull(),
+  jobName: varchar('job_name', { length: 64 }).notNull(),
+  sendDate: date('send_date').notNull(),
+  sentAt: timestamp('sent_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.tenantId, table.jobName, table.sendDate] }),
 }));
 
 // ─── Platform: Demo Data Registry ─────────────────────────────────

@@ -1,9 +1,15 @@
 import { db } from '../../config/database';
-import { crmLeads, crmDeals, crmActivities, appPermissions, users, tenantMembers } from '../../db/schema';
+import { crmLeads, crmDeals, crmActivities, appPermissions, users, tenantMembers, schedulerSendLog } from '../../db/schema';
 import { eq, and, gte, sql } from 'drizzle-orm';
 import { logger } from '../../utils/logger';
 import { sendEmail } from '../../services/email.service';
 import { env } from '../../config/env';
+
+const JOB_NAME = 'crm-digest';
+
+function todayUtc(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 const DIGEST_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -180,7 +186,23 @@ async function sendDigests(): Promise<number> {
 
     const baseUrl = env.CLIENT_PUBLIC_URL || env.SERVER_PUBLIC_URL || 'http://localhost:3001';
 
+    const sendDate = todayUtc();
+
     for (const [tenantId, recipients] of byAccount) {
+      // Per-(tenant, day) idempotency. INSERT ... ON CONFLICT DO NOTHING
+      // returns 0 rows if another process (or this process restarted)
+      // already claimed today's digest for this tenant.
+      const claimed = await db
+        .insert(schedulerSendLog)
+        .values({ tenantId, jobName: JOB_NAME, sendDate })
+        .onConflictDoNothing()
+        .returning({ tenantId: schedulerSendLog.tenantId });
+
+      if (claimed.length === 0) {
+        logger.debug({ tenantId, sendDate }, 'CRM digest already sent today, skipping');
+        continue;
+      }
+
       const stats = await getDigestStats(tenantId);
 
       // Skip if no activity at all
@@ -211,11 +233,11 @@ async function sendDigests(): Promise<number> {
 let digestTimer: ReturnType<typeof setInterval> | null = null;
 
 export function startDigestScheduler(): void {
-  // Run daily — first run after 1 minute, then every 24 hours
-  setTimeout(() => {
-    sendDigests().catch(() => {});
-  }, 60_000);
-
+  // Tick every 24h. No on-boot trigger — restarts don't re-send because
+  // the per-(tenant, UTC-date) row in scheduler_send_log already claims
+  // today's slot. The first real send happens 24h after process start;
+  // if you need same-day delivery on a fresh deploy, run sendDigests()
+  // manually once.
   digestTimer = setInterval(() => {
     sendDigests().catch((err) => {
       logger.error({ err }, 'CRM digest scheduler failed');

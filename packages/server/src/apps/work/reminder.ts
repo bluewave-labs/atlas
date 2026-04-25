@@ -111,6 +111,10 @@ let reminderTimer: ReturnType<typeof setInterval> | null = null;
 export function startTaskReminderScheduler() {
   if (reminderTimer) return;
 
+  // Hourly tick. No on-boot run — boot triggers caused the email to
+  // arrive seconds after a deploy regardless of time of day. The SQL
+  // guard (lastReminderAt < todayStart) prevents same-day double-send
+  // on its own, so the boot trigger was only adding off-schedule noise.
   reminderTimer = setInterval(async () => {
     try {
       await sendDueTaskReminders();
@@ -118,9 +122,6 @@ export function startTaskReminderScheduler() {
       logger.error({ err }, 'Task reminder scheduler failed');
     }
   }, REMINDER_INTERVAL_MS);
-
-  // Also run once after a short delay on startup
-  setTimeout(() => sendDueTaskReminders().catch(() => {}), 90_000);
 
   logger.info('Task reminder scheduler started (hourly)');
 }

@@ -240,20 +240,15 @@ export async function runInvoiceReminders(): Promise<ReminderRunResult> {
 // ─── Scheduler wiring ───────────────────────────────────────────────
 
 const INTERVAL_MS = 60 * 60 * 1000; // hourly
-const INITIAL_DELAY_MS = 30_000;
 
 let timer: ReturnType<typeof setInterval> | null = null;
-let initialTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function startInvoiceReminderScheduler() {
   if (timer) return;
 
-  initialTimer = setTimeout(() => {
-    runInvoiceReminders().catch((err) =>
-      logger.error({ err }, 'Initial invoice reminder run failed'),
-    );
-  }, INITIAL_DELAY_MS);
-
+  // Hourly tick. No on-boot run — restarts would re-send any reminder
+  // whose stage row hadn't been advanced yet. The first scheduled run
+  // happens INTERVAL_MS after start; reminders are at most 1h late.
   timer = setInterval(() => {
     runInvoiceReminders().catch((err) =>
       logger.error({ err }, 'Scheduled invoice reminder run failed'),
@@ -264,10 +259,6 @@ export function startInvoiceReminderScheduler() {
 }
 
 export function stopInvoiceReminderScheduler() {
-  if (initialTimer) {
-    clearTimeout(initialTimer);
-    initialTimer = null;
-  }
   if (timer) {
     clearInterval(timer);
     timer = null;

@@ -179,6 +179,48 @@ async function migrateLegacyData() {
     logger.error({ err }, 'demo_data_seeds create failed');
   }
 
+  // scheduler_send_log — per-(tenantId, jobName, sendDate) idempotency
+  // for email schedulers. The CRM digest does INSERT ... ON CONFLICT
+  // DO NOTHING here before sending so a process restart can't re-send
+  // the same day's digest, and dual replicas can't double-send.
+  try {
+    const c = await pool.connect();
+    try {
+      await c.query(`
+        CREATE TABLE IF NOT EXISTS scheduler_send_log (
+          tenant_id uuid NOT NULL,
+          job_name varchar(64) NOT NULL,
+          send_date date NOT NULL,
+          sent_at timestamptz NOT NULL DEFAULT now(),
+          PRIMARY KEY (tenant_id, job_name, send_date)
+        )
+      `);
+    } finally {
+      c.release();
+    }
+  } catch (err) {
+    logger.error({ err }, 'scheduler_send_log create failed');
+  }
+
+  // employees.holiday_calendar_id — added to the schema after the initial
+  // migration snapshot. Bootstrap snapshots are applied to fresh installs
+  // only, so every existing deployment is missing this column and the HR
+  // employee form blows up on insert with 42703 (undefined column).
+  // Idempotent backfill — safe to re-run.
+  // (See https://github.com/gorkem-bwl/atlas/issues/6)
+  try {
+    const c = await pool.connect();
+    try {
+      await c.query(
+        `ALTER TABLE employees ADD COLUMN IF NOT EXISTS holiday_calendar_id uuid`,
+      );
+    } finally {
+      c.release();
+    }
+  } catch (err) {
+    logger.error({ err }, 'employees.holiday_calendar_id backfill failed');
+  }
+
   // tenants.storage_quota_bytes — added to the schema after the initial
   // migration snapshot. Bootstrap only runs the snapshot on empty DBs, so
   // every existing deployment is missing this column. Idempotent backfill:
