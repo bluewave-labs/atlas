@@ -225,19 +225,21 @@ export async function cancelLeaveApplication(tenantId: string, id: string) {
 
   const [app] = await db.select().from(hrLeaveApplications)
     .where(and(eq(hrLeaveApplications.id, id), eq(hrLeaveApplications.tenantId, tenantId))).limit(1);
-  if (!app || app.status !== 'approved') return null;
+  if (!app || !['approved', 'pending'].includes(app.status)) return null;
 
-  // Restore balance
-  const [leaveType] = await db.select().from(hrLeaveTypes).where(eq(hrLeaveTypes.id, app.leaveTypeId)).limit(1);
-  if (leaveType) {
-    const currentYear = new Date(app.startDate).getFullYear();
-    await db.update(leaveBalances).set({
-      used: sql`GREATEST(${leaveBalances.used} - ${app.totalDays}, 0)`,
-      updatedAt: now,
-    }).where(and(
-      eq(leaveBalances.tenantId, tenantId), eq(leaveBalances.employeeId, app.employeeId),
-      eq(leaveBalances.leaveType, leaveType.slug), eq(leaveBalances.year, currentYear),
-    ));
+  // Restore balance only if approved (pending leaves never had balance deducted)
+  if (app.status === 'approved') {
+    const [leaveType] = await db.select().from(hrLeaveTypes).where(eq(hrLeaveTypes.id, app.leaveTypeId)).limit(1);
+    if (leaveType) {
+      const currentYear = new Date(app.startDate).getFullYear();
+      await db.update(leaveBalances).set({
+        used: sql`GREATEST(${leaveBalances.used} - ${app.totalDays}, 0)`,
+        updatedAt: now,
+      }).where(and(
+        eq(leaveBalances.tenantId, tenantId), eq(leaveBalances.employeeId, app.employeeId),
+        eq(leaveBalances.leaveType, leaveType.slug), eq(leaveBalances.year, currentYear),
+      ));
+    }
   }
 
   const [updated] = await db.update(hrLeaveApplications).set({
