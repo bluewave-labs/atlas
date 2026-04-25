@@ -2694,7 +2694,9 @@
       "submit": "Talebi gönder",
       "cancel": "İzni iptal et",
       "emptyDesc": "Başlamak için bir izin talebi gönderin. Yöneticiniz onay için bilgilendirilecektir.",
-      "request": "İzin talep et"
+      "request": "İzin talep et",
+      "submitFailed": "İzin talebi gönderilemedi. Lütfen izin bakiyenizi ve politikanızı kontrol edin.",
+      "retrySubmit": "Talebi gönder"
     },
     "teamCalendar": {
       "noLeaves": "Bu ay için onaylanmış izin yok."

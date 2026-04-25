@@ -2724,7 +2724,9 @@
       "selectType": "Select leave type...",
       "reason": "Reason",
       "submit": "Submit request",
-      "cancel": "Cancel leave"
+      "cancel": "Cancel leave",
+      "submitFailed": "Failed to submit leave request. Please check your leave balance and policy.",
+      "retrySubmit": "Submit request"
     },
     "teamCalendar": {
       "noLeaves": "No approved leaves for this month."

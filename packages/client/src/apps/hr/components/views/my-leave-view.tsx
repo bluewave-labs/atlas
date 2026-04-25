@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Check, XCircle, X } from 'lucide-react';
+import { Plus, Check, XCircle, X, Send } from 'lucide-react';
 import {
   useLeaveTypes, useLeaveApplications, useCreateLeaveApplication,
   useSubmitLeaveApplication, useApproveLeaveApplication,
@@ -20,6 +20,7 @@ import { FeatureEmptyState } from '../../../../components/ui/feature-empty-state
 import { formatDate } from '../../../../lib/format';
 import { useMyAppPermission } from '../../../../hooks/use-app-permissions';
 import { useAuthStore } from '../../../../stores/auth-store';
+import { useToastStore } from '../../../../stores/toast-store';
 
 export function MyLeaveView({ employees }: { employees: HrEmployee[] }) {
   const { t } = useTranslation();
@@ -34,6 +35,7 @@ export function MyLeaveView({ employees }: { employees: HrEmployee[] }) {
   // Permission + self-identification used to gate the approve/reject
   // icon buttons. Viewers can never approve; even privileged roles
   // should never approve their own records.
+  const addToast = useToastStore((s) => s.addToast);
   const { data: hrPerm } = useMyAppPermission('hr');
   const canApprove = hrPerm?.role === 'admin' || hrPerm?.role === 'editor';
   const authAccount = useAuthStore((s) => s.account);
@@ -69,8 +71,12 @@ export function MyLeaveView({ employees }: { employees: HrEmployee[] }) {
       onSuccess: (data) => {
         setShowRequest(false);
         setReqEmployeeId(''); setReqLeaveTypeId(''); setReqStartDate(''); setReqEndDate(''); setReqReason(''); setReqHalfDay(false);
-        // Auto-submit
-        if (data?.id) submitApp.mutate(data.id);
+        if (data?.id) submitApp.mutate(data.id, {
+          onError: (err: unknown) => {
+            const msg = err instanceof Error ? err.message : t('hr.myLeave.submitFailed');
+            addToast({ type: 'error', message: msg });
+          },
+        });
       },
     });
   };
@@ -130,6 +136,14 @@ export function MyLeaveView({ employees }: { employees: HrEmployee[] }) {
                   <IconButton icon={<Check size={14} />} label={t('hr.actions.approve')} size={26} onClick={() => approveApp.mutate({ id: app.id })} style={{ color: 'var(--color-success)' }} />
                   <IconButton icon={<XCircle size={14} />} label={t('hr.actions.reject')} size={26} destructive onClick={() => rejectApp.mutate({ id: app.id })} />
                 </>
+              )}
+              {app.status === 'draft' && app.employeeId === myEmployee?.id && (
+                <IconButton icon={<Send size={14} />} label={t('hr.myLeave.retrySubmit')} size={26} onClick={() => submitApp.mutate(app.id, {
+                  onError: (err: unknown) => {
+                    const msg = err instanceof Error ? err.message : t('hr.myLeave.submitFailed');
+                    addToast({ type: 'error', message: msg });
+                  },
+                })} />
               )}
               {app.status === 'approved' && app.employeeId === myEmployee?.id && (
                 <IconButton icon={<X size={14} />} label={t('hr.myLeave.cancel')} size={26} destructive onClick={() => cancelApp.mutate(app.id)} />
