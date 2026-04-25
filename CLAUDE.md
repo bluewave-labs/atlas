@@ -472,11 +472,15 @@ SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM
 
 ---
 
-## Multi-tenancy (Hidden)
+## Multi-tenancy
 
-Atlas runs as single-tenant but the multi-tenant DB structure exists:
-- `tenants` table — one row for the organization
-- `tenantMembers` — maps users to the tenant with roles (owner/admin/member)
-- `tenantApps` — which apps are enabled per tenant
-- Tenant is auto-created during first-run setup (`POST /auth/setup`)
-- No public registration — admin adds users via org members page
+Atlas is genuinely multi-tenant. A single deployment can host any number of independent tenants — each with its own users, apps, settings, and data — and we run it that way in production at [app.dodoapps.net](https://app.dodoapps.net) as an open SaaS. A self-hosted private deployment with one company is also valid; the data model is the same in both modes.
+
+- `tenants` — one row per organization. Every domain table carries a `tenant_id` and queries scope on it.
+- `tenantMembers` — maps users to a tenant with a role (owner/admin/member). A user can be a member of many tenants.
+- `tenantApps` — which apps are enabled per tenant.
+- The first user on a fresh deployment is bootstrapped via `POST /auth/setup` — they create the first tenant and become its owner.
+- Subsequent tenants can be created via:
+  - `POST /auth/register` — open self-service signup. **Disabled by default** (`DISABLE_PUBLIC_SIGNUP=true`); SaaS operators set `DISABLE_PUBLIC_SIGNUP=false` to allow anyone to create a workspace.
+  - Tenant invitations — an existing owner adds members via the org-members page.
+- Tenant scoping is enforced at the service layer via `req.auth!.tenantId`. There is no shared cross-tenant data; even global features (search, calendar aggregator) filter by `tenantId`.

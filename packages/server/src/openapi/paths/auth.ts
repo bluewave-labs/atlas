@@ -7,7 +7,10 @@ register({
   tags: ['Authentication'],
   summary: 'Check if first-run setup is required',
   public: true,
-  response: envelope(z.object({ needsSetup: z.boolean() })),
+  response: envelope(z.object({
+    needsSetup: z.boolean(),
+    publicSignupEnabled: z.boolean(),
+  })),
 });
 
 register({

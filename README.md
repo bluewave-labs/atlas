@@ -189,6 +189,7 @@ Atlas boots with a small set of **required** secrets. Everything else is optiona
 | `SERVER_PUBLIC_URL` | `http://localhost:3001` | Publicly reachable URL of the Atlas API (used in invitation / password-reset links, and as the default OAuth redirect host) |
 | `CLIENT_PUBLIC_URL` | `http://localhost:5180` in dev, same as `SERVER_PUBLIC_URL` in production | Publicly reachable URL of the Atlas web app |
 | `CORS_ORIGINS` | *(derived from `CLIENT_PUBLIC_URL`)* | Comma-separated origins allowed to call the API |
+| `DISABLE_PUBLIC_SIGNUP` | `true` | Public self-registration is **off by default** on every self-hosted instance. The first-run setup flow and tenant invitations always work. Set `DISABLE_PUBLIC_SIGNUP=false` only if you're running Atlas as an open SaaS where anyone can create their own workspace. |
 
 ### Optional integrations
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api-client';
@@ -28,9 +28,28 @@ export function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
+  const [signupDisabled, setSignupDisabled] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    api.get('/auth/setup-status')
+      .then(({ data }) => {
+        if (data.data.publicSignupEnabled === false) {
+          setSignupDisabled(true);
+        }
+      })
+      .catch(() => { /* server unreachable: fall through, the POST will surface the error */ })
+      .finally(() => setChecking(false));
+  }, []);
 
   if (isAuthenticated && !registered) {
     return <Navigate to={ROUTES.HOME} replace />;
+  }
+  if (!checking && signupDisabled) {
+    return <Navigate to={ROUTES.LOGIN} replace />;
+  }
+  if (checking) {
+    return null;
   }
 
   async function handleSubmit(e: React.FormEvent) {

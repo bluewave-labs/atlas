@@ -34,6 +34,19 @@ const envSchema = z.object({
 
   // ─── CORS ─────────────────────────────────────────────────────────────────
   CORS_ORIGINS: z.string().default('http://localhost:3001,http://localhost:5180'),
+
+  // ─── Self-hosting / SaaS gate ─────────────────────────────────────────────
+  // When true (the default), the public POST /auth/register endpoint is
+  // disabled. New users can still join via tenant invitations
+  // (POST /auth/invitation/:token/accept) and the first-run /auth/setup
+  // flow is unaffected. SaaS operators (e.g. app.dodoapps.net) who want
+  // to allow open self-signup must set DISABLE_PUBLIC_SIGNUP=false
+  // explicitly. Accepts 'false' / '0' / 'no' (case-insensitive) as
+  // falsy; any other value (including unset) is true.
+  DISABLE_PUBLIC_SIGNUP: z
+    .string()
+    .optional()
+    .transform((v) => v ? !['false', '0', 'no'].includes(v.toLowerCase()) : true),
 });
 
 export const env = envSchema.parse(process.env);

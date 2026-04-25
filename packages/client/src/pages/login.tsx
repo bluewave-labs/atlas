@@ -51,12 +51,18 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [checkingSetup, setCheckingSetup] = useState(true);
   const [backendUnreachable, setBackendUnreachable] = useState(false);
+  const [publicSignupEnabled, setPublicSignupEnabled] = useState(true);
 
   useEffect(() => {
     api.get('/auth/setup-status')
       .then(({ data }) => {
         if (data.data.needsSetup) {
           navigate(ROUTES.SETUP, { replace: true });
+        }
+        // publicSignupEnabled is added in v2.6.2; older servers omit it,
+        // so default to true to keep existing behavior on a stale server.
+        if (typeof data.data.publicSignupEnabled === 'boolean') {
+          setPublicSignupEnabled(data.data.publicSignupEnabled);
         }
       })
       .catch(() => {
@@ -189,11 +195,13 @@ export function LoginPage() {
           </Button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: 16 }}>
-          <Link to={ROUTES.REGISTER} style={{ fontSize: 'var(--font-size-sm)', color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>
-            {t('login.noAccount')}
-          </Link>
-        </div>
+        {publicSignupEnabled && (
+          <div style={{ textAlign: 'center', marginTop: 16 }}>
+            <Link to={ROUTES.REGISTER} style={{ fontSize: 'var(--font-size-sm)', color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}>
+              {t('login.noAccount')}
+            </Link>
+          </div>
+        )}
       </div>
       <VersionBadge />
     </div>

@@ -5,13 +5,20 @@ import { hashPassword, validatePasswordStrength } from '../../utils/password';
 import { slugify } from '../../utils/slugify';
 import * as tenantService from '../../services/platform/tenant.service';
 import * as demoDataService from '../../services/platform/demo-data.service';
+import { env } from '../../config/env';
 
 // ─── Setup ──────────────────────────────────────────────────────────
 
 export async function getSetupStatus(_req: Request, res: Response) {
   try {
     const userCount = await authService.getUserCount();
-    res.json({ success: true, data: { needsSetup: userCount === 0 } });
+    res.json({
+      success: true,
+      data: {
+        needsSetup: userCount === 0,
+        publicSignupEnabled: !env.DISABLE_PUBLIC_SIGNUP,
+      },
+    });
   } catch (error) {
     logger.error({ error }, 'Failed to check setup status');
     res.status(500).json({ success: false, error: 'Failed to check setup status' });

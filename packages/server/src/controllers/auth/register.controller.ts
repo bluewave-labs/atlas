@@ -7,9 +7,15 @@ import { logger } from '../../utils/logger';
 import { hashPassword, validatePasswordStrength } from '../../utils/password';
 import { slugify } from '../../utils/slugify';
 import * as tenantService from '../../services/platform/tenant.service';
+import { env } from '../../config/env';
 
 export async function register(req: Request, res: Response) {
   try {
+    if (env.DISABLE_PUBLIC_SIGNUP) {
+      res.status(403).json({ success: false, error: 'Public registration is disabled on this instance' });
+      return;
+    }
+
     const { name, email, password, companyName } = req.body;
 
     if (!name || !email || !password || !companyName) {
