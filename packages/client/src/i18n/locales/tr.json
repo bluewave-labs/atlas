@@ -85,7 +85,9 @@
       "of": "/",
       "clear": "Temizle"
     },
-    "signOut": "Çıkış yap"
+    "signOut": "Çıkış yap",
+    "noResults": "Sonuç bulunamadı",
+    "navigation": "Gezinme"
   },
   "auth": {
     "appName": "Atlas",
