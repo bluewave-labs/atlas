@@ -150,18 +150,6 @@ export function TourOverlay() {
   return (
     <>
       <div className="tour-backdrop" onClick={handleSkip} />
-      <div className="tour-dock-mask-top" />
-      <div className="tour-dock-mask-bottom" />
-
-      <div
-        className="tour-icon-ring"
-        style={{
-          left: position.iconRect.left - 4,
-          top: position.iconRect.top - 4,
-          width: position.iconRect.width + 8,
-          height: position.iconRect.height + 8,
-        }}
-      />
 
       <div ref={modalRef}>
         <TourModal
