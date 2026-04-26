@@ -42,4 +42,16 @@ export const hrManifest: ClientAppManifest = {
       { id: 'appearance', label: 'Appearance', icon: Eye, component: HrAppearancePanel },
     ],
   },
+  tour: {
+    variant: 'activity',
+    illustrationData: {
+      contact: { initials: 'AS', avatarColor: '#10b981', name: 'Anna Schmidt', meta: 'Engineering · Senior Engineer', badge: { label: 'Active', tone: 'success' } },
+      events: [
+        { text: 'Promotion approved by manager', timestamp: 'just now', isLive: true },
+        { text: 'PTO request — 5 days · approved', timestamp: '2h ago' },
+        { text: 'Quarterly review submitted', timestamp: 'yesterday' },
+        { text: 'Onboarding completed', timestamp: '14d ago' },
+      ],
+    },
+  },
 };
