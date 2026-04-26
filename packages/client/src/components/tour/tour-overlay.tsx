@@ -37,6 +37,9 @@ export function TourOverlay() {
     // would skew getBoundingClientRect() on the very first step.
     const resetDockItems = () => {
       document.querySelectorAll<HTMLElement>('.dock-item').forEach((el) => {
+        // Kill the post-mouseleave CSS transition first — measuring during it
+        // returns mid-flight rect values that misplace the spotlight ring.
+        el.classList.remove('dock-resetting');
         el.style.width = '52px';
         el.style.height = '52px';
         el.style.marginTop = '0px';
@@ -147,7 +150,8 @@ export function TourOverlay() {
   return (
     <>
       <div className="tour-backdrop" onClick={handleSkip} />
-      <div className="tour-dock-mask" />
+      <div className="tour-dock-mask-top" />
+      <div className="tour-dock-mask-bottom" />
 
       <div
         className="tour-icon-ring"

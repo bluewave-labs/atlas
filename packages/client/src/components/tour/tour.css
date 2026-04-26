@@ -23,14 +23,26 @@
   pointer-events: none;
 }
 
-/* Dock-aware backdrop: covers entire viewport EXCEPT a 120px band at the bottom
-   reserved for the dock. Keeps every dock icon visible at full brightness. */
-.tour-dock-mask {
+/* Dock-aware backdrop: dims the entire viewport EXCEPT a narrow horizontal
+   band at the bottom where the dock lives. Implemented as two siblings that
+   sandwich the dock (above + below). Keeps every dock icon at full brightness. */
+.tour-dock-mask-top {
   position: fixed;
   left: 0;
   right: 0;
   top: 0;
-  bottom: 120px;
+  bottom: 110px;
+  z-index: 9000;
+  background: rgba(8, 12, 24, 0.55);
+  pointer-events: none;
+}
+
+.tour-dock-mask-bottom {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 12px;
   z-index: 9000;
   background: rgba(8, 12, 24, 0.55);
   pointer-events: none;
