@@ -33,4 +33,17 @@ export const driveManifest: ClientAppManifest = {
       { id: 'files', label: 'Files', icon: File, component: DriveFilesPanel },
     ],
   },
+  tour: {
+    variant: 'list',
+    illustrationData: {
+      rows: [
+        { initials: 'PD', avatarColor: '#0ea5e9', primary: 'Q4 Roadmap.pdf', secondary: 'updated 2 min ago · 2.4 MB' },
+        { initials: 'XL', avatarColor: '#10b981', primary: 'Sales pipeline.xlsx', secondary: 'shared with Sales' },
+        { initials: 'PN', avatarColor: '#f59e0b', primary: 'Brand assets.zip', secondary: '128 MB · folder' },
+        { initials: 'DR', avatarColor: '#a78bfa', primary: 'Demo recordings/', secondary: '42 items' },
+      ],
+      fadeFrom: 2,
+      collaborator: { name: 'Tom', color: '#6366f1', targetRowIndex: 0 },
+    },
+  },
 };
