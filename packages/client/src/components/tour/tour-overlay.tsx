@@ -33,14 +33,16 @@ export function TourOverlay() {
     }
 
     const recompute = () => {
-      const target = document.querySelector<HTMLElement>(
+      const dockItem = document.querySelector<HTMLElement>(
         `[data-tour-target="${currentStep.appId}"]`,
       );
-      if (!target) {
+      if (!dockItem) {
         setPosition(null);
         return;
       }
-      const iconRect = target.getBoundingClientRect();
+      // Measure the visible rounded square (dock-icon-inner), not the wrapper
+      const iconEl = dockItem.querySelector<HTMLElement>('.dock-icon-inner') ?? dockItem;
+      const iconRect = iconEl.getBoundingClientRect();
       const modalEl = document.querySelector<HTMLElement>('.tour-modal');
       const measuredHeight = modalEl?.offsetHeight ?? 0;
       const modalHeight = measuredHeight > 0 ? measuredHeight : 380;
@@ -75,11 +77,12 @@ export function TourOverlay() {
     if (!isOpen || !currentStep) return;
     const modalEl = document.querySelector<HTMLElement>('.tour-modal');
     if (!modalEl) return;
-    const target = document.querySelector<HTMLElement>(
+    const dockItem = document.querySelector<HTMLElement>(
       `[data-tour-target="${currentStep.appId}"]`,
     );
-    if (!target) return;
-    const iconRect = target.getBoundingClientRect();
+    if (!dockItem) return;
+    const iconEl = dockItem.querySelector<HTMLElement>('.dock-icon-inner') ?? dockItem;
+    const iconRect = iconEl.getBoundingClientRect();
     setPosition(
       computeTourPosition(
         {
@@ -149,10 +152,10 @@ export function TourOverlay() {
       <div
         className="tour-icon-ring"
         style={{
-          left: position.iconRect.left,
-          top: position.iconRect.top,
-          width: position.iconRect.width,
-          height: position.iconRect.height,
+          left: position.iconRect.left - 4,
+          top: position.iconRect.top - 4,
+          width: position.iconRect.width + 8,
+          height: position.iconRect.height + 8,
         }}
       />
 

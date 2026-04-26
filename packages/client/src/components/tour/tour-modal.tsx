@@ -41,11 +41,6 @@ export function TourModal({
       aria-labelledby="tour-modal-title"
     >
       <div className="tour-modal-header">
-        <span
-          className="tour-modal-app-color"
-          style={{ background: step.appColor }}
-          aria-hidden="true"
-        />
         <span id="tour-modal-title" className="tour-modal-title">
           {t(step.titleKey)}
         </span>

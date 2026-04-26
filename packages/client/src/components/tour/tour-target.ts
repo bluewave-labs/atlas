@@ -1,5 +1,5 @@
 const MODAL_WIDTH = 340;
-const MODAL_GAP = 16;        // distance between modal bottom edge and icon top edge
+const MODAL_GAP = 32;        // distance between modal bottom edge and icon top edge
 const VIEWPORT_PADDING = 12; // minimum gap between modal and viewport edges
 const CARET_HALF_WIDTH = 8;
 const MIN_CARET_OFFSET = 16; // caret can't get closer than this to modal edges
