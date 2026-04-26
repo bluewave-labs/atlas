@@ -32,4 +32,17 @@ export const drawManifest: ClientAppManifest = {
       { id: 'export', label: 'Export', icon: Download, component: DrawExportPanel },
     ],
   },
+  tour: {
+    variant: 'list',
+    illustrationData: {
+      rows: [
+        { initials: 'WB', avatarColor: '#e06c9f', primary: 'Onboarding flow', secondary: 'edited just now' },
+        { initials: 'AR', avatarColor: '#a78bfa', primary: 'Architecture v2', secondary: '12 shapes · 3 collaborators' },
+        { initials: 'WF', avatarColor: '#0ea5e9', primary: 'Wireframes — settings', secondary: 'shared with Design' },
+        { initials: 'BR', avatarColor: '#f97316', primary: 'Brainstorm — Q4', secondary: '24 sticky notes' },
+      ],
+      fadeFrom: 2,
+      collaborator: { name: 'Sam', color: '#e06c9f', targetRowIndex: 0 },
+    },
+  },
 };
