@@ -41,7 +41,9 @@ export function TourOverlay() {
         return;
       }
       const iconRect = target.getBoundingClientRect();
-      const modalHeight = modalRef.current?.offsetHeight ?? 380;
+      const modalEl = document.querySelector<HTMLElement>('.tour-modal');
+      const measuredHeight = modalEl?.offsetHeight ?? 0;
+      const modalHeight = measuredHeight > 0 ? measuredHeight : 380;
       setPosition(
         computeTourPosition(
           {
@@ -70,7 +72,9 @@ export function TourOverlay() {
 
   // Re-measure once the modal has rendered (so we know the real height)
   useEffect(() => {
-    if (!isOpen || !currentStep || !modalRef.current) return;
+    if (!isOpen || !currentStep) return;
+    const modalEl = document.querySelector<HTMLElement>('.tour-modal');
+    if (!modalEl) return;
     const target = document.querySelector<HTMLElement>(
       `[data-tour-target="${currentStep.appId}"]`,
     );
@@ -85,9 +89,11 @@ export function TourOverlay() {
           height: iconRect.height,
         },
         { width: window.innerWidth, height: window.innerHeight },
-        modalRef.current.offsetHeight,
+        modalEl.offsetHeight,
       ),
     );
+    // Only depend on inputs, not on position — would create an infinite loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, currentStepIndex, currentStep]);
 
   // Esc → skip

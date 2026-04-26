@@ -172,7 +172,7 @@
   border: 1px solid var(--color-border-secondary);
   border-radius: var(--radius-sm);
   padding: 10px;
-  height: 280px;
+  height: 200px;
   overflow: hidden;
 }
 
