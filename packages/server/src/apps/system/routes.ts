@@ -16,6 +16,7 @@ import { isTenantAdmin, isTenantOwner } from '@atlas-platform/shared';
 import * as systemController from './controller';
 import * as permissionsController from './permissions.controller';
 import { authMiddleware } from '../../middleware/auth';
+import odooImporterRouter from './importers/odoo/routes';
 
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
   if (!isTenantAdmin(req.auth?.tenantRole)) {
@@ -35,6 +36,8 @@ function requireTenantOwner(req: Request, res: Response, next: NextFunction) {
 
 const router = Router();
 router.use(authMiddleware);
+
+router.use('/importers/odoo', odooImporterRouter);
 
 // Product tour — every authenticated tenant member can read and mark their own tour.
 router.get('/tour', systemController.getTour);
