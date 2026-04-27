@@ -41,6 +41,7 @@
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.25.0",
     "cors": "^2.8.0",
+    "csv-parse": "^5.6.0",
     "date-fns": "^4.1.0",
     "dockerode": "^4.0.9",
     "dotenv": "^16.4.0",
