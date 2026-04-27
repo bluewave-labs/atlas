@@ -16,3 +16,4 @@ export * from './calendar';
 export * from './invoices';
 export * from './proposals';
 export * from './concurrency';
+export * from './odoo-import';
