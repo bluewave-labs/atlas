@@ -22,3 +22,4 @@ certs/
 e2e/.auth/
 test-results/
 playwright-report/
+.superpowers/
