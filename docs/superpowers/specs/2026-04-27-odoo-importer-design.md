@@ -24,14 +24,14 @@ Atlas users coming from Odoo upload up to three CSVs from Odoo's UI, preview a s
 |---|----------|
 | Source format | CSV uploaded by user from Odoo UI export (with "import-compatible export" toggle ON) |
 | Files accepted | `res.partner.csv` (required), `crm.lead.csv` (optional), `mail.activity.csv` (optional). Multi-file upload in one session. |
-| Entry point | Settings → Data → Import (new panel under existing "Data" settings group, `ownerOnly: true`) |
+| Entry point | New `data-import` panel in the global Settings sidebar, sibling of `data-model`, `ownerOnly: true`. (Settings UI is currently flat panels, not nested sub-categories — "Settings → Data → Import" in earlier drafts was aspirational.) |
 | FK resolution between files | Odoo `id` column (integer, present in import-compatible exports) is the join key. We build an in-session map `odooPartnerId → atlasContactId\|atlasCompanyId`, consulted by lead/deal/activity passes. |
 | Lead vs Deal split | `crm.lead.csv` rows with `type='lead'` → `crmLeads`. Rows with `type='opportunity'` → `crmDeals`. |
 | Stage mapping | Distinct Odoo `stage_id` labels surfaced in preview; user maps each to an existing Atlas `crmDealStages` entry via dropdown. Pre-filled with case-insensitive name-equality matches. |
 | Custom fields | Detected, counted, listed in preview, **skipped** on import. User who wants them must define them in Atlas first and re-import. |
 | Activities filter | All rows from `mail.activity.csv` imported (Odoo's `mail.activity` table only contains pending activities by definition; done ones move to `mail.message`). |
 | Permission gate | `requireTenantOwner` on all importer endpoints. |
-| Timestamp preservation | Use Odoo's `create_date` → `createdAt`, `write_date` → `updatedAt` when present and parseable; fall back to `now()` otherwise. |
+| Timestamp preservation | Use Odoo's `create_date` → `createdAt`, `write_date` → `updatedAt` when present and parseable; fall back to `now()` otherwise. Implementation note: existing `createX` service helpers hardcode `now()` and have no override; the importer bypasses those helpers and writes via raw `tx.insert(...)` inside a transaction (see Architecture). |
 
 ---
 
@@ -127,6 +127,8 @@ Routing by `type`:
 
 Only rows where `res_model in ('res.partner', 'crm.lead')` are imported. Other models (e.g. `sale.order`, `account.move`) are dropped silently with a count in the summary.
 
+**Atlas's `crmActivities` has FK columns for `dealId`, `contactId`, `companyId` — but NOT for leads.** An imported activity tied to an Odoo `crm.lead` row that became an Atlas `crmLead` (not a `crmDeal`) has nowhere to attach. Such rows are dropped with a counted reason in the summary: "K activities couldn't be imported because they were attached to leads, which Atlas activities can't reference." Activities tied to opportunities (which became deals) attach via `dealId`; activities tied to partners attach via `companyId` or `contactId` per the partner's kind.
+
 | Odoo column | Atlas target | Notes |
 |-------------|-------------|-------|
 | `id` | (not stored) | |
@@ -147,6 +149,8 @@ Any column not in the recognized list above (typically prefixed `x_studio_` or `
 - Listed in preview by name + sample value from the first non-empty row
 - **Skipped on import**, with the count surfaced in the post-import summary
 
+**Column-name normalization:** Odoo's "import-compatible export" toggle suffixes Many2one fields with `/id` (e.g. `state_id` → `state_id/id`, `country_id/.id`). The CSV parser strips `/id` and `/.id` suffixes before matching column names against the recognized list, so both export styles work.
+
 ---
 
 ## Architecture
@@ -163,7 +167,7 @@ packages/server/src/apps/system/importers/
     map-activity.ts   — Pure mapper: row → CrmActivityInsert
     odoo-id-map.ts    — In-session Map<number, { kind: 'company'|'contact', atlasId: string }> + lookup helpers
     preview.service.ts — Builds an ImportPreview from raw rows: counts, distinct stages, distinct unrecognized columns, sample rows. Pure (no DB writes).
-    commit.service.ts  — Three-pass commit: partners → leads/deals → activities. All inserts go through CRM service helpers (NOT raw db.insert) so existing validations and uuid generation apply. Wraps the whole commit in a transaction; on failure rolls back fully.
+    commit.service.ts  — Three-pass commit: partners → leads/deals → activities. Inserts go via raw `tx.insert(...)` inside a single `db.transaction()` block. We deliberately bypass the per-entity `createX` service helpers because (a) those helpers hardcode `now()` for timestamps with no override, and we need to preserve Odoo's `create_date`/`write_date`, and (b) atomicity matters more than reusing the helpers' validation — importer mappers already validate row shape upstream. Cost: ~5 lines of duplicated insert shape per entity. On failure the transaction rolls back fully.
     controller.ts     — POST /system/importers/odoo/preview, POST /system/importers/odoo/commit
     routes.ts         — Wires the two endpoints with authMiddleware + requireTenantOwner
 ```
@@ -189,11 +193,13 @@ packages/shared/src/types/odoo-import.ts   — Shared types reused by client and
 
 ```
 packages/server/src/db/schema.ts                    — No changes needed (no new tables in v1)
-packages/server/src/apps/crm/services/contact.service.ts   — Bulk-create helpers exposed for importer (already exist for contacts; add for companies/leads/deals/activities if missing, with optional createdAt/updatedAt overrides)
 packages/server/src/apps/system/routes.ts           — Mount importer routes under /system/importers
-packages/client/src/config/settings-registry.ts     — Add 'data-import' panel under 'data' category, ownerOnly: true
+packages/server/package.json                        — Add csv-parse dependency
+packages/client/src/config/settings-registry.ts     — Register 'data-import' panel in globalSettingsCategory, ownerOnly: true, placed alongside 'data-model'
 packages/client/src/i18n/locales/{en,tr,de,fr,it}.json — Add 'import.odoo.*' namespace (titles, instructions, error messages, summary labels)
 ```
+
+**Note on existing CRM service helpers**: the importer does NOT modify `contact.service.ts`, `company.service.ts`, etc. Their `createX` helpers can't preserve Odoo timestamps (no override). The importer writes directly via `tx.insert(...)` instead — see Architecture. This is the deliberate tradeoff to keep the helpers untouched at the cost of duplicating ~5 lines of insert shape per entity.
 
 ### LOC budget (rough)
 
@@ -239,7 +245,15 @@ The preview shows:
 
 In-memory `Map<sessionId, { rows, preview, createdAt }>` on the server with a 30-minute TTL. Eviction on commit, on TTL, or on tenant logout. **No persistence to DB or disk** — uploaded CSVs never touch storage.
 
-This means previewing then closing the browser tab + reopening 31 minutes later forces a re-upload. Acceptable v1 tradeoff; persistence becomes a feature in v2.
+Multer is configured with `multer.memoryStorage()` (not the default disk storage used elsewhere in the codebase) and `limits: { fileSize: 20 * 1024 * 1024, files: 3 }`. Uploaded buffers are parsed in-process and the rows live only in the preview-session map.
+
+**Single-process by design.** The map is local to one Node process. With multi-instance deployment behind a load balancer, preview and commit must hit the same instance — Atlas runs as a single instance today, so this is fine. v2 migrates session storage to Redis if/when we go multi-instance.
+
+Closing the browser tab and reopening 31 minutes later forces a re-upload. Acceptable v1 tradeoff.
+
+### Stage validation at commit
+
+Between preview and commit, a tenant admin could rename or delete a `crmDealStages` row. The commit handler re-queries the tenant's stages by id; if any user-supplied stage mapping references a stage that's no longer present, the commit aborts with: "The stage you mapped to has been changed. Please re-run preview."
 
 ---
 
