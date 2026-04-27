@@ -1,0 +1,56 @@
+<h2>Clean direction — v3 (narrower, themed typography)</h2>
+<p class="subtitle">Modal width capped at ~340px. Typography pulled from Atlas tokens: system font stack, 14px title, 13px body, 11px meta. Radius 4px throughout.</p>
+
+<div class="mockup">
+  <div class="mockup-header">CRM step preview</div>
+  <div class="mockup-body" style="padding:0">
+    <div style="background:linear-gradient(135deg,#3a4a78,#1f2a4a); padding:0; height:420px; position:relative; overflow:hidden; border-radius:4px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+
+      <!-- soft radial vignette -->
+      <div style="position:absolute; inset:0; background:radial-gradient(circle at 64px 240px, transparent 0, rgba(10,15,30,0.0) 70px, rgba(10,15,30,0.55) 200px, rgba(10,15,30,0.7) 100%)"></div>
+
+      <!-- highlighted dock item -->
+      <div style="position:absolute; left:24px; top:212px; background:rgba(255,255,255,0.98); border-radius:4px; padding:10px 14px; display:flex; align-items:center; gap:10px; box-shadow:0 8px 28px rgba(0,0,0,0.3); width:140px">
+        <div style="width:28px; height:28px; border-radius:4px; background:linear-gradient(135deg,#f97316,#ea580c); display:flex; align-items:center; justify-content:center; color:white; font-size:14px; font-weight:600">C</div>
+        <div style="font-size:13px; font-weight:500; color:#111">CRM</div>
+      </div>
+
+      <!-- modal: capped at 340px -->
+      <div style="position:absolute; left:200px; top:80px; width:340px; background:white; border-radius:4px; padding:16px; box-shadow:0 16px 48px rgba(0,0,0,0.4); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px">
+          <div style="width:16px; height:16px; border-radius:4px; background:#f97316"></div>
+          <div style="font-size:14px; font-weight:600; color:#111; letter-spacing:-0.01em">CRM</div>
+          <div style="margin-left:auto; color:#94a3b8; font-size:16px; cursor:pointer; line-height:1">×</div>
+        </div>
+        <div style="font-size:13px; color:#475569; line-height:1.5; margin-bottom:12px">Your complete client database. Manage contacts, track opportunities through your pipeline, and log every interaction.</div>
+
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:8px 10px; margin-bottom:6px; display:flex; gap:8px; align-items:center">
+          <div style="width:24px; height:24px; border-radius:4px; background:#a78bfa; color:white; font-size:10px; font-weight:600; display:flex; align-items:center; justify-content:center">JR</div>
+          <div style="flex:1; min-width:0">
+            <div style="font-size:13px; font-weight:500; color:#111">James Rodriguez</div>
+            <div style="font-size:11px; color:#64748b">Horizon Media Group</div>
+          </div>
+          <div style="background:#dcfce7; color:#15803d; font-size:11px; padding:2px 7px; border-radius:4px; font-weight:500">Active</div>
+        </div>
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:8px 10px; display:flex; gap:8px; align-items:center; margin-bottom:14px">
+          <div style="width:24px; height:24px; border-radius:4px; background:#10b981; color:white; font-size:10px; font-weight:600; display:flex; align-items:center; justify-content:center">EC</div>
+          <div style="flex:1; min-width:0">
+            <div style="font-size:13px; font-weight:500; color:#111">Emily Chen</div>
+            <div style="font-size:11px; color:#64748b">CloudNine Solutions</div>
+          </div>
+          <div style="background:#dbeafe; color:#1d4ed8; font-size:11px; padding:2px 7px; border-radius:4px; font-weight:500">Lead</div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <div style="font-size:11px; color:#94a3b8">3 of 11</div>
+          <div style="display:flex; gap:6px">
+            <div style="background:transparent; border:1px solid #d0d5dd; padding:6px 10px; border-radius:4px; font-size:13px; color:#475569; font-weight:500">Previous</div>
+            <div style="background:#13715B; color:white; padding:6px 12px; border-radius:4px; font-size:13px; font-weight:500">Next</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px">If this looks right I'll move to scope/behavior questions in the terminal.</p>

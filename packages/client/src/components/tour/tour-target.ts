@@ -30,20 +30,16 @@ export function computeTourPosition(
   const iconCenterX = iconRect.left + iconRect.width / 2;
   const iconTop = iconRect.top;
 
-  // Default: center modal horizontally on the icon
   let modalLeft = Math.round(iconCenterX - MODAL_WIDTH / 2);
 
-  // Clamp horizontally
   const minLeft = VIEWPORT_PADDING;
   const maxLeft = viewport.width - MODAL_WIDTH - VIEWPORT_PADDING;
   if (modalLeft < minLeft) modalLeft = minLeft;
   if (modalLeft > maxLeft) modalLeft = maxLeft;
 
-  // Modal sits above the icon
   let modalTop = Math.round(iconTop - modalHeight - MODAL_GAP);
   if (modalTop < VIEWPORT_PADDING) modalTop = VIEWPORT_PADDING;
 
-  // Caret points down at the icon center; constrain so it doesn't run past modal edges
   const minCaret = MIN_CARET_OFFSET + CARET_HALF_WIDTH;
   const maxCaret = MODAL_WIDTH - MIN_CARET_OFFSET - CARET_HALF_WIDTH;
   let caretLeft = iconCenterX - modalLeft;

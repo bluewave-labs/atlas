@@ -1,31 +1,26 @@
 import { useTranslation } from 'react-i18next';
 import type { TourStep } from './tour-types';
+import type { TourPosition } from './tour-target';
 import { TourIllustration } from './tour-illustration';
 
 interface TourModalProps {
   step: TourStep;
   stepIndex: number;
   totalSteps: number;
-  modalLeft: number;
-  modalTop: number;
-  caretLeft: number;
+  position: TourPosition;
   onPrev: () => void;
   onNext: () => void;
   onSkip: () => void;
-  onClose: () => void;
 }
 
 export function TourModal({
   step,
   stepIndex,
   totalSteps,
-  modalLeft,
-  modalTop,
-  caretLeft,
+  position,
   onPrev,
   onNext,
   onSkip,
-  onClose,
 }: TourModalProps) {
   const { t } = useTranslation();
   const isFirst = stepIndex === 0;
@@ -34,7 +29,7 @@ export function TourModal({
   return (
     <div
       className="tour-modal"
-      style={{ left: modalLeft, top: modalTop }}
+      style={{ left: position.modalLeft, top: position.modalTop }}
       onClick={(e) => e.stopPropagation()}
       role="dialog"
       aria-modal="true"
@@ -47,7 +42,7 @@ export function TourModal({
         <button
           type="button"
           className="tour-modal-close"
-          onClick={onClose}
+          onClick={onSkip}
           aria-label={t('tour.skip')}
         >
           ×
@@ -82,7 +77,7 @@ export function TourModal({
 
       <span
         className="tour-modal-caret"
-        style={{ left: caretLeft }}
+        style={{ left: position.caretLeft }}
         aria-hidden="true"
       />
     </div>

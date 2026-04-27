@@ -1,12 +1,6 @@
-import type { ListData, BadgeTone } from '../tour-types';
-
-const BADGE_TONES: Record<BadgeTone, { bg: string; fg: string }> = {
-  success: { bg: '#dcfce7', fg: '#15803d' },
-  info: { bg: '#dbeafe', fg: '#1d4ed8' },
-  warning: { bg: '#fef3c7', fg: '#a16207' },
-  danger: { bg: '#fee2e2', fg: '#b91c1c' },
-  neutral: { bg: '#f1f5f9', fg: '#475569' },
-};
+import type { ListData } from '../tour-types';
+import { BADGE_TONES } from '../badge-tones';
+import { hexToRgba } from '../../../lib/color-themes';
 
 export function ListIllustration({ data }: { data: ListData }) {
   const visibleRows = data.rows.slice(0, 5);
@@ -87,10 +81,3 @@ export function ListIllustration({ data }: { data: ListData }) {
   );
 }
 
-function hexToRgba(hex: string, alpha: number): string {
-  const m = hex.replace('#', '');
-  const r = parseInt(m.substring(0, 2), 16);
-  const g = parseInt(m.substring(2, 4), 16);
-  const b = parseInt(m.substring(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}

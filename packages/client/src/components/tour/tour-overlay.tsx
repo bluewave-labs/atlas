@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api-client';
 import { queryKeys } from '../../config/query-keys';
@@ -10,7 +10,6 @@ import './tour.css';
 export function TourOverlay() {
   const { isOpen, steps, currentStepIndex, prev, next, skip, finish } = useTour();
   const [position, setPosition] = useState<TourPosition | null>(null);
-  const modalRef = useRef<HTMLDivElement | null>(null);
   const queryClient = useQueryClient();
 
   const completeMutation = useMutation({
@@ -145,8 +144,6 @@ export function TourOverlay() {
     skip();
   };
 
-  const handleClose = handleSkip;
-
   const handleNext = () => {
     const isLast = currentStepIndex === steps.length - 1;
     if (isLast) {
@@ -160,21 +157,15 @@ export function TourOverlay() {
   return (
     <>
       <div className="tour-backdrop" onClick={handleSkip} />
-
-      <div ref={modalRef}>
-        <TourModal
-          step={currentStep}
-          stepIndex={currentStepIndex}
-          totalSteps={steps.length}
-          modalLeft={position.modalLeft}
-          modalTop={position.modalTop}
-          caretLeft={position.caretLeft}
-          onPrev={prev}
-          onNext={handleNext}
-          onSkip={handleSkip}
-          onClose={handleClose}
-        />
-      </div>
+      <TourModal
+        step={currentStep}
+        stepIndex={currentStepIndex}
+        totalSteps={steps.length}
+        position={position}
+        onPrev={prev}
+        onNext={handleNext}
+        onSkip={handleSkip}
+      />
     </>
   );
 }

@@ -1,0 +1,133 @@
+<h2>Three tour design directions</h2>
+<p class="subtitle">All three highlight a dock icon and show a modal next to it. Pick the look you want — then we refine content, copy, and behavior.</p>
+
+<div class="cards" data-multiselect>
+
+  <!-- ============ OPTION A — CLEAN/MINIMAL (Eaglewire-style) ============ -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:linear-gradient(135deg,#3a4a78,#1f2a4a); padding:0; height:300px; position:relative; overflow:hidden">
+      <!-- backdrop dim -->
+      <div style="position:absolute; inset:0; background:rgba(10,15,30,0.55)"></div>
+
+      <!-- highlighted dock item (left) -->
+      <div style="position:absolute; left:14px; top:80px; background:rgba(255,255,255,0.98); border-radius:10px; padding:8px 12px; display:flex; align-items:center; gap:8px; box-shadow:0 8px 24px rgba(0,0,0,0.25); width:120px">
+        <div style="width:22px; height:22px; border-radius:6px; background:linear-gradient(135deg,#f97316,#ea580c); display:flex; align-items:center; justify-content:center; color:white; font-size:11px; font-weight:700">C</div>
+        <div style="font-size:11px; font-weight:600; color:#111">CRM</div>
+      </div>
+
+      <!-- modal (right) -->
+      <div style="position:absolute; left:150px; top:30px; right:14px; background:white; border-radius:12px; padding:14px; box-shadow:0 12px 40px rgba(0,0,0,0.35)">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px">
+          <div style="width:14px; height:14px; border-radius:3px; background:#f97316"></div>
+          <div style="font-size:12px; font-weight:700; color:#111">CRM</div>
+          <div style="margin-left:auto; color:#94a3b8; font-size:14px">×</div>
+        </div>
+        <div style="font-size:9px; color:#475569; line-height:1.5; margin-bottom:8px">Your complete client database. Manage contacts, track opportunities, and log every interaction.</div>
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:6px 8px; margin-bottom:6px; display:flex; gap:6px; align-items:center">
+          <div style="width:18px; height:18px; border-radius:4px; background:#a78bfa; color:white; font-size:8px; font-weight:700; display:flex; align-items:center; justify-content:center">JR</div>
+          <div style="flex:1">
+            <div style="font-size:8px; font-weight:600; color:#111">James Rodriguez</div>
+            <div style="font-size:7px; color:#64748b">Horizon Media</div>
+          </div>
+          <div style="background:#dcfce7; color:#15803d; font-size:7px; padding:2px 5px; border-radius:3px; font-weight:600">Active</div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px">
+          <div style="font-size:8px; color:#94a3b8">3 of 11</div>
+          <div style="display:flex; gap:4px">
+            <div style="background:#f1f5f9; padding:3px 8px; border-radius:4px; font-size:8px; color:#475569; font-weight:600">Previous</div>
+            <div style="background:#13715B; color:white; padding:3px 8px; border-radius:4px; font-size:8px; font-weight:600">Next</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Clean / Eaglewire</h3>
+      <p>Soft white modal, dim backdrop, target highlighted with a glow. Calm, professional, stays out of the way. Closest to the screenshot you sent.</p>
+    </div>
+  </div>
+
+  <!-- ============ OPTION B — DARK GLASS / NATIVE-MAC ============ -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:linear-gradient(135deg,#7c3aed,#3b82f6); padding:0; height:300px; position:relative; overflow:hidden">
+      <div style="position:absolute; inset:0; background:rgba(0,0,0,0.45)"></div>
+
+      <!-- highlighted dock item with glow -->
+      <div style="position:absolute; left:12px; top:80px; background:rgba(255,255,255,0.15); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.4); border-radius:10px; padding:10px; width:60px; height:60px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 4px rgba(255,255,255,0.2), 0 0 32px rgba(255,255,255,0.4)">
+        <div style="width:36px; height:36px; border-radius:8px; background:linear-gradient(135deg,#f97316,#ea580c); display:flex; align-items:center; justify-content:center; color:white; font-size:18px; font-weight:700">C</div>
+      </div>
+
+      <!-- dark glass modal -->
+      <div style="position:absolute; left:90px; top:30px; right:14px; background:rgba(20,25,40,0.85); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:14px; box-shadow:0 12px 40px rgba(0,0,0,0.5); color:white">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px">
+          <div style="width:14px; height:14px; border-radius:3px; background:#f97316"></div>
+          <div style="font-size:12px; font-weight:700">CRM</div>
+          <div style="margin-left:auto; color:rgba(255,255,255,0.5); font-size:14px">×</div>
+        </div>
+        <div style="font-size:9px; color:rgba(255,255,255,0.75); line-height:1.5; margin-bottom:8px">Your complete client database. Manage contacts, opportunities, and notes.</div>
+        <div style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); border-radius:6px; padding:6px 8px; display:flex; gap:6px; align-items:center; margin-bottom:6px">
+          <div style="width:18px; height:18px; border-radius:4px; background:#a78bfa; color:white; font-size:8px; font-weight:700; display:flex; align-items:center; justify-content:center">JR</div>
+          <div style="flex:1">
+            <div style="font-size:8px; font-weight:600">James Rodriguez</div>
+            <div style="font-size:7px; color:rgba(255,255,255,0.5)">Horizon Media</div>
+          </div>
+          <div style="background:rgba(34,197,94,0.2); color:#86efac; font-size:7px; padding:2px 5px; border-radius:3px; font-weight:600">Active</div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px">
+          <div style="font-size:8px; color:rgba(255,255,255,0.5)">3 of 11</div>
+          <div style="display:flex; gap:4px">
+            <div style="background:rgba(255,255,255,0.08); padding:3px 8px; border-radius:4px; font-size:8px; font-weight:600">Skip</div>
+            <div style="background:#13715B; padding:3px 8px; border-radius:4px; font-size:8px; font-weight:600">Next</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Dark glass / native</h3>
+      <p>Translucent modal sitting on the wallpaper, glow ring on the dock icon. Matches Atlas's macOS-like home page aesthetic.</p>
+    </div>
+  </div>
+
+  <!-- ============ OPTION C — SPOTLIGHT CUTOUT ============ -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:linear-gradient(135deg,#0f766e,#064e3b); padding:0; height:300px; position:relative; overflow:hidden">
+      <!-- vignette: very dark backdrop with cutout circle around dock icon -->
+      <div style="position:absolute; inset:0; background:radial-gradient(circle at 42px 110px, transparent 0, transparent 38px, rgba(0,0,0,0.78) 90px)"></div>
+
+      <!-- dock icon (no chrome, just the icon — spotlight does the work) -->
+      <div style="position:absolute; left:14px; top:90px; width:56px; height:56px; border-radius:12px; background:linear-gradient(135deg,#f97316,#ea580c); display:flex; align-items:center; justify-content:center; color:white; font-size:24px; font-weight:700; box-shadow:0 8px 24px rgba(0,0,0,0.3)">C</div>
+
+      <!-- bold modal with arrow -->
+      <div style="position:absolute; left:120px; top:30px; right:14px; background:white; border-radius:14px; padding:14px; box-shadow:0 16px 50px rgba(0,0,0,0.5)">
+        <!-- arrow pointing left -->
+        <div style="position:absolute; left:-7px; top:90px; width:0; height:0; border-top:7px solid transparent; border-bottom:7px solid transparent; border-right:7px solid white"></div>
+
+        <div style="background:#fff7ed; color:#c2410c; font-size:8px; padding:2px 6px; border-radius:10px; display:inline-block; font-weight:700; margin-bottom:6px">STEP 3 / 11</div>
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px">
+          <div style="font-size:14px; font-weight:800; color:#111">CRM</div>
+        </div>
+        <div style="font-size:9px; color:#475569; line-height:1.5; margin-bottom:8px">Your complete client database. Manage contacts and opportunities.</div>
+        <div style="background:#f0fdf4; border-left:2px solid #13715B; padding:5px 8px; margin-bottom:8px">
+          <div style="font-size:8px; color:#15803d; font-weight:600">Click the icon anytime to open CRM</div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <div style="display:flex; gap:3px">
+            <div style="width:5px; height:5px; border-radius:50%; background:#cbd5e1"></div>
+            <div style="width:5px; height:5px; border-radius:50%; background:#cbd5e1"></div>
+            <div style="width:14px; height:5px; border-radius:3px; background:#13715B"></div>
+            <div style="width:5px; height:5px; border-radius:50%; background:#cbd5e1"></div>
+            <div style="width:5px; height:5px; border-radius:50%; background:#cbd5e1"></div>
+          </div>
+          <div style="display:flex; gap:4px">
+            <div style="color:#94a3b8; padding:3px 6px; font-size:8px; font-weight:600">Skip tour</div>
+            <div style="background:#13715B; color:white; padding:3px 10px; border-radius:5px; font-size:8px; font-weight:700">Next →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Spotlight cutout</h3>
+      <p>Hard vignette around the icon, opinionated modal with step pill, arrow pointer, and progress dots. Bold and product-tour-y, like Userpilot/Pendo.</p>
+    </div>
+  </div>
+
+</div>

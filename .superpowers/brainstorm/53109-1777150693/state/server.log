@@ -1,0 +1,9 @@
+{"type":"server-started","port":60317,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:60317","screen_dir":"/Users/gorkemcetin/atlasmail/.superpowers/brainstorm/53109-1777150693/content","state_dir":"/Users/gorkemcetin/atlasmail/.superpowers/brainstorm/53109-1777150693/state"}
+{"type":"screen-added","file":"/Users/gorkemcetin/atlasmail/.superpowers/brainstorm/53109-1777150693/content/tour-styles.html"}
+{"source":"user-event","type":"click","text":"C\n        CRM\n      \n\n      \n      \n        \n          \n          CRM\n          ×\n        \n        Your complete client database. Manage contacts, track opportunities, and log every interaction.\n        \n          JR\n          \n            James Rodriguez\n            Horizon Media\n          \n          Active\n        \n        \n          3 of 11\n          \n            Previous\n            Next\n          \n        \n      \n    \n    \n      A — Clean / Eaglewire\n      Soft white modal, dim backdrop, target highlighted with a glow. Calm, professional, stays out of the way. Closest to the screenshot you sent.","choice":"a","id":null,"timestamp":1777150771155}
+{"type":"screen-added","file":"/Users/gorkemcetin/atlasmail/.superpowers/brainstorm/53109-1777150693/content/tour-clean-v2.html"}
+{"type":"screen-added","file":"/Users/gorkemcetin/atlasmail/.superpowers/brainstorm/53109-1777150693/content/tour-clean-v3.html"}
+{"type":"screen-added","file":"/Users/gorkemcetin/atlasmail/.superpowers/brainstorm/53109-1777150693/content/tour-clean-v4.html"}
+{"type":"screen-added","file":"/Users/gorkemcetin/atlasmail/.superpowers/brainstorm/53109-1777150693/content/tour-content-block.html"}
+{"type":"screen-added","file":"/Users/gorkemcetin/atlasmail/.superpowers/brainstorm/53109-1777150693/content/waiting.html"}
+{"type":"server-stopped","reason":"idle timeout"}

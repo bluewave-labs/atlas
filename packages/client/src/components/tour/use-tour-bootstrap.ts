@@ -11,6 +11,16 @@ interface TourStatusResponse {
   tourCompletedAt: string | null;
 }
 
+function buildStep(app: ReturnType<typeof appRegistry.getAll>[number]): TourStep {
+  return {
+    appId: app.id,
+    appColor: app.color,
+    config: app.tour!,
+    titleKey: `${app.id}.tour.title`,
+    descriptionKey: `${app.id}.tour.description`,
+  };
+}
+
 export function useTourBootstrap() {
   const { open, isOpen } = useTour();
   const accessibleQuery = useMyAccessibleApps();
@@ -39,13 +49,7 @@ export function useTourBootstrap() {
 
     if (tourApps.length === 0) return;
 
-    const steps: TourStep[] = tourApps.map((app) => ({
-      appId: app.id,
-      appColor: app.color,
-      config: app.tour!,
-      titleKey: `${app.id}.tour.title`,
-      descriptionKey: `${app.id}.tour.description`,
-    }));
+    const steps: TourStep[] = tourApps.map(buildStep);
 
     // Defer to after first paint so the dock renders before the overlay drops in
     const id = window.setTimeout(() => open(steps), 150);
@@ -56,13 +60,9 @@ export function useTourBootstrap() {
 /** Replay path used by the user-menu "Take the tour" entry. Ignores tourCompletedAt. */
 export function replayTour() {
   const { open } = useTour.getState();
-  const tourApps = appRegistry.getAll().filter((app) => app.tour !== undefined);
-  const steps: TourStep[] = tourApps.map((app) => ({
-    appId: app.id,
-    appColor: app.color,
-    config: app.tour!,
-    titleKey: `${app.id}.tour.title`,
-    descriptionKey: `${app.id}.tour.description`,
-  }));
+  const steps: TourStep[] = appRegistry
+    .getAll()
+    .filter((app) => app.tour !== undefined)
+    .map(buildStep);
   if (steps.length > 0) open(steps);
 }

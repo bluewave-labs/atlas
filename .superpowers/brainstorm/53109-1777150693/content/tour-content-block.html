@@ -1,0 +1,143 @@
+<h2>Pick a treatment for the in-modal preview</h2>
+<p class="subtitle">Three options for the visual block inside the CRM modal. Each per-app step gets its own custom illustration in this same shape.</p>
+
+<div class="cards" data-multiselect>
+
+  <!-- ============ A — FADED LIST WITH PARALLEL CURSOR ============ -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0; background:#fff; height:280px; position:relative; overflow:hidden; border-bottom:1px solid #e2e8f0">
+      <div style="padding:14px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+        <!-- row 1 full opacity -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:8px 10px; margin-bottom:6px; display:flex; gap:8px; align-items:center">
+          <div style="width:24px; height:24px; border-radius:4px; background:#a78bfa; color:white; font-size:10px; font-weight:600; display:flex; align-items:center; justify-content:center">JR</div>
+          <div style="flex:1; min-width:0">
+            <div style="font-size:13px; font-weight:500; color:#111">James Rodriguez</div>
+            <div style="font-size:11px; color:#64748b">Horizon Media Group</div>
+          </div>
+          <div style="background:#dcfce7; color:#15803d; font-size:11px; padding:2px 7px; border-radius:4px; font-weight:500">Active</div>
+        </div>
+        <!-- row 2 full opacity, with cursor + name flag mimicking another user -->
+        <div style="background:#f8fafc; border:1px solid #6366f1; border-radius:4px; padding:8px 10px; margin-bottom:6px; display:flex; gap:8px; align-items:center; position:relative; box-shadow:0 0 0 2px rgba(99,102,241,0.18)">
+          <div style="width:24px; height:24px; border-radius:4px; background:#10b981; color:white; font-size:10px; font-weight:600; display:flex; align-items:center; justify-content:center">EC</div>
+          <div style="flex:1; min-width:0">
+            <div style="font-size:13px; font-weight:500; color:#111">Emily Chen</div>
+            <div style="font-size:11px; color:#64748b">CloudNine Solutions</div>
+          </div>
+          <div style="background:#dbeafe; color:#1d4ed8; font-size:11px; padding:2px 7px; border-radius:4px; font-weight:500">Lead</div>
+
+          <!-- collaborator cursor -->
+          <svg width="14" height="14" viewBox="0 0 14 14" style="position:absolute; right:38px; top:-4px; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.25))">
+            <path d="M2 1 L2 11 L5 8 L7 12 L9 11 L7 7 L11 7 Z" fill="#6366f1" stroke="white" stroke-width="0.8"/>
+          </svg>
+          <div style="position:absolute; right:18px; top:10px; background:#6366f1; color:white; font-size:10px; padding:2px 6px; border-radius:3px; font-weight:500; white-space:nowrap">Maria</div>
+        </div>
+        <!-- row 3 fading -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:8px 10px; margin-bottom:6px; display:flex; gap:8px; align-items:center; opacity:0.7">
+          <div style="width:24px; height:24px; border-radius:4px; background:#f59e0b; color:white; font-size:10px; font-weight:600; display:flex; align-items:center; justify-content:center">DK</div>
+          <div style="flex:1"><div style="font-size:13px; font-weight:500; color:#111">David Kim</div><div style="font-size:11px; color:#64748b">Northwind Logistics</div></div>
+          <div style="background:#fef3c7; color:#a16207; font-size:11px; padding:2px 7px; border-radius:4px; font-weight:500">Prospect</div>
+        </div>
+        <!-- row 4 fading further -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:8px 10px; display:flex; gap:8px; align-items:center; opacity:0.35">
+          <div style="width:24px; height:24px; border-radius:4px; background:#ef4444; color:white; font-size:10px; font-weight:600; display:flex; align-items:center; justify-content:center">SP</div>
+          <div style="flex:1"><div style="font-size:13px; font-weight:500; color:#111">Sara Park</div><div style="font-size:11px; color:#64748b">Pinecrest Studio</div></div>
+          <div style="background:#fee2e2; color:#b91c1c; font-size:11px; padding:2px 7px; border-radius:4px; font-weight:500">Cold</div>
+        </div>
+        <!-- bottom fade gradient -->
+        <div style="position:absolute; left:0; right:0; bottom:0; height:60px; background:linear-gradient(to bottom, rgba(255,255,255,0), white)"></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Fading list + collaborator cursor</h3>
+      <p>Four contact rows fade out at the bottom, and a teammate ("Maria") is shown editing one of them with a colored cursor + name flag. Suggests "real, busy, multi-user product."</p>
+    </div>
+  </div>
+
+  <!-- ============ B — KANBAN MINI WITH MOTION ============ -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0; background:#fff; height:280px; position:relative; overflow:hidden; border-bottom:1px solid #e2e8f0">
+      <div style="padding:14px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; height:100%; box-sizing:border-box; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+        <!-- col 1 -->
+        <div>
+          <div style="font-size:10px; font-weight:600; color:#64748b; text-transform:uppercase; margin-bottom:6px; letter-spacing:0.04em">Lead · 4</div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:6px; margin-bottom:4px"><div style="font-size:11px; font-weight:500; color:#111">Emily Chen</div><div style="font-size:10px; color:#64748b">CloudNine</div></div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:6px; margin-bottom:4px"><div style="font-size:11px; font-weight:500; color:#111">Sara Park</div><div style="font-size:10px; color:#64748b">Pinecrest</div></div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:6px; opacity:0.5"><div style="font-size:11px; font-weight:500; color:#111">+ 2 more</div></div>
+        </div>
+        <!-- col 2 with item being dragged -->
+        <div style="position:relative">
+          <div style="font-size:10px; font-weight:600; color:#64748b; text-transform:uppercase; margin-bottom:6px; letter-spacing:0.04em">Active · 3</div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:6px; margin-bottom:4px"><div style="font-size:11px; font-weight:500; color:#111">James Rodriguez</div><div style="font-size:10px; color:#64748b">Horizon Media</div></div>
+          <!-- placeholder slot -->
+          <div style="background:transparent; border:1px dashed #6366f1; border-radius:4px; height:30px; margin-bottom:4px"></div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:6px"><div style="font-size:11px; font-weight:500; color:#111">Liam Park</div><div style="font-size:10px; color:#64748b">Beacon Co.</div></div>
+        </div>
+        <!-- col 3 -->
+        <div style="position:relative">
+          <div style="font-size:10px; font-weight:600; color:#64748b; text-transform:uppercase; margin-bottom:6px; letter-spacing:0.04em">Won · 2</div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:6px; margin-bottom:4px"><div style="font-size:11px; font-weight:500; color:#111">Ana Silva</div><div style="font-size:10px; color:#64748b">Vector Labs</div></div>
+        </div>
+
+        <!-- floating dragged card crossing columns -->
+        <div style="position:absolute; left:38%; top:104px; background:white; border:1px solid #6366f1; border-radius:4px; padding:6px 8px; box-shadow:0 8px 18px rgba(99,102,241,0.35); transform:rotate(-3deg); width:120px; z-index:2">
+          <div style="font-size:11px; font-weight:500; color:#111">David Kim</div>
+          <div style="font-size:10px; color:#64748b">Northwind</div>
+        </div>
+        <!-- collaborator cursor on dragged card -->
+        <svg width="14" height="14" viewBox="0 0 14 14" style="position:absolute; left:51%; top:120px; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.25)); z-index:3">
+          <path d="M2 1 L2 11 L5 8 L7 12 L9 11 L7 7 L11 7 Z" fill="#6366f1" stroke="white" stroke-width="0.8"/>
+        </svg>
+        <div style="position:absolute; left:55%; top:130px; background:#6366f1; color:white; font-size:10px; padding:2px 6px; border-radius:3px; font-weight:500; z-index:3">Maria</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Mini kanban with drag-in-progress</h3>
+      <p>Three pipeline columns, a card mid-drag with a teammate's cursor on it, dashed drop slot. Communicates the actual mental model of CRM (pipeline) and collaboration in one shot.</p>
+    </div>
+  </div>
+
+  <!-- ============ C — CONTACT + LIVE ACTIVITY FEED ============ -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0; background:#fff; height:280px; position:relative; overflow:hidden; border-bottom:1px solid #e2e8f0">
+      <div style="padding:14px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+        <!-- contact card -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:10px; margin-bottom:8px; display:flex; gap:10px; align-items:center">
+          <div style="width:32px; height:32px; border-radius:4px; background:#a78bfa; color:white; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center">JR</div>
+          <div style="flex:1">
+            <div style="font-size:13px; font-weight:500; color:#111">James Rodriguez</div>
+            <div style="font-size:11px; color:#64748b">Horizon Media Group · CMO</div>
+          </div>
+          <div style="background:#dcfce7; color:#15803d; font-size:11px; padding:2px 7px; border-radius:4px; font-weight:500">Active</div>
+        </div>
+        <!-- activity feed -->
+        <div style="font-size:10px; font-weight:600; color:#64748b; text-transform:uppercase; margin-bottom:6px; letter-spacing:0.04em">Activity</div>
+        <div style="display:flex; flex-direction:column; gap:6px">
+          <div style="display:flex; gap:8px; align-items:flex-start">
+            <div style="width:5px; height:5px; border-radius:50%; background:#10b981; margin-top:5px; flex-shrink:0; box-shadow:0 0 0 3px rgba(16,185,129,0.18)"></div>
+            <div style="flex:1"><div style="font-size:12px; color:#111"><b style="font-weight:500">Maria</b> moved deal to <b style="font-weight:500">Active</b></div><div style="font-size:10px; color:#94a3b8">just now</div></div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:flex-start; opacity:0.85">
+            <div style="width:5px; height:5px; border-radius:50%; background:#cbd5e1; margin-top:5px; flex-shrink:0"></div>
+            <div style="flex:1"><div style="font-size:12px; color:#111"><b style="font-weight:500">Tom</b> logged a call · 12 min</div><div style="font-size:10px; color:#94a3b8">2h ago</div></div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:flex-start; opacity:0.6">
+            <div style="width:5px; height:5px; border-radius:50%; background:#cbd5e1; margin-top:5px; flex-shrink:0"></div>
+            <div style="flex:1"><div style="font-size:12px; color:#111">Note added: "Send Q4 proposal"</div><div style="font-size:10px; color:#94a3b8">yesterday</div></div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:flex-start; opacity:0.3">
+            <div style="width:5px; height:5px; border-radius:50%; background:#cbd5e1; margin-top:5px; flex-shrink:0"></div>
+            <div style="flex:1"><div style="font-size:12px; color:#111">Email sent: "Intro deck"</div><div style="font-size:10px; color:#94a3b8">2d ago</div></div>
+          </div>
+        </div>
+        <div style="position:absolute; left:0; right:0; bottom:0; height:50px; background:linear-gradient(to bottom, rgba(255,255,255,0), white)"></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Contact + live activity feed</h3>
+      <p>One contact at the top, then a fading activity timeline below with a live "just now" pulse on the latest item. Tells the "every interaction logged" story directly.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px">Pick one (or say "mix B and C" etc.). Each app's modal will use the same pattern but with content unique to that app — Tasks gets a kanban, Drive gets files, Sign gets a contract preview, etc.</p>
