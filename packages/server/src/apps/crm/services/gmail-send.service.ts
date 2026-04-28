@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import { and, asc, eq } from 'drizzle-orm';
 import { db } from '../../../config/database';
-import { messageChannels, messageParticipants, messages } from '../../../db/schema';
+import { messageChannels, messageParticipants, messages, messageThreads } from '../../../db/schema';
 import { callGoogleApi } from '../../../services/google-api-call';
 import { logger } from '../../../utils/logger';
 import { withRetry } from '../../../utils/retry';
@@ -115,6 +115,13 @@ export async function performGmailSend(messageId: string): Promise<void> {
         updatedAt: new Date(),
       })
       .where(eq(messages.id, messageId));
+
+    if (gmailThreadId) {
+      await db
+        .update(messageThreads)
+        .set({ gmailThreadId, updatedAt: new Date() })
+        .where(eq(messageThreads.id, message.threadId));
+    }
 
     logger.info({ messageId, gmailMessageId, gmailThreadId }, 'Gmail send completed');
 
@@ -240,13 +247,16 @@ async function runPostSendMatching(
   const contactMap = await matchHandlesToContacts(handles, channel.tenantId);
 
   for (const p of participants) {
+    if (p.role !== 'from' && p.role !== 'to' && p.role !== 'cc' && p.role !== 'bcc') {
+      continue;
+    }
     if (isBlocked(p.handle)) continue;
     const matched = contactMap.get(p.handle.toLowerCase());
     if (matched) continue;
     const created = await autoCreateContactIfNeeded({
       handle: p.handle,
       displayName: p.displayName,
-      role: p.role as 'from' | 'to' | 'cc' | 'bcc',
+      role: p.role,
       direction: 'outbound',
       policy: channel.contactAutoCreationPolicy,
       tenantId: channel.tenantId,

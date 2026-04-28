@@ -4,7 +4,6 @@ const {
   dbSelectMock,
   dbUpdateMock,
   callGoogleApiMock,
-  insertParticipantsMock,
   loadBlocklistMock,
   matchHandlesToContactsMock,
   autoCreateContactIfNeededMock,
@@ -13,7 +12,6 @@ const {
   dbSelectMock: vi.fn(),
   dbUpdateMock: vi.fn(),
   callGoogleApiMock: vi.fn(),
-  insertParticipantsMock: vi.fn(),
   loadBlocklistMock: vi.fn(),
   matchHandlesToContactsMock: vi.fn(),
   autoCreateContactIfNeededMock: vi.fn(),
@@ -32,7 +30,6 @@ vi.mock('../src/services/google-api-call', () => ({
 }));
 
 vi.mock('../src/apps/crm/services/participant-match.service', () => ({
-  insertParticipants: insertParticipantsMock,
   loadBlocklist: loadBlocklistMock,
   matchHandlesToContacts: matchHandlesToContactsMock,
 }));
@@ -51,7 +48,6 @@ beforeEach(() => {
   dbSelectMock.mockReset();
   dbUpdateMock.mockReset();
   callGoogleApiMock.mockReset();
-  insertParticipantsMock.mockReset();
   loadBlocklistMock.mockReset();
   matchHandlesToContactsMock.mockReset();
   autoCreateContactIfNeededMock.mockReset();
