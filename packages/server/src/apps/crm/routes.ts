@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import * as crmController from './controller';
 import * as channelsController from './controllers/channels.controller';
+import * as messagesController from './controllers/messages.controller';
 import { authMiddleware } from '../../middleware/auth';
 import { requireAppPermission } from '../../middleware/require-app-permission';
 import { withConcurrencyCheck } from '../../middleware/concurrency-check';
@@ -253,6 +254,11 @@ router.post('/google/sync/stop', crmController.stopGoogleSync);
 router.get('/channels', channelsController.listChannels);
 router.patch('/channels/:id', withConcurrencyCheck(messageChannels), channelsController.updateChannel);
 router.post('/channels/:id/sync', channelsController.syncChannel);
+
+// Outbound messages (send, retry, get)
+router.post('/messages/send', messagesController.sendMessage);
+router.post('/messages/:id/retry', messagesController.retryMessage);
+router.get('/messages/:id', messagesController.getMessage);
 
 // CRM calendar (linked to contacts/deals)
 router.get('/contacts/:id/events', crmController.getContactEvents);

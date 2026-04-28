@@ -145,6 +145,7 @@ export interface ChannelLookupResult {
   accountId: string;
   ownerUserId: string;
   visibility: ChannelVisibility;
+  handle: string;
 }
 
 /**
@@ -164,6 +165,7 @@ export async function getChannelById(args: {
       accountId: messageChannels.accountId,
       ownerUserId: messageChannels.ownerUserId,
       visibility: messageChannels.visibility,
+      handle: messageChannels.handle,
     })
     .from(messageChannels)
     .where(
