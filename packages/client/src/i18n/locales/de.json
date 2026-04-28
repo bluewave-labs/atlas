@@ -4662,7 +4662,12 @@
     "indexTitle": "Daten importieren",
     "indexSubtitle": "Übertrage deine Daten von einer anderen Plattform nach Atlas.",
     "startImport": "Import starten",
-    "backToImporters": "Zurück zu den Importern"
+    "backToImporters": "Zurück zu den Importern",
+    "comingSoon": "Bald verfügbar",
+    "hubspot": {
+      "title": "HubSpot",
+      "subtitle": "Übernimm Kontakte, Unternehmen, Deals und Aktivitäten aus HubSpot nach Atlas."
+    }
   },
   "work": {
     "quickActions": {

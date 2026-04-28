@@ -7,9 +7,11 @@ import { OdooImportWizard } from './odoo-import-wizard';
 type ActiveImporter = 'odoo' | null;
 
 interface ImporterDef {
-  id: 'odoo';
+  id: 'odoo' | 'hubspot';
   i18nKey: string;
   logo: ReactNode;
+  /** When true, the card renders but isn't clickable yet */
+  comingSoon?: boolean;
 }
 
 const IMPORTERS: ImporterDef[] = [
@@ -23,6 +25,18 @@ const IMPORTERS: ImporterDef[] = [
         style={{ maxHeight: 28, maxWidth: '100%', width: 'auto', display: 'block' }}
       />
     ),
+  },
+  {
+    id: 'hubspot',
+    i18nKey: 'hubspot',
+    logo: (
+      <img
+        src="/importers/hubspot-logo.svg"
+        alt=""
+        style={{ maxHeight: 28, maxWidth: '100%', width: 'auto', display: 'block' }}
+      />
+    ),
+    comingSoon: true,
   },
 ];
 
@@ -67,8 +81,12 @@ export function DataImportPanel() {
             logo={imp.logo}
             title={t(`import.${imp.i18nKey}.title`)}
             description={t(`import.${imp.i18nKey}.subtitle`)}
-            cta={t('import.startImport')}
-            onClick={() => setActive(imp.id)}
+            cta={imp.comingSoon ? t('import.comingSoon') : t('import.startImport')}
+            disabled={imp.comingSoon}
+            onClick={() => {
+              if (imp.comingSoon) return;
+              if (imp.id === 'odoo') setActive('odoo');
+            }}
           />
         ))}
       </div>
@@ -135,6 +153,7 @@ interface CardProps {
   description: string;
   cta: string;
   onClick: () => void;
+  disabled?: boolean;
 }
 
 const cardBase: CSSProperties = {
@@ -146,23 +165,30 @@ const cardBase: CSSProperties = {
   border: '1px solid var(--color-border-primary)',
   borderRadius: 'var(--radius-md)',
   cursor: 'pointer',
-  transition: 'border-color 150ms, box-shadow 150ms',
+  transition: 'border-color 150ms, box-shadow 150ms, opacity 150ms',
   fontFamily: 'inherit',
   textAlign: 'left',
   width: '100%',
 };
 
-function ImporterCard({ logo, title, description, cta, onClick }: CardProps) {
+function ImporterCard({ logo, title, description, cta, onClick, disabled }: CardProps) {
   return (
     <button
       type="button"
       onClick={onClick}
-      style={cardBase}
+      disabled={disabled}
+      style={{
+        ...cardBase,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.6 : 1,
+      }}
       onMouseEnter={(e) => {
+        if (disabled) return;
         e.currentTarget.style.borderColor = 'var(--color-accent-primary)';
         e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
       }}
       onMouseLeave={(e) => {
+        if (disabled) return;
         e.currentTarget.style.borderColor = 'var(--color-border-primary)';
         e.currentTarget.style.boxShadow = 'none';
       }}
@@ -211,14 +237,14 @@ function ImporterCard({ logo, title, description, cta, onClick }: CardProps) {
           display: 'inline-flex',
           alignItems: 'center',
           gap: 4,
-          color: 'var(--color-accent-primary)',
+          color: disabled ? 'var(--color-text-tertiary)' : 'var(--color-accent-primary)',
           fontSize: 'var(--font-size-sm)',
           fontWeight: 500,
           marginTop: 'auto',
         }}
       >
         {cta}
-        <ArrowRight size={14} />
+        {!disabled && <ArrowRight size={14} />}
       </div>
     </button>
   );

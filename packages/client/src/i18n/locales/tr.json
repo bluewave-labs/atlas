@@ -4662,7 +4662,12 @@
     "indexTitle": "Veri içe aktar",
     "indexSubtitle": "Verilerinizi başka bir platformdan Atlas'a getirin.",
     "startImport": "İçe aktarmayı başlat",
-    "backToImporters": "İçe aktarıcılara dön"
+    "backToImporters": "İçe aktarıcılara dön",
+    "comingSoon": "Yakında",
+    "hubspot": {
+      "title": "HubSpot",
+      "subtitle": "HubSpot'tan kişileri, şirketleri, fırsatları ve etkileşimleri Atlas'a aktarın."
+    }
   },
   "work": {
     "quickActions": {

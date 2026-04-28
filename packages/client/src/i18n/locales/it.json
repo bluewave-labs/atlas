@@ -4662,7 +4662,12 @@
     "indexTitle": "Importa dati",
     "indexSubtitle": "Porta i tuoi dati in Atlas da un'altra piattaforma.",
     "startImport": "Avvia importazione",
-    "backToImporters": "Torna agli importatori"
+    "backToImporters": "Torna agli importatori",
+    "comingSoon": "Prossimamente",
+    "hubspot": {
+      "title": "HubSpot",
+      "subtitle": "Porta contatti, aziende, deal e attività da HubSpot in Atlas."
+    }
   },
   "work": {
     "quickActions": {
