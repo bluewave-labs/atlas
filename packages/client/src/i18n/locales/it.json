@@ -4658,7 +4658,11 @@
       "instructionsStep3": "Ripeti per l'elenco CRM Pipeline e (opzionalmente) per Activities.",
       "dropHint": "Trascina un CSV qui o clicca per sfogliare",
       "removeFile": "Rimuovi file"
-    }
+    },
+    "indexTitle": "Importa dati",
+    "indexSubtitle": "Porta i tuoi dati in Atlas da un'altra piattaforma.",
+    "startImport": "Avvia importazione",
+    "backToImporters": "Torna agli importatori"
   },
   "work": {
     "quickActions": {

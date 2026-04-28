@@ -4658,7 +4658,11 @@
       "instructionsStep3": "CRM Pipeline listesi ve (isteğe bağlı) Activities için de aynı adımları tekrarlayın.",
       "dropHint": "CSV dosyasını buraya bırakın veya seçmek için tıklayın",
       "removeFile": "Dosyayı kaldır"
-    }
+    },
+    "indexTitle": "Veri içe aktar",
+    "indexSubtitle": "Verilerinizi başka bir platformdan Atlas'a getirin.",
+    "startImport": "İçe aktarmayı başlat",
+    "backToImporters": "İçe aktarıcılara dön"
   },
   "work": {
     "quickActions": {
