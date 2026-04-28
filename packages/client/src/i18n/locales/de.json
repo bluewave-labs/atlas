@@ -4649,7 +4649,15 @@
       "progressContacts": "{{count}} Kontakte werden Unternehmen zugeordnet",
       "progressLeadsDeals": "{{leads}} Leads und {{deals}} Deals werden erstellt",
       "progressActivities": "{{count}} Aktivitäten werden geplant",
-      "progressFinalizing": "Abschließen — Ihr CRM ist bereit"
+      "progressFinalizing": "Abschließen — Ihr CRM ist bereit",
+      "instructionsHeading": "Export aus Odoo",
+      "instructionsStep1": "Öffne Contacts → Listenansicht → Action → Export.",
+      "instructionsStep2Prefix": "Aktiviere vor dem Export die Option",
+      "instructionsStep2Toggle": "I want to update data (import-compatible export)",
+      "instructionsStep2Suffix": ".",
+      "instructionsStep3": "Wiederhole das für die CRM Pipeline und (optional) Activities.",
+      "dropHint": "CSV hier ablegen oder zum Auswählen klicken",
+      "removeFile": "Datei entfernen"
     }
   },
   "work": {

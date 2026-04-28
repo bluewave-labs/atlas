@@ -4649,7 +4649,15 @@
       "progressContacts": "{{count}} kişi şirketlerle ilişkilendiriliyor",
       "progressLeadsDeals": "{{leads}} potansiyel ve {{deals}} fırsat oluşturuluyor",
       "progressActivities": "{{count}} aktivite planlanıyor",
-      "progressFinalizing": "Tamamlanıyor — CRM'iniz hazır"
+      "progressFinalizing": "Tamamlanıyor — CRM'iniz hazır",
+      "instructionsHeading": "Odoo'dan nasıl dışa aktarılır",
+      "instructionsStep1": "Contacts → liste görünümü → Action → Export menüsünü açın.",
+      "instructionsStep2Prefix": "Dışa aktarmadan önce",
+      "instructionsStep2Toggle": "I want to update data (import-compatible export)",
+      "instructionsStep2Suffix": "seçeneğini açın.",
+      "instructionsStep3": "CRM Pipeline listesi ve (isteğe bağlı) Activities için de aynı adımları tekrarlayın.",
+      "dropHint": "CSV dosyasını buraya bırakın veya seçmek için tıklayın",
+      "removeFile": "Dosyayı kaldır"
     }
   },
   "work": {

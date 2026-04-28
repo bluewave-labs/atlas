@@ -4649,7 +4649,15 @@
       "progressContacts": "Linking {{count}} contacts to companies",
       "progressLeadsDeals": "Creating {{leads}} leads and {{deals}} deals",
       "progressActivities": "Scheduling {{count}} activities",
-      "progressFinalizing": "Finalizing — your CRM is ready"
+      "progressFinalizing": "Finalizing — your CRM is ready",
+      "instructionsHeading": "How to export from Odoo",
+      "instructionsStep1": "Open Contacts → list view → Action → Export.",
+      "instructionsStep2Prefix": "Toggle",
+      "instructionsStep2Toggle": "I want to update data (import-compatible export)",
+      "instructionsStep2Suffix": "before exporting.",
+      "instructionsStep3": "Repeat for the CRM Pipeline list, and (optionally) Activities.",
+      "dropHint": "Drop a CSV here or click to browse",
+      "removeFile": "Remove file"
     }
   },
   "work": {
