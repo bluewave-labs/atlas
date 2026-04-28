@@ -18,6 +18,7 @@ import { GeneralPanel } from '../components/settings/general-panel';
 import { AppearancePanel } from '../components/settings/appearance-panel';
 import { FormatsPanel } from '../components/settings/formats-panel';
 import { DataModelPanel } from '../components/settings/data-model-panel';
+import { DataImportPanel } from '../components/settings/data-import/data-import-panel';
 import { AboutPanel } from '../components/settings/about-panel';
 import { AiSettingsPanel } from '../components/settings/ai-settings-panel';
 import { UpdatesPanel } from '../components/settings/updates-panel';
@@ -63,6 +64,7 @@ export const globalSettingsCategory: SettingsCategory = {
     { id: 'appearance', label: 'Appearance', icon: Palette, component: AppearancePanel },
     { id: 'formats', label: 'Formats', icon: Clock, component: FormatsPanel, adminOnly: true },
     { id: 'data-model', label: 'Data model', icon: Database, component: DataModelPanel, ownerOnly: true },
+    { id: 'data-import', label: 'Data import', icon: Database, component: DataImportPanel, ownerOnly: true },
     { id: 'home-background', label: 'Home background', icon: Image, component: HomeBackgroundPanel },
     { id: 'home-widgets', label: 'Widgets', icon: LayoutGrid, component: HomeWidgetsPanel },
     { id: 'integrations', label: 'Integrations', icon: Link2, component: IntegrationsPanel, ownerOnly: true },
@@ -89,6 +91,7 @@ const PANEL_I18N_KEYS: Record<string, string> = {
   appearance: 'settingsPanel.panels.appearance',
   formats: 'settingsPanel.panels.formats',
   'data-model': 'settingsPanel.panels.dataModel',
+  'data-import': 'settingsPanel.panels.dataImport',
   'home-background': 'settingsPanel.panels.homeBackground',
   'home-widgets': 'settingsPanel.panels.widgets',
   about: 'settingsPanel.panels.about',
