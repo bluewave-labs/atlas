@@ -7,6 +7,7 @@ import {
   type CalendarIncrementalSyncJobData,
   type GmailFullSyncJobData,
   type GmailIncrementalSyncJobData,
+  type GmailSendJobData,
 } from '../config/queue';
 import {
   performCalendarFullSync,
@@ -16,6 +17,7 @@ import {
   performGmailFullSync,
   performGmailIncrementalSync,
 } from '../apps/crm/services/gmail-sync.service';
+import { performGmailSend } from '../apps/crm/services/gmail-send.service';
 import { logger } from '../utils/logger';
 
 export async function processSyncJob(job: Job): Promise<void> {
@@ -42,6 +44,12 @@ export async function processSyncJob(job: Job): Promise<void> {
       const { channelId } = job.data as GmailIncrementalSyncJobData;
       logger.info({ jobId: job.id, channelId }, 'Running Gmail incremental sync');
       await performGmailIncrementalSync(channelId);
+      return;
+    }
+    case SyncJobName.GmailSend: {
+      const { messageId } = job.data as GmailSendJobData;
+      logger.info({ jobId: job.id, messageId }, 'Running Gmail send');
+      await performGmailSend(messageId);
       return;
     }
     default:

@@ -10,9 +10,14 @@ vi.mock('../src/apps/crm/services/gmail-sync.service', () => ({
   performGmailIncrementalSync: vi.fn(async () => undefined),
 }));
 
+vi.mock('../src/apps/crm/services/gmail-send.service', () => ({
+  performGmailSend: vi.fn(async () => undefined),
+}));
+
 import { processSyncJob } from '../src/workers/sync.worker';
 import * as calendarSync from '../src/services/calendar-sync.service';
 import * as gmailSync from '../src/apps/crm/services/gmail-sync.service';
+import * as gmailSend from '../src/apps/crm/services/gmail-send.service';
 
 describe('sync.worker: processSyncJob', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -51,6 +56,14 @@ describe('sync.worker: processSyncJob', () => {
     } as any);
     expect(gmailSync.performGmailIncrementalSync).toHaveBeenCalledWith('ch-2');
     expect(gmailSync.performGmailFullSync).not.toHaveBeenCalled();
+  });
+
+  it('dispatches gmail-send to performGmailSend', async () => {
+    await processSyncJob({
+      name: 'gmail-send',
+      data: { messageId: 'msg-1' },
+    } as any);
+    expect(gmailSend.performGmailSend).toHaveBeenCalledWith('msg-1');
   });
 
   it('throws on unknown job name', async () => {
