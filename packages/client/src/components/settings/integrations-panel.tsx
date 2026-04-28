@@ -14,6 +14,7 @@ import { isTenantAdmin } from '@atlas-platform/shared';
 import { useAuthStore } from '../../stores/auth-store';
 import { useToastStore } from '../../stores/toast-store';
 import { useGoogleDriveStatus } from '../../apps/drive/hooks';
+import { ChannelsList } from '../../apps/crm/components/integrations/channels-list';
 
 export function IntegrationsPanel() {
   const { t } = useTranslation();
@@ -176,6 +177,18 @@ export function IntegrationsPanel() {
                 </Button>
               )}
             </SettingsRow>
+
+            <div style={{ marginTop: 'var(--spacing-lg)' }}>
+              <h4 style={{
+                fontSize: 'var(--font-size-md)',
+                fontWeight: 'var(--font-weight-semibold)' as React.CSSProperties['fontWeight'],
+                marginBottom: 'var(--spacing-sm)',
+                color: 'var(--color-text-primary)',
+              }}>
+                {t('crm.integrations.channels.title', 'Email channels')}
+              </h4>
+              <ChannelsList />
+            </div>
           </>
         )}
       </SettingsSection>

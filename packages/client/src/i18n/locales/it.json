@@ -2033,6 +2033,36 @@
     "tour": {
       "title": "CRM",
       "description": "Il tuo database clienti completo. Gestisci i contatti, segui le opportunità nella pipeline e registra ogni interazione."
+    },
+    "integrations": {
+      "channels": {
+        "title": "Email channels",
+        "description": "Per-inbox sync settings, visibility, and contact auto-creation policy",
+        "empty": "No channels yet — connect a Google account to get started.",
+        "pause": "Pause sync",
+        "resume": "Resume sync",
+        "syncNow": "Sync now",
+        "syncQueued": "Sync queued",
+        "syncError": "Failed to start sync",
+        "updateError": "Failed to update channel",
+        "loadError": "Failed to load channels.",
+        "stage": {
+          "pending": "Pending",
+          "full-sync": "Full sync",
+          "incremental": "Live",
+          "failed": "Failed",
+          "paused": "Paused"
+        },
+        "visibility": {
+          "private": "Private",
+          "shared": "Shared with team"
+        },
+        "policy": {
+          "none": "No auto-create",
+          "sendOnly": "From sent emails",
+          "sendAndReceive": "From all emails"
+        }
+      }
     }
   },
   "drive": {
