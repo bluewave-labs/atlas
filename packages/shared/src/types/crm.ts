@@ -35,7 +35,7 @@ export interface CrmDealStage {
 
 export interface CrmDeal {
   id: string; tenantId: string; userId: string;
-  title: string; value: number; stageId: string;
+  title: string; value: number; currency: string; stageId: string;
   contactId: string | null; companyId: string | null;
   assignedUserId: string | null;
   teamId: string | null;

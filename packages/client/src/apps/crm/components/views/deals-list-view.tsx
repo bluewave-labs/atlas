@@ -124,7 +124,7 @@ export function DealsListView({
         <InlineEditInput value={String(deal.value)} type="number" onSave={(v) => handleSave(deal.id, 'value', v)} onCancel={() => onEditingCellChange(null)} />
       ) : (
         <span style={{ fontWeight: 'var(--font-weight-medium)', fontSize: 'var(--font-size-sm)', fontVariantNumeric: 'tabular-nums', cursor: 'text' }} onClick={(e) => handleCellClick(deal.id, 'value', e)}>
-          {formatCurrency(deal.value)}
+          {formatCurrency(deal.value, deal.currency)}
         </span>
       ),
       searchValue: (deal) => String(deal.value),

@@ -85,7 +85,7 @@ export function DealDetailPanel({
           <div className="crm-detail-field">
             <span className="crm-detail-field-label">{t('crm.deals.value')}</span>
             <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>
-              {formatCurrency(deal.value)}
+              {formatCurrency(deal.value, deal.currency)}
             </div>
           </div>
 

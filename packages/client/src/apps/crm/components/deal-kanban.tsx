@@ -231,7 +231,7 @@ export function DealKanban({ deals, stages, onMoveDeal, onDealClick }: DealKanba
                       fontVariantNumeric: 'tabular-nums',
                       marginBottom: 'var(--spacing-xs)',
                     }}>
-                      {formatCurrency(deal.value)}
+                      {formatCurrency(deal.value, deal.currency)}
                     </div>
                   )}
                   {deal.companyName && (

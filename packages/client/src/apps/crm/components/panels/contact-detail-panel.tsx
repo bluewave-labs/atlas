@@ -133,7 +133,7 @@ export function ContactDetailPanel({
                   onClick={() => { if (onDealClick) onDealClick(deal.id); }}
                 >
                   <span style={{ color: onDealClick ? 'var(--color-accent-primary)' : 'var(--color-text-primary)' }}>{deal.title}</span>
-                  <span style={{ color: 'var(--color-text-tertiary)', fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(deal.value)}</span>
+                  <span style={{ color: 'var(--color-text-tertiary)', fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(deal.value, deal.currency)}</span>
                 </div>
               ))}
             </div>

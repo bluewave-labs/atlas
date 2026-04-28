@@ -63,6 +63,7 @@ export interface CrmDeal {
   id: string;
   title: string;
   value: number;
+  currency: string;
   stageId: string;
   contactId: string | null;
   companyId: string | null;

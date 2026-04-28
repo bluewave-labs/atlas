@@ -111,20 +111,46 @@ export function formatRelativeDate(date: string | Date | null | undefined): stri
 // ─── Currency Formatting ──────────────────────────────────────────
 
 /**
- * Format a number as currency using the tenant's default currency symbol.
+ * Resolve a display symbol for a given ISO 4217 currency code (or raw symbol).
+ * Falls back to the tenant default when currency is null/undefined/empty.
  */
-export function formatCurrency(value: number | null | undefined): string {
+export function getCurrencySymbolFor(currency: string | null | undefined): string {
+  if (!currency) return getCurrencySymbol();
+
+  // Already a symbol (e.g. "$", "\u20ac", "\u00a3") \u2014 length \u2264 3 and not all uppercase letters
+  if (currency.length <= 3 && !/^[A-Z]+$/.test(currency)) return currency;
+
+  switch (currency.toUpperCase()) {
+    case 'USD': return '$';
+    case 'EUR': return '\u20ac';
+    case 'GBP': return '\u00a3';
+    case 'JPY': return '\u00a5';
+    case 'TRY': return '\u20ba';
+    case 'CHF': return 'CHF ';
+    case 'CAD': return 'C$';
+    case 'AUD': return 'A$';
+    default: return `${currency.toUpperCase()} `;
+  }
+}
+
+/**
+ * Format a number as currency. When `currency` is provided, its symbol is
+ * used; otherwise falls back to the tenant's default currency symbol.
+ */
+export function formatCurrency(value: number | null | undefined, currency?: string | null): string {
   if (value == null) return '\u2014';
-  const symbol = getCurrencySymbol();
+  const symbol = currency ? getCurrencySymbolFor(currency) : getCurrencySymbol();
   return `${symbol}${formatNumber(value)}`;
 }
 
 /**
  * Format a currency value in a compact form (e.g. $1.2M, $50K).
+ * When `currency` is provided, its symbol is used; otherwise falls back to
+ * the tenant's default currency symbol.
  */
-export function formatCurrencyCompact(value: number | null | undefined): string {
+export function formatCurrencyCompact(value: number | null | undefined, currency?: string | null): string {
   if (value == null) return '\u2014';
-  const symbol = getCurrencySymbol();
+  const symbol = currency ? getCurrencySymbolFor(currency) : getCurrencySymbol();
 
   if (Math.abs(value) >= 1_000_000) {
     return `${symbol}${(value / 1_000_000).toFixed(1)}M`;
