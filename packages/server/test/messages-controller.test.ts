@@ -207,6 +207,44 @@ describe('messages.controller: sendMessage', () => {
       data: { messageId: 'msg-1', status: 'pending' },
     });
   });
+
+  it('skips malformed recipients (no `@`, multi-`@`)', async () => {
+    getChannelByIdMock.mockResolvedValue({
+      id: 'ch-1', accountId: 'a-1', ownerUserId: 'u-1', visibility: 'private', handle: 'me@x.com',
+    });
+    let insertedParticipants: any = null;
+    let n = 0;
+    dbInsertMock.mockImplementation(() => ({
+      values: (rowOrRows: any) => {
+        n++;
+        if (n === 1) return { returning: () => Promise.resolve([{ id: 'thr-1' }]) };
+        if (n === 2) return { returning: () => Promise.resolve([{ id: 'msg-1' }]) };
+        insertedParticipants = rowOrRows;
+        return Promise.resolve();
+      },
+    }));
+
+    const req = {
+      auth: { userId: 'u-1', tenantId: 't-1' },
+      body: {
+        channelId: 'ch-1',
+        to: ['valid@x.com', 'noatsign', '<a@b@c>'],
+        subject: 'Hi',
+        body: 'b',
+      },
+      params: {},
+    } as unknown as Request;
+    const res = mockRes();
+    await sendMessage(req, res);
+
+    // Should have: 1 from + 1 valid to recipient = 2 rows
+    expect(insertedParticipants).toHaveLength(2);
+    const handles = insertedParticipants.map((r: any) => r.handle);
+    expect(handles).toContain('me@x.com');
+    expect(handles).toContain('valid@x.com');
+    expect(handles).not.toContain('noatsign');
+    expect(handles.some((h: string) => h.includes('a@b'))).toBe(false);
+  });
 });
 
 describe('messages.controller: retryMessage', () => {
@@ -222,6 +260,27 @@ describe('messages.controller: retryMessage', () => {
     const res = mockRes();
     await retryMessage(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
+  });
+
+  it('returns 400 when retrying an inbound message', async () => {
+    dbSelectMock.mockReturnValue({
+      from: () => ({ where: () => ({ limit: () => Promise.resolve([{
+        id: 'msg-1',
+        tenantId: 't-1',
+        channelId: 'ch-1',
+        direction: 'inbound',
+        status: 'failed',
+      }]) }) }),
+    });
+    const req = {
+      auth: { userId: 'u-1', tenantId: 't-1' },
+      params: { id: 'msg-1' },
+      body: {},
+    } as unknown as Request;
+    const res = mockRes();
+    await retryMessage(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(queueAddMock).not.toHaveBeenCalled();
   });
 
   it('returns 400 when the message is not in failed state', async () => {

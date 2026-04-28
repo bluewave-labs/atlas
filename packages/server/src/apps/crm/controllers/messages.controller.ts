@@ -11,6 +11,11 @@ import { getChannelById } from '../services/channel.service';
 import { getSyncQueue, SyncJobName } from '../../../config/queue';
 import { logger } from '../../../utils/logger';
 
+/** Placeholder prefix for `messages.gmailMessageId` until the send job populates the real Gmail id. */
+export const PENDING_GMAIL_MESSAGE_ID_PREFIX = 'pending-';
+/** Placeholder prefix for `message_threads.gmailThreadId` until the send job populates the canonical thread id. */
+export const LOCAL_THREAD_ID_PREFIX = 'local-';
+
 interface SendBody {
   channelId?: string;
   to?: string[];
@@ -24,20 +29,22 @@ interface SendBody {
   threadId?: string;
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 /**
  * Parse "Display Name <email@x>" or bare "email@x" into { handle, displayName }.
- * Returns null if no @ is present.
+ * Returns null if the address is not a valid single-@ email.
  */
 function parseAddress(s: string): { handle: string; displayName: string | null } | null {
   const angleMatch = s.match(/<([^>]+)>/);
   if (angleMatch) {
     const handle = angleMatch[1].trim().toLowerCase();
-    if (!handle.includes('@')) return null;
+    if (!EMAIL_RE.test(handle)) return null;
     const displayName = s.slice(0, angleMatch.index).trim().replace(/^"|"$/g, '') || null;
     return { handle, displayName };
   }
   const trimmed = s.trim().toLowerCase();
-  if (!trimmed.includes('@')) return null;
+  if (!EMAIL_RE.test(trimmed)) return null;
   return { handle: trimmed, displayName: null };
 }
 
@@ -83,7 +90,7 @@ export async function sendMessage(req: Request, res: Response) {
     // value when Gmail returns one.
     let threadId = body.threadId ?? null;
     if (!threadId) {
-      const placeholder = `local-${randomUUID()}`;
+      const placeholder = `${LOCAL_THREAD_ID_PREFIX}${randomUUID()}`;
       const [thread] = await db
         .insert(messageThreads)
         .values({
@@ -100,7 +107,7 @@ export async function sendMessage(req: Request, res: Response) {
 
     // messages.gmailMessageId is NOT NULL — use a placeholder until the send
     // service overwrites it with the actual Gmail message id on success.
-    const gmailMessageIdPlaceholder = `pending-${randomUUID()}`;
+    const gmailMessageIdPlaceholder = `${PENDING_GMAIL_MESSAGE_ID_PREFIX}${randomUUID()}`;
 
     const [insertedMsg] = await db
       .insert(messages)
@@ -161,6 +168,11 @@ export async function sendMessage(req: Request, res: Response) {
       await db.insert(messageParticipants).values(participantRows);
     }
 
+    // If the enqueue fails after the rows are committed, the message stays at
+    // status='pending' indefinitely. We accept this trade-off rather than wrap
+    // the inserts + enqueue in a DB transaction (which would deadlock against
+    // the worker that reads the row). A future Phase 2d/3 sweeper can re-queue
+    // stale pending rows.
     await queue.add(SyncJobName.GmailSend, { messageId });
 
     res.json({
@@ -193,6 +205,11 @@ export async function retryMessage(req: Request, res: Response) {
 
     if (!message) {
       res.status(404).json({ success: false, error: 'message not found' });
+      return;
+    }
+
+    if (message.direction !== 'outbound') {
+      res.status(400).json({ success: false, error: 'only outbound messages can be retried' });
       return;
     }
 
