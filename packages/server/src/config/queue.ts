@@ -9,6 +9,7 @@ export const SyncJobName = {
   CalendarIncrementalSync: 'calendar-incremental-sync',
   GmailFullSync: 'gmail-full-sync',
   GmailIncrementalSync: 'gmail-incremental-sync',
+  GmailSend: 'gmail-send',
 } as const;
 export type SyncJobName = (typeof SyncJobName)[keyof typeof SyncJobName];
 
@@ -49,11 +50,22 @@ export interface GmailIncrementalSyncJobData {
   channelId: string;
 }
 
+/**
+ * Outbound send job. The message row is already inserted with
+ * `direction='outbound'`, `status='pending'` by the controller before this
+ * job is enqueued — the worker just reads the row, builds the RFC 5322,
+ * calls Gmail, and updates the row to `'sent'` or `'failed'`.
+ */
+export interface GmailSendJobData {
+  messageId: string;
+}
+
 export type SyncJobData =
   | { name: typeof SyncJobName.CalendarFullSync; data: CalendarFullSyncJobData }
   | { name: typeof SyncJobName.CalendarIncrementalSync; data: CalendarIncrementalSyncJobData }
   | { name: typeof SyncJobName.GmailFullSync; data: GmailFullSyncJobData }
-  | { name: typeof SyncJobName.GmailIncrementalSync; data: GmailIncrementalSyncJobData };
+  | { name: typeof SyncJobName.GmailIncrementalSync; data: GmailIncrementalSyncJobData }
+  | { name: typeof SyncJobName.GmailSend; data: GmailSendJobData };
 
 let syncQueue: Queue | null = null;
 
