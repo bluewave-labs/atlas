@@ -13,6 +13,7 @@ import {
   type ResolvedParticipant,
 } from './participant-match.service';
 import { upsertActivitiesForMessage } from './message-activity.service';
+import { autoCreateContactIfNeeded } from './crm-contact-create.service';
 
 const FULL_SYNC_QUERY = 'newer_than:90d';
 const PAGE_SIZE = 100;
@@ -24,6 +25,7 @@ interface ChannelRow {
   tenantId: string;
   ownerUserId: string;
   isSyncEnabled: boolean;
+  contactAutoCreationPolicy: 'none' | 'send-only' | 'send-and-receive';
   syncCursor: string | null;
   throttleRetryAfter: Date | null;
 }
@@ -36,6 +38,7 @@ async function loadChannel(channelId: string): Promise<ChannelRow> {
       tenantId: messageChannels.tenantId,
       ownerUserId: messageChannels.ownerUserId,
       isSyncEnabled: messageChannels.isSyncEnabled,
+      contactAutoCreationPolicy: messageChannels.contactAutoCreationPolicy,
       syncCursor: messageChannels.syncCursor,
       throttleRetryAfter: messageChannels.throttleRetryAfter,
     })
@@ -344,13 +347,30 @@ async function ingestMessage(
   const isBlocked = await loadBlocklist(channel.tenantId);
   const contactMap = await matchHandlesToContacts(handles, channel.tenantId);
 
-  const resolved: ResolvedParticipant[] = parsed.participants.map((p) => {
+  const resolved: ResolvedParticipant[] = [];
+  for (const p of parsed.participants) {
     if (isBlocked(p.handle)) {
-      return { ...p, personId: null };
+      resolved.push({ ...p, personId: null });
+      continue;
     }
-    const personId = contactMap.get(p.handle.toLowerCase()) ?? null;
-    return { ...p, personId };
-  });
+    const matched = contactMap.get(p.handle.toLowerCase()) ?? null;
+    if (matched) {
+      resolved.push({ ...p, personId: matched });
+      continue;
+    }
+    // No existing contact. Try auto-create per channel policy.
+    const created = await autoCreateContactIfNeeded({
+      handle: p.handle,
+      displayName: p.displayName,
+      role: p.role,
+      direction,
+      policy: channel.contactAutoCreationPolicy,
+      tenantId: channel.tenantId,
+      userId: channel.ownerUserId,
+      isBlocked: false, // already checked above
+    });
+    resolved.push({ ...p, personId: created });
+  }
 
   await insertParticipants({
     messageId: insertedMsg.id,

@@ -12,6 +12,7 @@ const {
   loadBlocklistMock,
   matchHandlesToContactsMock,
   upsertActivitiesForMessageMock,
+  autoCreateContactIfNeededMock,
 } = vi.hoisted(() => ({
   dbSelectMock: vi.fn(),
   dbInsertMock: vi.fn(),
@@ -24,6 +25,7 @@ const {
   loadBlocklistMock: vi.fn(),
   matchHandlesToContactsMock: vi.fn(),
   upsertActivitiesForMessageMock: vi.fn(),
+  autoCreateContactIfNeededMock: vi.fn(async () => null),
 }));
 
 vi.mock('../src/config/database', () => ({
@@ -52,6 +54,10 @@ vi.mock('../src/apps/crm/services/message-activity.service', () => ({
   upsertActivitiesForMessage: upsertActivitiesForMessageMock,
 }));
 
+vi.mock('../src/apps/crm/services/crm-contact-create.service', () => ({
+  autoCreateContactIfNeeded: autoCreateContactIfNeededMock,
+}));
+
 import {
   performGmailFullSync,
   performGmailIncrementalSync,
@@ -69,6 +75,7 @@ beforeEach(() => {
   loadBlocklistMock.mockReset();
   matchHandlesToContactsMock.mockReset();
   upsertActivitiesForMessageMock.mockReset();
+  autoCreateContactIfNeededMock.mockReset();
   // Provide a default update mock that won't crash when callers .set().where() chain
   dbUpdateMock.mockReturnValue({ set: () => ({ where: () => Promise.resolve() }) });
 });
