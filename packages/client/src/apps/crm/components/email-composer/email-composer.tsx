@@ -36,7 +36,8 @@ export function EmailComposer(props: EmailComposerProps) {
   const sendMessage = useSendMessage();
   const addToast = useToastStore((s) => s.addToast);
 
-  const [showCc, setShowCc] = useState(draft.cc.length > 0 || draft.bcc.length > 0);
+  const [ccRequested, setCcRequested] = useState(false);
+  const showCc = ccRequested || draft.cc.length > 0 || draft.bcc.length > 0;
 
   const to = draft.to || props.defaultTo || '';
   const subject = draft.subject || props.defaultSubject || '';
@@ -108,7 +109,7 @@ export function EmailComposer(props: EmailComposerProps) {
           />
         </>
       ) : (
-        <Button size="sm" variant="ghost" onClick={() => setShowCc(true)}>
+        <Button size="sm" variant="ghost" onClick={() => setCcRequested(true)}>
           {t('crm.composer.addCcBcc', 'Add Cc / Bcc')}
         </Button>
       )}

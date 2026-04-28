@@ -9,6 +9,7 @@ import { buildRfc5322Message, encodeForGmailApi, type ReplyContext } from './rfc
 import {
   loadBlocklist,
   matchHandlesToContacts,
+  type MessageDirection,
 } from './participant-match.service';
 import { autoCreateContactIfNeeded } from './crm-contact-create.service';
 import { upsertActivitiesForMessage } from './message-activity.service';
@@ -18,7 +19,7 @@ interface MessageRow {
   channelId: string;
   tenantId: string;
   threadId: string;
-  direction: string;
+  direction: MessageDirection | string;
   status: string;
   subject: string | null;
   bodyText: string | null;
@@ -69,11 +70,12 @@ export async function performGmailSend(messageId: string): Promise<void> {
     throw new Error(`message ${messageId} is not outbound`);
   }
 
-  const channel = await loadChannel(message.channelId);
+  const [channel, participants, replyContext] = await Promise.all([
+    loadChannel(message.channelId),
+    loadParticipants(messageId),
+    buildReplyContext(message),
+  ]);
   if (!channel) throw new Error(`channel not found for message ${messageId}`);
-
-  const participants = await loadParticipants(messageId);
-  const replyContext = await buildReplyContext(message);
 
   const recipientsByRole = groupByRole(participants);
 
@@ -243,13 +245,19 @@ async function runPostSendMatching(
   participants: ParticipantRow[],
 ): Promise<void> {
   const handles = participants.map((p) => p.handle);
-  const isBlocked = await loadBlocklist(channel.tenantId);
-  const contactMap = await matchHandlesToContacts(handles, channel.tenantId);
+  const [isBlocked, contactMap] = await Promise.all([
+    loadBlocklist(channel.tenantId),
+    matchHandlesToContacts(handles, channel.tenantId),
+  ]);
+
+  const RECIPIENT_ROLES = ['to', 'cc', 'bcc'] as const;
+  type RecipientRole = (typeof RECIPIENT_ROLES)[number];
+  const isRecipient = (r: string): r is RecipientRole =>
+    (RECIPIENT_ROLES as readonly string[]).includes(r);
 
   for (const p of participants) {
-    if (p.role !== 'from' && p.role !== 'to' && p.role !== 'cc' && p.role !== 'bcc') {
-      continue;
-    }
+    // Skip the sender — only recipients are candidates for auto-create.
+    if (!isRecipient(p.role)) continue;
     if (isBlocked(p.handle)) continue;
     const matched = contactMap.get(p.handle.toLowerCase());
     if (matched) continue;

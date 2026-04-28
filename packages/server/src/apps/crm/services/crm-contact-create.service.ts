@@ -1,5 +1,4 @@
-import { db } from '../../../config/database';
-import { crmContacts } from '../../../db/schema';
+import { createContact } from './contact.service';
 import {
   shouldAutoCreate,
   type ContactAutoCreationPolicy,
@@ -27,25 +26,20 @@ export interface AutoCreateInput {
  *   3. (caller verified) no existing contact matched this handle
  *
  * Returns the new contact's `id` on creation, or `null` when no contact was
- * created.
+ * created. Delegates to `contact.service.createContact` so auto-created
+ * contacts share the same `sortOrder` allocation as user-created ones.
  */
 export async function autoCreateContactIfNeeded(input: AutoCreateInput): Promise<string | null> {
   if (input.isBlocked) return null;
   if (!shouldAutoCreate(input.policy, input.role, input.direction)) return null;
 
-  const name = pickName(input.displayName, input.handle);
+  const created = await createContact(input.userId, input.tenantId, {
+    name: pickName(input.displayName, input.handle),
+    email: input.handle.toLowerCase(),
+    source: 'email-auto',
+  });
 
-  const [inserted] = await db
-    .insert(crmContacts)
-    .values({
-      tenantId: input.tenantId,
-      userId: input.userId,
-      email: input.handle.toLowerCase(),
-      name,
-    })
-    .returning({ id: crmContacts.id });
-
-  return inserted.id;
+  return created.id;
 }
 
 function pickName(displayName: string | null, handle: string): string {

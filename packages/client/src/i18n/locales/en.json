@@ -2110,7 +2110,8 @@
       "retryError": "Failed to retry message",
       "statusPending": "Sending",
       "statusSent": "Sent",
-      "statusFailed": "Failed"
+      "statusFailed": "Failed",
+      "noSubject": "(no subject)"
     }
   },
   "drive": {

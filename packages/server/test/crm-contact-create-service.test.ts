@@ -1,21 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const dbInsertMock = vi.fn();
+const { createContactMock } = vi.hoisted(() => ({
+  createContactMock: vi.fn(),
+}));
 
-vi.mock('../src/config/database', () => ({
-  db: {
-    insert: () => dbInsertMock(),
-  },
+vi.mock('../src/apps/crm/services/contact.service', () => ({
+  createContact: createContactMock,
 }));
 
 import { autoCreateContactIfNeeded } from '../src/apps/crm/services/crm-contact-create.service';
 
 beforeEach(() => {
-  dbInsertMock.mockReset();
+  createContactMock.mockReset();
 });
 
 describe('autoCreateContactIfNeeded', () => {
-  it('returns null and inserts nothing when policy is none', async () => {
+  it('returns null and creates nothing when policy is none', async () => {
     const result = await autoCreateContactIfNeeded({
       handle: 'alice@example.com',
       displayName: 'Alice',
@@ -27,10 +27,10 @@ describe('autoCreateContactIfNeeded', () => {
       isBlocked: false,
     });
     expect(result).toBeNull();
-    expect(dbInsertMock).not.toHaveBeenCalled();
+    expect(createContactMock).not.toHaveBeenCalled();
   });
 
-  it('returns null and inserts nothing when handle is blocked', async () => {
+  it('returns null and creates nothing when handle is blocked', async () => {
     const result = await autoCreateContactIfNeeded({
       handle: 'spam@x.com',
       displayName: null,
@@ -42,7 +42,7 @@ describe('autoCreateContactIfNeeded', () => {
       isBlocked: true,
     });
     expect(result).toBeNull();
-    expect(dbInsertMock).not.toHaveBeenCalled();
+    expect(createContactMock).not.toHaveBeenCalled();
   });
 
   it('returns null when shouldAutoCreate decides no (e.g. send-only + inbound)', async () => {
@@ -57,19 +57,11 @@ describe('autoCreateContactIfNeeded', () => {
       isBlocked: false,
     });
     expect(result).toBeNull();
-    expect(dbInsertMock).not.toHaveBeenCalled();
+    expect(createContactMock).not.toHaveBeenCalled();
   });
 
-  it('creates a contact with name from displayName when policy permits (send-only + outbound + recipient)', async () => {
-    let captured: any = null;
-    dbInsertMock.mockReturnValue({
-      values: (row: any) => ({
-        returning: () => {
-          captured = row;
-          return Promise.resolve([{ id: 'new-contact-1' }]);
-        },
-      }),
-    });
+  it('delegates to createContact with parsed name when policy permits (send-only + outbound + recipient)', async () => {
+    createContactMock.mockResolvedValue({ id: 'new-contact-1' });
 
     const result = await autoCreateContactIfNeeded({
       handle: 'jane@example.com',
@@ -83,24 +75,15 @@ describe('autoCreateContactIfNeeded', () => {
     });
 
     expect(result).toBe('new-contact-1');
-    expect(captured).toMatchObject({
-      tenantId: 't-1',
-      userId: 'u-1',
-      email: 'jane@example.com',
+    expect(createContactMock).toHaveBeenCalledWith('u-1', 't-1', {
       name: 'Jane Doe',
+      email: 'jane@example.com',
+      source: 'email-auto',
     });
   });
 
   it('uses email local-part as name when displayName is null', async () => {
-    let captured: any = null;
-    dbInsertMock.mockReturnValue({
-      values: (row: any) => ({
-        returning: () => {
-          captured = row;
-          return Promise.resolve([{ id: 'new-contact-2' }]);
-        },
-      }),
-    });
+    createContactMock.mockResolvedValue({ id: 'new-contact-2' });
 
     await autoCreateContactIfNeeded({
       handle: 'jane.smith@example.com',
@@ -113,19 +96,13 @@ describe('autoCreateContactIfNeeded', () => {
       isBlocked: false,
     });
 
-    expect(captured.name).toBe('jane.smith');
+    expect(createContactMock).toHaveBeenCalledWith('u-1', 't-1', expect.objectContaining({
+      name: 'jane.smith',
+    }));
   });
 
   it('uses email local-part as name when displayName is empty/whitespace', async () => {
-    let captured: any = null;
-    dbInsertMock.mockReturnValue({
-      values: (row: any) => ({
-        returning: () => {
-          captured = row;
-          return Promise.resolve([{ id: 'new-contact-3' }]);
-        },
-      }),
-    });
+    createContactMock.mockResolvedValue({ id: 'new-contact-3' });
 
     await autoCreateContactIfNeeded({
       handle: 'cher@example.com',
@@ -138,19 +115,13 @@ describe('autoCreateContactIfNeeded', () => {
       isBlocked: false,
     });
 
-    expect(captured.name).toBe('cher');
+    expect(createContactMock).toHaveBeenCalledWith('u-1', 't-1', expect.objectContaining({
+      name: 'cher',
+    }));
   });
 
   it('lowercases the email handle', async () => {
-    let captured: any = null;
-    dbInsertMock.mockReturnValue({
-      values: (row: any) => ({
-        returning: () => {
-          captured = row;
-          return Promise.resolve([{ id: 'new-contact-4' }]);
-        },
-      }),
-    });
+    createContactMock.mockResolvedValue({ id: 'new-contact-4' });
 
     await autoCreateContactIfNeeded({
       handle: 'JANE@Example.COM',
@@ -163,6 +134,8 @@ describe('autoCreateContactIfNeeded', () => {
       isBlocked: false,
     });
 
-    expect(captured.email).toBe('jane@example.com');
+    expect(createContactMock).toHaveBeenCalledWith('u-1', 't-1', expect.objectContaining({
+      email: 'jane@example.com',
+    }));
   });
 });

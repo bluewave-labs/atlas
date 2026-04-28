@@ -1,13 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
 import { Mail, Send } from 'lucide-react';
-import { api } from '../../../../lib/api-client';
-import { queryKeys } from '../../../../config/query-keys';
 import { Button } from '../../../../components/ui/button';
 import { Badge } from '../../../../components/ui/badge';
 import { useToastStore } from '../../../../stores/toast-store';
-import { useRetryMessage } from '../../hooks/use-send-message';
+import { useMessage, useRetryMessage } from '../../hooks/use-send-message';
 import { EmailComposerPopover } from '../email-composer/email-composer-popover';
 
 export interface EmailActivityRowProps {
@@ -25,25 +22,7 @@ export function EmailActivityRow({ activity }: EmailActivityRowProps) {
   const addToast = useToastStore((s) => s.addToast);
   const [showFullBody, setShowFullBody] = useState(false);
 
-  const { data: message } = useQuery({
-    queryKey: queryKeys.crm.messages.detail(activity.messageId ?? 'none'),
-    queryFn: async () => {
-      if (!activity.messageId) return null;
-      const { data } = await api.get(`/crm/messages/${activity.messageId}`);
-      return data.data as {
-        id: string;
-        subject: string | null;
-        snippet: string | null;
-        bodyText: string | null;
-        status: string;
-        threadId: string;
-        headerMessageId: string | null;
-        direction: 'inbound' | 'outbound';
-      };
-    },
-    enabled: !!activity.messageId,
-    staleTime: 30_000,
-  });
+  const { data: message } = useMessage(activity.messageId);
 
   if (!message) {
     return (
@@ -109,7 +88,7 @@ export function EmailActivityRow({ activity }: EmailActivityRowProps) {
             fontSize: 'var(--font-size-sm)',
           }}
         >
-          {message.subject ?? '(no subject)'}
+          {message.subject ?? t('crm.composer.noSubject', '(no subject)')}
         </span>
         {statusBadge}
       </div>

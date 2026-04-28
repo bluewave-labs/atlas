@@ -79,17 +79,19 @@ function splitAddressList(s: string): string[] {
   return s.split(',').map((x) => x.trim()).filter(Boolean);
 }
 
-/** Parse one address. Returns null if malformed (no @ found). */
-function parseSingleAddress(s: string): { handle: string; displayName: string | null } | null {
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Parse one address. Returns null unless the handle is a valid single-`@` email. */
+export function parseSingleAddress(s: string): { handle: string; displayName: string | null } | null {
   const angle = ANGLE_BRACKET_PATTERN.exec(s);
   if (angle) {
     const handle = angle[1].trim().toLowerCase();
-    if (!handle.includes('@')) return null;
+    if (!EMAIL_RE.test(handle)) return null;
     const displayName = s.slice(0, angle.index).trim().replace(/^"|"$/g, '') || null;
     return { handle, displayName };
   }
   const trimmed = s.trim().toLowerCase();
-  if (!trimmed.includes('@')) return null;
+  if (!EMAIL_RE.test(trimmed)) return null;
   return { handle: trimmed, displayName: null };
 }
 

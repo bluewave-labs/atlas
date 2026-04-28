@@ -8,13 +8,12 @@ import {
   messageThreads,
 } from '../../../db/schema';
 import { getChannelById } from '../services/channel.service';
+import { parseSingleAddress } from '../services/gmail-message-parser';
 import { getSyncQueue, SyncJobName } from '../../../config/queue';
 import { logger } from '../../../utils/logger';
 
-/** Placeholder prefix for `messages.gmailMessageId` until the send job populates the real Gmail id. */
-export const PENDING_GMAIL_MESSAGE_ID_PREFIX = 'pending-';
-/** Placeholder prefix for `message_threads.gmailThreadId` until the send job populates the canonical thread id. */
-export const LOCAL_THREAD_ID_PREFIX = 'local-';
+const PENDING_GMAIL_MESSAGE_ID_PREFIX = 'pending-';
+const LOCAL_THREAD_ID_PREFIX = 'local-';
 
 interface SendBody {
   channelId?: string;
@@ -23,29 +22,8 @@ interface SendBody {
   bcc?: string[];
   subject?: string;
   body?: string;
-  /** When replying: the headerMessageId of the message being replied to. */
   inReplyTo?: string;
-  /** When replying: existing local thread id to attach to. If omitted, a new thread is created. */
   threadId?: string;
-}
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/**
- * Parse "Display Name <email@x>" or bare "email@x" into { handle, displayName }.
- * Returns null if the address is not a valid single-@ email.
- */
-function parseAddress(s: string): { handle: string; displayName: string | null } | null {
-  const angleMatch = s.match(/<([^>]+)>/);
-  if (angleMatch) {
-    const handle = angleMatch[1].trim().toLowerCase();
-    if (!EMAIL_RE.test(handle)) return null;
-    const displayName = s.slice(0, angleMatch.index).trim().replace(/^"|"$/g, '') || null;
-    return { handle, displayName };
-  }
-  const trimmed = s.trim().toLowerCase();
-  if (!EMAIL_RE.test(trimmed)) return null;
-  return { handle: trimmed, displayName: null };
 }
 
 export async function sendMessage(req: Request, res: Response) {
@@ -152,7 +130,7 @@ export async function sendMessage(req: Request, res: Response) {
     for (const role of ['to', 'cc', 'bcc'] as const) {
       const list = role === 'to' ? to : role === 'cc' ? cc : bcc;
       for (const raw of list) {
-        const parsed = parseAddress(raw);
+        const parsed = parseSingleAddress(raw);
         if (!parsed) continue;
         participantRows.push({
           messageId,

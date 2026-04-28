@@ -1,6 +1,32 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../lib/api-client';
 import { queryKeys } from '../../../config/query-keys';
+
+export interface MessageDTO {
+  id: string;
+  channelId: string;
+  subject: string | null;
+  snippet: string | null;
+  bodyText: string | null;
+  status: string;
+  threadId: string;
+  headerMessageId: string | null;
+  direction: 'inbound' | 'outbound';
+  sentAt: string | null;
+}
+
+export function useMessage(messageId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.crm.messages.detail(messageId ?? 'none'),
+    queryFn: async () => {
+      if (!messageId) return null;
+      const { data } = await api.get(`/crm/messages/${messageId}`);
+      return data.data as MessageDTO;
+    },
+    enabled: !!messageId,
+    staleTime: 30_000,
+  });
+}
 
 export interface SendMessageInput {
   channelId: string;
