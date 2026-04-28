@@ -8,6 +8,11 @@ dotenvConfig({ path: rootEnv });
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  WORKER_MODE: z
+    .string()
+    .optional()
+    .transform((v) => (v === '' ? undefined : v))
+    .pipe(z.enum(['api', 'worker', 'both']).default('both')),
   PORT: z.coerce.number().default(3001),
   DATABASE_URL: z.string().min(1).default('postgresql://postgres:postgres@localhost:5432/atlas'),
   REDIS_URL: z.string().optional(),
