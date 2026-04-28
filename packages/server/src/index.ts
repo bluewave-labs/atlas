@@ -12,6 +12,7 @@ import { startCrmReminderScheduler, stopCrmReminderScheduler } from './apps/crm/
 import { startLeaveBalanceScheduler, stopLeaveBalanceScheduler } from './apps/hr/services/leave-balance-scheduler';
 import { startRecurringInvoiceScheduler, stopRecurringInvoiceScheduler } from './apps/invoices/recurring-scheduler';
 import { startInvoiceReminderScheduler, stopInvoiceReminderScheduler } from './apps/invoices/reminder-scheduler';
+import { startSyncWorker, stopSyncWorker, scheduleIncrementalSyncForAllAccounts } from './workers';
 
 const PURGE_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 const BACKUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -68,10 +69,16 @@ app.listen(env.PORT, async () => {
 
   // Invoices: overdue invoice reminders — runs hourly
   startInvoiceReminderScheduler();
+
+  // Sync worker: BullMQ consumer for calendar (Phase 1) and Gmail (Phase 2+) jobs.
+  startSyncWorker();
+  scheduleIncrementalSyncForAllAccounts().catch((err) =>
+    logger.error({ err }, 'Failed to schedule incremental sync jobs'),
+  );
 });
 
 // Graceful shutdown
-function handleShutdown(signal: string) {
+async function handleShutdown(signal: string) {
   logger.info({ signal }, 'Received shutdown signal, cleaning up');
 
   if (purgeTimer) { clearInterval(purgeTimer); purgeTimer = null; }
@@ -83,23 +90,31 @@ function handleShutdown(signal: string) {
   stopTaskReminderScheduler();
   stopCrmReminderScheduler();
 
-  closeRedis()
-    .catch((err) => logger.warn({ err }, 'Error closing Redis'));
-
-  closeDb()
-    .then(() => {
-      logger.info('Cleanup complete');
-      process.exit(0);
-    })
-    .catch((err) => {
-      logger.error({ err }, 'Error during cleanup');
-      process.exit(1);
-    });
-
   setTimeout(() => {
     logger.error('Forced exit after shutdown timeout');
     process.exit(1);
   }, 10000);
+
+  try {
+    await stopSyncWorker();
+  } catch (err) {
+    logger.warn({ err }, 'Error stopping sync worker');
+  }
+
+  try {
+    await closeRedis();
+  } catch (err) {
+    logger.warn({ err }, 'Error closing Redis');
+  }
+
+  try {
+    await closeDb();
+    logger.info('Cleanup complete');
+    process.exit(0);
+  } catch (err) {
+    logger.error({ err }, 'Error during cleanup');
+    process.exit(1);
+  }
 }
 
 process.on('SIGTERM', () => handleShutdown('SIGTERM'));
