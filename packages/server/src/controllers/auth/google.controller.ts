@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { eq } from 'drizzle-orm';
 import { db } from '../../config/database';
-import { accounts } from '../../db/schema';
+import { accounts, messageChannels, tenantMembers } from '../../db/schema';
 import { logger } from '../../utils/logger';
 import { isGoogleConfigured, getAuthUrl, exchangeCode, createOAuth2Client } from '../../services/google-auth';
 import { encrypt, decrypt } from '../../utils/crypto';
@@ -64,6 +64,58 @@ export async function googleCallback(req: Request, res: Response) {
       syncError: null,
       updatedAt: new Date(),
     }).where(eq(accounts.id, accountId));
+
+    // Create the message channel if this is the user's first connection.
+    // Idempotent: if a channel already exists for this account (either from
+    // a prior connect or from the bootstrap migration backfill), skip.
+    // Failure here is logged but does not block the OAuth callback — the
+    // user's tokens are already saved; an operator can manually repair the
+    // channel via the migration's backfill SELECT or via re-connect.
+    try {
+      const [account] = await db
+        .select({ id: accounts.id, email: accounts.email, userId: accounts.userId })
+        .from(accounts)
+        .where(eq(accounts.id, accountId))
+        .limit(1);
+
+      if (account) {
+        const [existingChannel] = await db
+          .select({ id: messageChannels.id })
+          .from(messageChannels)
+          .where(eq(messageChannels.accountId, account.id))
+          .limit(1);
+
+        if (!existingChannel) {
+          // Find the user's tenant via tenant_members. Pick the earliest
+          // membership (deterministic) — same rule as the migration backfill.
+          const [membership] = await db
+            .select({ tenantId: tenantMembers.tenantId })
+            .from(tenantMembers)
+            .where(eq(tenantMembers.userId, account.userId))
+            .orderBy(tenantMembers.createdAt)
+            .limit(1);
+
+          if (membership) {
+            await db.insert(messageChannels).values({
+              accountId: account.id,
+              tenantId: membership.tenantId,
+              ownerUserId: account.userId,
+              type: 'gmail',
+              handle: account.email.toLowerCase(),
+              visibility: 'private',
+              isSyncEnabled: true,
+              contactAutoCreationPolicy: 'send-only',
+              syncStage: 'pending',
+            });
+            logger.info({ accountId: account.id, handle: account.email.toLowerCase(), tenantId: membership.tenantId }, 'Created message channel on connect');
+          } else {
+            logger.warn({ accountId: account.id, userId: account.userId }, 'No tenant_member found for user; channel not created');
+          }
+        }
+      }
+    } catch (err) {
+      logger.error({ err, accountId }, 'Failed to create message channel on connect');
+    }
 
     logger.info({ accountId }, 'Google account connected successfully');
     res.redirect(`${env.CLIENT_PUBLIC_URL}/crm?google_connected=true`);
