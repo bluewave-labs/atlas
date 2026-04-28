@@ -4,6 +4,7 @@ import { createActivity as createActivityService } from '../services/activity.se
 import * as crmCalendarService from '../calendar.service';
 import { isGoogleConfigured } from '../../../services/google-auth';
 import { getRedisClient } from '../../../config/redis';
+import { getSyncQueue, SyncJobName } from '../../../config/queue';
 import { db } from '../../../config/database';
 import { accounts } from '../../../db/schema';
 import { eq } from 'drizzle-orm';
@@ -92,6 +93,16 @@ export async function getGoogleSyncStatus(req: Request, res: Response) {
         lastSync: account?.lastSync ?? null,
         lastFullSync: account?.lastFullSync ?? null,
         redisAvailable: !!getRedisClient(),
+        queueDepth: await (async () => {
+          const q = getSyncQueue();
+          if (!q) return null;
+          try {
+            return await q.getJobCounts('waiting', 'active', 'delayed', 'failed');
+          } catch (error) {
+            logger.warn({ error }, 'queueDepth fetch failed');
+            return null;
+          }
+        })(),
       },
     });
   } catch (error) {
@@ -102,7 +113,42 @@ export async function getGoogleSyncStatus(req: Request, res: Response) {
 
 export async function startGoogleSync(req: Request, res: Response) {
   try {
-    res.json({ success: true, data: { message: 'Calendar sync is handled automatically' } });
+    const userId = req.auth!.userId;
+
+    const [account] = await db
+      .select({ id: accounts.id, provider: accounts.provider })
+      .from(accounts)
+      .where(eq(accounts.userId, userId))
+      .limit(1);
+
+    if (!account || account.provider !== 'google') {
+      res.status(400).json({ success: false, error: 'No connected Google account' });
+      return;
+    }
+
+    const queue = getSyncQueue();
+    if (!queue) {
+      res.status(503).json({
+        success: false,
+        error: 'Sync queue unavailable — Redis is not configured',
+      });
+      return;
+    }
+
+    // Update DB first so a queue-add failure leaves a recoverable "pending" status
+    // rather than an orphan job that BullMQ runs without the UI knowing.
+    await db
+      .update(accounts)
+      .set({ syncStatus: 'pending', syncError: null, updatedAt: new Date() })
+      .where(eq(accounts.id, account.id));
+
+    const job = await queue.add(SyncJobName.CalendarFullSync, {
+      accountId: account.id,
+      triggeredBy: 'user',
+      userId,
+    });
+
+    res.json({ success: true, data: { jobId: job.id, queued: true } });
   } catch (error) {
     logger.error({ error }, 'Failed to start Google sync');
     res.status(500).json({ success: false, error: 'Failed to start sync' });
