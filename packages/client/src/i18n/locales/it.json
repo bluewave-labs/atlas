@@ -85,7 +85,9 @@
       "of": "di",
       "clear": "Cancella"
     },
-    "signOut": "Esci"
+    "signOut": "Esci",
+    "noResults": "Nessun risultato",
+    "navigation": "Navigazione"
   },
   "auth": {
     "appName": "Atlas",

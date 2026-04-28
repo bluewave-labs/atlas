@@ -85,7 +85,9 @@
       "of": "of",
       "clear": "Clear"
     },
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "noResults": "No results",
+    "navigation": "Navigation"
   },
   "auth": {
     "appName": "Atlas",
