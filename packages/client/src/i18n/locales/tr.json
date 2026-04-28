@@ -4150,7 +4150,8 @@
       "updates": "Güncellemeler",
       "activityTypes": "Aktivite türleri",
       "invoiceTemplates": "Fatura şablonları",
-      "ai": "Yapay zeka"
+      "ai": "Yapay zeka",
+      "dataImport": "Data import"
     },
     "dataModel": {
       "searchObjects": "Nesneleri ara...",
@@ -4595,6 +4596,46 @@
     "tour": {
       "title": "Faturalar",
       "description": "Fatura gönderin, ödemeleri ve gecikmiş bakiyeleri takip edin, geç ödeyenlerin peşinden otomatik olarak düşün."
+    }
+  },
+  "import": {
+    "odoo": {
+      "title": "Import from Odoo",
+      "subtitle": "Upload CSV files exported from Odoo to migrate contacts, deals, and activities into Atlas.",
+      "instructions": "From your Odoo instance, go to Contacts → list view → Action → Export. Toggle 'I want to update data (import-compatible export)' before exporting. Repeat for CRM Pipeline and (optionally) Activities.",
+      "partnersLabel": "Contacts (res.partner.csv)",
+      "leadsLabel": "Leads & opportunities (crm.lead.csv)",
+      "activitiesLabel": "Pending activities (mail.activity.csv)",
+      "preview": "Preview",
+      "parsing": "Parsing...",
+      "previewSummaryTitle": "Records to import",
+      "companies": "{{count}} companies",
+      "contacts": "{{count}} contacts",
+      "leads": "{{count}} leads",
+      "deals": "{{count}} deals",
+      "activities": "{{count}} activities",
+      "droppedTitle": "Rows that will be skipped",
+      "customFieldsTitle": "Custom fields detected",
+      "customFieldsHelp": "Atlas does not auto-create custom field schemas. These columns will be skipped on import. Define them in Atlas first if you need them.",
+      "stageMappingTitle": "Stage mapping",
+      "stageMappingHelp": "Map each Odoo stage to an Atlas deal stage. Pre-filled with name matches.",
+      "odooStage": "Odoo stage",
+      "atlasStage": "Atlas stage",
+      "cancel": "Back",
+      "commit": "Import",
+      "committing": "Importing...",
+      "previewFailed": "Couldn't read your files. Check that they are CSV exports from Odoo.",
+      "commitFailed": "Import failed. No data was changed.",
+      "commitSucceeded": "Import complete.",
+      "summaryTitle": "Import complete",
+      "summaryCompanies": "Imported {{count}} companies",
+      "summaryContacts": "Imported {{count}} contacts",
+      "summaryLeads": "Imported {{count}} leads",
+      "summaryDeals": "Imported {{count}} deals",
+      "summaryActivities": "Imported {{count}} activities",
+      "summaryCustomFieldsSkipped": "Skipped {{count}} custom field columns",
+      "summaryDroppedTitle": "Skipped rows",
+      "done": "Done"
     }
   },
   "work": {
