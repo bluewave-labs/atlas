@@ -4,12 +4,37 @@ import { useTranslation } from 'react-i18next';
 import type { Task, TaskProject, TenantUser } from '@atlas-platform/shared';
 import { isDoneStatus } from '@atlas-platform/shared';
 import { getDueBadgeClass, formatDueDate } from '../lib/helpers';
+import { PRIORITY_OPTIONS } from '../lib/constants';
 import { Avatar } from '../../../components/ui/avatar';
 
 type SortKey = 'title' | 'project' | 'priority' | 'dueDate' | 'assignee';
 type SortDir = 'asc' | 'desc';
 
-const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2, none: 3 };
+const PRIORITY_ORDER: Record<Task['priority'], number> = Object.fromEntries(
+  PRIORITY_OPTIONS.map((p, i) => [p.value, i]),
+) as Record<Task['priority'], number>;
+
+const NO_DUE_DATE_SORT_KEY = '￿';
+
+const TH_STYLE: CSSProperties = {
+  padding: '6px var(--spacing-md)',
+  fontSize: 'var(--font-size-xs)',
+  fontWeight: 'var(--font-weight-semibold)',
+  color: 'var(--color-text-tertiary)',
+  fontFamily: 'var(--font-family)',
+  textAlign: 'left',
+  borderBottom: '1px solid var(--color-border-secondary)',
+  whiteSpace: 'nowrap',
+  userSelect: 'none',
+};
+
+const TD_STYLE: CSSProperties = {
+  padding: '7px var(--spacing-md)',
+  fontSize: 'var(--font-size-sm)',
+  fontFamily: 'var(--font-family)',
+  borderBottom: '1px solid var(--color-border-secondary)',
+  verticalAlign: 'middle',
+};
 
 function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
   if (col !== sortKey) return <ChevronsUpDown size={11} style={{ opacity: 0.35 }} />;
@@ -98,10 +123,11 @@ function TaskTableViewInner({
         const pb = (b.projectId && projectById.get(b.projectId)?.title) ?? '';
         cmp = pa.localeCompare(pb);
       } else if (sortKey === 'priority') {
-        cmp = (PRIORITY_ORDER[a.priority] ?? 3) - (PRIORITY_ORDER[b.priority] ?? 3);
+        const last = PRIORITY_OPTIONS.length - 1;
+        cmp = (PRIORITY_ORDER[a.priority] ?? last) - (PRIORITY_ORDER[b.priority] ?? last);
       } else if (sortKey === 'dueDate') {
-        const da = a.dueDate ?? '9999';
-        const db = b.dueDate ?? '9999';
+        const da = a.dueDate ?? NO_DUE_DATE_SORT_KEY;
+        const db = b.dueDate ?? NO_DUE_DATE_SORT_KEY;
         cmp = da.localeCompare(db);
       } else if (sortKey === 'assignee') {
         const ua = (a.assigneeId && memberById.get(a.assigneeId)?.name) ?? '';
@@ -112,26 +138,6 @@ function TaskTableViewInner({
     });
     return list;
   }, [tasks, sortKey, sortDir, projectById, memberById]);
-
-  const thStyle: CSSProperties = {
-    padding: '6px var(--spacing-md)',
-    fontSize: 'var(--font-size-xs)',
-    fontWeight: 'var(--font-weight-semibold)',
-    color: 'var(--color-text-tertiary)',
-    fontFamily: 'var(--font-family)',
-    textAlign: 'left',
-    borderBottom: '1px solid var(--color-border-secondary)',
-    whiteSpace: 'nowrap',
-    userSelect: 'none',
-  };
-
-  const tdStyle: CSSProperties = {
-    padding: '7px var(--spacing-md)',
-    fontSize: 'var(--font-size-sm)',
-    fontFamily: 'var(--font-family)',
-    borderBottom: '1px solid var(--color-border-secondary)',
-    verticalAlign: 'middle',
-  };
 
   const handleRowKeyDown = (e: KeyboardEvent<HTMLTableRowElement>, taskId: string) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -154,21 +160,21 @@ function TaskTableViewInner({
         </colgroup>
         <thead>
           <tr>
-            <th style={thStyle} />
-            <th style={thStyle} />
-            <th style={thStyle}>
+            <th style={TH_STYLE} />
+            <th style={TH_STYLE} />
+            <th style={TH_STYLE}>
               <SortHeader col="title" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} label={t('tasks.fields.title')} />
             </th>
-            <th style={thStyle}>
+            <th style={TH_STYLE}>
               <SortHeader col="project" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} label={t('tasks.fields.project')} />
             </th>
-            <th style={thStyle}>
+            <th style={TH_STYLE}>
               <SortHeader col="priority" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} label={t('tasks.fields.priority')} />
             </th>
-            <th style={thStyle}>
+            <th style={TH_STYLE}>
               <SortHeader col="dueDate" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} label={t('tasks.fields.dueDate')} />
             </th>
-            <th style={thStyle}>
+            <th style={TH_STYLE}>
               <SortHeader col="assignee" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} label={t('tasks.fields.assignee')} />
             </th>
           </tr>
@@ -184,24 +190,14 @@ function TaskTableViewInner({
             return (
               <tr
                 key={task.id}
+                className="tasks-table-row"
                 role="button"
                 tabIndex={0}
                 aria-selected={isSelected}
                 onClick={() => onSelectTask(task.id)}
                 onKeyDown={e => handleRowKeyDown(e, task.id)}
-                style={{
-                  cursor: 'pointer',
-                  background: isSelected ? 'var(--color-surface-selected)' : undefined,
-                  transition: 'background 0.1s',
-                }}
-                onMouseEnter={e => {
-                  if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'var(--color-surface-hover)';
-                }}
-                onMouseLeave={e => {
-                  if (!isSelected) (e.currentTarget as HTMLElement).style.background = '';
-                }}
               >
-                <td style={{ ...tdStyle, textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                <td style={{ ...TD_STYLE, textAlign: 'center' }} onClick={e => e.stopPropagation()}>
                   <input
                     type="checkbox"
                     checked={isChecked}
@@ -212,7 +208,7 @@ function TaskTableViewInner({
                   />
                 </td>
 
-                <td style={{ ...tdStyle, textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                <td style={{ ...TD_STYLE, textAlign: 'center' }} onClick={e => e.stopPropagation()}>
                   <button
                     type="button"
                     className={`task-checkbox${done ? ' completed' : ''}`}
@@ -224,7 +220,7 @@ function TaskTableViewInner({
                   </button>
                 </td>
 
-                <td style={{ ...tdStyle, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <td style={{ ...TD_STYLE, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     {task.priority !== 'none' && <div className={`task-priority-dot ${task.priority}`} style={{ flexShrink: 0 }} />}
                     {task.icon && <span>{task.icon}</span>}
@@ -234,7 +230,7 @@ function TaskTableViewInner({
                   </span>
                 </td>
 
-                <td style={{ ...tdStyle, color: 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <td style={{ ...TD_STYLE, color: 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {project ? (
                     <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                       {project.icon
@@ -245,7 +241,7 @@ function TaskTableViewInner({
                   ) : <span style={{ color: 'var(--color-text-tertiary)' }}>—</span>}
                 </td>
 
-                <td style={{ ...tdStyle, color: 'var(--color-text-secondary)' }}>
+                <td style={{ ...TD_STYLE, color: 'var(--color-text-secondary)' }}>
                   {task.priority !== 'none'
                     ? (
                       <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -256,13 +252,13 @@ function TaskTableViewInner({
                     : <span style={{ color: 'var(--color-text-tertiary)' }}>—</span>}
                 </td>
 
-                <td style={tdStyle}>
+                <td style={TD_STYLE}>
                   {task.dueDate
                     ? <span className={getDueBadgeClass(task.dueDate)}>{formatDueDate(task.dueDate, t)}</span>
                     : <span style={{ color: 'var(--color-text-tertiary)' }}>—</span>}
                 </td>
 
-                <td style={tdStyle}>
+                <td style={TD_STYLE}>
                   {assignee
                     ? (
                       <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

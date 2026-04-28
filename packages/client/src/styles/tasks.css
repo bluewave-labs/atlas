@@ -1739,6 +1739,19 @@
   color: var(--color-text-secondary);
 }
 
+.tasks-table-row {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.tasks-table-row[aria-selected='true'] {
+  background: var(--color-surface-selected);
+}
+
+.tasks-table-row[aria-selected='false']:hover {
+  background: var(--color-surface-hover);
+}
+
 .tasks-view-toggle-btn.active {
   background: var(--color-surface-selected);
   color: var(--color-accent-primary);

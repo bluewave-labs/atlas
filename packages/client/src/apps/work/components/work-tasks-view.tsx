@@ -131,6 +131,11 @@ export function WorkTasksView({ view, title }: Props) {
     return tasks;
   }, [allTasks, searchQuery, visibilityFilter, currentUserId]);
 
+  const nonHeadingDisplayTasks = useMemo(
+    () => displayTasks.filter(task => task.type !== 'heading'),
+    [displayTasks],
+  );
+
   const projectTaskGroups = useMemo(() => {
     if (!view.startsWith('project:')) return null;
     const headings = displayTasks.filter(t => t.type === 'heading');
@@ -146,7 +151,7 @@ export function WorkTasksView({ view, title }: Props) {
 
   const inboxGroups = useMemo(() => {
     if (view !== 'my') return null;
-    const tasks = displayTasks.filter(t => t.type !== 'heading');
+    const tasks = nonHeadingDisplayTasks;
     const todayStr = getTodayStr();
     const overdue: Task[] = [], inbox: Task[] = [], today: Task[] = [];
     const evening: Task[] = [], anytime: Task[] = [], someday: Task[] = [];
@@ -167,7 +172,7 @@ export function WorkTasksView({ view, title }: Props) {
     if (anytime.length > 0) groups.push({ label: t('tasks.whenOptions.anytime'), icon: CircleDot, color: '#06b6d4', tasks: anytime });
     if (someday.length > 0) groups.push({ label: t('tasks.whenOptions.someday'), icon: Coffee, color: '#a78bfa', tasks: someday });
     return groups;
-  }, [view, displayTasks, t]);
+  }, [view, nonHeadingDisplayTasks, t]);
 
   const showWhenBadges = useMemo(() => {
     return view.startsWith('project:') || view === 'all' || view === 'assigned' || view === 'created';
@@ -402,69 +407,57 @@ export function WorkTasksView({ view, title }: Props) {
 
         <div className="tasks-content">
           {viewMode === 'table' ? (
-            <>
-              <TaskTableView
-                tasks={displayTasks.filter(task => task.type !== 'heading')}
-                projects={projects}
-                members={tenantMembers}
-                selectedTaskId={selectedTaskId}
-                selectedIds={selectedIds}
-                onSelectTask={setSelectedTaskId}
-                onComplete={handleComplete}
-                onCheckToggle={toggleSelectOne}
-              />
-              {selectedTask && selectedTask.type !== 'heading' && (
-                <TaskDetailPanel task={selectedTask} projects={projects} members={tenantMembers} allTasks={allTasks} onClose={() => setSelectedTaskId(null)} />
-              )}
-            </>
+            <TaskTableView
+              tasks={nonHeadingDisplayTasks}
+              projects={projects}
+              members={tenantMembers}
+              selectedTaskId={selectedTaskId}
+              selectedIds={selectedIds}
+              onSelectTask={setSelectedTaskId}
+              onComplete={handleComplete}
+              onCheckToggle={toggleSelectOne}
+            />
           ) : viewMode === 'board' && canShowBoard ? (
-            <>
-              <KanbanBoard tasks={displayTasks} projects={projects} onComplete={handleComplete} onSelectTask={(id) => setSelectedTaskId(id)} />
-              {selectedTask && selectedTask.type !== 'heading' && (
-                <TaskDetailPanel task={selectedTask} projects={projects} members={tenantMembers} allTasks={allTasks} onClose={() => setSelectedTaskId(null)} />
-              )}
-            </>
+            <KanbanBoard tasks={displayTasks} projects={projects} onComplete={handleComplete} onSelectTask={(id) => setSelectedTaskId(id)} />
           ) : (
-            <>
-              <TaskListView
-                activeSection={activeSection}
-                displayTasks={displayTasks}
-                completedTasks={completedTasks}
-                todayTasks={null}
-                projectTaskGroups={projectTaskGroups}
-                inboxGroups={view === 'my' ? inboxGroups : null}
-                activeProject={activeProject}
-                projects={projects}
-                tenantMembers={tenantMembers}
-                defaultWhen={defaultWhen}
-                projectIdForNew={projectIdForNew}
-                isLoading={isLoading}
-                seeding={false}
-                canCreate={canCreate}
-                selectedTaskId={selectedTaskId}
-                showWhenBadges={showWhenBadges}
-                showProjectInList={showProjectInList}
-                showDueDateInList={showDueDateInList}
-                draggedTaskId={draggedTaskId}
-                dropTargetId={dropTargetId}
-                selectedIds={selectedIds}
-                blockedTaskIdSet={blockedTaskIdSet}
-                onSelectTask={setSelectedTaskId}
-                onComplete={handleComplete}
-                onTitleSave={(id, newTitle) => updateTask.mutate({ id, title: newTitle })}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                onDragEnd={handleDragEnd}
-                onToggleSelectOne={toggleSelectOne}
-                onDeleteHeading={handleDeleteHeading}
-                onSeed={() => {}}
-                renderTaskItem={renderTaskItem}
-              />
-              {selectedTask && selectedTask.type !== 'heading' && (
-                <TaskDetailPanel task={selectedTask} projects={projects} members={tenantMembers} allTasks={allTasks} onClose={() => setSelectedTaskId(null)} />
-              )}
-            </>
+            <TaskListView
+              activeSection={activeSection}
+              displayTasks={displayTasks}
+              completedTasks={completedTasks}
+              todayTasks={null}
+              projectTaskGroups={projectTaskGroups}
+              inboxGroups={view === 'my' ? inboxGroups : null}
+              activeProject={activeProject}
+              projects={projects}
+              tenantMembers={tenantMembers}
+              defaultWhen={defaultWhen}
+              projectIdForNew={projectIdForNew}
+              isLoading={isLoading}
+              seeding={false}
+              canCreate={canCreate}
+              selectedTaskId={selectedTaskId}
+              showWhenBadges={showWhenBadges}
+              showProjectInList={showProjectInList}
+              showDueDateInList={showDueDateInList}
+              draggedTaskId={draggedTaskId}
+              dropTargetId={dropTargetId}
+              selectedIds={selectedIds}
+              blockedTaskIdSet={blockedTaskIdSet}
+              onSelectTask={setSelectedTaskId}
+              onComplete={handleComplete}
+              onTitleSave={(id, newTitle) => updateTask.mutate({ id, title: newTitle })}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onDragEnd={handleDragEnd}
+              onToggleSelectOne={toggleSelectOne}
+              onDeleteHeading={handleDeleteHeading}
+              onSeed={() => {}}
+              renderTaskItem={renderTaskItem}
+            />
+          )}
+          {selectedTask && selectedTask.type !== 'heading' && (
+            <TaskDetailPanel task={selectedTask} projects={projects} members={tenantMembers} allTasks={allTasks} onClose={() => setSelectedTaskId(null)} />
           )}
         </div>
       </ContentArea>
