@@ -20,7 +20,7 @@ const IMPORTERS: ImporterDef[] = [
       <img
         src="/importers/odoo-logo.svg"
         alt=""
-        style={{ height: 32, width: 'auto', display: 'block' }}
+        style={{ maxHeight: 28, maxWidth: '100%', width: 'auto', display: 'block' }}
       />
     ),
   },
@@ -38,15 +38,10 @@ export function DataImportPanel() {
           label={t('import.backToImporters')}
           onClick={() => setActive(null)}
         />
-        <p
-          style={{
-            margin: 0,
-            color: 'var(--color-text-secondary)',
-            fontSize: 'var(--font-size-sm)',
-          }}
-        >
-          {t('import.odoo.subtitle')}
-        </p>
+        <SectionHeader
+          title={t('import.odoo.title')}
+          subtitle={t('import.odoo.subtitle')}
+        />
         <OdooImportWizard onClose={() => navigate('/crm')} />
       </div>
     );
@@ -54,15 +49,10 @@ export function DataImportPanel() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
-      <p
-        style={{
-          margin: 0,
-          color: 'var(--color-text-secondary)',
-          fontSize: 'var(--font-size-sm)',
-        }}
-      >
-        {t('import.indexSubtitle')}
-      </p>
+      <SectionHeader
+        title={t('import.indexTitle')}
+        subtitle={t('import.indexSubtitle')}
+      />
 
       <div
         style={{
@@ -82,6 +72,32 @@ export function DataImportPanel() {
           />
         ))}
       </div>
+    </div>
+  );
+}
+
+function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <h3
+        style={{
+          margin: 0,
+          fontSize: 'var(--font-size-md)',
+          fontWeight: 600,
+          color: 'var(--color-text-primary)',
+        }}
+      >
+        {title}
+      </h3>
+      <p
+        style={{
+          margin: 0,
+          color: 'var(--color-text-secondary)',
+          fontSize: 'var(--font-size-sm)',
+        }}
+      >
+        {subtitle}
+      </p>
     </div>
   );
 }
@@ -154,7 +170,7 @@ function ImporterCard({ logo, title, description, cta, onClick }: CardProps) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
         <div
           style={{
-            width: 56,
+            width: 96,
             height: 56,
             display: 'flex',
             alignItems: 'center',
@@ -163,7 +179,7 @@ function ImporterCard({ logo, title, description, cta, onClick }: CardProps) {
             border: '1px solid var(--color-border-secondary)',
             borderRadius: 'var(--radius-md)',
             flexShrink: 0,
-            padding: 8,
+            padding: '8px 12px',
           }}
         >
           {logo}
