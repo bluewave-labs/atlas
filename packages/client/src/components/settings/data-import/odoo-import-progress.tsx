@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Check, Loader2 } from 'lucide-react';
 import { Modal } from '../../ui/modal';
 import type { OdooImportPreview, OdooImportSummary } from '@atlas-platform/shared';
+import { humanizeDropReason } from './humanize';
 
 interface Step {
   key: string;
@@ -220,20 +221,30 @@ function SummaryContent({
       <Counter label={t('import.odoo.summaryDeals', { count: summary.imported.deals })} count={summary.imported.deals} />
       <Counter label={t('import.odoo.summaryActivities', { count: summary.imported.activities })} count={summary.imported.activities} />
       {summary.dropped.length > 0 && (
-        <details style={{ marginTop: 'var(--spacing-sm)' }}>
+        <details style={{ marginTop: 'var(--spacing-md)' }}>
           <summary
             style={{
               cursor: 'pointer',
-              fontSize: 'var(--font-size-xs)',
-              color: 'var(--color-text-tertiary)',
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--color-text-secondary)',
+              fontWeight: 500,
             }}
           >
             {t('import.odoo.summaryDroppedTitle')}
           </summary>
-          <ul style={{ margin: 'var(--spacing-sm) 0 0 0', paddingLeft: 'var(--spacing-lg)', color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-xs)' }}>
+          <ul
+            style={{
+              margin: 'var(--spacing-sm) 0 0 0',
+              paddingLeft: 'var(--spacing-lg)',
+              color: 'var(--color-text-secondary)',
+              fontSize: 'var(--font-size-sm)',
+              lineHeight: 1.5,
+            }}
+          >
             {summary.dropped.map((d, i) => (
               <li key={i}>
-                {d.reason} <span style={{ color: 'var(--color-text-tertiary)' }}>({d.count})</span>
+                {humanizeDropReason(d.reason, t)}{' '}
+                <span style={{ color: 'var(--color-text-tertiary)' }}>({d.count})</span>
               </li>
             ))}
           </ul>
