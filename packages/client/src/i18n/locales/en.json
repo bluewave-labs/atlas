@@ -2090,6 +2090,27 @@
           "sendAndReceive": "From all emails"
         }
       }
+    },
+    "composer": {
+      "to": "To",
+      "cc": "Cc",
+      "bcc": "Bcc",
+      "subject": "Subject",
+      "body": "Message",
+      "send": "Send",
+      "sending": "Sending...",
+      "addCcBcc": "Add Cc / Bcc",
+      "sentToast": "Message queued for sending",
+      "sendError": "Failed to send message",
+      "newEmail": "New email",
+      "reply": "Reply",
+      "retry": "Retry",
+      "retrying": "Retrying...",
+      "retryToast": "Send retried",
+      "retryError": "Failed to retry message",
+      "statusPending": "Sending",
+      "statusSent": "Sent",
+      "statusFailed": "Failed"
     }
   },
   "drive": {
