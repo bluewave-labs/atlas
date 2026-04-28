@@ -12,7 +12,12 @@ import { startCrmReminderScheduler, stopCrmReminderScheduler } from './apps/crm/
 import { startLeaveBalanceScheduler, stopLeaveBalanceScheduler } from './apps/hr/services/leave-balance-scheduler';
 import { startRecurringInvoiceScheduler, stopRecurringInvoiceScheduler } from './apps/invoices/recurring-scheduler';
 import { startInvoiceReminderScheduler, stopInvoiceReminderScheduler } from './apps/invoices/reminder-scheduler';
-import { startSyncWorker, stopSyncWorker, scheduleIncrementalSyncForAllAccounts } from './workers';
+import {
+  startSyncWorker,
+  stopSyncWorker,
+  scheduleIncrementalSyncForAllAccounts,
+  scheduleGmailIncrementalSyncForAllChannels,
+} from './workers';
 
 const PURGE_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 const BACKUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -74,6 +79,9 @@ app.listen(env.PORT, async () => {
   startSyncWorker();
   scheduleIncrementalSyncForAllAccounts().catch((err) =>
     logger.error({ err }, 'Failed to schedule incremental sync jobs'),
+  );
+  scheduleGmailIncrementalSyncForAllChannels().catch((err) =>
+    logger.error({ err }, 'Failed to schedule Gmail incremental sync jobs'),
   );
 });
 

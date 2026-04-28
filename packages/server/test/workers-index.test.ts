@@ -62,3 +62,49 @@ describe('workers/index: scheduleIncrementalSyncForAllAccounts', () => {
     await expect(fn()).resolves.toBeUndefined();
   });
 });
+
+describe('workers/index: scheduleGmailIncrementalSyncForAllChannels', () => {
+  beforeEach(() => {
+    addMock.mockClear();
+    upsertJobSchedulerMock.mockClear();
+  });
+
+  it('upserts one repeatable job per gmail channel with sync enabled', async () => {
+    vi.resetModules();
+    vi.doMock('../src/config/queue', async () => {
+      const actual = await vi.importActual<typeof import('../src/config/queue')>(
+        '../src/config/queue',
+      );
+      return {
+        ...actual,
+        getSyncQueue: () => ({
+          add: addMock,
+          upsertJobScheduler: upsertJobSchedulerMock,
+          close: vi.fn(async () => undefined),
+        }),
+      };
+    });
+    vi.doMock('../src/config/database', () => ({
+      db: {
+        select: () => ({
+          from: () => ({
+            where: () => Promise.resolve([{ id: 'ch-1' }, { id: 'ch-2' }]),
+          }),
+        }),
+      },
+    }));
+    const { scheduleGmailIncrementalSyncForAllChannels: fn } = await import('../src/workers/index');
+    await fn();
+    expect(upsertJobSchedulerMock).toHaveBeenCalledTimes(2);
+    expect(upsertJobSchedulerMock).toHaveBeenCalledWith(
+      'gmail-incremental-ch-1',
+      expect.objectContaining({ every: 5 * 60 * 1000 }),
+      expect.objectContaining({
+        name: 'gmail-incremental-sync',
+        data: { channelId: 'ch-1' },
+      }),
+    );
+    vi.doUnmock('../src/config/database');
+    vi.doUnmock('../src/config/queue');
+  });
+});

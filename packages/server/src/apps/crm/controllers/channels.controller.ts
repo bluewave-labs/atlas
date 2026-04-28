@@ -4,7 +4,7 @@ import {
   updateChannelSettings,
   getChannelById,
 } from '../services/channel.service';
-import { getSyncQueue, SyncJobName } from '../../../config/queue';
+import { getSyncQueue, SyncJobName, type GmailIncrementalSyncJobData } from '../../../config/queue';
 import { logger } from '../../../utils/logger';
 
 export async function listChannels(req: Request, res: Response) {
@@ -78,6 +78,26 @@ export async function syncChannel(req: Request, res: Response) {
       triggeredBy: 'user',
       userId,
     });
+
+    // Also ensure a recurring incremental scheduler exists for this channel.
+    // Idempotent — if `gmail-incremental-{channel.id}` already exists,
+    // upsertJobScheduler is a no-op. This handles the case where a user
+    // connects a new Gmail channel mid-runtime: the boot-time scheduler
+    // (workers/index.ts:scheduleGmailIncrementalSyncForAllChannels) only
+    // runs at startup, so without this call the new channel would never
+    // get incremental sync until the next reboot.
+    try {
+      await queue.upsertJobScheduler(
+        `gmail-incremental-${channel.id}`,
+        { every: 5 * 60 * 1000 },
+        {
+          name: SyncJobName.GmailIncrementalSync,
+          data: { channelId: channel.id } satisfies GmailIncrementalSyncJobData,
+        },
+      );
+    } catch (err) {
+      logger.warn({ err, channelId: channel.id }, 'Failed to upsert Gmail incremental scheduler on manual sync');
+    }
 
     res.json({ success: true, data: { jobId: job.id, queued: true } });
   } catch (error) {

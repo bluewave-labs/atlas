@@ -6,14 +6,16 @@ const {
   updateChannelSettingsMock,
   getChannelByIdMock,
   queueAddMock,
+  upsertJobSchedulerMock,
 } = vi.hoisted(() => ({
   listChannelsForUserMock: vi.fn(),
   updateChannelSettingsMock: vi.fn(),
   getChannelByIdMock: vi.fn(),
   queueAddMock: vi.fn(async () => ({ id: 'job-1' })),
+  upsertJobSchedulerMock: vi.fn(async () => undefined),
 }));
 
-let getSyncQueueMock: () => any = () => ({ add: queueAddMock });
+let getSyncQueueMock: () => any = () => ({ add: queueAddMock, upsertJobScheduler: upsertJobSchedulerMock });
 
 vi.mock('../src/apps/crm/services/channel.service', () => ({
   listChannelsForUser: listChannelsForUserMock,
@@ -136,8 +138,9 @@ describe('channels.controller: updateChannel', () => {
 describe('channels.controller: syncChannel', () => {
   beforeEach(() => {
     queueAddMock.mockClear();
+    upsertJobSchedulerMock.mockClear();
     getChannelByIdMock.mockReset();
-    getSyncQueueMock = () => ({ add: queueAddMock });
+    getSyncQueueMock = () => ({ add: queueAddMock, upsertJobScheduler: upsertJobSchedulerMock });
   });
 
   it('returns 404 if the channel is not visible to the user', async () => {
