@@ -31,7 +31,7 @@ const IMPORTERS: ImporterDef[] = [
     i18nKey: 'hubspot',
     logo: (
       <img
-        src="/importers/hubspot-logo.svg"
+        src="/importers/hubspot-logo.png"
         alt=""
         style={{ maxHeight: 28, maxWidth: '100%', width: 'auto', display: 'block' }}
       />
@@ -180,7 +180,6 @@ function ImporterCard({ logo, title, description, cta, onClick, disabled }: Card
       style={{
         ...cardBase,
         cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.6 : 1,
       }}
       onMouseEnter={(e) => {
         if (disabled) return;
