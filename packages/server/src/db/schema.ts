@@ -1502,12 +1502,17 @@ export const crmActivities = pgTable('crm_activities', {
   scheduledAt: timestamp('scheduled_at', { withTimezone: true }),
   completedAt: timestamp('completed_at', { withTimezone: true }),
   isArchived: boolean('is_archived').notNull().default(false),
+  // References messages.id — no FK to avoid circular forward reference; app layer enforces integrity.
+  messageId: uuid('message_id'),
+  externalProvider: text('external_provider'),
+  externalId: text('external_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   dealIdx: index('idx_crm_activities_deal').on(table.dealId),
   contactIdx: index('idx_crm_activities_contact').on(table.contactId),
   companyIdx: index('idx_crm_activities_company').on(table.companyId),
+  messageIdx: index('idx_crm_activities_message').on(table.messageId),
 }));
 
 // ─── CRM: Workflow Automations ────────────────────────────────────
@@ -2100,4 +2105,105 @@ export const exchangeRates = pgTable('exchange_rates', {
   provider: varchar('provider', { length: 50 }).notNull(),
   fetchedAt: timestamp('fetched_at', { withTimezone: true }).defaultNow().notNull(),
 });
+
+// ─── Email Sync: Channels, Threads, Messages, Participants, Blocklist ──
+
+export const messageChannels = pgTable('message_channels', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  ownerUserId: uuid('owner_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  type: text('type').notNull().default('gmail'),
+  handle: text('handle').notNull(),
+  visibility: text('visibility').notNull().default('private'),
+  isSyncEnabled: boolean('is_sync_enabled').notNull().default(true),
+  contactAutoCreationPolicy: text('contact_auto_creation_policy').notNull().default('send-only'),
+  syncStage: text('sync_stage').notNull().default('pending'),
+  syncStatus: text('sync_status'),
+  syncError: text('sync_error'),
+  syncCursor: text('sync_cursor'),
+  lastFullSyncAt: timestamp('last_full_sync_at', { withTimezone: true }),
+  lastIncrementalSyncAt: timestamp('last_incremental_sync_at', { withTimezone: true }),
+  throttleFailureCount: integer('throttle_failure_count').notNull().default(0),
+  throttleRetryAfter: timestamp('throttle_retry_after', { withTimezone: true }),
+  pushSubscriptionId: text('push_subscription_id'),
+  pushWatchExpiration: timestamp('push_watch_expiration', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  accountIdx: index('idx_message_channels_account').on(table.accountId),
+  tenantSyncIdx: index('idx_message_channels_tenant_sync').on(table.tenantId, table.isSyncEnabled),
+  ownerIdx: index('idx_message_channels_owner').on(table.ownerUserId),
+}));
+
+export const messageThreads = pgTable('message_threads', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  channelId: uuid('channel_id').notNull().references(() => messageChannels.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  gmailThreadId: text('gmail_thread_id').notNull(),
+  subject: text('subject'),
+  messageCount: integer('message_count').notNull().default(0),
+  lastMessageAt: timestamp('last_message_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  channelGmailUnique: uniqueIndex('uniq_message_threads_channel_gmail').on(table.channelId, table.gmailThreadId),
+  tenantLastMsgIdx: index('idx_message_threads_tenant_last_msg').on(table.tenantId, table.lastMessageAt),
+  channelLastMsgIdx: index('idx_message_threads_channel_last_msg').on(table.channelId, table.lastMessageAt),
+}));
+
+export const messages = pgTable('messages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  channelId: uuid('channel_id').notNull().references(() => messageChannels.id, { onDelete: 'cascade' }),
+  threadId: uuid('thread_id').notNull().references(() => messageThreads.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  gmailMessageId: text('gmail_message_id').notNull(),
+  headerMessageId: text('header_message_id'),
+  inReplyTo: text('in_reply_to'),
+  subject: text('subject'),
+  snippet: text('snippet'),
+  bodyText: text('body_text'),
+  bodyHtml: text('body_html'),
+  direction: text('direction').notNull(),
+  status: text('status').notNull().default('received'),
+  sentAt: timestamp('sent_at', { withTimezone: true }),
+  receivedAt: timestamp('received_at', { withTimezone: true }),
+  labels: jsonb('labels').$type<string[]>().notNull().default([]),
+  hasAttachments: boolean('has_attachments').notNull().default(false),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  channelGmailUnique: uniqueIndex('uniq_messages_channel_gmail').on(table.channelId, table.gmailMessageId),
+  threadSentIdx: index('idx_messages_thread_sent').on(table.threadId, table.sentAt),
+  tenantInboundIdx: index('idx_messages_tenant_inbound_sent').on(table.tenantId, table.sentAt),
+  tenantOutboundIdx: index('idx_messages_tenant_outbound').on(table.tenantId, table.status, table.direction),
+}));
+
+export const messageParticipants = pgTable('message_participants', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  messageId: uuid('message_id').notNull().references(() => messages.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  role: text('role').notNull(),
+  handle: text('handle').notNull(),
+  displayName: text('display_name'),
+  personId: uuid('person_id').references(() => crmContacts.id, { onDelete: 'set null' }),
+  workspaceMemberId: uuid('workspace_member_id').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  handleTenantIdx: index('idx_message_participants_handle_tenant').on(table.handle, table.tenantId),
+  personIdx: index('idx_message_participants_person').on(table.personId),
+  messageRoleIdx: index('idx_message_participants_message_role').on(table.messageId, table.role),
+}));
+
+export const messageBlocklist = pgTable('message_blocklist', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  pattern: text('pattern').notNull(),
+  createdByUserId: uuid('created_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  tenantPatternUnique: uniqueIndex('uniq_message_blocklist_tenant_pattern').on(table.tenantId, table.pattern),
+}));
 
