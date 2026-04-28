@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui/button';
 import { Select } from '../../ui/select';
 import type { OdooImportPreview } from '@atlas-platform/shared';
+import { humanizeDropReason } from './humanize';
 
 interface Props {
   preview: OdooImportPreview;
@@ -34,6 +35,15 @@ export function OdooImportPreviewView({ preview, busy, onCommit, onCancel }: Pro
   const allMapped = preview.stages.every((s) => mapping[s.odooStage]);
   const canCommit = !busy && (preview.stages.length === 0 || allMapped);
 
+  // Hide stage mapping section when every Odoo stage exactly matched an Atlas stage
+  // by name — the auto-matched dropdowns add no decision value, just noise.
+  const stageMappingNeedsAttention = preview.stages.some((s) => {
+    const mapped = mapping[s.odooStage];
+    if (!mapped) return true;
+    const target = preview.atlasStages.find((a) => a.id === mapped);
+    return !target || target.name.toLowerCase() !== s.odooStage.toLowerCase();
+  });
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
       <Section title={t('import.odoo.previewSummaryTitle')}>
@@ -50,7 +60,9 @@ export function OdooImportPreviewView({ preview, busy, onCommit, onCancel }: Pro
         <Section title={t('import.odoo.droppedTitle')}>
           <ul style={{ margin: 0, paddingLeft: 'var(--spacing-lg)', color: 'var(--color-text-secondary)' }}>
             {preview.dropped.map((d, i) => (
-              <li key={i}>{`[${d.file}] ${d.reason} — ${d.count}`}</li>
+              <li key={i}>
+                {humanizeDropReason(d.reason, t)} <span style={{ color: 'var(--color-text-tertiary)' }}>({d.count})</span>
+              </li>
             ))}
           </ul>
         </Section>
@@ -69,7 +81,7 @@ export function OdooImportPreviewView({ preview, busy, onCommit, onCancel }: Pro
         </Section>
       )}
 
-      {preview.stages.length > 0 && (
+      {preview.stages.length > 0 && stageMappingNeedsAttention && (
         <Section title={t('import.odoo.stageMappingTitle')}>
           <p style={{ margin: 0, color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}>
             {t('import.odoo.stageMappingHelp')}

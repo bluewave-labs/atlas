@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui/button';
 import type { OdooImportSummary } from '@atlas-platform/shared';
+import { humanizeDropReason } from './humanize';
 
 export function OdooImportSummaryView({
   summary,
@@ -32,14 +33,16 @@ export function OdooImportSummaryView({
           </h4>
           <ul style={{ margin: 0, paddingLeft: 'var(--spacing-lg)', color: 'var(--color-text-secondary)' }}>
             {summary.dropped.map((d, i) => (
-              <li key={i}>{`[${d.file}] ${d.reason} — ${d.count}`}</li>
+              <li key={i}>
+                {humanizeDropReason(d.reason, t)} <span style={{ color: 'var(--color-text-tertiary)' }}>({d.count})</span>
+              </li>
             ))}
           </ul>
         </section>
       )}
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Button variant="primary" onClick={onDone}>
-          {t('import.odoo.done')}
+          {t('import.odoo.openCrm')}
         </Button>
       </div>
     </div>
