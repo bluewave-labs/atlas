@@ -4,6 +4,7 @@ import { pool } from '../config/database';
 import { logger } from '../utils/logger';
 import { migrateWorkMerge } from './migrations/2026-04-15-work-merge';
 import { migrateCrmWorkflowSteps } from './migrations/2026-04-22-crm-workflow-steps';
+import { migrateMessageChannels } from './migrations/2026-04-28-message-channels';
 
 const MIGRATIONS_DIR = join(__dirname, 'migrations');
 
@@ -453,6 +454,13 @@ async function migrateLegacyData() {
     await migrateCrmWorkflowSteps();
   } catch (err) {
     logger.error({ err }, 'crm_workflow_steps migration failed');
+  }
+
+  // Message channels (email sync) migration — idempotent.
+  try {
+    await migrateMessageChannels();
+  } catch (err) {
+    logger.error({ err }, 'message-channels migration failed');
   }
 
   // Drop the 5 dead user_settings.tables_* columns left over from the

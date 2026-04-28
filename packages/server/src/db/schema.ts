@@ -2131,7 +2131,7 @@ export const messageChannels = pgTable('message_channels', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
-  accountIdx: index('idx_message_channels_account').on(table.accountId),
+  accountUnique: uniqueIndex('uniq_message_channels_account').on(table.accountId),
   tenantSyncIdx: index('idx_message_channels_tenant_sync').on(table.tenantId, table.isSyncEnabled),
   ownerIdx: index('idx_message_channels_owner').on(table.ownerUserId),
 }));
