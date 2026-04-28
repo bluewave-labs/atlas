@@ -91,9 +91,10 @@ function Instructions({ t }: { t: (k: string) => string }) {
           <code
             style={{
               background: 'var(--color-bg-tertiary)',
-              padding: '1px 6px',
+              padding: '2px 6px',
               borderRadius: 'var(--radius-sm)',
-              fontSize: 'var(--font-size-xs)',
+              fontSize: 'var(--font-size-sm)',
+              fontFamily: 'var(--font-family-mono, ui-monospace, SFMono-Regular, monospace)',
             }}
           >
             {t('import.odoo.instructionsStep2Toggle')}
@@ -206,23 +207,25 @@ function DropSlot({ label, required, file, onChange }: DropSlotProps) {
               display: 'flex',
               alignItems: 'center',
               gap: 'var(--spacing-xs)',
-              marginTop: 2,
-              fontSize: 'var(--font-size-xs)',
-              color: 'var(--color-text-tertiary)',
+              marginTop: 4,
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--color-text-secondary)',
             }}
           >
-            <FileText size={12} />
+            <FileText size={14} />
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {file.name}
             </span>
-            <span style={{ flexShrink: 0 }}>· {Math.round(file.size / 1024)} KB</span>
+            <span style={{ flexShrink: 0, color: 'var(--color-text-tertiary)' }}>
+              · {Math.round(file.size / 1024)} KB
+            </span>
           </div>
         ) : (
           <div
             style={{
-              marginTop: 2,
-              fontSize: 'var(--font-size-xs)',
-              color: 'var(--color-text-tertiary)',
+              marginTop: 4,
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--color-text-secondary)',
             }}
           >
             {t('import.odoo.dropHint')}
