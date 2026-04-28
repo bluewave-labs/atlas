@@ -4641,7 +4641,15 @@
       "dropReasonLeadAttached": "Activity attached to a lead (Atlas activities can't reference leads, only deals/contacts/companies)",
       "dropReasonPartnerNotFound": "Activity references partner #{{id}}, which wasn't in the contacts file",
       "dropReasonStageNoMapping": "Opportunity stage has no Atlas mapping",
-      "dropReasonPartnerType": "Partner type '{{type}}' (only main contacts are imported)"
+      "dropReasonPartnerType": "Partner type '{{type}}' (only main contacts are imported)",
+      "progressTitle": "Importing your data",
+      "progressSubtitle": "This may take a few seconds. Please don't close this window.",
+      "progressReading": "Reading uploaded files",
+      "progressCompanies": "Importing {{count}} companies",
+      "progressContacts": "Linking {{count}} contacts to companies",
+      "progressLeadsDeals": "Creating {{leads}} leads and {{deals}} deals",
+      "progressActivities": "Scheduling {{count}} activities",
+      "progressFinalizing": "Finalizing — your CRM is ready"
     }
   },
   "work": {

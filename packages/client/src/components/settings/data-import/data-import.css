@@ -1,0 +1,13 @@
+@keyframes odoo-spin {
+  to { transform: rotate(360deg); }
+}
+
+.odoo-spin {
+  animation: odoo-spin 0.9s linear infinite;
+}
+
+@keyframes tour-pulse-once {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
