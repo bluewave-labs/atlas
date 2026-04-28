@@ -1103,7 +1103,15 @@
     "widgetDueToday": "in scadenza oggi",
     "widgetOverdue": "in ritardo",
     "widgetCompleted": "questa settimana",
-    "download": "Scarica"
+    "download": "Scarica",
+    "tableView": "Vista tabella",
+    "fields": {
+      "title": "Titolo",
+      "project": "Progetto",
+      "priority": "Priorità",
+      "dueDate": "Scadenza",
+      "assignee": "Assegnatario"
+    }
   },
   "errors": {
     "recipientRequired": "È necessario almeno un destinatario",
@@ -3338,7 +3346,10 @@
     "sidebar": {
       "overview": "Panoramica",
       "storage": "Archiviazione",
-      "email": "Email"
+      "email": "Email",
+      "superAdmin": "Super-admin",
+      "allTenants": "Tutti i tenant",
+      "allUsers": "Tutti gli utenti"
     },
     "permissions": {
       "title": "Autorizzazioni",
@@ -3427,6 +3438,46 @@
     "tour": {
       "title": "Sistema",
       "description": "Impostazioni dell'area di lavoro — permessi, fatturazione, log di audit, integrazioni. La sala di controllo del tuo spazio."
+    },
+    "adminUsers": {
+      "title": "Tutti gli utenti",
+      "description": "Ogni utente di ogni tenant su questa istanza.",
+      "filterPlaceholder": "Filtra per nome, email o tenant…",
+      "emptyTitle": "Nessun utente",
+      "emptyDescription": "Nessun utente corrisponde a questo filtro.",
+      "colName": "Nome",
+      "colEmail": "Email",
+      "colProvider": "Provider",
+      "colTenants": "Tenant",
+      "colRole": "Ruolo",
+      "colCreated": "Creato",
+      "memberships": "{{count}} appartenenze",
+      "grantSuperAdmin": "Concedi super-admin",
+      "revokeSuperAdmin": "Revoca super-admin",
+      "you": "Tu",
+      "copyEmail": "Copia email",
+      "emailCopied": "Email copiata"
+    },
+    "adminTenants": {
+      "title": "Tutti i tenant",
+      "description": "Ogni organizzazione su questa istanza Atlas. Vista super-admin.",
+      "emptyTitle": "Nessun tenant",
+      "colName": "Nome",
+      "colSlug": "Identificativo",
+      "colPlan": "Piano",
+      "colStatus": "Stato",
+      "colMembers": "Membri",
+      "colStorage": "Quota di archiviazione",
+      "colCreated": "Creato",
+      "impersonate": "Impersona",
+      "impersonateTooltip": "Apri l’app come questo tenant (impersonificazione super-admin, 15 min)",
+      "detailTitle": "Dettagli tenant",
+      "loading": "Caricamento…",
+      "membersTitle": "Membri ({{count}})",
+      "memberName": "Nome",
+      "memberEmail": "Email",
+      "memberRole": "Ruolo",
+      "memberJoined": "Aggiunto"
     }
   },
   "widgets": {
@@ -4655,7 +4706,7 @@
       "instructionsHeading": "Come esportare da Odoo",
       "instructionsStep1": "Apri Contacts → vista elenco → Action → Export.",
       "instructionsStep2Prefix": "Prima di esportare, attiva",
-      "instructionsStep2Toggle": "I want to update data (import-compatible export)",
+      "instructionsStep2Toggle": "Voglio aggiornare i dati (export compatibile con l’import)",
       "instructionsStep2Suffix": ".",
       "instructionsStep3": "Ripeti per l'elenco CRM Pipeline e (opzionalmente) per Activities.",
       "dropHint": "Trascina un CSV qui o clicca per sfogliare",
@@ -4844,7 +4895,8 @@
         "completedMove": "Sposta in fondo",
         "completedHide": "Nascondi",
         "confirmBeforeDelete": "Conferma prima di eliminare",
-        "confirmBeforeDeleteHelp": "Chiedi prima di rimuovere definitivamente un’attività."
+        "confirmBeforeDeleteHelp": "Chiedi prima di rimuovere definitivamente un’attività.",
+        "viewModeTable": "Tabella"
       },
       "statuses": {
         "title": "Stati attività",

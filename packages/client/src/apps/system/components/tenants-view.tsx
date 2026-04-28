@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { UserCog } from 'lucide-react';
 import { api } from '../../../lib/api-client';
 import { Badge } from '../../../components/ui/badge';
@@ -37,6 +38,7 @@ interface TenantDetail extends AdminTenant {
 }
 
 export function TenantsView() {
+  const { t } = useTranslation();
   const [detailId, setDetailId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -71,64 +73,64 @@ export function TenantsView() {
   const columns: DataTableColumn<AdminTenant>[] = [
     {
       key: 'name',
-      label: 'Name',
+      label: t('system.adminTenants.colName'),
       minWidth: 160,
       hideable: false,
-      render: (t) => <strong>{t.name}</strong>,
-      searchValue: (t) => t.name,
+      render: (row) => row.name,
+      searchValue: (row) => row.name,
       compare: (a, b) => a.name.localeCompare(b.name),
     },
     {
       key: 'slug',
-      label: 'Slug',
+      label: t('system.adminTenants.colSlug'),
       minWidth: 120,
-      render: (t) => <span style={{ color: 'var(--color-text-secondary)' }}>{t.slug}</span>,
-      searchValue: (t) => t.slug,
+      render: (row) => <span style={{ color: 'var(--color-text-secondary)' }}>{row.slug}</span>,
+      searchValue: (row) => row.slug,
       compare: (a, b) => a.slug.localeCompare(b.slug),
     },
     {
       key: 'plan',
-      label: 'Plan',
+      label: t('system.adminTenants.colPlan'),
       width: 100,
-      render: (t) => <Badge variant="default">{t.plan}</Badge>,
-      searchValue: (t) => t.plan,
+      render: (row) => <Badge variant="default">{row.plan}</Badge>,
+      searchValue: (row) => row.plan,
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('system.adminTenants.colStatus'),
       width: 110,
-      render: (t) => (
-        <Badge variant={t.status === 'active' ? 'success' : t.status === 'suspended' ? 'error' : 'warning'}>
-          {t.status}
+      render: (row) => (
+        <Badge variant={row.status === 'active' ? 'success' : row.status === 'suspended' ? 'error' : 'warning'}>
+          {row.status}
         </Badge>
       ),
-      searchValue: (t) => t.status,
+      searchValue: (row) => row.status,
     },
     {
       key: 'memberCount',
-      label: 'Members',
+      label: t('system.adminTenants.colMembers'),
       width: 90,
       align: 'right',
-      render: (t) => <span>{t.memberCount}</span>,
+      render: (row) => <span>{row.memberCount}</span>,
       compare: (a, b) => a.memberCount - b.memberCount,
     },
     {
       key: 'storageQuotaBytes',
-      label: 'Storage quota',
+      label: t('system.adminTenants.colStorage'),
       width: 130,
-      render: (t) => <span style={{ color: 'var(--color-text-secondary)' }}>{formatBytes(t.storageQuotaBytes)}</span>,
+      render: (row) => <span style={{ color: 'var(--color-text-secondary)' }}>{formatBytes(row.storageQuotaBytes)}</span>,
       compare: (a, b) => a.storageQuotaBytes - b.storageQuotaBytes,
     },
     {
       key: 'createdAt',
-      label: 'Created',
+      label: t('system.adminTenants.colCreated'),
       width: 120,
-      render: (t) => (
+      render: (row) => (
         <span style={{ color: 'var(--color-text-tertiary)' }}>
-          {new Date(t.createdAt).toLocaleDateString()}
+          {new Date(row.createdAt).toLocaleDateString()}
         </span>
       ),
-      searchValue: (t) => new Date(t.createdAt).toLocaleDateString(),
+      searchValue: (row) => new Date(row.createdAt).toLocaleDateString(),
       compare: (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     },
     {
@@ -138,17 +140,17 @@ export function TenantsView() {
       hideable: false,
       resizable: false,
       align: 'right',
-      render: (t) => (
+      render: (row) => (
         <div style={{ whiteSpace: 'nowrap' }}>
-          <Tooltip content="Open the app as this tenant (super-admin impersonation, 15 min)">
+          <Tooltip content={t('system.adminTenants.impersonateTooltip')}>
             <Button
               variant="secondary"
               size="sm"
               disabled={impersonate.isPending}
-              onClick={(e) => { e.stopPropagation(); impersonate.mutate(t.id); }}
+              onClick={(e) => { e.stopPropagation(); impersonate.mutate(row.id); }}
             >
               <UserCog size={14} style={{ marginRight: 6 }} />
-              Impersonate
+              {t('system.adminTenants.impersonate')}
             </Button>
           </Tooltip>
         </div>
@@ -160,10 +162,10 @@ export function TenantsView() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 1100 }}>
       <div>
         <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--color-text-primary)', margin: 0 }}>
-          All tenants
+          {t('system.adminTenants.title')}
         </h2>
         <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', margin: '4px 0 0' }}>
-          Every organization on this Atlas instance. Super-admin view.
+          {t('system.adminTenants.description')}
         </p>
       </div>
 
@@ -177,15 +179,14 @@ export function TenantsView() {
           columns={columns}
           storageKey="system_tenants"
           searchable
-          paginated={false}
-          onRowClick={(t) => setDetailId(t.id)}
-          emptyTitle="No tenants"
+          onRowClick={(row) => setDetailId(row.id)}
+          emptyTitle={t('system.adminTenants.emptyTitle')}
         />
       )}
 
-      <Modal open={!!detailId} onOpenChange={(o) => !o && setDetailId(null)} width={720} title="Tenant detail">
+      <Modal open={!!detailId} onOpenChange={(o) => !o && setDetailId(null)} width={720} title={t('system.adminTenants.detailTitle')}>
         <Modal.Header
-          title={detail.data?.name ?? 'Loading…'}
+          title={detail.data?.name ?? t('system.adminTenants.loading')}
           subtitle={detail.data ? `${detail.data.slug} · ${detail.data.plan} · ${detail.data.status}` : undefined}
         />
         <Modal.Body>
@@ -194,24 +195,24 @@ export function TenantsView() {
           ) : (
             <>
               <h3 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, margin: '0 0 8px', color: 'var(--color-text-secondary)' }}>
-                Members ({detail.data.members.length})
+                {t('system.adminTenants.membersTitle', { count: detail.data.members.length })}
               </h3>
               {/* NOTE: This members sub-table inside the tenant detail modal is left as raw HTML
                   because it is a simple read-only display within a small modal. */}
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--font-size-sm)' }}>
                 <thead>
                   <tr style={{ background: 'var(--color-bg-secondary)', textAlign: 'left' }}>
-                    <th style={th}>Name</th>
-                    <th style={th}>Email</th>
-                    <th style={th}>Role</th>
-                    <th style={th}>Joined</th>
+                    <th style={th}>{t('system.adminTenants.memberName')}</th>
+                    <th style={th}>{t('system.adminTenants.memberEmail')}</th>
+                    <th style={th}>{t('system.adminTenants.memberRole')}</th>
+                    <th style={th}>{t('system.adminTenants.memberJoined')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {detail.data.members.map((m) => (
                     <tr key={m.userId} style={{ borderTop: '1px solid var(--color-border-secondary)' }}>
                       <td style={td}>
-                        <strong>{m.name ?? '—'}</strong>
+                        {m.name ?? '—'}
                         {m.isSuperAdmin && <span style={{ marginLeft: 8 }}><Badge variant="primary">super-admin</Badge></span>}
                       </td>
                       <td style={{ ...td, color: 'var(--color-text-secondary)' }}>{m.email ?? '—'}</td>

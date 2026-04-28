@@ -47,7 +47,7 @@ export const settingsSchema = z.object({
   tasksCompactMode: z.boolean().optional(),
   tasksCompletedBehavior: z.enum(['fade', 'move', 'hide']).optional(),
   tasksDefaultSort: z.enum(['manual', 'priority', 'dueDate', 'title', 'created']).optional(),
-  tasksViewMode: z.enum(['list', 'board']).optional(),
+  tasksViewMode: z.enum(['list', 'board', 'table']).optional(),
   // Global settings
   dateFormat: z.enum(['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD']).optional(),
   currencySymbol: z.string().max(5).optional(),

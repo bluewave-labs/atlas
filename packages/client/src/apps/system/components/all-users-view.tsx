@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ShieldPlus, ShieldMinus, Copy, Check } from 'lucide-react';
 import { api } from '../../../lib/api-client';
 import { Badge } from '../../../components/ui/badge';
@@ -10,6 +11,7 @@ import { useAuthStore } from '../../../stores/auth-store';
 import { useToastStore } from '../../../stores/toast-store';
 
 function CopyableEmail({ email }: { email: string | null }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const addToast = useToastStore((s) => s.addToast);
   if (!email) return <span style={{ color: 'var(--color-text-secondary)' }}>—</span>;
@@ -27,7 +29,7 @@ function CopyableEmail({ email }: { email: string | null }) {
       document.body.removeChild(ta);
     }
     setCopied(true);
-    addToast({ message: 'Email copied', type: 'success', duration: 1500 });
+    addToast({ message: t('system.adminUsers.emailCopied'), type: 'success', duration: 1500 });
     setTimeout(() => setCopied(false), 1200);
   };
 
@@ -40,8 +42,8 @@ function CopyableEmail({ email }: { email: string | null }) {
       <button
         type="button"
         onClick={handleCopy}
-        title={copied ? 'Copied' : 'Copy email'}
-        aria-label={copied ? 'Email copied' : 'Copy email'}
+        title={copied ? t('system.adminUsers.emailCopied') : t('system.adminUsers.copyEmail')}
+        aria-label={copied ? t('system.adminUsers.emailCopied') : t('system.adminUsers.copyEmail')}
         style={{
           background: 'transparent',
           border: 'none',
@@ -72,6 +74,7 @@ interface AdminUser {
 }
 
 export function AllUsersView() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const currentUserId = useAuthStore((s) => s.account?.userId);
   const { data, isLoading } = useQuery({
@@ -96,12 +99,12 @@ export function AllUsersView() {
   const columns: DataTableColumn<AdminUser>[] = [
     {
       key: 'name',
-      label: 'Name',
+      label: t('system.adminUsers.colName'),
       minWidth: 160,
       hideable: false,
       render: (u) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <strong>{u.name ?? '—'}</strong>
+          {u.name ?? '—'}
           {u.isSuperAdmin && <Badge variant="primary">super-admin</Badge>}
         </div>
       ),
@@ -110,7 +113,7 @@ export function AllUsersView() {
     },
     {
       key: 'email',
-      label: 'Email',
+      label: t('system.adminUsers.colEmail'),
       minWidth: 200,
       render: (u) => <CopyableEmail email={u.email} />,
       searchValue: (u) => u.email ?? '',
@@ -118,7 +121,7 @@ export function AllUsersView() {
     },
     {
       key: 'provider',
-      label: 'Provider',
+      label: t('system.adminUsers.colProvider'),
       width: 100,
       render: (u) => (
         <span style={{ color: 'var(--color-text-tertiary)' }}>{u.provider ?? '—'}</span>
@@ -127,23 +130,23 @@ export function AllUsersView() {
     },
     {
       key: 'tenants',
-      label: 'Tenants',
+      label: t('system.adminUsers.colTenants'),
       minWidth: 160,
       render: (u) =>
         u.tenants.length === 0 ? (
           <span style={{ color: 'var(--color-text-tertiary)' }}>—</span>
         ) : (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-            {u.tenants.map((t) => (
-              <Badge key={t.id} variant="default">{t.name ?? t.slug}</Badge>
+            {u.tenants.map((tenant) => (
+              <Badge key={tenant.id} variant="default">{tenant.name ?? tenant.slug}</Badge>
             ))}
           </div>
         ),
-      searchValue: (u) => u.tenants.map((t) => t.name ?? t.slug ?? '').join(' '),
+      searchValue: (u) => u.tenants.map((tenant) => tenant.name ?? tenant.slug ?? '').join(' '),
     },
     {
       key: 'role',
-      label: 'Role',
+      label: t('system.adminUsers.colRole'),
       width: 140,
       render: (u) =>
         u.tenants.length === 0 ? (
@@ -152,14 +155,14 @@ export function AllUsersView() {
           <Badge variant={u.tenants[0].role === 'owner' ? 'success' : 'default'}>{u.tenants[0].role}</Badge>
         ) : (
           <span style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--font-size-xs)' }}>
-            {u.tenants.length} memberships
+            {t('system.adminUsers.memberships', { count: u.tenants.length })}
           </span>
         ),
-      searchValue: (u) => u.tenants.map((t) => t.role).join(' '),
+      searchValue: (u) => u.tenants.map((tenant) => tenant.role).join(' '),
     },
     {
       key: 'createdAt',
-      label: 'Created',
+      label: t('system.adminUsers.colCreated'),
       width: 120,
       render: (u) => (
         <span style={{ color: 'var(--color-text-tertiary)' }}>
@@ -172,7 +175,7 @@ export function AllUsersView() {
     {
       key: 'actions',
       label: '',
-      width: 200,
+      width: 240,
       hideable: false,
       resizable: false,
       align: 'right',
@@ -182,7 +185,7 @@ export function AllUsersView() {
         if (u.id === currentUserId) {
           return (
             <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
-              You
+              {t('system.adminUsers.you')}
             </span>
           );
         }
@@ -197,7 +200,7 @@ export function AllUsersView() {
               {u.isSuperAdmin
                 ? <ShieldMinus size={14} style={{ marginRight: 6 }} />
                 : <ShieldPlus size={14} style={{ marginRight: 6 }} />}
-              {u.isSuperAdmin ? 'Revoke super-admin' : 'Grant super-admin'}
+              {u.isSuperAdmin ? t('system.adminUsers.revokeSuperAdmin') : t('system.adminUsers.grantSuperAdmin')}
             </Button>
           </div>
         );
@@ -209,10 +212,10 @@ export function AllUsersView() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 1100 }}>
       <div>
         <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--color-text-primary)', margin: 0 }}>
-          All users
+          {t('system.adminUsers.title')}
         </h2>
         <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)', margin: '4px 0 0' }}>
-          Every user across every tenant on this instance.
+          {t('system.adminUsers.description')}
         </p>
       </div>
 
@@ -226,10 +229,9 @@ export function AllUsersView() {
           columns={columns}
           storageKey="system_all_users"
           searchable
-          searchPlaceholder="Filter by name, email, or tenant…"
-          paginated={false}
-          emptyTitle="No users"
-          emptyDescription="No users match that filter."
+          searchPlaceholder={t('system.adminUsers.filterPlaceholder')}
+          emptyTitle={t('system.adminUsers.emptyTitle')}
+          emptyDescription={t('system.adminUsers.emptyDescription')}
         />
       )}
     </div>

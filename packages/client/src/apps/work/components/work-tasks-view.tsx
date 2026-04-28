@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   Search, Inbox, Star, Calendar, Coffee,
   CircleDot, Moon, X, Trash2,
-  LayoutList, LayoutGrid, User,
+  LayoutList, LayoutGrid, Table2, User,
   Eye, Users,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -30,6 +30,7 @@ import { CalendarView } from './calendar-view';
 import { TaskDetailPanel } from './task-detail-panel';
 import { KanbanBoard } from './kanban-board';
 import { TaskListView } from './task-list-view';
+import { TaskTableView } from './task-table-view';
 import '../../../styles/tasks.css';
 
 export type WorkView = 'my' | 'assigned' | 'created' | 'all' | `project:${string}`;
@@ -55,7 +56,7 @@ export function WorkTasksView({ view, title }: Props) {
   const [showSearch, setShowSearch] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'mine' | 'team'>('all');
-  const [viewMode, setViewMode] = useState<'list' | 'board'>(tasksSettings.viewMode || 'list');
+  const [viewMode, setViewMode] = useState<'list' | 'board' | 'table'>(tasksSettings.viewMode || 'list');
   const canShowBoard = view === 'my';
 
   useEffect(() => {
@@ -158,6 +159,7 @@ export function WorkTasksView({ view, title }: Props) {
       else inbox.push(task);
     }
     const groups: { label: string; icon: typeof Inbox; color: string; tasks: Task[]; noHeader?: boolean }[] = [];
+    overdue.sort((a, b) => (a.dueDate ?? '').localeCompare(b.dueDate ?? ''));
     if (overdue.length > 0) groups.push({ label: t('tasks.overdue'), icon: Calendar, color: '#ef4444', tasks: overdue });
     if (inbox.length > 0) groups.push({ label: t('tasks.unscheduled'), icon: Inbox, color: '#3b82f6', tasks: inbox, noHeader: true });
     if (today.length > 0) groups.push({ label: t('tasks.todayLabel'), icon: Star, color: '#f59e0b', tasks: today });
@@ -171,9 +173,7 @@ export function WorkTasksView({ view, title }: Props) {
     return view.startsWith('project:') || view === 'all' || view === 'assigned' || view === 'created';
   }, [view]);
 
-  const showProjectInList = useMemo(() => {
-    return view === 'all' || view === 'assigned' || view === 'created';
-  }, [view]);
+  const showProjectInList = tasksSettings.showProjectInList;
 
   const showDueDateInList = view !== 'my';
 
@@ -354,18 +354,22 @@ export function WorkTasksView({ view, title }: Props) {
                 label={allVisibleSelected ? t('tasks.deselectAll') : t('tasks.selectAll')} size={28} onClick={toggleSelectAll}
               />
             )}
-            {canShowBoard && (
-              <div className="tasks-view-toggle">
-                <button className={`tasks-view-toggle-btn${viewMode === 'list' ? ' active' : ''}`}
-                  onClick={() => { setViewMode('list'); tasksSettings.setViewMode('list'); }} title={t('tasks.listView')}>
-                  <LayoutList size={14} />
-                </button>
+            <div className="tasks-view-toggle">
+              <button className={`tasks-view-toggle-btn${viewMode === 'list' ? ' active' : ''}`}
+                onClick={() => { setViewMode('list'); tasksSettings.setViewMode('list'); }} title={t('tasks.listView')}>
+                <LayoutList size={14} />
+              </button>
+              {canShowBoard && (
                 <button className={`tasks-view-toggle-btn${viewMode === 'board' ? ' active' : ''}`}
                   onClick={() => { setViewMode('board'); tasksSettings.setViewMode('board'); }} title={t('tasks.boardView')}>
                   <LayoutGrid size={14} />
                 </button>
-              </div>
-            )}
+              )}
+              <button className={`tasks-view-toggle-btn${viewMode === 'table' ? ' active' : ''}`}
+                onClick={() => { setViewMode('table'); tasksSettings.setViewMode('table'); }} title={t('tasks.tableView')}>
+                <Table2 size={14} />
+              </button>
+            </div>
             {showSearch ? (
               <div className="tasks-search-bar">
                 <Search size={13} color="var(--color-text-tertiary)" />
@@ -397,7 +401,23 @@ export function WorkTasksView({ view, title }: Props) {
         )}
 
         <div className="tasks-content">
-          {viewMode === 'board' && canShowBoard ? (
+          {viewMode === 'table' ? (
+            <>
+              <TaskTableView
+                tasks={displayTasks.filter(task => task.type !== 'heading')}
+                projects={projects}
+                members={tenantMembers}
+                selectedTaskId={selectedTaskId}
+                selectedIds={selectedIds}
+                onSelectTask={setSelectedTaskId}
+                onComplete={handleComplete}
+                onCheckToggle={toggleSelectOne}
+              />
+              {selectedTask && selectedTask.type !== 'heading' && (
+                <TaskDetailPanel task={selectedTask} projects={projects} members={tenantMembers} allTasks={allTasks} onClose={() => setSelectedTaskId(null)} />
+              )}
+            </>
+          ) : viewMode === 'board' && canShowBoard ? (
             <>
               <KanbanBoard tasks={displayTasks} projects={projects} onComplete={handleComplete} onSelectTask={(id) => setSelectedTaskId(id)} />
               {selectedTask && selectedTask.type !== 'heading' && (

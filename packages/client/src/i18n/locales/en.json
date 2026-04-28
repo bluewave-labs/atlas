@@ -1130,7 +1130,15 @@
     "widgetDueToday": "due today",
     "widgetOverdue": "overdue",
     "widgetCompleted": "this week",
-    "download": "Download"
+    "download": "Download",
+    "tableView": "Table view",
+    "fields": {
+      "title": "Title",
+      "project": "Project",
+      "priority": "Priority",
+      "dueDate": "Due date",
+      "assignee": "Assignee"
+    }
   },
   "errors": {
     "recipientRequired": "At least one recipient is required",
@@ -3365,7 +3373,10 @@
     "sidebar": {
       "overview": "Overview",
       "storage": "Storage",
-      "email": "Email"
+      "email": "Email",
+      "superAdmin": "Super admin",
+      "allTenants": "All tenants",
+      "allUsers": "All users"
     },
     "permissions": {
       "title": "Permissions",
@@ -3454,6 +3465,46 @@
     "tour": {
       "title": "System",
       "description": "Workspace settings — permissions, billing, audit log, integrations. The control room for your tenant."
+    },
+    "adminUsers": {
+      "title": "All users",
+      "description": "Every user across every tenant on this instance.",
+      "filterPlaceholder": "Filter by name, email, or tenant…",
+      "emptyTitle": "No users",
+      "emptyDescription": "No users match that filter.",
+      "colName": "Name",
+      "colEmail": "Email",
+      "colProvider": "Provider",
+      "colTenants": "Tenants",
+      "colRole": "Role",
+      "colCreated": "Created",
+      "memberships": "{{count}} memberships",
+      "grantSuperAdmin": "Grant super-admin",
+      "revokeSuperAdmin": "Revoke super-admin",
+      "you": "You",
+      "copyEmail": "Copy email",
+      "emailCopied": "Email copied"
+    },
+    "adminTenants": {
+      "title": "All tenants",
+      "description": "Every organization on this Atlas instance. Super-admin view.",
+      "emptyTitle": "No tenants",
+      "colName": "Name",
+      "colSlug": "Slug",
+      "colPlan": "Plan",
+      "colStatus": "Status",
+      "colMembers": "Members",
+      "colStorage": "Storage quota",
+      "colCreated": "Created",
+      "impersonate": "Impersonate",
+      "impersonateTooltip": "Open the app as this tenant (super-admin impersonation, 15 min)",
+      "detailTitle": "Tenant detail",
+      "loading": "Loading…",
+      "membersTitle": "Members ({{count}})",
+      "memberName": "Name",
+      "memberEmail": "Email",
+      "memberRole": "Role",
+      "memberJoined": "Joined"
     }
   },
   "widgets": {
@@ -4844,7 +4895,8 @@
         "completedMove": "Move to bottom",
         "completedHide": "Hide",
         "confirmBeforeDelete": "Confirm before deleting",
-        "confirmBeforeDeleteHelp": "Ask before permanently removing a task."
+        "confirmBeforeDeleteHelp": "Ask before permanently removing a task.",
+        "viewModeTable": "Table"
       },
       "statuses": {
         "title": "Task statuses",

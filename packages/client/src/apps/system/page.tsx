@@ -235,16 +235,16 @@ export function SystemPage() {
           )}
         </SidebarSection>
         {isSuperAdmin && (
-          <SidebarSection title="Super admin">
+          <SidebarSection title={t('system.sidebar.superAdmin')}>
             <SidebarItem
-              label="All tenants"
+              label={t('system.sidebar.allTenants')}
               icon={<Building2 size={15} />}
               iconColor="#8b5cf6"
               isActive={activeView === 'tenants'}
               onClick={() => setActiveView('tenants')}
             />
             <SidebarItem
-              label="All users"
+              label={t('system.sidebar.allUsers')}
               icon={<Users size={15} />}
               iconColor="#8b5cf6"
               isActive={activeView === 'users'}

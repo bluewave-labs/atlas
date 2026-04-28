@@ -157,6 +157,8 @@ On a self-hosted deployment, replace `localhost:3001` with your Atlas domain.
 
 Atlas also includes **Draw** — an Excalidraw-based canvas with PDF export, image insertion, and presentation mode.
 
+**Data import.** Bring your CRM data with you. Atlas ships with an Odoo importer (Settings → Data import) that ingests `res.partner`, `crm.lead`, and CRM activity CSV exports — mapping companies, contacts, leads, deals, and activities into your tenant in one pass, with per-row validation and a skipped-row report. HubSpot is on the way.
+
 
 ## Tech stack
 

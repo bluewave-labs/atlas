@@ -1103,7 +1103,15 @@
     "widgetDueToday": "heute fällig",
     "widgetOverdue": "überfällig",
     "widgetCompleted": "diese Woche",
-    "download": "Herunterladen"
+    "download": "Herunterladen",
+    "tableView": "Tabellenansicht",
+    "fields": {
+      "title": "Titel",
+      "project": "Projekt",
+      "priority": "Priorität",
+      "dueDate": "Fälligkeitsdatum",
+      "assignee": "Zuständig"
+    }
   },
   "errors": {
     "recipientRequired": "Mindestens ein Empfänger ist erforderlich",
@@ -3338,7 +3346,10 @@
     "sidebar": {
       "overview": "Übersicht",
       "storage": "Speicher",
-      "email": "E-Mail"
+      "email": "E-Mail",
+      "superAdmin": "Super-Admin",
+      "allTenants": "Alle Mandanten",
+      "allUsers": "Alle Benutzer"
     },
     "permissions": {
       "title": "Berechtigungen",
@@ -3427,6 +3438,46 @@
     "tour": {
       "title": "System",
       "description": "Arbeitsbereich-Einstellungen — Berechtigungen, Abrechnung, Prüfprotokoll, Integrationen. Die Schaltzentrale Ihres Mandanten."
+    },
+    "adminUsers": {
+      "title": "Alle Benutzer",
+      "description": "Alle Benutzer aus allen Mandanten dieser Instanz.",
+      "filterPlaceholder": "Nach Name, E-Mail oder Mandant filtern…",
+      "emptyTitle": "Keine Benutzer",
+      "emptyDescription": "Keine Benutzer entsprechen diesem Filter.",
+      "colName": "Name",
+      "colEmail": "E-Mail",
+      "colProvider": "Anbieter",
+      "colTenants": "Mandanten",
+      "colRole": "Rolle",
+      "colCreated": "Erstellt",
+      "memberships": "{{count}} Mitgliedschaften",
+      "grantSuperAdmin": "Super-Admin gewähren",
+      "revokeSuperAdmin": "Super-Admin entziehen",
+      "you": "Du",
+      "copyEmail": "E-Mail kopieren",
+      "emailCopied": "E-Mail kopiert"
+    },
+    "adminTenants": {
+      "title": "Alle Mandanten",
+      "description": "Alle Organisationen in dieser Atlas-Instanz. Super-Admin-Ansicht.",
+      "emptyTitle": "Keine Mandanten",
+      "colName": "Name",
+      "colSlug": "Kennung",
+      "colPlan": "Tarif",
+      "colStatus": "Status",
+      "colMembers": "Mitglieder",
+      "colStorage": "Speicherkontingent",
+      "colCreated": "Erstellt",
+      "impersonate": "Anmelden als",
+      "impersonateTooltip": "App als dieser Mandant öffnen (Super-Admin-Identitätsnahme, 15 Min)",
+      "detailTitle": "Mandantendetails",
+      "loading": "Wird geladen…",
+      "membersTitle": "Mitglieder ({{count}})",
+      "memberName": "Name",
+      "memberEmail": "E-Mail",
+      "memberRole": "Rolle",
+      "memberJoined": "Beigetreten"
     }
   },
   "widgets": {
@@ -4655,7 +4706,7 @@
       "instructionsHeading": "Export aus Odoo",
       "instructionsStep1": "Öffne Contacts → Listenansicht → Action → Export.",
       "instructionsStep2Prefix": "Aktiviere vor dem Export die Option",
-      "instructionsStep2Toggle": "I want to update data (import-compatible export)",
+      "instructionsStep2Toggle": "Ich möchte Daten aktualisieren (importkompatibler Export)",
       "instructionsStep2Suffix": ".",
       "instructionsStep3": "Wiederhole das für die CRM Pipeline und (optional) Activities.",
       "dropHint": "CSV hier ablegen oder zum Auswählen klicken",
@@ -4844,7 +4895,8 @@
         "completedMove": "Nach unten",
         "completedHide": "Verbergen",
         "confirmBeforeDelete": "Vor dem Löschen bestätigen",
-        "confirmBeforeDeleteHelp": "Vor dem endgültigen Entfernen einer Aufgabe fragen."
+        "confirmBeforeDeleteHelp": "Vor dem endgültigen Entfernen einer Aufgabe fragen.",
+        "viewModeTable": "Tabelle"
       },
       "statuses": {
         "title": "Aufgabenstatus",

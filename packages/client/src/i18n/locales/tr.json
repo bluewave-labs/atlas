@@ -1103,7 +1103,15 @@
     "widgetDueToday": "bugün bitiyor",
     "widgetOverdue": "gecikmiş",
     "widgetCompleted": "bu hafta",
-    "download": "İndir"
+    "download": "İndir",
+    "tableView": "Tablo görünümü",
+    "fields": {
+      "title": "Başlık",
+      "project": "Proje",
+      "priority": "Öncelik",
+      "dueDate": "Son tarih",
+      "assignee": "Atanan"
+    }
   },
   "errors": {
     "recipientRequired": "En az bir alıcı gereklidir",
@@ -3338,7 +3346,10 @@
     "sidebar": {
       "overview": "Genel bakış",
       "storage": "Depolama",
-      "email": "E-posta"
+      "email": "E-posta",
+      "superAdmin": "Süper yönetici",
+      "allTenants": "Tüm kiracılar",
+      "allUsers": "Tüm kullanıcılar"
     },
     "permissions": {
       "title": "İzinler",
@@ -3427,6 +3438,46 @@
     "tour": {
       "title": "Sistem",
       "description": "Çalışma alanı ayarları — izinler, faturalama, denetim günlüğü, entegrasyonlar. Kiracınızın kontrol odası."
+    },
+    "adminUsers": {
+      "title": "Tüm kullanıcılar",
+      "description": "Bu örnekteki her kiracıdaki tüm kullanıcılar.",
+      "filterPlaceholder": "Ad, e-posta veya kiracıya göre filtrele…",
+      "emptyTitle": "Kullanıcı yok",
+      "emptyDescription": "Bu filtreye uyan kullanıcı yok.",
+      "colName": "Ad",
+      "colEmail": "E-posta",
+      "colProvider": "Sağlayıcı",
+      "colTenants": "Kiracılar",
+      "colRole": "Rol",
+      "colCreated": "Oluşturulma",
+      "memberships": "{{count}} üyelik",
+      "grantSuperAdmin": "Süper yöneticiye yükselt",
+      "revokeSuperAdmin": "Süper yöneticiliği geri al",
+      "you": "Sen",
+      "copyEmail": "E-postayı kopyala",
+      "emailCopied": "E-posta kopyalandı"
+    },
+    "adminTenants": {
+      "title": "Tüm kiracılar",
+      "description": "Bu Atlas örneğindeki tüm kuruluşlar. Süper yönetici görünümü.",
+      "emptyTitle": "Kiracı yok",
+      "colName": "Ad",
+      "colSlug": "Kısa ad",
+      "colPlan": "Plan",
+      "colStatus": "Durum",
+      "colMembers": "Üyeler",
+      "colStorage": "Depolama kotası",
+      "colCreated": "Oluşturulma",
+      "impersonate": "Kimliğe bürün",
+      "impersonateTooltip": "Uygulamayı bu kiracı olarak aç (süper yönetici kimliğe bürünme, 15 dk)",
+      "detailTitle": "Kiracı ayrıntısı",
+      "loading": "Yükleniyor…",
+      "membersTitle": "Üyeler ({{count}})",
+      "memberName": "Ad",
+      "memberEmail": "E-posta",
+      "memberRole": "Rol",
+      "memberJoined": "Katıldı"
     }
   },
   "widgets": {
@@ -4655,7 +4706,7 @@
       "instructionsHeading": "Odoo'dan nasıl dışa aktarılır",
       "instructionsStep1": "Contacts → liste görünümü → Action → Export menüsünü açın.",
       "instructionsStep2Prefix": "Dışa aktarmadan önce",
-      "instructionsStep2Toggle": "I want to update data (import-compatible export)",
+      "instructionsStep2Toggle": "Verileri güncellemek istiyorum (içe aktarmaya uyumlu dışa aktarma)",
       "instructionsStep2Suffix": "seçeneğini açın.",
       "instructionsStep3": "CRM Pipeline listesi ve (isteğe bağlı) Activities için de aynı adımları tekrarlayın.",
       "dropHint": "CSV dosyasını buraya bırakın veya seçmek için tıklayın",
@@ -4844,7 +4895,8 @@
         "completedMove": "En alta taşı",
         "completedHide": "Gizle",
         "confirmBeforeDelete": "Silmeden önce onay iste",
-        "confirmBeforeDeleteHelp": "Bir görevi kalıcı olarak silmeden önce sor."
+        "confirmBeforeDeleteHelp": "Bir görevi kalıcı olarak silmeden önce sor.",
+        "viewModeTable": "Tablo"
       },
       "statuses": {
         "title": "Görev durumları",

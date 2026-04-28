@@ -26,6 +26,7 @@ export function WorkBehaviorPanel() {
   const viewModeOptions: Array<{ value: TaskViewMode; label: string }> = [
     { value: 'list', label: t('work.settings.behavior.viewModeList') },
     { value: 'board', label: t('work.settings.behavior.viewModeBoard') },
+    { value: 'table', label: t('work.settings.behavior.viewModeTable') },
   ];
 
   const sortOptions: Array<{ value: TaskSortOrder; label: string }> = [

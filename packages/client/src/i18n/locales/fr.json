@@ -1103,7 +1103,15 @@
     "widgetDueToday": "à faire aujourd'hui",
     "widgetOverdue": "en retard",
     "widgetCompleted": "cette semaine",
-    "download": "Télécharger"
+    "download": "Télécharger",
+    "tableView": "Vue tableur",
+    "fields": {
+      "title": "Titre",
+      "project": "Projet",
+      "priority": "Priorité",
+      "dueDate": "Échéance",
+      "assignee": "Responsable"
+    }
   },
   "errors": {
     "recipientRequired": "Au moins un destinataire est requis",
@@ -1415,7 +1423,7 @@
     "kanban": {
       "collapse": "Réduire l'étape",
       "expand": "Développer l'étape",
-      "dealsCount": "{{count}} deals",
+      "dealsCount": "{{count}} affaires",
       "totalValue": "Total : {{value}}"
     },
     "fields": {
@@ -3338,7 +3346,10 @@
     "sidebar": {
       "overview": "Vue d'ensemble",
       "storage": "Stockage",
-      "email": "E-mail"
+      "email": "E-mail",
+      "superAdmin": "Super-admin",
+      "allTenants": "Tous les locataires",
+      "allUsers": "Tous les utilisateurs"
     },
     "permissions": {
       "title": "Autorisations",
@@ -3383,7 +3394,7 @@
     "architecture": "Architecture",
     "platform": "Plateforme",
     "heapUsed": "Heap utilisé",
-    "heapTotal": "Heap total",
+    "heapTotal": "Total du tas",
     "processUptime": "Durée du processus",
     "totalSpace": "Espace total",
     "usedSpace": "Espace utilisé",
@@ -3427,6 +3438,46 @@
     "tour": {
       "title": "Système",
       "description": "Paramètres de l'espace de travail — permissions, facturation, journal d'audit, intégrations. La salle de contrôle de votre espace."
+    },
+    "adminUsers": {
+      "title": "Tous les utilisateurs",
+      "description": "Tous les utilisateurs de tous les locataires de cette instance.",
+      "filterPlaceholder": "Filtrer par nom, e-mail ou locataire…",
+      "emptyTitle": "Aucun utilisateur",
+      "emptyDescription": "Aucun utilisateur ne correspond à ce filtre.",
+      "colName": "Nom",
+      "colEmail": "E-mail",
+      "colProvider": "Fournisseur",
+      "colTenants": "Locataires",
+      "colRole": "Rôle",
+      "colCreated": "Créé",
+      "memberships": "{{count}} adhésions",
+      "grantSuperAdmin": "Accorder super-admin",
+      "revokeSuperAdmin": "Révoquer super-admin",
+      "you": "Vous",
+      "copyEmail": "Copier l’e-mail",
+      "emailCopied": "E-mail copié"
+    },
+    "adminTenants": {
+      "title": "Tous les locataires",
+      "description": "Toutes les organisations de cette instance Atlas. Vue super-admin.",
+      "emptyTitle": "Aucun locataire",
+      "colName": "Nom",
+      "colSlug": "Identifiant",
+      "colPlan": "Plan",
+      "colStatus": "Statut",
+      "colMembers": "Membres",
+      "colStorage": "Quota de stockage",
+      "colCreated": "Créé",
+      "impersonate": "Usurper l’identité",
+      "impersonateTooltip": "Ouvrir l’application en tant que ce locataire (usurpation super-admin, 15 min)",
+      "detailTitle": "Détails du locataire",
+      "loading": "Chargement…",
+      "membersTitle": "Membres ({{count}})",
+      "memberName": "Nom",
+      "memberEmail": "E-mail",
+      "memberRole": "Rôle",
+      "memberJoined": "Rejoint"
     }
   },
   "widgets": {
@@ -3747,7 +3798,7 @@
         "satis": "Vente (Satis)",
         "iade": "Retour (Iade)",
         "tevkifat": "Retenue (Tevkifat)",
-        "istisna": "Exemption (Istisna)"
+        "istisna": "Exonération (Istisna)"
       },
       "kdvRate": "KDV %",
       "generate": "Generer e-fatura",
@@ -4613,8 +4664,8 @@
       "previewSummaryTitle": "Enregistrements à importer",
       "companies": "{{count}} entreprises",
       "contacts": "{{count}} contacts",
-      "leads": "{{count}} leads",
-      "deals": "{{count}} deals",
+      "leads": "{{count}} prospects",
+      "deals": "{{count}} affaires",
       "activities": "{{count}} activités",
       "droppedTitle": "Lignes qui seront ignorées",
       "customFieldsTitle": "Champs personnalisés détectés",
@@ -4655,7 +4706,7 @@
       "instructionsHeading": "Comment exporter depuis Odoo",
       "instructionsStep1": "Ouvre Contacts → vue liste → Action → Export.",
       "instructionsStep2Prefix": "Avant d'exporter, active",
-      "instructionsStep2Toggle": "I want to update data (import-compatible export)",
+      "instructionsStep2Toggle": "Je souhaite mettre à jour les données (export compatible avec l’import)",
       "instructionsStep2Suffix": ".",
       "instructionsStep3": "Répète pour la liste CRM Pipeline et (en option) Activities.",
       "dropHint": "Dépose un CSV ici ou clique pour parcourir",
@@ -4844,7 +4895,8 @@
         "completedMove": "Déplacer en bas",
         "completedHide": "Masquer",
         "confirmBeforeDelete": "Confirmer avant de supprimer",
-        "confirmBeforeDeleteHelp": "Demander avant la suppression définitive d’une tâche."
+        "confirmBeforeDeleteHelp": "Demander avant la suppression définitive d’une tâche.",
+        "viewModeTable": "Tableur"
       },
       "statuses": {
         "title": "Statuts de tâche",
