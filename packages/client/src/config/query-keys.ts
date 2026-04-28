@@ -176,6 +176,10 @@ export const queryKeys = {
       all: ['crm', 'channels'] as const,
       detail: (id: string) => ['crm', 'channels', id] as const,
     },
+    messages: {
+      all: ['crm', 'messages'] as const,
+      detail: (id: string) => ['crm', 'messages', id] as const,
+    },
     activityTypes: {
       all: ['crm', 'activity-types'] as const,
     },
