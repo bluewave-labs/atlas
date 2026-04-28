@@ -7,6 +7,8 @@ export const SYNC_QUEUE_NAME = 'atlas-sync';
 export const SyncJobName = {
   CalendarFullSync: 'calendar-full-sync',
   CalendarIncrementalSync: 'calendar-incremental-sync',
+  GmailFullSync: 'gmail-full-sync',
+  GmailIncrementalSync: 'gmail-incremental-sync',
 } as const;
 export type SyncJobName = (typeof SyncJobName)[keyof typeof SyncJobName];
 
@@ -25,9 +27,33 @@ export interface CalendarIncrementalSyncJobData {
   accountId: string;
 }
 
+/**
+ * `userId` is set when `triggeredBy === 'user'` (manual sync via API) and
+ * omitted when `triggeredBy === 'system'` (e.g. repeatable scheduled jobs).
+ * Reused for both gmail and calendar full-sync jobs because the worker
+ * only cares about (channelId|accountId, triggeredBy).
+ */
+export interface GmailFullSyncJobData {
+  channelId: string;
+  triggeredBy: 'user' | 'system';
+  userId?: string;
+}
+
+/**
+ * Incremental gmail sync runs from the channel's syncCursor (Gmail
+ * historyId). No `triggeredBy` field — incremental sync is always
+ * scheduled by the system, never user-triggered (users trigger full
+ * syncs via `GmailFullSync`).
+ */
+export interface GmailIncrementalSyncJobData {
+  channelId: string;
+}
+
 export type SyncJobData =
   | { name: typeof SyncJobName.CalendarFullSync; data: CalendarFullSyncJobData }
-  | { name: typeof SyncJobName.CalendarIncrementalSync; data: CalendarIncrementalSyncJobData };
+  | { name: typeof SyncJobName.CalendarIncrementalSync; data: CalendarIncrementalSyncJobData }
+  | { name: typeof SyncJobName.GmailFullSync; data: GmailFullSyncJobData }
+  | { name: typeof SyncJobName.GmailIncrementalSync; data: GmailIncrementalSyncJobData };
 
 let syncQueue: Queue | null = null;
 

@@ -139,3 +139,43 @@ export async function updateChannelSettings(args: {
       .where(eq(messageChannels.id, args.channelId));
   });
 }
+
+export interface ChannelLookupResult {
+  id: string;
+  accountId: string;
+  ownerUserId: string;
+  visibility: ChannelVisibility;
+}
+
+/**
+ * Fetch a channel by id, applying the same visibility filter as
+ * listChannelsForUser. Returns null if the channel does not exist or
+ * is not visible to the user. Used by the controller for enqueue
+ * endpoints that need the accountId without a full DTO.
+ */
+export async function getChannelById(args: {
+  channelId: string;
+  userId: string;
+  tenantId: string;
+}): Promise<ChannelLookupResult | null> {
+  const [row] = await db
+    .select({
+      id: messageChannels.id,
+      accountId: messageChannels.accountId,
+      ownerUserId: messageChannels.ownerUserId,
+      visibility: messageChannels.visibility,
+    })
+    .from(messageChannels)
+    .where(
+      and(
+        eq(messageChannels.id, args.channelId),
+        eq(messageChannels.tenantId, args.tenantId),
+        or(
+          eq(messageChannels.visibility, 'shared-with-tenant'),
+          eq(messageChannels.ownerUserId, args.userId),
+        ),
+      ),
+    )
+    .limit(1);
+  return (row as ChannelLookupResult | undefined) ?? null;
+}

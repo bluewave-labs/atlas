@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import * as crmController from './controller';
+import * as channelsController from './controllers/channels.controller';
 import { authMiddleware } from '../../middleware/auth';
 import { requireAppPermission } from '../../middleware/require-app-permission';
 import { withConcurrencyCheck } from '../../middleware/concurrency-check';
@@ -19,6 +20,7 @@ import {
   crmProposals,
   crmWorkflows,
   crmWorkflowSteps,
+  messageChannels,
 } from '../../db/schema';
 import { eq, inArray } from 'drizzle-orm';
 
@@ -246,6 +248,11 @@ router.get('/permissions', async (req, res) => {
 router.get('/google/status', crmController.getGoogleSyncStatus);
 router.post('/google/sync/start', crmController.startGoogleSync);
 router.post('/google/sync/stop', crmController.stopGoogleSync);
+
+// Message channels (Gmail / future channel types)
+router.get('/channels', channelsController.listChannels);
+router.patch('/channels/:id', withConcurrencyCheck(messageChannels), channelsController.updateChannel);
+router.post('/channels/:id/sync', channelsController.syncChannel);
 
 // CRM calendar (linked to contacts/deals)
 router.get('/contacts/:id/events', crmController.getContactEvents);

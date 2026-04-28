@@ -15,6 +15,7 @@ vi.mock('../src/config/database', () => ({
 import {
   listChannelsForUser,
   updateChannelSettings,
+  getChannelById,
 } from '../src/apps/crm/services/channel.service';
 
 describe('channel.service: listChannelsForUser', () => {
@@ -125,5 +126,27 @@ describe('channel.service: updateChannelSettings', () => {
         patch: { contactAutoCreationPolicy: 'aggressive' as any },
       }),
     ).rejects.toThrow(/invalid contactAutoCreationPolicy/i);
+  });
+});
+
+describe('channel.service: getChannelById', () => {
+  beforeEach(() => {
+    dbSelectMock.mockReset();
+  });
+
+  it('returns the channel when visible to the user', async () => {
+    dbSelectMock.mockReturnValue({
+      from: () => ({ where: () => ({ limit: () => Promise.resolve([{ id: 'c1', accountId: 'a1', ownerUserId: 'u-1', visibility: 'private' }]) }) }),
+    });
+    const result = await getChannelById({ channelId: 'c1', userId: 'u-1', tenantId: 't-1' });
+    expect(result).toEqual({ id: 'c1', accountId: 'a1', ownerUserId: 'u-1', visibility: 'private' });
+  });
+
+  it('returns null when no row matches', async () => {
+    dbSelectMock.mockReturnValue({
+      from: () => ({ where: () => ({ limit: () => Promise.resolve([]) }) }),
+    });
+    const result = await getChannelById({ channelId: 'c-missing', userId: 'u-1', tenantId: 't-1' });
+    expect(result).toBeNull();
   });
 });
