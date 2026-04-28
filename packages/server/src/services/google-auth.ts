@@ -100,6 +100,52 @@ export async function getAuthenticatedClient(accountId: string): Promise<OAuth2C
   return client;
 }
 
+/**
+ * Force a token refresh and return a freshly-credentialed client. Used by
+ * `callGoogleApi` to recover from a 401 mid-call without depending on the
+ * proactive expiry check. Persists the refreshed credentials.
+ */
+export async function forceRefreshClient(accountId: string): Promise<OAuth2Client> {
+  const [account] = await db.select().from(accounts).where(eq(accounts.id, accountId)).limit(1);
+  if (!account) throw new Error(`Account ${accountId} not found`);
+  if (account.provider !== 'google') throw new Error('Account is not connected to Google');
+
+  const refreshToken = decrypt(account.refreshToken);
+
+  if (refreshToken === 'password-placeholder') {
+    throw new Error('Account is not connected to Google');
+  }
+
+  const client = createOAuth2Client();
+  client.setCredentials({ refresh_token: refreshToken });
+
+  try {
+    const { credentials } = await client.refreshAccessToken();
+    client.setCredentials(credentials);
+
+    const updates: Record<string, unknown> = {
+      accessToken: encrypt(credentials.access_token!),
+      tokenExpiresAt: new Date(credentials.expiry_date!),
+      updatedAt: new Date(),
+    };
+    if (credentials.refresh_token) {
+      updates.refreshToken = encrypt(credentials.refresh_token);
+    }
+    await db.update(accounts).set(updates).where(eq(accounts.id, accountId));
+    logger.info({ accountId }, 'Force-refreshed Google access token');
+
+    return client;
+  } catch (err) {
+    logger.error({ err, accountId }, 'Failed to force-refresh Google token');
+    await db.update(accounts).set({
+      syncStatus: 'error',
+      syncError: 'Token refresh failed',
+      updatedAt: new Date(),
+    }).where(eq(accounts.id, accountId));
+    throw err;
+  }
+}
+
 // ─── Google Drive scope helpers ──────────────────────────────────────
 
 /**

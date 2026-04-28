@@ -1,10 +1,10 @@
 import { google } from 'googleapis';
-import { getAuthenticatedClient } from './google-auth';
 import { db } from '../config/database';
 import { accounts, calendars, calendarEvents } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
 import { logger } from '../utils/logger';
 import { withRetry } from '../utils/retry';
+import { callGoogleApi } from './google-api-call';
 
 // ─── Full Calendar Sync ────────────────────────────────────────────────
 
@@ -12,16 +12,16 @@ export async function performCalendarFullSync(accountId: string) {
   logger.info({ accountId }, 'Starting full calendar sync');
 
   try {
-    const client = await getAuthenticatedClient(accountId);
-    const calendar = google.calendar({ version: 'v3', auth: client });
-
     // List all calendars
     let calPageToken: string | undefined;
     do {
-      const calListRes = await withRetry(() =>
-        calendar.calendarList.list({ pageToken: calPageToken }),
-        'Calendar API',
-      );
+      const calListRes = await callGoogleApi(accountId, async (auth) => {
+        const calendar = google.calendar({ version: 'v3', auth });
+        return withRetry(
+          () => calendar.calendarList.list({ pageToken: calPageToken }),
+          'Calendar API',
+        );
+      });
 
       const items = calListRes.data.items ?? [];
       calPageToken = calListRes.data.nextPageToken ?? undefined;
@@ -66,17 +66,20 @@ export async function performCalendarFullSync(accountId: string) {
         let nextSyncToken: string | undefined;
 
         do {
-          const eventsRes = await withRetry(() =>
-            calendar.events.list({
-              calendarId: dbCal.googleCalendarId,
-              maxResults: 2500,
-              singleEvents: true,
-              orderBy: 'startTime',
-              timeMin: sixMonthsAgo.toISOString(),
-              pageToken: eventPageToken,
-            }),
-            'Calendar API',
-          );
+          const eventsRes = await callGoogleApi(accountId, async (auth) => {
+            const calendar = google.calendar({ version: 'v3', auth });
+            return withRetry(
+              () => calendar.events.list({
+                calendarId: dbCal.googleCalendarId,
+                maxResults: 2500,
+                singleEvents: true,
+                orderBy: 'startTime',
+                timeMin: sixMonthsAgo.toISOString(),
+                pageToken: eventPageToken,
+              }),
+              'Calendar API',
+            );
+          });
 
           const events = eventsRes.data.items ?? [];
           eventPageToken = eventsRes.data.nextPageToken ?? undefined;
@@ -114,9 +117,6 @@ export async function performCalendarIncrementalSync(accountId: string) {
   logger.info({ accountId }, 'Starting incremental calendar sync');
 
   try {
-    const client = await getAuthenticatedClient(accountId);
-    const calendarApi = google.calendar({ version: 'v3', auth: client });
-
     const dbCalendars = await db.select().from(calendars)
       .where(eq(calendars.accountId, accountId));
 
@@ -125,7 +125,7 @@ export async function performCalendarIncrementalSync(accountId: string) {
         // No sync token — do a full sync for this calendar
         logger.info({ calendarId: dbCal.id }, 'No sync token, performing full sync for calendar');
         try {
-          await syncSingleCalendarFull(calendarApi, accountId, dbCal);
+          await syncSingleCalendarFull(accountId, dbCal);
         } catch (err) {
           logger.error({ err, calendarId: dbCal.id }, 'Failed full sync for calendar');
         }
@@ -137,14 +137,17 @@ export async function performCalendarIncrementalSync(accountId: string) {
         let nextSyncToken: string | undefined;
 
         do {
-          const eventsRes = await withRetry(() =>
-            calendarApi.events.list({
-              calendarId: dbCal.googleCalendarId,
-              syncToken: dbCal.syncToken!,
-              pageToken,
-            }),
-            'Calendar API',
-          );
+          const eventsRes = await callGoogleApi(accountId, async (auth) => {
+            const calendarApi = google.calendar({ version: 'v3', auth });
+            return withRetry(
+              () => calendarApi.events.list({
+                calendarId: dbCal.googleCalendarId,
+                syncToken: dbCal.syncToken!,
+                pageToken,
+              }),
+              'Calendar API',
+            );
+          });
 
           const events = eventsRes.data.items ?? [];
           pageToken = eventsRes.data.nextPageToken ?? undefined;
@@ -185,7 +188,7 @@ export async function performCalendarIncrementalSync(accountId: string) {
           await db.update(calendars).set({ syncToken: null, updatedAt: new Date() })
             .where(eq(calendars.id, dbCal.id));
           try {
-            await syncSingleCalendarFull(calendarApi, accountId, dbCal);
+            await syncSingleCalendarFull(accountId, dbCal);
           } catch (fullErr) {
             logger.error({ fullErr, calendarId: dbCal.id }, 'Failed full sync after token expiry');
           }
@@ -209,7 +212,6 @@ export async function performCalendarIncrementalSync(accountId: string) {
 // ─── Sync a single calendar fully ──────────────────────────────────────
 
 async function syncSingleCalendarFull(
-  calendarApi: ReturnType<typeof google.calendar>,
   accountId: string,
   dbCal: { id: string; googleCalendarId: string },
 ) {
@@ -220,17 +222,20 @@ async function syncSingleCalendarFull(
   let nextSyncToken: string | undefined;
 
   do {
-    const eventsRes = await withRetry(() =>
-      calendarApi.events.list({
-        calendarId: dbCal.googleCalendarId,
-        maxResults: 2500,
-        singleEvents: true,
-        orderBy: 'startTime',
-        timeMin: sixMonthsAgo.toISOString(),
-        pageToken,
-      }),
-      'Calendar API',
-    );
+    const eventsRes = await callGoogleApi(accountId, async (auth) => {
+      const calendarApi = google.calendar({ version: 'v3', auth });
+      return withRetry(
+        () => calendarApi.events.list({
+          calendarId: dbCal.googleCalendarId,
+          maxResults: 2500,
+          singleEvents: true,
+          orderBy: 'startTime',
+          timeMin: sixMonthsAgo.toISOString(),
+          pageToken,
+        }),
+        'Calendar API',
+      );
+    });
 
     const events = eventsRes.data.items ?? [];
     pageToken = eventsRes.data.nextPageToken ?? undefined;
