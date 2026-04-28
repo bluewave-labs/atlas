@@ -14,6 +14,7 @@ import { ConfirmDialog } from '../../../components/ui/confirm-dialog';
 import { SmartButtonBar } from '../../../components/shared/SmartButtonBar';
 import { PresenceAvatars } from '../../../components/shared/presence-avatars';
 import { CustomFieldsRenderer } from '../../../components/shared/custom-fields-renderer';
+import { EmailComposerPopover } from './email-composer/email-composer-popover';
 import { CalendarEvents } from './calendar-events';
 import { NotesSection } from './notes-section';
 import { getActivityIcon } from '../utils';
@@ -118,6 +119,11 @@ export function ContactDetailPage({ contactId, onBack, onNavigate, onCompanyClic
         <div style={{ flex: 1 }} />
         <PresenceAvatars appId="crm" recordId={contact.id} />
         <SmartButtonBar appId="crm" recordId={contact.id} />
+        <EmailComposerPopover
+          composerKey={`contact-${contact.id}`}
+          defaultTo={contact.email ?? ''}
+          defaultSubject=""
+        />
 
         {/* Navigation */}
         <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-family)' }}>
