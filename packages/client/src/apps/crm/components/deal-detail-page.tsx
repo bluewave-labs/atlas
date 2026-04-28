@@ -14,6 +14,7 @@ import { IconButton } from '../../../components/ui/icon-button';
 import { Textarea } from '../../../components/ui/textarea';
 import { StatusDot } from '../../../components/ui/status-dot';
 import { ConfirmDialog } from '../../../components/ui/confirm-dialog';
+import { AlertBanner } from '../../../components/ui/alert-banner';
 import { EditableField } from '../../../components/ui/editable-field';
 import { MarkLostModal } from './mark-lost-modal';
 import { getActivityIcon } from '../utils';
@@ -298,10 +299,23 @@ export function DealDetailPage({ dealId, onBack, onNavigate }: DealDetailPagePro
 
           {/* Won/Lost info */}
           {deal.lostAt && deal.lostReason && (
-            <div style={{ padding: 'var(--spacing-md)', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--color-error)' }}>
-              <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)', fontWeight: 'var(--font-weight-semibold)', textTransform: 'uppercase', marginBottom: 4 }}>{t('crm.deals.lostReason')}</div>
-              <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)', fontFamily: 'var(--font-family)' }}>{deal.lostReason}</div>
-            </div>
+            <AlertBanner variant="error">
+              <div
+                style={{
+                  fontSize: 'var(--font-size-xs)',
+                  color: 'var(--color-text-tertiary)',
+                  fontWeight: 'var(--font-weight-semibold)',
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.4,
+                  marginBottom: 4,
+                }}
+              >
+                {t('crm.deals.lostReason')}
+              </div>
+              <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-primary)' }}>
+                {deal.lostReason}
+              </div>
+            </AlertBanner>
           )}
 
           {/* Calendar */}
