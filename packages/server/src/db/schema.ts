@@ -3,6 +3,7 @@ import {
   timestamp, date, index, uniqueIndex, primaryKey, real, type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { customType } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import type { StepCondition, TaskStatus } from '@atlas-platform/shared';
 
 // Custom tsvector type for full-text search
@@ -2177,6 +2178,9 @@ export const messages = pgTable('messages', {
   channelGmailUnique: uniqueIndex('uniq_messages_channel_gmail').on(table.channelId, table.gmailMessageId),
   threadSentIdx: index('idx_messages_thread_sent').on(table.threadId, table.sentAt),
   tenantInboundIdx: index('idx_messages_tenant_inbound_sent').on(table.tenantId, table.sentAt),
+  tenantInboundActiveIdx: index('idx_messages_tenant_inbound_active')
+    .on(table.tenantId, table.sentAt.desc())
+    .where(sql`direction = 'inbound' AND deleted_at IS NULL`),
   tenantOutboundIdx: index('idx_messages_tenant_outbound').on(table.tenantId, table.status, table.direction),
 }));
 

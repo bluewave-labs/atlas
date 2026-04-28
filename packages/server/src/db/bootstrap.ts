@@ -5,6 +5,7 @@ import { logger } from '../utils/logger';
 import { migrateWorkMerge } from './migrations/2026-04-15-work-merge';
 import { migrateCrmWorkflowSteps } from './migrations/2026-04-22-crm-workflow-steps';
 import { migrateMessageChannels } from './migrations/2026-04-28-message-channels';
+import { migrateGmailMessagePartialIndex } from './migrations/2026-04-29-gmail-message-partial-index';
 
 const MIGRATIONS_DIR = join(__dirname, 'migrations');
 
@@ -461,6 +462,13 @@ async function migrateLegacyData() {
     await migrateMessageChannels();
   } catch (err) {
     logger.error({ err }, 'message-channels migration failed');
+  }
+
+  // Gmail messages partial index (inbound, non-deleted) — idempotent.
+  try {
+    await migrateGmailMessagePartialIndex();
+  } catch (err) {
+    logger.error({ err }, 'gmail-message-partial-index migration failed');
   }
 
   // Drop the 5 dead user_settings.tables_* columns left over from the
