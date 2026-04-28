@@ -99,6 +99,7 @@ export interface CrmActivity {
   isArchived: boolean;
   createdAt: string;
   updatedAt: string;
+  messageId: string | null;
   assignedUserName?: string;
 }
 

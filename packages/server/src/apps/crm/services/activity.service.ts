@@ -79,6 +79,7 @@ export async function listActivities(userId: string, tenantId: string, filters?:
       isArchived: crmActivities.isArchived,
       createdAt: crmActivities.createdAt,
       updatedAt: crmActivities.updatedAt,
+      messageId: crmActivities.messageId,
       assignedUserName: users.name,
     })
     .from(crmActivities)

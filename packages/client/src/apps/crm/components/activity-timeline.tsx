@@ -17,6 +17,7 @@ import { Select } from '../../../components/ui/select';
 import { IconButton } from '../../../components/ui/icon-button';
 import { Popover, PopoverTrigger, PopoverContent } from '../../../components/ui/popover';
 import { translateActivityBody } from '../lib/workflow-i18n';
+import { EmailActivityRow } from './activity-list/email-activity-row';
 
 export function ActivityTimeline({ activities }: { activities: CrmActivity[] }) {
   const { t } = useTranslation();
@@ -86,7 +87,22 @@ export function ActivityTimeline({ activities }: { activities: CrmActivity[] }) 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
-      {activities.slice(0, 10).map((activity) => (
+      {activities.slice(0, 10).map((activity) => {
+        if (activity.type === 'email-received' || activity.type === 'email-sent') {
+          return (
+            <div key={activity.id} style={{ padding: 'var(--spacing-xs) 0' }}>
+              <EmailActivityRow
+                activity={{
+                  id: activity.id,
+                  type: activity.type,
+                  messageId: activity.messageId,
+                  createdAt: activity.createdAt,
+                }}
+              />
+            </div>
+          );
+        }
+        return (
         <div key={activity.id} className="crm-activity-item" style={{ position: 'relative' }}>
           <div className="crm-activity-icon">
             {getActivityIcon(activity.type)}
@@ -172,7 +188,8 @@ export function ActivityTimeline({ activities }: { activities: CrmActivity[] }) 
             </div>
           )}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
