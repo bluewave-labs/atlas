@@ -3,7 +3,7 @@ import { createAppSettingsHook } from '../../lib/create-app-settings-store';
 export type TaskDefaultView = 'inbox' | 'today' | 'anytime';
 export type TaskCompletedBehavior = 'fade' | 'move' | 'hide';
 export type TaskSortOrder = 'manual' | 'priority' | 'dueDate' | 'title' | 'created';
-export type TaskViewMode = 'list' | 'board';
+export type TaskViewMode = 'list' | 'board' | 'table';
 
 interface TasksSettings {
   defaultView: TaskDefaultView;
@@ -34,16 +34,16 @@ export const useTasksSettingsStore = createAppSettingsHook<TasksSettings>({
     viewMode: 'list',
   },
   fieldMapping: {
-    defaultView: 'workTasksDefaultView',
-    confirmBeforeDelete: 'workTasksConfirmDelete',
-    showCalendarInToday: 'workTasksShowCalendar',
-    showEveningSection: 'workTasksShowEvening',
-    showWhenBadges: 'workTasksShowWhenBadges',
-    showProjectInList: 'workTasksShowProject',
-    showNotesIndicator: 'workTasksShowNotesIndicator',
-    compactMode: 'workTasksCompactMode',
-    completedBehavior: 'workTasksCompletedBehavior',
-    defaultSortOrder: 'workTasksDefaultSort',
-    viewMode: 'workTasksViewMode',
+    defaultView: 'tasksDefaultView',
+    confirmBeforeDelete: 'tasksConfirmDelete',
+    showCalendarInToday: 'tasksShowCalendar',
+    showEveningSection: 'tasksShowEvening',
+    showWhenBadges: 'tasksShowWhenBadges',
+    showProjectInList: 'tasksShowProject',
+    showNotesIndicator: 'tasksShowNotesIndicator',
+    compactMode: 'tasksCompactMode',
+    completedBehavior: 'tasksCompletedBehavior',
+    defaultSortOrder: 'tasksDefaultSort',
+    viewMode: 'tasksViewMode',
   },
 });
