@@ -6,6 +6,9 @@ import { migrateWorkMerge } from './migrations/2026-04-15-work-merge';
 import { migrateCrmWorkflowSteps } from './migrations/2026-04-22-crm-workflow-steps';
 import { migrateMessageChannels } from './migrations/2026-04-28-message-channels';
 import { migrateGmailMessagePartialIndex } from './migrations/2026-04-29-gmail-message-partial-index';
+import { db } from '../config/database';
+import { tenants } from './schema';
+import { seedBlocklistForTenant } from '../apps/crm/services/blocklist-seed.service';
 
 const MIGRATIONS_DIR = join(__dirname, 'migrations');
 
@@ -83,6 +86,7 @@ export async function bootstrapDatabase() {
   // CREATE TABLE statement — those columns never land via re-running the
   // snapshot because duplicate_table swallows the whole statement.
   await migrateLegacyData();
+  await seedAllTenantBlocklists();
 }
 
 // One-off data cleanups that can run against a live DB without schema changes.
@@ -527,4 +531,23 @@ async function migrateLegacyData() {
   } catch (err) {
     logger.error({ err }, 'Failed to repoint tasks.project_id FK to project_projects');
   }
+}
+
+/**
+ * Seed the per-tenant message blocklist on every boot. Idempotent — the
+ * underlying `seedBlocklistForTenant` uses `onConflictDoNothing`, so
+ * existing rows are left alone and only missing default patterns are added.
+ */
+async function seedAllTenantBlocklists() {
+  const allTenants = await db.select({ id: tenants.id }).from(tenants);
+  let succeeded = 0;
+  for (const tenant of allTenants) {
+    try {
+      await seedBlocklistForTenant(tenant.id);
+      succeeded++;
+    } catch (err) {
+      logger.error({ err, tenantId: tenant.id }, 'Failed to seed blocklist for tenant');
+    }
+  }
+  logger.info({ tenants: allTenants.length, succeeded }, 'Seeded blocklist for all tenants');
 }
