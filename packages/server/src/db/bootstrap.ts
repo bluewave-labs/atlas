@@ -388,6 +388,8 @@ async function migrateLegacyData() {
     'timestamp with time zone');
   await addColumnIfMissing('tenant_members', 'tour_completed_at',
     'timestamp with time zone');
+  await addColumnIfMissing('tenants', 'gmail_retention_days',
+    'integer');
 
   // Missing tables — create if absent.
   try {

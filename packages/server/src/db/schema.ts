@@ -676,6 +676,7 @@ export const tenants = pgTable('tenants', {
   quotaMemoryMb: integer('quota_memory_mb').notNull().default(4096),
   quotaStorageMb: integer('quota_storage_mb').notNull().default(20480),
   storageQuotaBytes: bigint('storage_quota_bytes', { mode: 'number' }).notNull().default(10737418240),
+  gmailRetentionDays: integer('gmail_retention_days'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
