@@ -354,7 +354,9 @@ describe('messages.controller: getMessage', () => {
     dbSelectMock.mockReturnValue({
       from: () => ({
         innerJoin: () => ({
-          where: () => ({ limit: () => Promise.resolve([]) }),
+          leftJoin: () => ({
+            where: () => ({ limit: () => Promise.resolve([]) }),
+          }),
         }),
       }),
     });
@@ -369,33 +371,26 @@ describe('messages.controller: getMessage', () => {
   });
 
   it('returns the message with fromHandle when visibility filter passes', async () => {
-    let selectCall = 0;
-    dbSelectMock.mockImplementation(() => {
-      selectCall++;
-      if (selectCall === 1) {
-        return {
-          from: () => ({
-            innerJoin: () => ({
-              where: () => ({ limit: () => Promise.resolve([{
-                id: 'msg-1',
-                channelId: 'ch-1',
-                subject: 'Hi',
-                snippet: 'preview',
-                bodyText: 'body',
-                status: 'sent',
-                threadId: 'thr-1',
-                headerMessageId: '<abc@mail.com>',
-                direction: 'outbound',
-                sentAt: new Date('2026-04-29T10:00:00Z'),
-              }]) }),
-            }),
+    dbSelectMock.mockReturnValue({
+      from: () => ({
+        innerJoin: () => ({
+          leftJoin: () => ({
+            where: () => ({ limit: () => Promise.resolve([{
+              id: 'msg-1',
+              channelId: 'ch-1',
+              subject: 'Hi',
+              snippet: 'preview',
+              bodyText: 'body',
+              status: 'sent',
+              threadId: 'thr-1',
+              headerMessageId: '<abc@mail.com>',
+              direction: 'outbound',
+              sentAt: new Date('2026-04-29T10:00:00Z'),
+              fromHandle: 'sender@example.com',
+            }]) }),
           }),
-        };
-      }
-      // Second select: from-participant lookup
-      return {
-        from: () => ({ where: () => ({ limit: () => Promise.resolve([{ handle: 'sender@example.com' }]) }) }),
-      };
+        }),
+      }),
     });
     const req = {
       auth: { userId: 'u-1', tenantId: 't-1' },

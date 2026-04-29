@@ -238,7 +238,7 @@ export async function getMessage(req: Request, res: Response) {
     const tenantId = req.auth!.tenantId!;
     const messageId = req.params.id as string;
 
-    const [message] = await db
+    const [row] = await db
       .select({
         id: messages.id,
         channelId: messages.channelId,
@@ -250,9 +250,17 @@ export async function getMessage(req: Request, res: Response) {
         headerMessageId: messages.headerMessageId,
         direction: messages.direction,
         sentAt: messages.sentAt,
+        fromHandle: messageParticipants.handle,
       })
       .from(messages)
       .innerJoin(messageChannels, eq(messageChannels.id, messages.channelId))
+      .leftJoin(
+        messageParticipants,
+        and(
+          eq(messageParticipants.messageId, messages.id),
+          eq(messageParticipants.role, 'from'),
+        ),
+      )
       .where(
         and(
           eq(messages.id, messageId),
@@ -265,26 +273,12 @@ export async function getMessage(req: Request, res: Response) {
       )
       .limit(1);
 
-    if (!message) {
+    if (!row) {
       res.status(404).json({ success: false, error: 'message not found' });
       return;
     }
 
-    const [fromRow] = await db
-      .select({ handle: messageParticipants.handle })
-      .from(messageParticipants)
-      .where(
-        and(
-          eq(messageParticipants.messageId, message.id),
-          eq(messageParticipants.role, 'from'),
-        ),
-      )
-      .limit(1);
-
-    res.json({
-      success: true,
-      data: { ...message, fromHandle: fromRow?.handle ?? null },
-    });
+    res.json({ success: true, data: row });
   } catch (error) {
     logger.error({ error }, 'Failed to load message');
     res.status(500).json({ success: false, error: 'Failed to load message' });

@@ -8,7 +8,7 @@ import { migrateMessageChannels } from './migrations/2026-04-28-message-channels
 import { migrateGmailMessagePartialIndex } from './migrations/2026-04-29-gmail-message-partial-index';
 import { db } from '../config/database';
 import { tenants } from './schema';
-import { seedBlocklistForTenant } from '../apps/crm/services/blocklist-seed.service';
+import { seedBlocklistForTenants } from '../apps/crm/services/blocklist-seed.service';
 
 const MIGRATIONS_DIR = join(__dirname, 'migrations');
 
@@ -534,20 +534,15 @@ async function migrateLegacyData() {
 }
 
 /**
- * Seed the per-tenant message blocklist on every boot. Idempotent — the
- * underlying `seedBlocklistForTenant` uses `onConflictDoNothing`, so
- * existing rows are left alone and only missing default patterns are added.
+ * Seed the per-tenant message blocklist on every boot. Single bulk INSERT
+ * with `onConflictDoNothing` — safe to re-run on every boot.
  */
 async function seedAllTenantBlocklists() {
   const allTenants = await db.select({ id: tenants.id }).from(tenants);
-  let succeeded = 0;
-  for (const tenant of allTenants) {
-    try {
-      await seedBlocklistForTenant(tenant.id);
-      succeeded++;
-    } catch (err) {
-      logger.error({ err, tenantId: tenant.id }, 'Failed to seed blocklist for tenant');
-    }
+  try {
+    await seedBlocklistForTenants(allTenants.map((t) => t.id));
+    logger.info({ tenants: allTenants.length }, 'Seeded blocklist for all tenants');
+  } catch (err) {
+    logger.error({ err, tenants: allTenants.length }, 'Failed to seed blocklist');
   }
-  logger.info({ tenants: allTenants.length, succeeded }, 'Seeded blocklist for all tenants');
 }

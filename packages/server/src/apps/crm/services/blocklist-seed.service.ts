@@ -9,19 +9,23 @@ export const DEFAULT_BLOCKLIST_PATTERNS = [
 ] as const;
 
 /**
- * Seed the per-tenant blocklist with the four default patterns from the
- * Phase 2 spec. Idempotent — the unique `(tenantId, pattern)` index plus
- * `onConflictDoNothing` makes safe to call on every boot.
+ * Seed the default blocklist patterns for one or more tenants in a single
+ * INSERT. Idempotent — the unique `(tenantId, pattern)` index plus
+ * `onConflictDoNothing` makes it safe to call on every boot.
  */
+export async function seedBlocklistForTenants(tenantIds: readonly string[]): Promise<void> {
+  if (tenantIds.length === 0) return;
+  const rows = tenantIds.flatMap((tenantId) =>
+    DEFAULT_BLOCKLIST_PATTERNS.map((pattern) => ({
+      tenantId,
+      pattern,
+      createdByUserId: null,
+    })),
+  );
+  await db.insert(messageBlocklist).values(rows).onConflictDoNothing();
+}
+
+/** Single-tenant convenience wrapper. */
 export async function seedBlocklistForTenant(tenantId: string): Promise<void> {
-  await db
-    .insert(messageBlocklist)
-    .values(
-      DEFAULT_BLOCKLIST_PATTERNS.map((pattern) => ({
-        tenantId,
-        pattern,
-        createdByUserId: null,
-      })),
-    )
-    .onConflictDoNothing();
+  await seedBlocklistForTenants([tenantId]);
 }

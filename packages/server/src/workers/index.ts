@@ -138,7 +138,7 @@ export async function scheduleDailyMessageCleaner(): Promise<void> {
   if (!queue) return;
 
   await queue.upsertJobScheduler(
-    'gmail-message-cleaner',
+    SyncJobName.GmailMessageCleaner,
     { every: CLEANER_INTERVAL_MS },
     {
       name: SyncJobName.GmailMessageCleaner,

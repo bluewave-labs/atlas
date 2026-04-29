@@ -12,6 +12,7 @@ vi.mock('../src/config/database', () => ({
 
 import {
   seedBlocklistForTenant,
+  seedBlocklistForTenants,
   DEFAULT_BLOCKLIST_PATTERNS,
 } from '../src/apps/crm/services/blocklist-seed.service';
 
@@ -60,5 +61,29 @@ describe('seedBlocklistForTenant', () => {
       expect(row.tenantId).toBe('t-1');
       expect(row.createdByUserId).toBeNull();
     }
+  });
+});
+
+describe('seedBlocklistForTenants', () => {
+  it('does nothing when tenant list is empty', async () => {
+    await seedBlocklistForTenants([]);
+    expect(dbInsertMock).not.toHaveBeenCalled();
+  });
+
+  it('issues a single bulk insert across all tenants', async () => {
+    let inserted: any = null;
+    dbInsertMock.mockReturnValue({
+      values: (rows: any) => {
+        inserted = rows;
+        return { onConflictDoNothing: () => Promise.resolve() };
+      },
+    });
+
+    await seedBlocklistForTenants(['t-1', 't-2', 't-3']);
+
+    expect(dbInsertMock).toHaveBeenCalledTimes(1);
+    expect(inserted).toHaveLength(12); // 3 tenants × 4 patterns
+    const tenantIds = new Set(inserted.map((r: any) => r.tenantId));
+    expect(tenantIds).toEqual(new Set(['t-1', 't-2', 't-3']));
   });
 });

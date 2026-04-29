@@ -8,6 +8,9 @@ export const HARD_DELETE_GRACE_DAYS = 30;
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
+const rowCount = (result: unknown): number =>
+  (result as { rowCount?: number })?.rowCount ?? 0;
+
 /**
  * Daily cleaner. Two passes per run:
  *   1. Soft-delete messages older than each tenant's retention window
@@ -38,14 +41,14 @@ export async function performGmailMessageCleaner(): Promise<void> {
           lt(messages.sentAt, cutoff),
         ),
       );
-    softDeleted += (result as { rowCount?: number })?.rowCount ?? 0;
+    softDeleted += rowCount(result);
   }
 
   const hardCutoff = new Date(Date.now() - HARD_DELETE_GRACE_DAYS * MS_PER_DAY);
   const hardResult = await db
     .delete(messages)
     .where(and(isNotNull(messages.deletedAt), lt(messages.deletedAt, hardCutoff)));
-  const hardDeleted = (hardResult as { rowCount?: number })?.rowCount ?? 0;
+  const hardDeleted = rowCount(hardResult);
 
   logger.info(
     { tenants: tenantRows.length, softDeleted, hardDeleted },
