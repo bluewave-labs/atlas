@@ -350,9 +350,13 @@ describe('messages.controller: retryMessage', () => {
 });
 
 describe('messages.controller: getMessage', () => {
-  it('returns 404 when message does not exist', async () => {
+  it('returns 404 when message does not exist or visibility filter rejects', async () => {
     dbSelectMock.mockReturnValue({
-      from: () => ({ where: () => ({ limit: () => Promise.resolve([]) }) }),
+      from: () => ({
+        innerJoin: () => ({
+          where: () => ({ limit: () => Promise.resolve([]) }),
+        }),
+      }),
     });
     const req = {
       auth: { userId: 'u-1', tenantId: 't-1' },
@@ -364,27 +368,24 @@ describe('messages.controller: getMessage', () => {
     expect(res.status).toHaveBeenCalledWith(404);
   });
 
-  it('returns the message when visible to the user', async () => {
+  it('returns the message when visibility filter passes', async () => {
     dbSelectMock.mockReturnValue({
-      from: () => ({ where: () => ({ limit: () => Promise.resolve([{
-        id: 'msg-1',
-        channelId: 'ch-1',
-        subject: 'Hi',
-        snippet: 'preview',
-        bodyText: 'body',
-        status: 'sent',
-        threadId: 'thr-1',
-        headerMessageId: '<abc@mail.com>',
-        direction: 'outbound',
-        sentAt: new Date('2026-04-28T10:00:00Z'),
-      }]) }) }),
-    });
-    getChannelByIdMock.mockResolvedValue({
-      id: 'ch-1',
-      accountId: 'a-1',
-      ownerUserId: 'u-1',
-      visibility: 'private',
-      handle: 'me@x.com',
+      from: () => ({
+        innerJoin: () => ({
+          where: () => ({ limit: () => Promise.resolve([{
+            id: 'msg-1',
+            channelId: 'ch-1',
+            subject: 'Hi',
+            snippet: 'preview',
+            bodyText: 'body',
+            status: 'sent',
+            threadId: 'thr-1',
+            headerMessageId: '<abc@mail.com>',
+            direction: 'outbound',
+            sentAt: new Date('2026-04-29T10:00:00Z'),
+          }]) }),
+        }),
+      }),
     });
     const req = {
       auth: { userId: 'u-1', tenantId: 't-1' },

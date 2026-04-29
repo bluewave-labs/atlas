@@ -1,11 +1,12 @@
 import type { Request, Response } from 'express';
 import { randomUUID } from 'crypto';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, or } from 'drizzle-orm';
 import { db } from '../../../config/database';
 import {
   messages,
   messageParticipants,
   messageThreads,
+  messageChannels,
 } from '../../../db/schema';
 import { getChannelById } from '../services/channel.service';
 import { parseSingleAddress } from '../services/gmail-message-parser';
@@ -251,17 +252,20 @@ export async function getMessage(req: Request, res: Response) {
         sentAt: messages.sentAt,
       })
       .from(messages)
-      .where(and(eq(messages.id, messageId), eq(messages.tenantId, tenantId)))
+      .innerJoin(messageChannels, eq(messageChannels.id, messages.channelId))
+      .where(
+        and(
+          eq(messages.id, messageId),
+          eq(messages.tenantId, tenantId),
+          or(
+            eq(messageChannels.visibility, 'shared-with-tenant'),
+            eq(messageChannels.ownerUserId, userId),
+          ),
+        ),
+      )
       .limit(1);
 
     if (!message) {
-      res.status(404).json({ success: false, error: 'message not found' });
-      return;
-    }
-
-    // Owner-only visibility for Phase 2c (Phase 2d will broaden via channel.visibility).
-    const channel = await getChannelById({ channelId: message.channelId, userId, tenantId });
-    if (!channel) {
       res.status(404).json({ success: false, error: 'message not found' });
       return;
     }
