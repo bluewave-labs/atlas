@@ -14,10 +14,15 @@ vi.mock('../src/apps/crm/services/gmail-send.service', () => ({
   performGmailSend: vi.fn(async () => undefined),
 }));
 
+vi.mock('../src/apps/crm/services/gmail-message-cleaner.service', () => ({
+  performGmailMessageCleaner: vi.fn(async () => undefined),
+}));
+
 import { processSyncJob } from '../src/workers/sync.worker';
 import * as calendarSync from '../src/services/calendar-sync.service';
 import * as gmailSync from '../src/apps/crm/services/gmail-sync.service';
 import * as gmailSend from '../src/apps/crm/services/gmail-send.service';
+import * as cleaner from '../src/apps/crm/services/gmail-message-cleaner.service';
 
 describe('sync.worker: processSyncJob', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -64,6 +69,14 @@ describe('sync.worker: processSyncJob', () => {
       data: { messageId: 'msg-1' },
     } as any);
     expect(gmailSend.performGmailSend).toHaveBeenCalledWith('msg-1');
+  });
+
+  it('dispatches gmail-message-cleaner to performGmailMessageCleaner', async () => {
+    await processSyncJob({
+      name: 'gmail-message-cleaner',
+      data: {},
+    } as any);
+    expect(cleaner.performGmailMessageCleaner).toHaveBeenCalled();
   });
 
   it('throws on unknown job name', async () => {

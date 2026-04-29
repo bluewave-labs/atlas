@@ -10,6 +10,7 @@ export const SyncJobName = {
   GmailFullSync: 'gmail-full-sync',
   GmailIncrementalSync: 'gmail-incremental-sync',
   GmailSend: 'gmail-send',
+  GmailMessageCleaner: 'gmail-message-cleaner',
 } as const;
 export type SyncJobName = (typeof SyncJobName)[keyof typeof SyncJobName];
 
@@ -60,12 +61,16 @@ export interface GmailSendJobData {
   messageId: string;
 }
 
+/** Daily cleaner walks all tenants — no per-job payload. */
+export type GmailMessageCleanerJobData = Record<string, never>;
+
 export type SyncJobData =
   | { name: typeof SyncJobName.CalendarFullSync; data: CalendarFullSyncJobData }
   | { name: typeof SyncJobName.CalendarIncrementalSync; data: CalendarIncrementalSyncJobData }
   | { name: typeof SyncJobName.GmailFullSync; data: GmailFullSyncJobData }
   | { name: typeof SyncJobName.GmailIncrementalSync; data: GmailIncrementalSyncJobData }
-  | { name: typeof SyncJobName.GmailSend; data: GmailSendJobData };
+  | { name: typeof SyncJobName.GmailSend; data: GmailSendJobData }
+  | { name: typeof SyncJobName.GmailMessageCleaner; data: GmailMessageCleanerJobData };
 
 let syncQueue: Queue | null = null;
 

@@ -18,6 +18,7 @@ import {
   performGmailIncrementalSync,
 } from '../apps/crm/services/gmail-sync.service';
 import { performGmailSend } from '../apps/crm/services/gmail-send.service';
+import { performGmailMessageCleaner } from '../apps/crm/services/gmail-message-cleaner.service';
 import { logger } from '../utils/logger';
 
 export async function processSyncJob(job: Job): Promise<void> {
@@ -50,6 +51,11 @@ export async function processSyncJob(job: Job): Promise<void> {
       const { messageId } = job.data as GmailSendJobData;
       logger.info({ jobId: job.id, messageId }, 'Running Gmail send');
       await performGmailSend(messageId);
+      return;
+    }
+    case SyncJobName.GmailMessageCleaner: {
+      logger.info({ jobId: job.id }, 'Running Gmail message cleaner');
+      await performGmailMessageCleaner();
       return;
     }
     default:
