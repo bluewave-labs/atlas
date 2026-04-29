@@ -13,6 +13,7 @@ import { env } from '../config/env';
 import { logger } from '../utils/logger';
 
 const INCREMENTAL_INTERVAL_MS = 5 * 60 * 1000;
+const CLEANER_INTERVAL_MS = 24 * 60 * 60 * 1000; // daily
 
 export function startSyncWorker(): void {
   if (env.WORKER_MODE === 'api') {
@@ -126,4 +127,24 @@ export async function scheduleGmailIncrementalSyncForAllChannels(): Promise<void
     },
     'Scheduled incremental Gmail sync',
   );
+}
+
+/**
+ * Schedule the daily Gmail message cleaner. Idempotent — `upsertJobScheduler`
+ * de-dupes by id.
+ */
+export async function scheduleDailyMessageCleaner(): Promise<void> {
+  const queue = getSyncQueue();
+  if (!queue) return;
+
+  await queue.upsertJobScheduler(
+    'gmail-message-cleaner',
+    { every: CLEANER_INTERVAL_MS },
+    {
+      name: SyncJobName.GmailMessageCleaner,
+      data: {},
+    },
+  );
+
+  logger.info({ intervalMs: CLEANER_INTERVAL_MS }, 'Scheduled daily Gmail message cleaner');
 }
