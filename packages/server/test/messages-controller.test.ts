@@ -368,24 +368,34 @@ describe('messages.controller: getMessage', () => {
     expect(res.status).toHaveBeenCalledWith(404);
   });
 
-  it('returns the message when visibility filter passes', async () => {
-    dbSelectMock.mockReturnValue({
-      from: () => ({
-        innerJoin: () => ({
-          where: () => ({ limit: () => Promise.resolve([{
-            id: 'msg-1',
-            channelId: 'ch-1',
-            subject: 'Hi',
-            snippet: 'preview',
-            bodyText: 'body',
-            status: 'sent',
-            threadId: 'thr-1',
-            headerMessageId: '<abc@mail.com>',
-            direction: 'outbound',
-            sentAt: new Date('2026-04-29T10:00:00Z'),
-          }]) }),
-        }),
-      }),
+  it('returns the message with fromHandle when visibility filter passes', async () => {
+    let selectCall = 0;
+    dbSelectMock.mockImplementation(() => {
+      selectCall++;
+      if (selectCall === 1) {
+        return {
+          from: () => ({
+            innerJoin: () => ({
+              where: () => ({ limit: () => Promise.resolve([{
+                id: 'msg-1',
+                channelId: 'ch-1',
+                subject: 'Hi',
+                snippet: 'preview',
+                bodyText: 'body',
+                status: 'sent',
+                threadId: 'thr-1',
+                headerMessageId: '<abc@mail.com>',
+                direction: 'outbound',
+                sentAt: new Date('2026-04-29T10:00:00Z'),
+              }]) }),
+            }),
+          }),
+        };
+      }
+      // Second select: from-participant lookup
+      return {
+        from: () => ({ where: () => ({ limit: () => Promise.resolve([{ handle: 'sender@example.com' }]) }) }),
+      };
     });
     const req = {
       auth: { userId: 'u-1', tenantId: 't-1' },
@@ -397,7 +407,7 @@ describe('messages.controller: getMessage', () => {
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         success: true,
-        data: expect.objectContaining({ id: 'msg-1', status: 'sent' }),
+        data: expect.objectContaining({ id: 'msg-1', fromHandle: 'sender@example.com' }),
       }),
     );
   });

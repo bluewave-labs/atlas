@@ -5,6 +5,7 @@ import { Button } from '../../../../components/ui/button';
 import { Badge } from '../../../../components/ui/badge';
 import { useToastStore } from '../../../../stores/toast-store';
 import { useMessage, useRetryMessage } from '../../hooks/use-send-message';
+import { useBlockSender } from '../../hooks/use-block-sender';
 import { EmailComposerPopover } from '../email-composer/email-composer-popover';
 
 export interface EmailActivityRowProps {
@@ -19,6 +20,7 @@ export interface EmailActivityRowProps {
 export function EmailActivityRow({ activity }: EmailActivityRowProps) {
   const { t } = useTranslation();
   const retry = useRetryMessage();
+  const blockSender = useBlockSender();
   const addToast = useToastStore((s) => s.addToast);
   const [showFullBody, setShowFullBody] = useState(false);
 
@@ -52,6 +54,21 @@ export function EmailActivityRow({ activity }: EmailActivityRowProps) {
       return <Badge variant="success">{t('crm.composer.statusSent', 'Sent')}</Badge>;
     return null;
   })();
+
+  const handleBlock = () => {
+    if (!message?.fromHandle) return;
+    blockSender.mutate(message.fromHandle, {
+      onSuccess: () =>
+        addToast({ type: 'success', message: t('crm.composer.blockSenderToast', 'Sender blocked') }),
+      onError: (err: unknown) => {
+        const anyErr = err as { response?: { data?: { error?: string } } };
+        addToast({
+          type: 'error',
+          message: anyErr?.response?.data?.error ?? t('crm.composer.blockSenderError', 'Failed to block sender'),
+        });
+      },
+    });
+  };
 
   const handleRetry = () => {
     retry.mutate(message.id, {
@@ -108,6 +125,11 @@ export function EmailActivityRow({ activity }: EmailActivityRowProps) {
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--spacing-sm)', justifyContent: 'flex-end' }}>
+        {!isOutbound && message.fromHandle && (
+          <Button size="sm" variant="ghost" onClick={handleBlock} disabled={blockSender.isPending}>
+            {t('crm.composer.blockSender', 'Block sender')}
+          </Button>
+        )}
         {message.status === 'failed' && (
           <Button size="sm" variant="secondary" onClick={handleRetry} disabled={retry.isPending}>
             {retry.isPending

@@ -270,7 +270,21 @@ export async function getMessage(req: Request, res: Response) {
       return;
     }
 
-    res.json({ success: true, data: message });
+    const [fromRow] = await db
+      .select({ handle: messageParticipants.handle })
+      .from(messageParticipants)
+      .where(
+        and(
+          eq(messageParticipants.messageId, message.id),
+          eq(messageParticipants.role, 'from'),
+        ),
+      )
+      .limit(1);
+
+    res.json({
+      success: true,
+      data: { ...message, fromHandle: fromRow?.handle ?? null },
+    });
   } catch (error) {
     logger.error({ error }, 'Failed to load message');
     res.status(500).json({ success: false, error: 'Failed to load message' });

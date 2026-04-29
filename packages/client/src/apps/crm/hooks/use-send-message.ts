@@ -13,6 +13,7 @@ export interface MessageDTO {
   headerMessageId: string | null;
   direction: 'inbound' | 'outbound';
   sentAt: string | null;
+  fromHandle: string | null;
 }
 
 export function useMessage(messageId: string | null) {

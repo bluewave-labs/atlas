@@ -2111,7 +2111,10 @@
       "statusPending": "Sending",
       "statusSent": "Sent",
       "statusFailed": "Failed",
-      "noSubject": "(no subject)"
+      "noSubject": "(no subject)",
+      "blockSender": "Block sender",
+      "blockSenderToast": "Sender blocked — future emails won’t auto-create contacts",
+      "blockSenderError": "Failed to block sender"
     }
   },
   "drive": {
