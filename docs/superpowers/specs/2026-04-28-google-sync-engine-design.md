@@ -495,3 +495,32 @@ Each sub-phase gets its own implementation plan and PR. The four together = Phas
 - **Composer rich text** — explicitly Phase 3, but the schema already supports `bodyHtml` so it's purely a UI question later.
 - **Partial index on `messages` for inbound + non-deleted reads** — 2a code review (commit `4f579f86`) flagged that the existing `idx_messages_tenant_inbound_sent` on `(tenantId, sentAt)` doesn't include `direction` or `deletedAt` predicates. Acceptable for 2a (no reads yet), but **2b MUST add a partial index** before the inbox-listing query lands: `CREATE INDEX idx_messages_tenant_inbound_active ON messages (tenant_id, sent_at DESC) WHERE direction = 'inbound' AND deleted_at IS NULL;` (Drizzle: pass a `where` predicate to the `.index()` builder). Without it, large tenants will scan every row in the `sentAt` range before applying the filter. **Done in 2b Task 1 (commit `7605afba`).**
 - **Functional index on `crm_contacts.email` for case-insensitive lookups** — Phase 2b's participant matching does `LOWER(email) = ?` lookups within tenant. Postgres can't use a plain B-tree on `email` for this; for tenants with thousands of contacts, the per-message lookup will table-scan. Phase 2b mitigates by using a single tenant-scoped SELECT + JS-side filtering in `matchHandlesToContacts`, which is one query per message instead of one per participant. A proper functional index `CREATE INDEX idx_crm_contacts_tenant_email_lower ON crm_contacts (tenant_id, LOWER(email))` should land before production volume — track as a Phase 2c or 2d follow-up.
+
+## 14. Phase 3 scope (locked 2026-04-30)
+
+Phase 2's "out of scope" list (§2) bundles many items. Phase 3 narrows aggressively. The following are **the only items in Phase 3**:
+
+1. **Attachments — send and receive.** Multipart MIME on outbound, attachment metadata + storage on inbound. Highest-asked-for missing feature in CRM email flows.
+2. **Blocklist management UI.** Schema and seed shipped in 2d; this adds a list view + remove action in Settings > Integrations.
+3. **Tenant retention UI.** One settings field that writes `tenants.gmail_retention_days`. Pairs with the cleaner job already running.
+4. **Activity backfill on new contact match.** When a contact is auto- or manually created, retroactively walk `message_participants` for that handle, set `personId`, and fan out `crm_activities`. Phase 2c's auto-create only links going-forward.
+5. **Orphan scheduler reconcile.** Drop BullMQ scheduler entries whose channel was deleted (Phase 2b TODO).
+
+**Explicitly NOT in Phase 3** (re-classified from §2 to "later phases or never"):
+
+- **Outlook OAuth, generic IMAP/SMTP** — separate phases / their own product, not "Phase 3 follow-on."
+- **Push notifications (Pub/Sub / Gmail watch)** — own infrastructure project; defer until polling-latency complaints surface.
+- **Drafts (server-saved, multi-device)** — Phase 2c's per-device Zustand draft persistence is sufficient. Multi-device drafts are a real product surface (autosave, conflict resolution, "resume" UI) and not on a calendar.
+- **Email templates with variables** — small, but build only when a user asks.
+- **Email aliases (multiple from-addresses per channel)** — schema supports it; build only with a real shared-inbox use case.
+- **Read receipts / open tracking** — privacy-sensitive product decision; not a default.
+- **Folder mirroring (`message_folders` table)** — JSONB labels are working fine.
+- **Multi-channel-per-account UI** — wait for a real shared-inbox request.
+- **HTML/rich-text composer** — `messages.bodyHtml` already exists; UI is on-demand.
+
+**Operational items (no Phase 3 calendar slot — apply when measurable):**
+
+- **Functional index on `crm_contacts.email`** — add when a query plan demands it.
+- **Batch `GET /crm/messages?ids=`** — N+1 on the timeline isn't biting after the 2d simplify pass; revisit if it does.
+
+The five Phase 3 items break into their own sub-phases or land as a single plan, decided at planning time.
