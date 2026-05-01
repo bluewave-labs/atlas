@@ -3,6 +3,7 @@ import * as crmController from './controller';
 import * as channelsController from './controllers/channels.controller';
 import * as messagesController from './controllers/messages.controller';
 import * as blocklistController from './controllers/blocklist.controller';
+import * as tenantSettingsController from './controllers/tenant-settings.controller';
 import { authMiddleware } from '../../middleware/auth';
 import { requireAppPermission } from '../../middleware/require-app-permission';
 import { withConcurrencyCheck } from '../../middleware/concurrency-check';
@@ -265,6 +266,10 @@ router.get('/messages/:id', messagesController.getMessage);
 router.post('/blocklist', blocklistController.addBlocklistEntry);
 router.get('/blocklist', blocklistController.listBlocklist);
 router.delete('/blocklist/:id', blocklistController.deleteBlocklistEntry);
+
+// Tenant settings (Phase 3a)
+router.get('/settings', tenantSettingsController.getTenantSettings);
+router.patch('/settings/retention', tenantSettingsController.updateRetention);
 
 // CRM calendar (linked to contacts/deals)
 router.get('/contacts/:id/events', crmController.getContactEvents);
