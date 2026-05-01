@@ -2062,6 +2062,30 @@
           "sendOnly": "From sent emails",
           "sendAndReceive": "From all emails"
         }
+      },
+      "blocklist": {
+        "title": "Blocklist",
+        "description": "Patterns that prevent contact auto-creation. Default seeds plus any added entries.",
+        "empty": "No patterns yet.",
+        "addPlaceholder": "pattern (e.g. *@spam.com or alice@example.com)",
+        "add": "Add",
+        "remove": "Remove",
+        "addedToast": "Pattern added",
+        "removedToast": "Pattern removed",
+        "addError": "Failed to add pattern",
+        "removeError": "Failed to remove pattern",
+        "patternRequired": "Pattern is required"
+      },
+      "retention": {
+        "title": "Retention",
+        "description": "Auto-delete emails older than N days. Leave blank to retain forever.",
+        "label": "Days to retain",
+        "forever": "Retain forever (no auto-delete)",
+        "save": "Save",
+        "saving": "Saving...",
+        "savedToast": "Retention updated",
+        "saveError": "Failed to update retention",
+        "invalidValue": "Enter a positive integer or leave blank"
       }
     },
     "composer": {

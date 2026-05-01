@@ -15,6 +15,8 @@ import { useAuthStore } from '../../stores/auth-store';
 import { useToastStore } from '../../stores/toast-store';
 import { useGoogleDriveStatus } from '../../apps/drive/hooks';
 import { ChannelsList } from '../../apps/crm/components/integrations/channels-list';
+import { BlocklistSection } from '../../apps/crm/components/integrations/blocklist-section';
+import { RetentionSection } from '../../apps/crm/components/integrations/retention-section';
 
 export function IntegrationsPanel() {
   const { t } = useTranslation();
@@ -188,6 +190,30 @@ export function IntegrationsPanel() {
                 {t('crm.integrations.channels.title', 'Email channels')}
               </h4>
               <ChannelsList />
+            </div>
+
+            <div style={{ marginTop: 'var(--spacing-lg)' }}>
+              <h4 style={{
+                fontSize: 'var(--font-size-md)',
+                fontWeight: 'var(--font-weight-semibold)' as React.CSSProperties['fontWeight'],
+                marginBottom: 'var(--spacing-sm)',
+                color: 'var(--color-text-primary)',
+              }}>
+                {t('crm.integrations.blocklist.title', 'Blocklist')}
+              </h4>
+              <BlocklistSection />
+            </div>
+
+            <div style={{ marginTop: 'var(--spacing-lg)' }}>
+              <h4 style={{
+                fontSize: 'var(--font-size-md)',
+                fontWeight: 'var(--font-weight-semibold)' as React.CSSProperties['fontWeight'],
+                marginBottom: 'var(--spacing-sm)',
+                color: 'var(--color-text-primary)',
+              }}>
+                {t('crm.integrations.retention.title', 'Retention')}
+              </h4>
+              <RetentionSection />
             </div>
           </>
         )}
