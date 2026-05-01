@@ -1,17 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Request, Response } from 'express';
 
-const { dbInsertMock } = vi.hoisted(() => ({
+const { dbInsertMock, dbSelectMock, dbDeleteMock } = vi.hoisted(() => ({
   dbInsertMock: vi.fn(),
+  dbSelectMock: vi.fn(),
+  dbDeleteMock: vi.fn(),
 }));
 
 vi.mock('../src/config/database', () => ({
   db: {
     insert: () => dbInsertMock(),
+    select: () => dbSelectMock(),
+    delete: () => dbDeleteMock(),
   },
 }));
 
-import { addBlocklistEntry } from '../src/apps/crm/controllers/blocklist.controller';
+import {
+  addBlocklistEntry,
+  listBlocklist,
+  deleteBlocklistEntry,
+} from '../src/apps/crm/controllers/blocklist.controller';
 
 function mockRes() {
   const res: Partial<Response> = {};
@@ -22,6 +30,8 @@ function mockRes() {
 
 beforeEach(() => {
   dbInsertMock.mockReset();
+  dbSelectMock.mockReset();
+  dbDeleteMock.mockReset();
 });
 
 describe('blocklist.controller: addBlocklistEntry', () => {
@@ -91,5 +101,64 @@ describe('blocklist.controller: addBlocklistEntry', () => {
     await addBlocklistEntry(req, res);
 
     expect(captured.pattern).toBe('spam@example.com');
+  });
+});
+
+describe('blocklist.controller: listBlocklist', () => {
+  it('returns blocklist patterns for the tenant', async () => {
+    dbSelectMock.mockReturnValue({
+      from: () => ({ where: () => ({ orderBy: () => Promise.resolve([
+        { id: 'b-1', pattern: '*@noreply.*', createdAt: new Date('2026-01-01T00:00:00Z') },
+        { id: 'b-2', pattern: 'spam@x.com', createdAt: new Date('2026-04-30T00:00:00Z') },
+      ]) }) }),
+    });
+    const req = {
+      auth: { userId: 'u-1', tenantId: 't-1' },
+      body: {},
+      params: {},
+    } as unknown as Request;
+    const res = mockRes();
+    await listBlocklist(req, res);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: true,
+        data: expect.arrayContaining([
+          expect.objectContaining({ id: 'b-1', pattern: '*@noreply.*' }),
+          expect.objectContaining({ id: 'b-2', pattern: 'spam@x.com' }),
+        ]),
+      }),
+    );
+  });
+});
+
+describe('blocklist.controller: deleteBlocklistEntry', () => {
+  it('returns 400 when id is missing', async () => {
+    const req = {
+      auth: { userId: 'u-1', tenantId: 't-1' },
+      params: {},
+      body: {},
+    } as unknown as Request;
+    const res = mockRes();
+    await deleteBlocklistEntry(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(dbDeleteMock).not.toHaveBeenCalled();
+  });
+
+  it('deletes the entry scoped to the tenant', async () => {
+    dbDeleteMock.mockReturnValue({
+      where: () => Promise.resolve({ rowCount: 1 }),
+    });
+    const req = {
+      auth: { userId: 'u-1', tenantId: 't-1' },
+      params: { id: 'b-1' },
+      body: {},
+    } as unknown as Request;
+    const res = mockRes();
+    await deleteBlocklistEntry(req, res);
+    expect(dbDeleteMock).toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      data: { deleted: true },
+    });
   });
 });

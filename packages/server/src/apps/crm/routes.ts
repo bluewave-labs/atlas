@@ -263,6 +263,8 @@ router.get('/messages/:id', messagesController.getMessage);
 
 // Blocklist
 router.post('/blocklist', blocklistController.addBlocklistEntry);
+router.get('/blocklist', blocklistController.listBlocklist);
+router.delete('/blocklist/:id', blocklistController.deleteBlocklistEntry);
 
 // CRM calendar (linked to contacts/deals)
 router.get('/contacts/:id/events', crmController.getContactEvents);
