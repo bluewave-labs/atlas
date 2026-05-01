@@ -180,6 +180,12 @@ export const queryKeys = {
       all: ['crm', 'messages'] as const,
       detail: (id: string) => ['crm', 'messages', id] as const,
     },
+    blocklist: {
+      all: ['crm', 'blocklist'] as const,
+    },
+    tenantSettings: {
+      all: ['crm', 'tenant-settings'] as const,
+    },
     activityTypes: {
       all: ['crm', 'activity-types'] as const,
     },
