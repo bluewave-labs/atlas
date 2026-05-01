@@ -148,3 +148,5 @@ export async function scheduleDailyMessageCleaner(): Promise<void> {
 
   logger.info({ intervalMs: CLEANER_INTERVAL_MS }, 'Scheduled daily Gmail message cleaner');
 }
+
+export { reconcileGmailIncrementalSchedulers } from '../apps/crm/services/scheduler-reconcile.service';

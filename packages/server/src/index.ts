@@ -18,6 +18,7 @@ import {
   scheduleIncrementalSyncForAllAccounts,
   scheduleGmailIncrementalSyncForAllChannels,
   scheduleDailyMessageCleaner,
+  reconcileGmailIncrementalSchedulers,
 } from './workers';
 
 const PURGE_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
@@ -86,6 +87,9 @@ app.listen(env.PORT, async () => {
   );
   scheduleDailyMessageCleaner().catch((err) =>
     logger.error({ err }, 'Failed to schedule Gmail message cleaner'),
+  );
+  reconcileGmailIncrementalSchedulers().catch((err) =>
+    logger.error({ err }, 'Failed to reconcile Gmail schedulers'),
   );
 });
 
