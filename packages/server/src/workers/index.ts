@@ -5,6 +5,7 @@ import {
   getSyncQueue,
   closeSyncQueue,
   SyncJobName,
+  GMAIL_INCREMENTAL_KEY_PREFIX,
   type CalendarIncrementalSyncJobData,
   type GmailIncrementalSyncJobData,
 } from '../config/queue';
@@ -100,7 +101,7 @@ export async function scheduleGmailIncrementalSyncForAllChannels(): Promise<void
   const results = await Promise.allSettled(
     rows.map((row) =>
       queue.upsertJobScheduler(
-        `gmail-incremental-${row.id}`,
+        `${GMAIL_INCREMENTAL_KEY_PREFIX}${row.id}`,
         { every: INCREMENTAL_INTERVAL_MS },
         {
           name: SyncJobName.GmailIncrementalSync,

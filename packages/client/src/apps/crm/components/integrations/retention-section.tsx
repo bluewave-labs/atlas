@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
@@ -11,13 +11,16 @@ export function RetentionSection() {
   const updateRetention = useUpdateRetention();
   const addToast = useToastStore((s) => s.addToast);
   const [draft, setDraft] = useState<string>('');
+  // Initialize the draft only on the first non-undefined settings payload.
+  // Re-firing on later refetches would clobber the user's in-progress edit.
+  const initializedRef = useRef(false);
 
-  // Sync the draft from server data on first load.
   useEffect(() => {
-    if (settings) {
+    if (!initializedRef.current && settings) {
       setDraft(
         settings.gmailRetentionDays == null ? '' : String(settings.gmailRetentionDays),
       );
+      initializedRef.current = true;
     }
   }, [settings]);
 

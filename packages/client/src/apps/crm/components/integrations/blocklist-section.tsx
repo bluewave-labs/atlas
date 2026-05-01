@@ -99,7 +99,7 @@ export function BlocklistSection() {
         </Button>
       </div>
 
-      {isLoading ? null : entries && entries.length > 0 ? (
+      {entries && entries.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
           {entries.map((entry) => (
             <div
@@ -134,7 +134,9 @@ export function BlocklistSection() {
             </div>
           ))}
         </div>
-      ) : (
+      )}
+
+      {!isLoading && entries && entries.length === 0 && (
         <div
           style={{
             fontSize: 'var(--font-size-sm)',

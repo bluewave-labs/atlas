@@ -137,8 +137,8 @@ export async function createContact(userId: string, tenantId: string, input: Cre
   executeWorkflows(tenantId, userId, 'contact_created', { contactId: created.id })
     .catch((err) => logger.warn({ err, trigger: 'contact_created' }, 'Workflow dispatch failed'));
 
-  // Phase 3a: retroactively link prior messages to this contact.
-  // Fire-and-forget — backfill failures should not block contact creation.
+  // Retroactively link prior messages from this email; fire-and-forget so
+  // backfill failures don't block contact creation.
   backfillContactMessages(tenantId, created.id, userId)
     .catch((err) => logger.error({ err, contactId: created.id }, 'Contact backfill failed'));
 

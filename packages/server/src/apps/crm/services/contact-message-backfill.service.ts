@@ -32,9 +32,6 @@ export async function backfillContactMessages(
   if (!contact || !contact.email) return 0;
   const handle = contact.email.toLowerCase();
 
-  // Find participants matching this handle that haven't been linked yet.
-  // Join through messages so we can capture each affected message's direction
-  // for the activity upsert call.
   const rows = await db
     .select({
       messageId: messageParticipants.messageId,
@@ -63,27 +60,25 @@ export async function backfillContactMessages(
       ),
     );
 
-  // Per affected message, re-run the activity upsert so the timeline picks
-  // up the new contact link. Distinct messageIds — one message can have
-  // multiple participants (cc, bcc) for the same handle is rare but possible.
-  const seen = new Set<string>();
+  // Distinct messages: a single message may have multiple participants
+  // sharing the same handle (rare, but possible across to/cc/bcc).
+  const distinctMessages = new Map<string, MessageDirection>();
   for (const row of rows) {
-    if (seen.has(row.messageId)) continue;
-    seen.add(row.messageId);
-    try {
-      await upsertActivitiesForMessage({
-        messageId: row.messageId,
-        tenantId,
-        userId,
-        direction: row.direction as MessageDirection,
-      });
-    } catch (err) {
-      logger.error({ err, messageId: row.messageId, contactId }, 'Backfill activity upsert failed');
+    if (!distinctMessages.has(row.messageId)) {
+      distinctMessages.set(row.messageId, row.direction as MessageDirection);
     }
   }
 
+  await Promise.all(
+    [...distinctMessages].map(([messageId, direction]) =>
+      upsertActivitiesForMessage({ messageId, tenantId, userId, direction }).catch((err) =>
+        logger.error({ err, messageId, contactId }, 'Backfill activity upsert failed'),
+      ),
+    ),
+  );
+
   logger.info(
-    { tenantId, contactId, linked: rows.length, messages: seen.size },
+    { tenantId, contactId, linked: rows.length, messages: distinctMessages.size },
     'Contact message backfill completed',
   );
 

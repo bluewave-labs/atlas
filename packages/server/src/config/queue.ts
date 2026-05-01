@@ -4,6 +4,9 @@ import { logger } from '../utils/logger';
 
 export const SYNC_QUEUE_NAME = 'atlas-sync';
 
+/** BullMQ job-scheduler key prefix for per-channel Gmail incremental sync. */
+export const GMAIL_INCREMENTAL_KEY_PREFIX = 'gmail-incremental-';
+
 export const SyncJobName = {
   CalendarFullSync: 'calendar-full-sync',
   CalendarIncrementalSync: 'calendar-incremental-sync',

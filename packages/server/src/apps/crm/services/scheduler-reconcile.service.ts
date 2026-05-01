@@ -1,10 +1,8 @@
-import { eq } from 'drizzle-orm';
+import { inArray } from 'drizzle-orm';
 import { db } from '../../../config/database';
 import { messageChannels } from '../../../db/schema';
-import { getSyncQueue } from '../../../config/queue';
+import { getSyncQueue, GMAIL_INCREMENTAL_KEY_PREFIX } from '../../../config/queue';
 import { logger } from '../../../utils/logger';
-
-const SCHEDULER_KEY_PREFIX = 'gmail-incremental-';
 
 /**
  * Drop BullMQ scheduler entries whose underlying channel was deleted or
@@ -24,8 +22,8 @@ export async function reconcileGmailIncrementalSchedulers(): Promise<void> {
 
   const keyByChannelId = new Map<string, string>();
   for (const s of schedulers) {
-    if (!s.key || !s.key.startsWith(SCHEDULER_KEY_PREFIX)) continue;
-    const channelId = s.key.slice(SCHEDULER_KEY_PREFIX.length);
+    if (!s.key || !s.key.startsWith(GMAIL_INCREMENTAL_KEY_PREFIX)) continue;
+    const channelId = s.key.slice(GMAIL_INCREMENTAL_KEY_PREFIX.length);
     keyByChannelId.set(channelId, s.key);
   }
 
@@ -37,7 +35,7 @@ export async function reconcileGmailIncrementalSchedulers(): Promise<void> {
   const channels = await db
     .select({ id: messageChannels.id, isSyncEnabled: messageChannels.isSyncEnabled })
     .from(messageChannels)
-    .where(eq(messageChannels.type, 'gmail'));
+    .where(inArray(messageChannels.id, [...keyByChannelId.keys()]));
 
   const live = new Set(channels.filter((c) => c.isSyncEnabled).map((c) => c.id));
 

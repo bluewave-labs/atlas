@@ -23,6 +23,7 @@ beforeEach(() => {
   dbSelectMock.mockReset();
   dbUpdateMock.mockReset();
   upsertActivitiesForMessageMock.mockReset();
+  upsertActivitiesForMessageMock.mockResolvedValue(undefined);
   dbUpdateMock.mockReturnValue({
     set: () => ({ where: () => Promise.resolve({ rowCount: 0 }) }),
   });

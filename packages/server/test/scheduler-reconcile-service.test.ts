@@ -14,6 +14,7 @@ const {
 
 vi.mock('../src/config/queue', () => ({
   getSyncQueue: () => getSyncQueueMock(),
+  GMAIL_INCREMENTAL_KEY_PREFIX: 'gmail-incremental-',
 }));
 
 vi.mock('../src/config/database', () => ({
