@@ -4,6 +4,7 @@ import { eq, and, asc, sql } from 'drizzle-orm';
 import { logger } from '../../../utils/logger';
 import type { CrmRecordAccess } from '@atlas-platform/shared';
 import { executeWorkflows } from './workflow.service';
+import { backfillContactMessages } from './contact-message-backfill.service';
 
 // ─── Input types ────────────────────────────────────────────────────
 
@@ -135,6 +136,11 @@ export async function createContact(userId: string, tenantId: string, input: Cre
   // Fire workflow trigger
   executeWorkflows(tenantId, userId, 'contact_created', { contactId: created.id })
     .catch((err) => logger.warn({ err, trigger: 'contact_created' }, 'Workflow dispatch failed'));
+
+  // Phase 3a: retroactively link prior messages to this contact.
+  // Fire-and-forget — backfill failures should not block contact creation.
+  backfillContactMessages(tenantId, created.id, userId)
+    .catch((err) => logger.error({ err, contactId: created.id }, 'Contact backfill failed'));
 
   return created;
 }
