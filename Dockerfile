@@ -51,6 +51,9 @@ RUN npm ci --omit=dev
 COPY --from=builder /app/packages/shared/dist packages/shared/dist
 COPY --from=builder /app/packages/server/dist packages/server/dist
 COPY --from=builder /app/packages/client/dist packages/client/dist
+# SQL migration files — tsc skips non-TS assets, so copy them next to the compiled JS.
+# bootstrapDatabase reads .sql files from this dir on every start (see packages/server/src/db/bootstrap.ts).
+COPY packages/server/src/db/migrations/*.sql packages/server/dist/db/migrations/
 # Locale JSONs — server loads them at runtime for seeded-workflow i18n
 COPY --from=builder /app/packages/client/src/i18n/locales packages/client/src/i18n/locales
 
